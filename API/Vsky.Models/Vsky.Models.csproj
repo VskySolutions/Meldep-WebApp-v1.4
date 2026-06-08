@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Ical.Net" Version="5.1.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.15" />
+        <PackageReference Include="Microsoft.PowerBI.Api" Version="4.22.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Vsky.Core\Vsky.Core.csproj" />
+    </ItemGroup>
+
+</Project>
