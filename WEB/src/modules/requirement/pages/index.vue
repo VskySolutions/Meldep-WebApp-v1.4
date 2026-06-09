@@ -1267,7 +1267,6 @@ const onLinkTaskToPlan = () => {
 };
 
 function onBulkRequirementsConvertToTask (requirementIds) {
-  debugger;
   const selectedRequirements = rows.value.filter(row => requirementIds.includes(row.id));
   if (!selectedRequirements.length) return;
 
