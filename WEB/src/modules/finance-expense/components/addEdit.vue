@@ -608,12 +608,11 @@ const getExpenseDetails = async (id) => {
         endDate.value = "";
       } else {
         if (resp.recurringStartDate) {
-          const [month, day, year] = resp.recurringStartDate.split("-");
-          startDate.value = `${month}/${day}/${year}`;
+          startDate.value = resp.recurringStartDate;
         }
         if (resp.recurringEndDate) {
-          const [month, day, year] = resp.recurringEndDate.split("-");
-          endDate.value = `${month}/${day}/${year}`;
+          startDate.value = resp.recurringEndDate;
+
         }
       }
      expenses.value = resp.expenseLines?.map((expenseItem, index) => {
@@ -623,7 +622,7 @@ const getExpenseDetails = async (id) => {
       rowIndex,
       expenseItem.expenseCategoryId
      );
-
+     console.log(resp);;
       return {
         ...expenseItem,
         id: expenseItem.id || uid(),

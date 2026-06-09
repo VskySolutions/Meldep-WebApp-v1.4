@@ -451,6 +451,53 @@ namespace Vsky.Api.Controllers
                     entity.UpdatedOnUtc = GetDateTime;
                     _testCaseService.UpdateTestCase(entity);
 
+                    var testcasestatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Test Case Status", "Fail");
+                    if (statusId == testcasestatus)
+                    {
+                        //var EmployeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                        var EmployeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+                        var newstatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Status", "New from Test Plan");
+                        var medium = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Priority", "Medium");
+                        var bug = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Type", "Bug");
+                        var exists = await _issueService.GetIssueByName(SiteId, entity.Name, entity.ProjectId);
+                        if (exists == null)
+                        {
+                            var issue = new Issue();
+                            issue.IssueNumber = await _issueService.GetLastIssueNumber() + 1;
+                            issue.SiteId = SiteId;
+                            issue.TestCaseId = entity.Id;
+                            issue.ProjectId = entity.ProjectId;
+                            issue.Name = entity.Name;
+                            issue.PriorityId = medium;
+                            issue.StatusId = newstatus;
+                            issue.EmployeeId = entity.EmployeeId;
+                            issue.TypeId = bug;
+                            issue.ReportedById = EmployeeId;
+                            //issue.Description = issue.Description = model.Description + "<br><br>Steps:" + model.Steps + "<br><br>Expected Result:<br>" + model.ExpectedResult + "<br><br>Actual Result:<br>" + model.ActualResult;
+
+                            if (!string.IsNullOrEmpty(entity.Description))
+                            {
+                                var formattedDescription = issue.Description = entity.Description + "<br><br>Steps:" + entity.Steps + "<br><br>Expected Result:<br>" + entity.ExpectedResult + "<br><br>Actual Result:<br>" + entity.ActualResult;
+
+                                issue.Description = await _azureBlobImageServices
+                                    .ProcessHtmlAndManageImagesAsync(
+                                        formattedDescription,
+                                        SiteData.Name,
+                                        "test-case",
+                                        issue.IssueNumber.ToString()
+                                    );
+                            }
+
+                            issue.AreaId = entity.AreaId;
+                            issue.WorkspaceId = entity.WorkspaceId;
+                            issue.CreatedById = LoggedUserId;
+                            issue.UpdatedById = LoggedUserId;
+                            issue.CreatedOnUtc = GetDateTime;
+                            issue.UpdatedOnUtc = GetDateTime;
+                            _issueService.InsertIssue(issue);
+                        }
+                    }
+
                     return NoContent();
                 }
                 return ModelStateError(ModelState);

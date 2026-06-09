@@ -800,6 +800,7 @@ const getRequirement = () => {
     model.value = _.cloneDeep(resp);
     model.value.IdentifiedDateStr = resp.identifiedDate ? format(resp.identifiedDate, "MM/dd/yyyy") : "";
     model.value.closeDateStr = resp.closeDate ? format(resp.closeDate, "MM/dd/yyyy") : "";
+    model.value.description = resp.description ? resp.description : "";
     rows.value = resp.filePathDetails.map(item => ({
       ...item,
       editing: false,

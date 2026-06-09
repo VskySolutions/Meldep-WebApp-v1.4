@@ -36,6 +36,7 @@ export const onSubmitHelpDeskStatus = async (id, statusId, refreshHelpDeskList) 
 
 // Update AssignedTo
 export const onSubmitAssignedTo = async (id, assignedToId, refreshHelpDeskList, refreshAllUserListByRoleForDropdown) => {
+  debugger;
   try {
     return withRowLoader(
       "assignedTo",
@@ -74,7 +75,7 @@ const withRowLoader = async (
     if (afterSuccess) {
       await afterSuccess();
     }
-    
+
     notifySuccess({ message: successMessage });
   } catch (error) {
     notifyError({ message: errorMessage });

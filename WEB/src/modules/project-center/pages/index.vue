@@ -269,7 +269,7 @@
                     <template #body="propsRequirements">
                       <q-tr :props="propsRequirements" :class="activeRowIdRequirements == propsRequirements.row.id ? 'highlight' : ''" :set="(preProjectName = null)">
                         <q-td style="width: 3%;" class="hidden">{{ propsRequirements.row.requirementNumber }}</q-td>
-                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">{{ propsRequirements.row.requirementGroup.name }}</q-td>
+                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;" class="hidden">{{ propsRequirements.row.requirementGroup.name }}</q-td>
                         <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">{{ propsRequirements.row.title }}</q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
@@ -477,7 +477,7 @@ const activeRowIdRequirements = ref(null);
 const filterRequirement = ref("");
 const paginationRequirements = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 const columnsRequirements = ref([
-  { name: "requirementGroup.name", label: "Requirement Group", field: "requirementGroup.name", align: "left", sortable: true },
+  // { name: "requirementGroup.name", label: "Requirement Group", field: "requirementGroup.name", align: "left", sortable: true },
   { name: "title", label: "Title", field: "title", align: "left", sortable: true },
   { name: "status.dropDownValue", label: "Status", field: "status.dropDownValue", align: "left", sortable: true },
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true },
