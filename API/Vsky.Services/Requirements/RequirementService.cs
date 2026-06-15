@@ -323,7 +323,7 @@ namespace Vsky.Services.Requirements
 
         public IPagedList<Requirement> GetAllRequirementsForDashboard(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
         {
-            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && !x.RequirementGroup.Deleted && x.SiteId == SiteId && x.ProjectId == projectId);
+            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.ProjectId == projectId);
 
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
@@ -404,7 +404,7 @@ namespace Vsky.Services.Requirements
                 {
                     Id = x.RequirementGroup.Id,
                     Name = x.RequirementGroup.Name
-                },
+                }
             });
 
             var list = new PagedList<Requirement>(query, page, pageSize);

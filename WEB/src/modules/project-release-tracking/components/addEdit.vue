@@ -282,7 +282,7 @@ import { useAuthStore } from "stores/auth";
 import useVuelidate from "@vuelidate/core";
 import { ref, onMounted, watch, computed } from "vue";
 import { useQuasar, useDialogPluginComponent } from "quasar";
-import { required, helpers } from "@vuelidate/validators";
+import { required, helpers, maxLength } from "@vuelidate/validators";
 
 import releaseTrackingService from "modules/project-release-tracking/projectReleaseTracking.service";
 
@@ -578,7 +578,7 @@ const rules = {
   testerId: { required: helpers.withMessage("Tester is required", required) },
   releaseTypeId: { required: helpers.withMessage("Release Type is required", required) },
   versionNumber: { required: helpers.withMessage("Version Number is required", required) },
-  name: { required: helpers.withMessage("Name is required", required) }
+  name: { required: helpers.withMessage("Name is required", required), maxLength: maxLength(500) }
 };
 // Validate rules
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
