@@ -62,7 +62,7 @@
               <div class="col-12 col-md-6">
                 <div class="q-mb-xs">Price In Dollar</div>
                 <div class="text-black RichTextEditor">
-                  ${{ model.priceInDollar }}
+                  ${{ model.price }}
                 </div>
               </div>
             </div>

@@ -668,7 +668,8 @@
               <span
                 @click="onNoteTimelineView(
                 props.row.id,
-                'Requirement'
+                'Requirement',
+                `${props.row.project.name} : ${props.row.title}`
                 )"
               >
                 {{ truncateText(props.row.lastNote) }}
@@ -706,7 +707,7 @@
                 v-if="props.row.isEditable || props.row.isNotes"
                 style="position: relative;"
                 class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
-                @click="onNoteAdd(props.row.id, 'Requirement', props.row.project.id, props.row.projectName, props.row.name, refreshRequirementList)"
+                @click="onNoteAdd(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, `${props.row.project.name} : ${props.row.title}`, refreshRequirementList)"
               >
                 <q-tooltip anchor="bottom middle" self="top middle">
                   Note

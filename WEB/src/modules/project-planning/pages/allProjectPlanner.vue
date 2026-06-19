@@ -462,7 +462,7 @@
                                     <q-item-section avatar><q-icon name="o_edit" color="" size="xs" /></q-item-section>
                                     <q-item-section class="">Edit</q-item-section>
                                   </q-item>
-                                  <q-item v-if="props.row.isEditable || props.row.isNotes" v-ripple clickable @click="onNoteAdd(props.row.id, 'Projects', props.row.id, props.row.name, props.row.name, refreshProjectList)">
+                                  <q-item v-if="props.row.isEditable || props.row.isNotes" v-ripple clickable @click="onNoteAdd(props.row.id, 'Projects', props.row.id, props.row.name, props.row.name, '', refreshProjectList)">
                                     <q-item-section avatar><q-icon name="o_assignment" size="xs" /></q-item-section>
                                     <q-item-section>Note</q-item-section>
                                     <div>
@@ -1541,7 +1541,7 @@
                                               <q-item-section avatar><q-icon name="o_notes" size="xs" /></q-item-section>
                                               <q-item-section>Task Level Timesheet</q-item-section>
                                             </q-item>
-                                            <q-item v-if="(props.row.isEditable || props.row.isNotes) && props.row.status != 'Close'" v-ripple clickable @click="onNoteAdd(props.row.id, 'Project Task', props.row.projectId, props.row.projectName, props.row.name, refreshProjectList)">
+                                            <q-item v-if="(props.row.isEditable || props.row.isNotes) && props.row.status != 'Close'" v-ripple clickable @click="onNoteAdd(props.row.id, 'Project Task', props.row.projectId, props.row.projectName, props.row.name, '', refreshProjectList)">
                                               <q-item-section avatar><q-icon name="o_note" size="xs" /></q-item-section>
                                               <q-item-section>Note</q-item-section>
                                             </q-item><q-separator />

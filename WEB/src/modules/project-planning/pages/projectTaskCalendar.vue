@@ -405,7 +405,7 @@
                           <q-item-section avatar><q-icon name="o_notes" size="xs" /></q-item-section>
                           <q-item-section>Task Level Timesheet</q-item-section>
                         </q-item>
-                        <q-item v-if="taskRow.task.status.dropDownValue != 'Close'" v-ripple clickable @click="onNoteAdd(taskRow.task.id, 'Project Task', taskRow.task.projectId, taskRow.task.project.name, taskRow.task.name, refreshProjectTaskList)">
+                        <q-item v-if="taskRow.task.status.dropDownValue != 'Close'" v-ripple clickable @click="onNoteAdd(taskRow.task.id, 'Project Task', taskRow.task.projectId, taskRow.task.project.name, taskRow.task.name, '', refreshProjectTaskList)">
                           <q-item-section avatar><q-icon name="o_note" size="xs" /></q-item-section>
                           <q-item-section>Note</q-item-section>
                         </q-item><q-separator />

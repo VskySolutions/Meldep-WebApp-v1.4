@@ -214,11 +214,11 @@
             </q-td>
             <q-td style="width: 6%;" align="right">
               <div v-if="editingRowId !== props.row.id">
-                ${{ props.row.priceInDollar }}
+                ${{ props.row.price }}
               </div>
               <q-input
                 v-else
-                v-model="props.row.priceInDollar"
+                v-model="props.row.price"
                 outlined
                 stack-label
                 hide-bottom-space
@@ -226,9 +226,11 @@
                 input-class="text-right"
                 inputmode="decimal"
                 class="break-error"
-                :error="v$.priceInDollar.$error"
-                :error-message="v$.priceInDollar.$errors[0]?.$message"
-                @blur="v$.priceInDollar.$touch"
+                :error="v$.price.$error"
+                :error-message="v$.price.$errors[0]?.$message"
+                @blur="v$.price.$touch()"
+                @focus="props.row._originalPrice = props.row.price"
+                @change="onPriceChange(props.row)"
               />
             </q-td>
              <q-td style="width: 5%;" align="right">
@@ -379,6 +381,9 @@
             <q-td class="text-right text-weight-bold">
               ${{ totalPrice.toFixed(2) }}
             </q-td>
+            <q-td class="text-right text-weight-bold">
+              ${{ totalYtd.toFixed(2) }}
+            </q-td>
             <q-td />
             <q-td />
             <q-td />
@@ -393,12 +398,13 @@
 <script setup>
 // Import libraries
 import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
-import { useQuasar } from "quasar";
+import { useQuasar, Dialog } from "quasar";
 import useVuelidate from "@vuelidate/core";
 import { required, helpers } from "@vuelidate/validators";
 import { isDate } from "validators/zw_validators.js";
-import { zwConfirm, notifySuccess, getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
+import { zwConfirm, zwConfirmDelete, notifySuccess, getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
+import Confirmation from "src/dialogs/confirmation.vue";
 
 import infraAccountsServicesService from "modules/infra-account-services/infraAccountServices.service";
 import WalletPopup from "modules/infra-account/components/_walletPopup.vue";
@@ -481,7 +487,7 @@ const columns = ref([
   { name: "url", label: "URL", field: "url", align: "left", sortable: true },
   { name: "startDate", label: "Start Date", field: "startDate", align: "left", sortable: true },
   { name: "paymentTerm.dropDownValue", label: "Payment Term", field: "paymentTerm.dropDownValue", align: "left", sortable: true },
-  { name: "priceInDollar", label: "Price (Dollar)", field: "priceInDollar", align: "right", sortable: true },
+  { name: "price", label: "Price (Dollar)", field: "price", align: "right", sortable: true },
   { name: "ytd", label: "Year To Date", field: "ytd", align: "right", sortable: true },
   { name: "infraProjectServices", label: "Projects", field: "infraProjectServices", align: "left", sortable: false },
   { name: "infraAccountServiceId", label: "Infra Account Service", field: "infraAccountServiceId", align: "left", sortable: true }
@@ -522,6 +528,7 @@ const getAllInfraAccountServicesForList = (props) => {
     pagination.value.sortBy = sortBy;
     pagination.value.descending = descending;
     pagination.value.rowsNumber = resp.total;
+    console.log(rows.value)
   }).finally(() => {
     loading.value = false;
     searchLoader.value = false;
@@ -536,8 +543,14 @@ function refreshInfraAccountServicesList () {
 // ----------------------------------------------------------------------------------------------------------------
 const totalPrice = computed(() => {
   return rows.value.reduce((sum, row) => {
-    const price = parseFloat(row.priceInDollar) || 0;
+    const price = parseFloat(row.price) || 0;
     return sum + price;
+  }, 0);
+});
+
+const totalYtd = computed(() => {
+  return rows.value.reduce((sum, row) => {
+    return sum + (parseFloat(row.ytd) || 0);
   }, 0);
 });
 
@@ -590,6 +603,29 @@ function onCancel(row) {
 
   editingRowId.value = null;
   editingRow.value = null;
+}
+
+const onPriceChange = (row) => {
+  const oldValue = Number(row._originalPrice);
+  const newValue = Number(row.price);
+
+  if (row.price == null || row.price === "" || newValue === oldValue) {
+    return;
+  }
+  Dialog.create({
+    component: Confirmation,
+    componentProps: {
+      title: "Confirmation",
+      message: "Are you sure you want to change the price?",
+      cancel: true
+    }
+  })
+    .onOk(() => {
+      row._originalPrice = newValue;
+    })
+    .onCancel(() => {
+      row.price = oldValue;
+    });
 }
 
 function getInfraAccountServicesByInfraAccountId(infraAccountId) {
@@ -688,7 +724,7 @@ const rules = {
     isDate: helpers.withMessage("Date is invalid", isDate)
   },
   name: { required: helpers.withMessage("Name is required", required) },
-  priceInDollar: {
+  price: {
     required: helpers.withMessage("Price is required", required),
     decimalNumber: helpers.withMessage(
       "Enter valid amount (max 2 decimal places)",
@@ -745,11 +781,10 @@ async function onSave (row) {
       url: row.url,
       startDateStr: row.startDateStr,
       paymentTermId: row.paymentTermId,
-      priceInDollar: row.priceInDollar,
+      price: row.price,
       walletTypeId: row.walletTypeId,
       walletNumber: row.walletNumber
     };
-
     await infraAccountsServicesService.saveInfraAccountServices(row.id, payload);
 
     notifySuccess({

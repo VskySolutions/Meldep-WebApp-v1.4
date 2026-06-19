@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -409,8 +410,17 @@ namespace Vsky.Api.Controllers
                                 if (item.AssignDateStr != "" && item.AssignDateStr != null)
                                     type.AssignDate = DateTime.ParseExact(item.AssignDateStr, "MM/dd/yyyy", null);
 
-                                if (item.ReturnDateStr != "" && item.ReturnDateStr != null)
-                                    type.ReturnDate = DateTime.ParseExact(item.ReturnDateStr, "MM/dd/yyyy", null);
+                                if (!string.IsNullOrWhiteSpace(item.ReturnDateStr))
+                                {
+                                    type.ReturnDate = DateTime.ParseExact(
+                                        item.ReturnDateStr,
+                                        "MM/dd/yyyy",
+                                        CultureInfo.InvariantCulture);
+                                }
+                                else
+                                {
+                                    type.ReturnDate = null;
+                                }
 
                                 type.ReturnReson = item.ReturnReson;
                                 type.UpdatedById = LoggedUserId;

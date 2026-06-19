@@ -35,7 +35,8 @@ namespace Vsky.Models
         public string UpdatedById { get; set; }
         public bool Deleted { get; set; }
         [NotMapped]
-        public decimal TotalServicesCost { get; set; }        
+        public decimal TotalServicesCost { get; set; }      
+        
 
         public virtual Site Site { get; set; }
         public virtual DropDown Provider { get; set; }
@@ -63,7 +64,10 @@ namespace Vsky.Models
         public string Flag { get; set; }
         [NotMapped]
         public decimal ActualPriceInDollar { get; set; }
-        [NotMapped] public decimal YTD { get; set; }
+        [NotMapped] 
+        public decimal YTD { get; set; }
+        [NotMapped]
+        public decimal Price { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal PriceInDollar { get; set; }
@@ -103,6 +107,8 @@ namespace Vsky.Models
     {
         public string InfraAccountServiceId { get; set; }
         public decimal Price { get; set; }
+        public decimal DiffInYears { get; set; }
+        public decimal TotalPrice { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public string CreatedById { get; set; }

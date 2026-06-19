@@ -72,9 +72,10 @@ namespace Vsky.Services.MovementRegisters
                 query = query.Where(m =>
                     m.MovementRegisterDetails.Any(d =>
                         (d.Employees.Person.FirstName + " " + d.Employees.Person.LastName).ToLower().Contains(lower)) ||
-                    m.MovementRegisterDetails.Any(d =>d.Message.ToLower().Contains(lower) ) ||
-                    m.MovementRegisterDetails.Any(d =>(d.Approvers.Person.FirstName + " " + d.Approvers.Person.LastName).ToLower().Contains(lower)) ||
+                    m.MovementRegisterDetails.Any(d => d.Message.ToLower().Contains(lower) ) ||
+                    m.MovementRegisterDetails.Any(d => (d.Approvers.Person.FirstName + " " + d.Approvers.Person.LastName).ToLower().Contains(lower)) ||
                     m.MovementRegisterDetails.Any(d => d.Type.DropDownValue.ToLower().Contains(lower)) ||
+                    m.MovementRegisterDetails.Any(d => d.TimeInMinutes.ToString().Contains(searchText)) ||
                     (m.Date != null && m.Date.Value.Date == parsedDate.Date)
                 );
             }
@@ -83,46 +84,62 @@ namespace Vsky.Services.MovementRegisters
             {
                 Id = x.Id,
                 Date = x.Date,
-                MovementRegisterDetails = x.MovementRegisterDetails.Where(m => !m.Deleted && (string.IsNullOrWhiteSpace(createdBy) || m.CreatedById == createdBy) && (string.IsNullOrWhiteSpace(employeeId) || m.EmployeeId == employeeId) && (string.IsNullOrWhiteSpace(typeId) || m.TypeId == typeId))
-                .OrderByDescending(m => m.CreatedOnUtc)
-                .Select(d => new MovementRegisterDetails
-                {
-                    Id = d.Id,
-                    EmployeeId = d.EmployeeId,
-                    ApproverById = d.ApproverById,
-                    Message = d.Message,
-                    TimeInMinutes = d.TimeInMinutes,
-                    Employees = new Employee
-                    {
-                        Id = d.EmployeeId,
-                        Person = new Person
+                MovementRegisterDetails = x.MovementRegisterDetails.Where(d =>
+                            !d.Deleted &&
+                            (string.IsNullOrWhiteSpace(createdBy) || d.CreatedById == createdBy) &&
+                            (string.IsNullOrWhiteSpace(employeeId) || d.EmployeeId == employeeId) &&
+                            (string.IsNullOrWhiteSpace(typeId) || d.TypeId == typeId) &&
+
+                            // Search filter on detail rows
+                            (string.IsNullOrEmpty(searchText) ||
+                                (d.Employees.Person.FirstName + " " + d.Employees.Person.LastName)
+                                    .ToLower().Contains(searchText.ToLower()) ||
+                                d.Message.ToLower().Contains(searchText.ToLower()) ||
+                                (d.Approvers.Person.FirstName + " " + d.Approvers.Person.LastName)
+                                    .ToLower().Contains(searchText.ToLower()) ||
+                                d.Type.DropDownValue.ToLower().Contains(searchText.ToLower()) ||
+                                d.TimeInMinutes.ToString().Contains(searchText)
+                            )
+                        )
+                        .OrderByDescending(m => m.CreatedOnUtc)
+                        .Select(d => new MovementRegisterDetails
                         {
-                            Id = d.Employees.Person.Id,
-                            FullName = d.Employees.Person.FirstName + " " + d.Employees.Person.LastName
-                        }
-                    },
-                    Approvers = new Employee
-                    {
-                        Id = d.ApproverById,
-                        Person = new Person
-                        {
-                            Id = d.Approvers.Person.Id,
-                            FullName = d.Approvers.Person.FirstName + " " + d.Approvers.Person.LastName
-                        }
-                    },
-                    Type = new DropDown
-                    {
-                        Id = d.Type.Id,
-                        DropDownValue = d.Type.DropDownValue,
-                    },
-                    WFHDuration = new DropDown
-                    {
-                        Id = d.WFHDuration.Id,
-                        DropDownText = d.WFHDuration.DropDownText,
-                    },
-                })
-                .ToList()
-            }).Where(r => r.MovementRegisterDetails.Any()).OrderByDescending(x => x.Date); 
+                            Id = d.Id,
+                            EmployeeId = d.EmployeeId,
+                            ApproverById = d.ApproverById,
+                            Message = d.Message,
+                            TimeInMinutes = d.TimeInMinutes,
+                            Employees = new Employee
+                            {
+                                Id = d.EmployeeId,
+                                Person = new Person
+                                {
+                                    Id = d.Employees.Person.Id,
+                                    FullName = d.Employees.Person.FirstName + " " + d.Employees.Person.LastName
+                                }
+                            },
+                            Approvers = new Employee
+                            {
+                                Id = d.ApproverById,
+                                Person = new Person
+                                {
+                                    Id = d.Approvers.Person.Id,
+                                    FullName = d.Approvers.Person.FirstName + " " + d.Approvers.Person.LastName
+                                }
+                            },
+                            Type = new DropDown
+                            {
+                                Id = d.Type.Id,
+                                DropDownValue = d.Type.DropDownValue,
+                            },
+                            WFHDuration = new DropDown
+                            {
+                                Id = d.WFHDuration.Id,
+                                DropDownText = d.WFHDuration.DropDownText,
+                            },
+                        })
+                        .ToList()
+                       }).Where(r => r.MovementRegisterDetails.Any()).OrderByDescending(x => x.Date); 
 
             var list = new PagedList<Models.MovementRegister>(query, page, pageSize);
 

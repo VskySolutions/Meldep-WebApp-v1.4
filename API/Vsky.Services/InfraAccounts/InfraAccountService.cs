@@ -108,7 +108,7 @@ namespace Vsky.Services.InfraAccounts
                     Id = x.Provider.Id,
                     DropDownValue = x.Provider.DropDownValue
                 },
-                TotalServicesCost = x.InfraAccountServices.Where(s => !s.Deleted).Sum(s => (decimal?)s.PriceInDollar) ?? 0
+                TotalServicesCost = x.InfraAccountServices.Where(s => !s.Deleted).SelectMany(s => s.PriceHistories).Sum(ph => (decimal?)ph.Price) ?? 0
             });
 
             var list = new PagedList<InfraAccount>(query, page, pageSize);
@@ -224,6 +224,7 @@ namespace Vsky.Services.InfraAccounts
                             Id = m.WalletType.Id,
                             DropDownValue = m.WalletType.DropDownValue
                         },
+                        Price = m.PriceHistories.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.StartDate).Select(ph => ph.Price).FirstOrDefault(),
                         InfraFTPList = m.InfraFTPList.Where(m => !m.Deleted).Select(x => new InfraFTP
                         {
                             Id = x.Id,

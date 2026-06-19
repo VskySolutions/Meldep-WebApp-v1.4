@@ -130,7 +130,7 @@
                 >
                   <template #header="props">
                     <q-tr :props="props" class="bg-primary text-white">
-                      <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}<span v-if="['itemTypeId', 'ownerShipTypeId', 'paymentTermId','name', 'startDateStr', 'priceInDollar'].includes(col.name)" class="required">*</span></q-th>
+                      <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}<span v-if="['itemTypeId', 'ownerShipTypeId', 'paymentTermId','name', 'startDateStr', 'price'].includes(col.name)" class="required">*</span></q-th>
                       <q-th auto-width class="text-center">Actions</q-th>
                     </q-tr>
                   </template>
@@ -191,17 +191,17 @@
                       </q-td>
                       <q-td style="min-width: 120px;width: 10%;">
                         <q-input
-                          v-model="props.row.priceInDollar"
+                          v-model="props.row.price"
                           outlined
                           stack-label
                           hide-bottom-space
                           prefix="$"
                           input-class="text-right"
                           inputmode="decimal"
-                          :error="rowValidations[props.rowIndex]?.value?.priceInDollar.$error"
-                          :error-message="rowValidations[props.rowIndex]?.value?.priceInDollar.$errors[0]?.$message"
+                          :error="rowValidations[props.rowIndex]?.value?.price.$error"
+                          :error-message="rowValidations[props.rowIndex]?.value?.price.$errors[0]?.$message"
                           class="break-error"
-                          @blur="rowValidations[props.rowIndex]?.value?.priceInDollar.$touch"
+                          @blur="rowValidations[props.rowIndex]?.value?.price.$touch"
                         />
                       </q-td>
                       <q-td style="width: 6%;">
@@ -336,7 +336,7 @@ const columns = ref([
   { name: "url", label: "URL", field: "url", align: "left", sortable: true },
   { name: "startDateStr", label: "Start Date", field: "startDateStr", align: "left", sortable: true },
   { name: "paymentTermId", label: "Payment Term", field: "paymentTermId", align: "left", sortable: true },
-  { name: "priceInDollar", label: "Price", field: "priceInDollar", align: "right", sortable: true },
+  { name: "price", label: "Price", field: "price", align: "right", sortable: true },
   { name: "walletTypeId", label: "Wallet Type", field: "walletTypeId", align: "left", sortable: true },
   { name: "walletNumber", label: "Wallet Number", field: "walletNumber", align: "left", sortable: true }
 ]);
@@ -386,7 +386,7 @@ const getInfraAccount = async () => {
 
 const totalPrice = computed(() => {
   return rows.value.reduce((sum, row) => {
-    const price = parseFloat(row.priceInDollar) || 0;
+    const price = parseFloat(row.price) || 0;
     return sum + price;
   }, 0);
 });
@@ -403,7 +403,7 @@ function onAdd () {
     url: "",
     startDateStr: "",
     endDateStr: "",
-    priceInDollar: "",
+    price: "",
     instructions: "",
     flag: "New",
     deleted: false
@@ -496,7 +496,7 @@ const rowRules = {
     isDate: helpers.withMessage("Date is invalid", isDate)
   },
   name: { required: helpers.withMessage("Name is required", required) },
-  priceInDollar: {
+  price: {
     required: helpers.withMessage("Price is required", required),
     decimalNumber: helpers.withMessage(
       "Enter valid amount (max 2 decimal places)",
@@ -550,16 +550,16 @@ async function onSubmit () {
     }
     if (isValid) {
       const cleanedRows = rows.value.map(row => {
-        const trimmedPrice = (row.priceInDollar ?? "").toString().trim();
-        let priceInDollar;
+        const trimmedPrice = (row.price ?? "").toString().trim();
+        let price;
         if (row.deleted === true) {
-          priceInDollar = 0.0;
+          price = 0.0;
         } else {
-          priceInDollar = trimmedPrice === "" ? null : parseFloat(trimmedPrice);
+          price = trimmedPrice === "" ? null : parseFloat(trimmedPrice);
         }
         return {
           ...row,
-          priceInDollar,
+          price,
           deleted: row.deleted ?? ""
         };
       });

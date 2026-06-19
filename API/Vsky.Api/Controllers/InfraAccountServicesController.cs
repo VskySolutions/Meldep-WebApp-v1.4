@@ -178,7 +178,7 @@ namespace Vsky.Api.Controllers
                                 Name = item.Name,
                                 URL = !string.IsNullOrWhiteSpace(item.URL) ? item.URL : null,
                                 PaymentTermId = item.PaymentTermId,
-                                PriceInDollar = item.PriceInDollar,
+                                Price = item.Price,
                                 WalletTypeId = item.WalletTypeId,
                                 WalletNumber = item.WalletNumber,
                                 Instructions = item.Instructions,
@@ -229,7 +229,7 @@ namespace Vsky.Api.Controllers
                                 var infraAccountServicesPriceHistory = new InfraAccountServicesPriceHistory
                                 {
                                     InfraAccountServiceId = servicePriceHistory.Id,
-                                    Price = servicePriceHistory.PriceInDollar,
+                                    Price = servicePriceHistory.Price,
                                     StartDate = servicePriceHistory.StartDate,
                                     CreatedOnUtc = GetDateTime,
                                     CreatedById = LoggedUserId,
@@ -288,7 +288,6 @@ namespace Vsky.Api.Controllers
                     entity.URL = !string.IsNullOrWhiteSpace(model.URL) ? model.URL : null;
                     entity.OwnerShipTypeId = model.OwnerShipTypeId;
                     entity.PaymentTermId = model.PaymentTermId;
-                    entity.PriceInDollar = model.PriceInDollar;
 
                     // Calculate StartDate & EndDate
                     if (!string.IsNullOrEmpty(model.StartDateStr))
@@ -324,12 +323,40 @@ namespace Vsky.Api.Controllers
                     if (existingPriceHistory == null)
                         return BadRequest(new BadRequestError("No infra account service price history found for the specified account service"));
 
-                    existingPriceHistory.Price = model.PriceInDollar;
-                    existingPriceHistory.StartDate = entity.StartDate;
-                    existingPriceHistory.UpdatedById = LoggedUserId;
-                    existingPriceHistory.UpdatedOnUtc = GetDateTime;
+                    if (existingPriceHistory.Price != model.Price)
+                    {
+                        var totalMonths =
+                             ((GetDateTime.Year - existingPriceHistory.StartDate.Year) * 12) +
+                             (GetDateTime.Month - existingPriceHistory.StartDate.Month);
 
-                    _infraAccountServiceCalculationService.UpdateInfraAccountServicesPriceHistory(existingPriceHistory);
+                        if (GetDateTime.Day < existingPriceHistory.StartDate.Day)
+                           totalMonths--;
+
+                        var years = totalMonths / 12;
+                        var months = totalMonths % 12;
+
+                        var diffInYears = years + (months / 10m);
+
+                        existingPriceHistory.DiffInYears = diffInYears;
+                        existingPriceHistory.TotalPrice = Math.Round(diffInYears * existingPriceHistory.Price, 2);
+                        existingPriceHistory.UpdatedById = LoggedUserId;
+                        existingPriceHistory.UpdatedOnUtc = GetDateTime;
+                        _infraAccountServiceCalculationService.UpdateInfraAccountServicesPriceHistory(existingPriceHistory);
+
+                        var newPriceHistory = new InfraAccountServicesPriceHistory
+                        {
+                            InfraAccountServiceId = entity.Id,
+                            Price = model.Price,
+                            StartDate = GetDateTime.Date,
+                            CreatedOnUtc = GetDateTime,
+                            CreatedById = LoggedUserId,
+                            UpdatedById = LoggedUserId,
+                            UpdatedOnUtc = GetDateTime,
+                        };
+
+                        _infraAccountServiceCalculationService.InsertInfraAccountServicesPriceHistory(newPriceHistory);
+
+                    }
                 }
                 return NoContent();
             }

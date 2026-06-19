@@ -179,7 +179,7 @@
               <a
                 style="position: relative;"
                 class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
-                @click="onNoteAdd(props.row.id, 'Lead', props.row.id, props.row.name, props.row.name, refreshLeadList)"
+                @click="onNoteAdd(props.row.id, 'Lead', props.row.id, props.row.name, props.row.name, '', refreshLeadList)"
               >
                 <q-tooltip anchor="bottom middle" self="top middle">
                   Note

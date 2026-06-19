@@ -5,8 +5,9 @@
       style="width: 60vw !important; max-width: 60vw !important;"
     >
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div v-if="isShow" class="text-h2 text-white">Add/View Notes</div>
-        <div v-else class="text-h2 text-white">View Notes</div>
+        <div class="text-h2 text-white">{{ props.label || (isShow ? 'Add/View Notes' : 'View Notes') }}</div>
+        <!-- <div v-if="isShow" class="text-h2 text-white">Add/View Notes</div>
+        <div v-else class="text-h2 text-white">View Notes</div> -->
         <q-btn
           v-close-popup
           icon="o_close"
@@ -139,7 +140,7 @@
   <q-dialog v-model="isDialogOpen">
     <q-card style="width: 700px; max-width: 80vw;">
       <q-card-section style="background-color: #1b75ab">
-        <div class="text-h2 text-weight-medium text-white">Note Summary</div>
+        <div class="text-h2 text-weight-medium text-white">{{ label || 'Note Summary' }}</div>
       </q-card-section>
       <q-card-section class="q-pt-sm">
         <div class="RichTextEditor" v-html="currentComment" />
@@ -194,8 +195,11 @@ const props = defineProps({
   moduleId: { type: String, default: "" },
   module: { type: String, default: "" },
   name: { type: String, default: "" },
-  isShow: { type: Boolean, default: true }
+  isShow: { type: Boolean, default: true },
+  label: { type: String, default: ""}
 });
+
+console.log(props);
 
 const isShow = props.isShow;
 // Define model values

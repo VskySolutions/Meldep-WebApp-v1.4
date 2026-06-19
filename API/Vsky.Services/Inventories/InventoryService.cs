@@ -254,7 +254,7 @@ namespace Vsky.Services.Inventories
                         FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
                     }
                 },
-                InventoryAssignmentList = x.InventoryAssignmentList.Where(m => !m.Deleted).Select(status => new InventoryAssignment
+                InventoryAssignmentList = x.InventoryAssignmentList.Where(m => !m.Deleted).OrderByDescending(m => m.CreatedOnUtc).Select(status => new InventoryAssignment
                 {
                     Id = status.Id,
                     EmployeeId = status.EmployeeId,

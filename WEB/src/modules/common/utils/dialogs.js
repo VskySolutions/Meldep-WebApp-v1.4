@@ -10,11 +10,11 @@ export function initCommonDialogs (rowRef) {
   activeRowId = rowRef;
 }
 
-export function onNoteAdd (id, type, moduleId, module, name, refresh) {
+export function onNoteAdd (id, type, moduleId, module, name, label, refresh) {
   activeRowId.value = id;
   $q.dialog({
     component: addEditNotes,
-    componentProps: { id, type, moduleId, module, name }
+    componentProps: { id, type, moduleId, module, name, label }
   }).onOk(() => {
     refresh?.();
   })
@@ -22,11 +22,11 @@ export function onNoteAdd (id, type, moduleId, module, name, refresh) {
     .onDismiss(() => { activeRowId.value = id; refresh?.(); });
 }
 
-export function onNoteTimelineView(id, notesType) {
+export function onNoteTimelineView(id, notesType, label) {
   activeRowId.value = id;
   $q.dialog({
     component: viewNoteTimeLineView,
-    componentProps: { id, notesType}
+    componentProps: { id, notesType, label}
   })
     .onOk(() => {
     })

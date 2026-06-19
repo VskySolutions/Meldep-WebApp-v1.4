@@ -1779,7 +1779,7 @@ namespace Vsky.Data
                 entity.Property(e => e.UpdatedById).HasMaxLength(450);
                 entity.Property(e => e.UpdatedOnUtc).HasPrecision(6);
 
-                entity.HasOne(d => d.MomentRegisters).WithMany(p => p.MovementRegisterDetails).HasForeignKey(d => d.MomentRegisterId);
+                entity.HasOne(d => d.MovementRegister).WithMany(p => p.MovementRegisterDetails).HasForeignKey(d => d.MomentRegisterId);
                 entity.HasOne(d => d.Employees).WithMany().HasForeignKey(d => d.EmployeeId);
                 entity.HasOne(d => d.Approvers).WithMany().HasForeignKey(d => d.ApproverById);
                 entity.HasOne(d => d.BreakTime).WithMany().HasForeignKey(d => d.BreakTimeId);
@@ -2185,7 +2185,7 @@ namespace Vsky.Data
 
             builder.Entity<InfraAccountServices>(entity =>
             {
-                entity.ToTable("Infra_Account_Services_History");
+                entity.ToTable("Infra_Account_Services");
 
                 entity.HasOne(d => d.InfraAccount).WithMany(x => x.InfraAccountServices).HasForeignKey(d => d.InfraAccountId);
                 entity.HasOne(d => d.ItemType).WithMany().HasForeignKey(d => d.ItemTypeId);

@@ -2,7 +2,7 @@
   <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" persistent position="right"  @hide="onDialogHide">
     <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic column no-wrap" style="width: 50vw; max-width: 50vw;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div class="text-h2 text-white">View Notes</div>
+        <div class="text-h2 text-white">{{ label || 'View Notes' }}</div>
         <q-btn
           v-close-popup
           icon="o_close"
@@ -63,7 +63,8 @@ const { dialogRef, onDialogHide } = useDialogPluginComponent();
 const props = defineProps({
   id: { type: String, default: "" },
   notesType: { type: String, default: "" },
-  isShow: { type: Boolean, default: true }
+  isShow: { type: Boolean, default: true },
+  label: { type: String, default: "" }
 });
 
 // common variables

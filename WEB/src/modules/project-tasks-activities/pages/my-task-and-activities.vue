@@ -559,7 +559,7 @@
                           style="position: relative;"
                           class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
                           :class="activityProps.row.isDescription ? 'text-grey-5 cursor-not-allowed' : ''"
-                          @click="!activityProps.row.isDescription && onNoteAdd(activityProps.row.id, 'project Activities', activityProps.row.project.id, activityProps.row.project.name, activityProps.row.name, refreshProjectTaskActivityList)"
+                          @click="!activityProps.row.isDescription && onNoteAdd(activityProps.row.id, 'project Activities', activityProps.row.project.id, activityProps.row.project.name, activityProps.row.name, '', refreshProjectTaskActivityList)"
                         >
                           <q-tooltip anchor="bottom middle" self="top middle">{{ activityProps.row.isDescription ? 'Please Add Description First' : 'Note' }}</q-tooltip>
                           <q-icon name="o_assignment" />

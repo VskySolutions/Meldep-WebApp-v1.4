@@ -42,8 +42,8 @@ namespace Vsky.Services.MovementRegisters
         {
             var query = _movementRegisterDetailsRepository.TableNoTracking.Where(x => !x.Deleted && x.EmployeeId == employeeId &&
                     x.TypeId == typeId &&
-                    x.MomentRegisters.Date.Value.Date == date.Value.Date &&
-                    x.MomentRegisters.SiteId == siteId);
+                    x.MovementRegister.Date.Value.Date == date.Value.Date &&
+                    x.MovementRegister.SiteId == siteId);
 
             var item = await query.FirstOrDefaultAsync();
             return item;

@@ -21,9 +21,6 @@ namespace Vsky.Models
         public DateTime CreatedOnUtc { get; set; }
         public bool Deleted { get; set; }
 
-        [NotMapped]
-        public string DateStr { get; set; }
-
         public virtual Site Sites { get; set; }
         public virtual ICollection<MovementRegisterDetails> MovementRegisterDetails { get; set; } = new List<MovementRegisterDetails>();
     }
@@ -44,7 +41,8 @@ namespace Vsky.Models
         public DateTime UpdatedOnUtc { get; set; }
         public bool Deleted { get; set; }
 
-        public virtual MovementRegister MomentRegisters { get; set; }
+
+        public virtual MovementRegister MovementRegister { get; set; }
         public virtual Employee Employees { get; set; }
         public virtual Employee Approvers { get; set; }
         public virtual DropDown Type { get; set; }
@@ -58,6 +56,7 @@ namespace Vsky.Models
 
         [NotMapped]
         public int SiteModifiedLogCount { get; set; }
+    
     }
     public class SaveMovementRegister
     {

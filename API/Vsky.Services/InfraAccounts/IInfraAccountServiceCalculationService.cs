@@ -23,6 +23,10 @@ namespace Vsky.Services.InfraAccounts
         void InsertInfraAccountServicesPriceHistoryList(IList<InfraAccountServicesPriceHistory> entities);
         #endregion
 
+        #region InsertInfraAccountServicesPriceHistory
+        void InsertInfraAccountServicesPriceHistory(InfraAccountServicesPriceHistory entity);
+        #endregion
+
         #region UpdateInfraAccountServicesPriceHistory
         void UpdateInfraAccountServicesPriceHistory(Models.InfraAccountServicesPriceHistory entity);
         #endregion

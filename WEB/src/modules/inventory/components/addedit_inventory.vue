@@ -379,12 +379,20 @@
                       <q-td class="text-left">
                         <q-input
                           v-if="mode == 'edit' && editingRow && props.row.id === activeRowId" v-model="editingRow.returnDateStr" outlined stack-label hide-bottom-space mask="##/##/####" dense
-                          :error="editingRowV$.returnDateStr.$error" :error-message="editingRowV$.returnDateStr.$errors[0]?.$message" @blur="editingRowV$.returnDateStr.$touch"
+                           :error="editingRowV$.returnDateStr.$error ||
+                                (showAddButtonEndDateError && props.row.id === activeRowId)"
+                              :error-message="(showAddButtonEndDateError && props.row.id === activeRowId)
+                                ? 'Return Date is required.'
+                                : editingRowV$.returnDateStr.$errors[0]?.$message"
+                              @blur="() => editingRowV$.returnDateStr.$touch()"
+                              @update:model-value="
+                                showAddButtonEndDateError = false;
+                              "
                         >
                           <template #append>
                             <q-icon name="o_calendar_month" class="cursor-pointer">
                               <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                                <q-date v-model="editingRow.returnDateStr" :options="disableBeforeAssignDate" mask="MM/DD/YYYY" @update:model-value="() => $refs.qDateProxy.hide()" />
+                                <q-date v-model="editingRow.returnDateStr" :options="disableBeforeAssignDate" mask="MM/DD/YYYY" @update:model-value="(val, reason, details) => { showAddButtonEndDateError = false; $event?.target?.closest('.q-popup-proxy')?.hide?.(); }" />
                               </q-popup-proxy>
                             </q-icon>
                           </template>
@@ -457,6 +465,7 @@ const currentDate = new Date();
 const mode = ref(null);
 const editingRow = ref(null);
 const selectedSiteId = ref(history.state?.siteId);
+const showAddButtonEndDateError = ref(false);
 
 // Table variables
 const tableRef = ref();
@@ -666,9 +675,8 @@ function getEmployee (value) {
   }
 }
 
-let isSaveDialog = false;
-let isConfirmSaveDialog = false;
 function onEditRow (item) {
+  showAddButtonEndDateError.value = false;
   let isContinue = 0;
   if (isConfirmSaveDialog === true) {
     zwConfirmLeave({ data: "" }, () => {
@@ -758,13 +766,6 @@ async function onSave () {
       return;
     }
     isConfirmSaveDialog = false;
-    let isDuplicate = 0;
-    rows.value.forEach((item, index) => {
-      if (item.employeeId.toLowerCase() === editingRow.value.employeeId.toLowerCase()) {
-        isDuplicate = 1;
-      }
-    });
-    if (isDuplicate === 0) {
       const newRow = {
         id: uid(),
         employeeId: editingRow.value.employeeId,
@@ -776,13 +777,26 @@ async function onSave () {
       rows.value.unshift(newRow);
       mode.value = null;
       activeRowId.value = null;
-    } else {
-      notifyError({ message: "Duplicate Employee." });
-    }
   }
 }
 
+let isSaveDialog = false;
+let isConfirmSaveDialog = false;
 function onAdd () {
+    // Find the first row without End Date
+  const rowWithoutEndDate = rows.value.find(row => !row.returnDateStr);
+
+  if (rowWithoutEndDate) {
+    mode.value = "edit";
+    activeRowId.value = rowWithoutEndDate.id;
+    editingRow.value = { ...rowWithoutEndDate };
+
+    showAddButtonEndDateError.value = true;
+    return; // stop add
+  }
+
+  // If all rows are valid, proceed
+  showAddButtonEndDateError.value = false;
   let isAddContinue = 0;
   if (isConfirmSaveDialog === true) {
     zwConfirmLeave({ data: "" }, () => {
@@ -797,6 +811,37 @@ function onAdd () {
     onAddConfirm();
   }
 }
+
+// function onAdd () {
+//   debugger;
+//   let isAddContinue = 0;
+//   if (isConfirmSaveDialog === true) {
+//   // Find the first row without End Date
+//   const rowWithoutEndDate = rows.value.find(row => !row.returnDateStr);
+
+//   if (rowWithoutEndDate) {
+//     mode.value = "edit";
+//     activeRowId.value = rowWithoutEndDate.id;
+//     editingRow.value = { ...rowWithoutEndDate };
+
+//     showAddButtonEndDateError.value = true;
+//     return; // stop add
+//   }
+
+//   // If all rows are valid, proceed
+//   showAddButtonEndDateError.value = false;
+//     zwConfirmLeave({ data: "" }, () => {
+//       onAddConfirm();
+//     }, () => {
+//       isAddContinue = 0;
+//     });
+//   } else {
+//     isAddContinue = 1;
+//   }
+//   if (isAddContinue === 1) {
+//     onAddConfirm();
+//   }
+// }
 
 function onAddConfirm () {
   isSaveDialog = true;
@@ -836,6 +881,7 @@ const onSubmit = async () => {
     if (await v$.value.$validate()) {
       processing.value = true;
       model.value.inventoryAssignments = rows.value;
+      console.log(rows.value);
       inventoryService.saveInventorys(props.id, model.value).then((resp) => {
         notifySuccess({ message: "Inventory is saved successfully." });
         onDialogOK();

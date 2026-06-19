@@ -295,7 +295,7 @@
                   :label="props.row.candidateFeedbackCount"
                 />
               </a>
-              <a style="position: relative;" class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md" @click="setActiveRowIdInLocalStorage(props.row.id); onNoteAdd(props.row.id, 'Candidate', props.row.id, props.row.person.fullName, props.row.person.fullName, refreshCandidateList)">
+              <a style="position: relative;" class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md" @click="setActiveRowIdInLocalStorage(props.row.id); onNoteAdd(props.row.id, 'Candidate', props.row.id, props.row.person.fullName, props.row.person.fullName, '', refreshCandidateList)">
                 <q-tooltip anchor="bottom middle" self="top middle">
                   Note
                 </q-tooltip>

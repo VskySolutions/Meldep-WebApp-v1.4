@@ -135,7 +135,7 @@
             <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">{{ props.row.createdBy.person.firstName +" "+ props.row.createdBy.person.lastName }}</q-td>
             <q-td style="width: 5%;" class="text-center">{{ props.row.createdOnUtc }}</q-td>
             <q-td style="width: 5%;" class="text-center actions">
-              <a style="position: relative;" class="q-icon notranslate cursor-pointer q-mr-md" @click="onNoteAdd(props.row.id, 'Projects Module', props.row.id, props.row.name, props.row.name, refreshProjectModulesList)">
+              <a style="position: relative;" class="q-icon notranslate cursor-pointer q-mr-md" @click="onNoteAdd(props.row.id, 'Projects Module', props.row.id, props.row.name, props.row.name, '', refreshProjectModulesList)">
                 <q-tooltip anchor="bottom middle" self="top middle">
                   Note
                 </q-tooltip>

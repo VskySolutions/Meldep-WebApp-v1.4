@@ -323,7 +323,7 @@
                   v-if="props.row.isEditable || props.row.isNotes"
                   style="position: relative;"
                   class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
-                  @click="onNoteAdd(props.row.id, 'Issue', props.row.project.id, props.row.project.name, props.row.name, refreshIssueList)"
+                  @click="onNoteAdd(props.row.id, 'Issue', props.row.project.id, props.row.project.name, props.row.name,`${props.row.project.name} : ${props.row.name}`, refreshIssueList)"
                 >
                   <q-tooltip anchor="bottom middle" self="top middle">
                     Note

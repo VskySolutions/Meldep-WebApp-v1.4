@@ -96,7 +96,7 @@ namespace Vsky.Services.InfraAccounts
                 PriceInDollar = m.PriceInDollar,
                 WalletNumber = m.WalletNumber,
                 Instructions = m.Instructions,
-                PriceHistories = m.PriceHistories.Where(ph => !ph.Deleted).OrderBy(ph => ph.StartDate).ToList(),
+                PriceHistories = m.PriceHistories.Where(ph => !ph.Deleted).ToList(),
                 InfraAccount = new InfraAccount
                 {
                     Id = m.InfraAccount.Id,
@@ -132,6 +132,7 @@ namespace Vsky.Services.InfraAccounts
                     Id = m.WalletType.Id,
                     DropDownValue = m.WalletType.DropDownValue
                 },
+                Price = m.PriceHistories.OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.Price).FirstOrDefault(),
                 InfraProjectServices = m.InfraProjectServices.Where(m => !m.Deleted).Select(x => new InfraProjectServices
                 {
                     Id = x.Id,
@@ -147,7 +148,6 @@ namespace Vsky.Services.InfraAccounts
             foreach (var item in list)
             {
                 item.YTD = _calculationService.CalculateYTD(item.PriceHistories);
-                item.PriceInDollar = _calculationService.GetCurrentCyclePrice(item.PriceHistories);
             }
             return list;
         }
@@ -212,7 +212,6 @@ namespace Vsky.Services.InfraAccounts
                     URL = m.URL,
                     StartDate = m.StartDate,
                     EndDate = m.EndDate,
-                    PriceInDollar = m.PriceInDollar,
                     ActualPriceInDollar = Math.Round(
                         (decimal)m.PriceInDollar /
                         Math.Max(
@@ -225,7 +224,6 @@ namespace Vsky.Services.InfraAccounts
                     CreatedOnUtc = m.CreatedOnUtc,
                     UpdatedOnUtc = m.UpdatedOnUtc,
                     Instructions = m.Instructions,
-                    PriceHistories = m.PriceHistories.Where(ph => !ph.Deleted).OrderBy(ph => ph.StartDate).ToList(),
                     InfraAccount = new InfraAccount
                     {
                         Id = m.InfraAccount.Id,
@@ -282,16 +280,11 @@ namespace Vsky.Services.InfraAccounts
                             Id = x.Project.Id,
                             Name = x.Project.Name
                         }
-                    }).ToList()
+                    }).ToList(),
+                    Price = m.PriceHistories.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.StartDate).Select(ph => ph.Price).FirstOrDefault(),
                 });
                 var item = await query.FirstOrDefaultAsync();
-                //if (item != null)
-                //{
-                //    item.YTD = _calculationService.CalculateYTD(item.PriceHistories);
-                //    item.PriceInDollar = _calculationService.GetCurrentCyclePrice(item.PriceHistories);
-
-                //}
-                return item;
+            return item;
         }
         #endregion
 
