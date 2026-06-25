@@ -18,6 +18,8 @@ namespace Vsky.Models
         public string AreaId { get; set; }
         public string WorkspaceId { get; set; }
         public string RequirementTypeId { get; set; }
+        public string ConfirmedById { get; set; }
+        public string ApprovedById { get; set; }
         public string ApprovalStatus { get; set; }
         public string RequirementEnteredBy { get; set; }
         public string StatusId { get; set; }
@@ -32,6 +34,10 @@ namespace Vsky.Models
         public string Notes { get; set; }
         public int EditingStatus { get; set; }
         public int RequirementNumber { get; set; }
+        public DateTime? PlannedStartDate { get; set; }
+        public DateTime? PlannedEndDate { get; set; }
+        public DateTime? ActualStartDate { get; set; }
+        public DateTime? ActualEndDate { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public string CreatedById { get; set; }
         public string UpdatedById { get; set; }
@@ -66,6 +72,8 @@ namespace Vsky.Models
         public virtual Employee Employee { get; set; }
         public virtual Person Customer { get; set; }
         public virtual DropDown Priority { get; set; }
+        public virtual Employee ConfirmedBy { get; set; }
+        public virtual Employee ApprovedBy { get; set; }
         public virtual ICollection<FilePathDetails> FilePathDetails { get; set; } = new List<FilePathDetails>();
         public virtual ICollection<RequirementChangeLog> RequirementChangeLog { get; set; } = new List<RequirementChangeLog>();
         public virtual ICollection<ProjectTaskRelatedMapping> ProjectTaskRelatedMappings { get; set; } = new List<ProjectTaskRelatedMapping>();

@@ -235,14 +235,20 @@ namespace Vsky.Api.Controllers
                     entity.ProjectModuleId = model.ProjectModuleId;
                     entity.RequirementGroupId = model.RequirementGroupId;
                     entity.RequirementTypeId = model.RequirementTypeId;
-                    entity.Title = model.Title;
                     entity.AreaId = model.AreaId;
                     entity.WorkspaceId = model.WorkspaceId;
+                    entity.ConfirmedById = model.ConfirmedById;
+                    entity.ApprovedById = model.ApprovedById;
+                    entity.Title = model.Title;
                     entity.Notes = model.Notes;
                     entity.StatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Requirement Status", "New");
                     entity.IdentifiedUserType = model.IdentifiedUserType;
                     entity.EditingStatus = model.EditingStatus;
                     entity.SiteId = SiteId;
+                    entity.PlannedStartDate = model.PlannedStartDate;
+                    entity.PlannedEndDate = model.PlannedEndDate;
+                    entity.ActualStartDate = model.ActualStartDate;
+                    entity.ActualEndDate = model.ActualEndDate;
 
                     if (!string.IsNullOrEmpty(model.Description))
                     {
@@ -263,6 +269,18 @@ namespace Vsky.Api.Controllers
 
                     if (model.CloseDateStr != "" && model.CloseDateStr != null)
                         entity.CloseDate = DateTime.ParseExact(model.CloseDateStr, "MM/dd/yyyy", null);
+
+                    if (model.PlannedStartDateStr != "" && model.PlannedStartDateStr != null)
+                        entity.PlannedStartDate = DateTime.ParseExact(model.PlannedStartDateStr, "MM/dd/yyyy", null);
+
+                    if (model.PlannedEndDateStr != "" && model.PlannedEndDateStr != null)
+                        entity.PlannedEndDate = DateTime.ParseExact(model.PlannedEndDateStr, "MM/dd/yyyy", null);
+
+                    if (model.ActualStartDateStr != "" && model.ActualStartDateStr != null)
+                        entity.ActualStartDate = DateTime.ParseExact(model.ActualStartDateStr, "MM/dd/yyyy", null);
+
+                    if (model.ActualEndDateStr != "" && model.ActualEndDateStr != null)
+                        entity.ActualEndDate = DateTime.ParseExact(model.ActualEndDateStr, "MM/dd/yyyy", null);
 
                     var UserTypeId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Requirement Identifier", "Employee");
                     if (model.IdentifiedUserType == UserTypeId)
@@ -387,19 +405,22 @@ namespace Vsky.Api.Controllers
                     entity.ProjectModuleId = model.ProjectModuleId;
                     entity.RequirementGroupId = model.RequirementGroupId;
                     entity.RequirementTypeId = model.RequirementTypeId;
-                    entity.Title = model.Title;
                     entity.AreaId = model.AreaId;
                     entity.WorkspaceId = model.WorkspaceId;
+                    entity.ConfirmedById = model.ConfirmedById;
+                    entity.ApprovedById = model.ApprovedById;
+                    entity.Title = model.Title;
                     entity.Notes = model.Notes;
                     entity.StatusId = model.StatusId;
                     entity.IdentifiedUserType = model.IdentifiedUserType;
                     entity.EditingStatus = model.EditingStatus;
+                    entity.PlannedStartDate = model.PlannedStartDate;
+                    entity.PlannedEndDate = model.PlannedEndDate;
+                    entity.ActualStartDate = model.ActualStartDate;
+                    entity.ActualEndDate = model.ActualEndDate;
 
                     if (model.PriorityId != null)
                         entity.PriorityId = model.PriorityId;
-
-                    if (model.CloseDateStr != "" && model.CloseDateStr != null)
-                        entity.CloseDate = DateTime.ParseExact(model.CloseDateStr, "MM/dd/yyyy", null);
 
                     var UserTypeId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Requirement Identifier", "Employee");
                     if (model.IdentifiedUserType == UserTypeId)
@@ -409,6 +430,21 @@ namespace Vsky.Api.Controllers
 
                     if (model.IdentifiedDateStr != "" && model.IdentifiedDateStr != null)
                         entity.IdentifiedDate = DateTime.ParseExact(model.IdentifiedDateStr, "MM/dd/yyyy", null);
+
+                    if (model.CloseDateStr != "" && model.CloseDateStr != null)
+                        entity.CloseDate = DateTime.ParseExact(model.CloseDateStr, "MM/dd/yyyy", null);
+
+                    if (model.PlannedStartDateStr != "" && model.PlannedStartDateStr != null)
+                        entity.PlannedStartDate = DateTime.ParseExact(model.PlannedStartDateStr, "MM/dd/yyyy", null);
+
+                    if (model.PlannedEndDateStr != "" && model.PlannedEndDateStr != null)
+                        entity.PlannedEndDate = DateTime.ParseExact(model.PlannedEndDateStr, "MM/dd/yyyy", null);
+
+                    if (model.ActualStartDateStr != "" && model.ActualStartDateStr != null)
+                        entity.ActualStartDate = DateTime.ParseExact(model.ActualStartDateStr, "MM/dd/yyyy", null);
+
+                    if (model.ActualEndDateStr != "" && model.ActualEndDateStr != null)
+                        entity.ActualEndDate = DateTime.ParseExact(model.ActualEndDateStr, "MM/dd/yyyy", null);
 
                     if (model.RequirementEnteredBy != null && model.RequirementEnteredBy != "")
                         entity.RequirementEnteredBy = model.RequirementEnteredBy;
@@ -922,6 +958,7 @@ namespace Vsky.Api.Controllers
                 case "status":
                     if (data is string statusId)
                         entity.StatusId = statusId;
+                        entity.CloseDate = GetDateTime;
                     break;
 
                 case "priority":

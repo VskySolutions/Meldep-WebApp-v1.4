@@ -68,6 +68,11 @@ namespace Vsky.Models
         public decimal YTD { get; set; }
         [NotMapped]
         public decimal Price { get; set; }
+        [NotMapped]
+        public DateTime? PriceEndDate { get; set; }
+        [NotMapped]
+        public DateTime PriceStartDate { get; set; }
+
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal PriceInDollar { get; set; }
@@ -89,7 +94,7 @@ namespace Vsky.Models
         public virtual ICollection<InfraFTP> InfraFTPList { get; set; } = new List<InfraFTP>();
         public virtual ICollection<InfraDatabase> InfraDatabaseList { get; set; } = new List<InfraDatabase>();
         public virtual ICollection<InfraProjectServices> InfraProjectServices { get; set; } = new List<InfraProjectServices>();
-        public virtual ICollection<InfraAccountServicesPriceHistory> PriceHistories { get; set; } = new List<InfraAccountServicesPriceHistory>();
+        public virtual ICollection<InfraAccountServicesPriceHistory> InfraAccountServicesPriceHistory { get; set; } = new List<InfraAccountServicesPriceHistory>();
     }
     public class InfraProjectServices : BaseEntity
     {
@@ -110,6 +115,7 @@ namespace Vsky.Models
         public decimal DiffInYears { get; set; }
         public decimal TotalPrice { get; set; }
         public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public string CreatedById { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
@@ -118,6 +124,7 @@ namespace Vsky.Models
 
         public virtual InfraAccountServices InfraAccountServicesHistory { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }
+        public virtual ApplicationUser UpdatedBy { get; set; }
     }
     public class SaveInfraAccount
     {
@@ -155,6 +162,14 @@ namespace Vsky.Models
         public decimal PriceInDollar { get; set; }
         public string Instructions { get; set; }
     }
+
+    public class SaveInfraAccountServicesPriceHistory
+    {
+        public decimal Price { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+    }
+
     public class SaveInfraAccountServicesList
     {
         public string InfraAccountId { get; set; }

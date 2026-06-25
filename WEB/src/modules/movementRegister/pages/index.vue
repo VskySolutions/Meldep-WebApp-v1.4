@@ -249,7 +249,7 @@
             <q-td colspan="5" style="background: #dbf2ff;" class="text-center">{{ props.row.date }}</q-td>
           </q-tr>
           <q-tr
-            v-for="(line) in props.row.movementRegisterDetails"
+            v-for="(line) in props.row.details"
             :key="line.id"
           >
             <q-td class="text-left">
@@ -329,6 +329,7 @@ const columns = ref([
   { name: "timeInMinutes", label: "Time In Minutes", field: row => row.timeInMinutes, align: "center", sortable: true }
 ]);
 
+
 // Get/Map MovementRegister list to table
 const getAllMovementRegisters = (props) => {
   const { page, rowsPerPage, sortBy, descending } = props.pagination;
@@ -338,10 +339,7 @@ const getAllMovementRegisters = (props) => {
   const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
   setLocalStorage(localStorageKey, search.value);
   movementRegisterService.getAllMovementRegisters(payload).then((resp) => {
-    rows.value = resp.moveRegisterList.map(r => ({
-      ...r, // keep moveRegisterList fields
-      ...(r.movementRegisterDetails) // merge detail fields
-    }));
+    rows.value = resp.data;
     pagination.value.page = page;
     pagination.value.rowsPerPage = rowsPerPage;
     pagination.value.sortBy = sortBy;
@@ -425,10 +423,18 @@ function getAllMovementRegisterTypeListForFilter (val, update, abort) {
   });
 }
 
-function calculateTotalTime (rows) {
-  const total = rows.flatMap(r => r.movementRegisterDetails).reduce((sum, l) => sum + Number(l.timeInMinutes || 0), 0);
-  const h = Math.floor(total / 60), m = total % 60;
-  return [h ? `${h} hr${h > 1 ? "s" : ""}` : "", m ? `${m} mins` : ""].filter(Boolean).join(" ");
+function calculateTotalTime(rows) {
+  const total = rows
+    .flatMap(r => r.details || [])
+    .reduce((sum, l) => sum + (Number(l.timeInMinutes) || 0), 0);
+
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+
+  const hoursText = h ? `${h} hr${h > 1 ? 's' : ''}` : '';
+  const minsText = m ? `${m} min${m > 1 ? 's' : ''}` : '';
+
+  return [hoursText, minsText].filter(Boolean).join(' ');
 }
 
 // ----------------------------

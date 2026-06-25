@@ -636,7 +636,6 @@ function shouldShowIcons (name, type, date) {
 
 const selectedTimesheetLineIds = ref([]);
 const onSelectCheckbox = (line, flag) => {
-  console.log("Clicked line:", line.id);
   if (flag) {
     if (!selectedTimesheetLineIds.value.includes(line.id)) {
       selectedTimesheetLineIds.value.push(line.id);

@@ -13,6 +13,8 @@ using Vsky.Api.Models;
 using AngleSharp.Dom;
 using Vsky.Services.InfraAccounts;
 using Vsky.Services.DropDowns;
+using System.Globalization;
+using static Dapper.SqlMapper;
 
 namespace Vsky.Api.Controllers
 {
@@ -495,6 +497,97 @@ namespace Vsky.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        #endregion
+
+        #region Update Price History End Date
+
+        [HttpPut("price-history/{id}")]
+        public async Task<IActionResult> UpdateInfraAccountServicePrice(string id, SaveInfraAccountServicesPriceHistory model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var LoggedUserId = User.GetLoggedInUserId<string>();
+                    var SiteId = _globalVariable.SiteId;
+                    var SiteData = await _siteService.GetById(SiteId);
+                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                    var existingPriceHistory = await _infraAccountServiceCalculationService.GetInfraAccountServicesPriceHistoryByAccountServiceId(id);
+                    if (existingPriceHistory == null)
+                        return BadRequest(new BadRequestError("No infra account service price history found for the specified account service"));
+
+                    if (existingPriceHistory.Price != model.Price)
+                    {
+                        var totalMonths =
+                              ((GetDateTime.Year - existingPriceHistory.StartDate.Year) * 12) +
+                              (GetDateTime.Month - existingPriceHistory.StartDate.Month);
+
+                        if (GetDateTime.Day < existingPriceHistory.StartDate.Day)
+                            totalMonths--;
+
+                        var years = totalMonths / 12;
+                        var months = totalMonths % 12;
+
+                        var diffInYears = years + (months / 10m);
+
+                        existingPriceHistory.DiffInYears = diffInYears;
+                        existingPriceHistory.TotalPrice = Math.Round(diffInYears * existingPriceHistory.Price, 2);
+                        existingPriceHistory.EndDate = GetDateTime;
+                        existingPriceHistory.UpdatedById = LoggedUserId;
+                        existingPriceHistory.UpdatedOnUtc = GetDateTime;
+                        _infraAccountServiceCalculationService.UpdateInfraAccountServicesPriceHistory(existingPriceHistory);
+
+                        var newPriceHistory = new InfraAccountServicesPriceHistory
+                        {
+                            InfraAccountServiceId = id,
+                            Price = model.Price,
+                            StartDate = model.StartDate,
+                            CreatedById = LoggedUserId,
+                            CreatedOnUtc = GetDateTime,
+                            UpdatedById = LoggedUserId,
+                            UpdatedOnUtc = GetDateTime
+                        };
+
+                        _infraAccountServiceCalculationService
+                            .InsertInfraAccountServicesPriceHistory(newPriceHistory);
+                    }
+                    // End Date updated
+                    else
+                    {
+
+                        var totalMonths =
+                            (model.EndDate.Value.Date.Year - existingPriceHistory.StartDate.Year) * 12 +
+                            (model.EndDate.Value.Date.Month - existingPriceHistory.StartDate.Month);
+
+                        if (model.EndDate.Value.Day < existingPriceHistory.StartDate.Day)
+                            totalMonths--;
+
+                        var years = totalMonths / 12;
+                        var months = totalMonths % 12;
+
+                        var diffInYears = years + (months / 10m);
+
+                        existingPriceHistory.DiffInYears = diffInYears;
+                        existingPriceHistory.TotalPrice = Math.Round(diffInYears * existingPriceHistory.Price, 2);
+                        existingPriceHistory.EndDate = model.EndDate;
+                        existingPriceHistory.UpdatedById = LoggedUserId;
+                        existingPriceHistory.UpdatedOnUtc = GetDateTime;
+
+                        _infraAccountServiceCalculationService.UpdateInfraAccountServicesPriceHistory(existingPriceHistory);
+                    }
+
+                    return NoContent();
+                }
+
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         #endregion
     }
 }

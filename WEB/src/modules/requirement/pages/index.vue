@@ -678,6 +678,42 @@
                 </q-tooltip>
               </span>
             </q-td>
+             <q-td
+              v-if="selectedColumnNames.includes('plannedStartDate')"
+              class="common-q-td text-center"
+            >
+                {{ props.row.plannedStartDate }}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('plannedEndDate')"
+              class="common-q-td text-center"
+            >
+                {{ props.row.plannedEndDate }}
+            </q-td>
+             <q-td
+              v-if="selectedColumnNames.includes('actualStartDate')"
+              class="common-q-td text-center"
+            >
+                {{ props.row.actualStartDate }}
+            </q-td>
+             <q-td
+              v-if="selectedColumnNames.includes('actualEndDate')"
+              class="common-q-td text-center"
+            >
+                {{ props.row.actualEndDate }}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('confirmedBy.person.firstName')"
+              class="common-q-td"
+            >
+                {{ props.row.confirmedBy.person.fullName}}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('approvedBy.person.firstName')"
+              class="common-q-td"
+            >
+                {{ props.row.approvedBy.person.fullName}}
+            </q-td>
             <q-td
               v-if="selectedColumnNames.includes('createdBy.person.firstName')"
               class="common-q-td"
@@ -966,6 +1002,12 @@ const columns = ref([
   { name: "requirementEntered.person.firstName", label: "Entered By", field: "requirementEntered.person.firstName", align: "left", sortable: true, default: false },
   { name: "approvalStatusDropDown.dropDownValue", label: "Approval Status", field: "approvalStatusDropDown.dropDownValue", align: "left", sortable: true, default: false },
   { name: "lastNote", label: "Last Note", field: "lastNote", align: "left", sortable: false, default: true },
+  { name: "plannedStartDate", label: "Planned Start Date", field: "plannedStartDate", align: "center", sortable: true, default: false },
+  { name: "plannedEndDate", label: "Planned End Date", field: "plannedEndDate", align: "center", sortable: true, default: false },
+  { name: "actualStartDate", label: "Actual Start Date", field: "actualStartDate", align: "center", sortable: true, default: false },
+  { name: "actualEndDate", label: "Actual End Date", field: "actualEndDate", align: "center", sortable: true, default: false },
+  // { name: "confirmedBy.person.firstName", label: "Confirmed By", field: "confirmedBy.person.firstName", align: "left", sortable: true, default: false },
+  // { name: "approvedBy.person.firstName", label: "Approved By", field: "approvedBy.person.firstName", align: "left", sortable: true, default: false },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
   { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
   { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },

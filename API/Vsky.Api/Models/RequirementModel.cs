@@ -15,6 +15,8 @@ namespace Vsky.Api.Models
         public string AreaId { get; set; }
         public string WorkspaceId { get; set; }
         public string RequirementTypeId { get; set; }
+        public string ConfirmedById { get; set; }
+        public string ApprovedById { get; set; }
         public string ApprovalStatus { get; set; }
         public string RequirementEnteredBy { get; set; }
         public string StatusId { get; set; }
@@ -31,6 +33,14 @@ namespace Vsky.Api.Models
         public string Notes { get; set; }
         public int EditingStatus { get; set; }
         public int RequirementNumber { get; set; }
+        public DateTime? PlannedStartDate { get; set; }
+        public string PlannedStartDateStr { get; set; }
+        public DateTime? PlannedEndDate { get; set; }
+        public string PlannedEndDateStr { get; set; }
+        public DateTime? ActualStartDate { get; set; }
+        public string ActualStartDateStr { get; set; }
+        public DateTime? ActualEndDate { get; set; }
+        public string ActualEndDateStr { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public string CreatedById { get; set; }
         public string UpdatedById { get; set; }
@@ -55,6 +65,8 @@ namespace Vsky.Api.Models
         public virtual DropDown Status { get; set; }
         public virtual DropDown UserType { get; set; }
         public virtual Employee Employee { get; set; }
+        public virtual Employee ConfirmedBy { get; set; }
+        public virtual Employee ApprovedBy { get; set; }
         public virtual Person Customer { get; set; }
         public virtual DropDown Priority { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }

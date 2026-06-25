@@ -190,19 +190,34 @@
                         />
                       </q-td>
                       <q-td style="min-width: 120px;width: 10%;">
-                        <q-input
-                          v-model="props.row.price"
-                          outlined
-                          stack-label
-                          hide-bottom-space
-                          prefix="$"
-                          input-class="text-right"
-                          inputmode="decimal"
-                          :error="rowValidations[props.rowIndex]?.value?.price.$error"
-                          :error-message="rowValidations[props.rowIndex]?.value?.price.$errors[0]?.$message"
-                          class="break-error"
-                          @blur="rowValidations[props.rowIndex]?.value?.price.$touch"
-                        />
+                        <div class="row items-center no-wrap">
+                          <q-input
+                            v-model="props.row.price"
+                            outlined
+                            stack-label
+                            hide-bottom-space
+                            prefix="$"
+                            input-class="text-right"
+                            inputmode="decimal"
+                            :readonly="props.row.flag === 'Edit'"
+                            :error="rowValidations[props.rowIndex]?.value?.price.$error"
+                            :error-message="rowValidations[props.rowIndex]?.value?.price.$errors[0]?.$message"
+                            class="break-error col"
+                            @blur="rowValidations[props.rowIndex]?.value?.price.$touch"
+                          />
+
+                          <q-icon
+                            v-if="props.row.flag === 'Edit'"
+                            name="o_info"
+                            size="xs"
+                            color="grey"
+                            class="q-ml-xs cursor-pointer"
+                          >
+                            <q-tooltip>
+                              Coming Soon
+                            </q-tooltip>
+                          </q-icon>
+                        </div>
                       </q-td>
                       <q-td style="width: 6%;">
                         <formSingleSelectDropdown
@@ -334,7 +349,7 @@ const columns = ref([
   { name: "ownerShipTypeId", label: "Ownership Type", field: "ownerShipTypeId", align: "left", sortable: true },
   { name: "name", label: "Name", field: "name", align: "left", sortable: true },
   { name: "url", label: "URL", field: "url", align: "left", sortable: true },
-  { name: "startDateStr", label: "Start Date", field: "startDateStr", align: "left", sortable: true },
+  { name: "startDateStr", label: "Service Start Date", field: "startDateStr", align: "left", sortable: true },
   { name: "paymentTermId", label: "Payment Term", field: "paymentTermId", align: "left", sortable: true },
   { name: "price", label: "Price", field: "price", align: "right", sortable: true },
   { name: "walletTypeId", label: "Wallet Type", field: "walletTypeId", align: "left", sortable: true },

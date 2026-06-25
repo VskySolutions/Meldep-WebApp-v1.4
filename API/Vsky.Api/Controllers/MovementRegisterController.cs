@@ -13,6 +13,7 @@ using Vsky.Services.DropDowns;
 using Vsky.Services.TimeInTimeOuts;
 using Vsky.Api.ApiErrors;
 using Vsky.Services.SitesModifiedLog;
+using System.Collections.Generic;
 
 namespace Vsky.Api.Controllers
 {
@@ -69,7 +70,27 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
                 var createdBy = searchModel.CreatedBy == "Created By Me" ? LoggedUserId : "";
 
-                var List = _movementRegisterService.GetAllMovementRegister(
+               // var List = _movementRegisterService.GetAllMovementRegister(
+               //    SiteId,
+               //    createdBy,
+               //    searchModel.SearchText,
+               //    searchModel.EmployeeId,
+               //    searchModel.TypeId,
+               //    searchModel.FromDate,
+               //    searchModel.ToDate,
+               //    searchModel.SortBy,
+               //    searchModel.Descending,
+               //    searchModel.Page,
+               //    searchModel.PageSize
+               //);
+
+               // var Data = new MovementRegisterList
+               // {
+               //     MoveRegisterList = List,
+               //     Total = List.TotalCount
+               // };
+
+                var list = await _movementRegisterDetailsService.GetMovementRegisterDetails(
                     SiteId,
                     createdBy,
                     searchModel.SearchText,
@@ -83,13 +104,18 @@ namespace Vsky.Api.Controllers
                     searchModel.PageSize
                 );
 
-                var Data = new MovementRegisterList
-                {
-                    MoveRegisterList = List,
-                    Total = List.TotalCount
-                };
+                //var Data = new MovementRegisterDetailList
+                //{
+                //    MovementRegisterDetailsList = List,
+                //    Total = List.TotalCount
+                //};
 
-                return Ok(Data);
+
+                return Ok(new
+                {
+                    Data = list,
+                    Total = list.TotalCount
+                });
             }
             catch (Exception ex)
             {

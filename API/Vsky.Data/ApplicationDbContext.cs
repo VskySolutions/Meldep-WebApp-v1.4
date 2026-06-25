@@ -1959,6 +1959,8 @@ namespace Vsky.Data
                 entity.HasOne(d => d.Employee).WithMany().HasForeignKey(d => d.IdentifiedEmployeeId);
                 entity.HasOne(d => d.Customer).WithMany().HasForeignKey(d => d.IdentifiedCustomerId);
                 entity.HasOne(d => d.Priority).WithMany().HasForeignKey(d => d.PriorityId);
+                entity.HasOne(d => d.ConfirmedBy).WithMany().HasForeignKey(d => d.ConfirmedById);
+                entity.HasOne(d => d.ApprovedBy).WithMany().HasForeignKey(d => d.ApprovedById);
             });
 
             builder.Entity<RequirementGroup>(entity =>
@@ -2199,7 +2201,7 @@ namespace Vsky.Data
             {
                 entity.ToTable("Infra_Account_Services_PriceHistory");
 
-                entity.HasOne(d => d.InfraAccountServicesHistory).WithMany(p => p.PriceHistories).HasForeignKey(d => d.InfraAccountServiceId);
+                entity.HasOne(d => d.InfraAccountServicesHistory).WithMany(p => p.InfraAccountServicesPriceHistory).HasForeignKey(d => d.InfraAccountServiceId);
             });
 
             builder.Entity<InfraProjectServices>(entity =>

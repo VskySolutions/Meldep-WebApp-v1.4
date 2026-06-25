@@ -126,21 +126,20 @@ namespace Vsky.Services.InfraAccounts
                 .Where(x => x.Id != latestHistory.Id)
                 .Sum(x => x.TotalPrice);
 
+            var endDate = latestHistory.EndDate ?? today;
+
             // Calculate current active record
             var totalMonths =
-                ((today.Year - latestHistory.StartDate.Year) * 12) +
-                (today.Month - latestHistory.StartDate.Month);
+                ((endDate.Year - latestHistory.StartDate.Year) * 12) +
+                (endDate.Month - latestHistory.StartDate.Month);
 
-            if (today.Day < latestHistory.StartDate.Day)
-            {
-                totalMonths--;
-            }
+            if (endDate.Day < latestHistory.StartDate.Day)
+               totalMonths--;
 
             var years = totalMonths / 12;
             var months = totalMonths % 12;
 
             var diffInYears = years + (months / 10m);
-
             ytd += Math.Round(diffInYears * latestHistory.Price, 2);
 
             return Math.Round(ytd, 2);

@@ -433,23 +433,7 @@ namespace Vsky.Api.Controllers
                                 infraAccountServicesEntity.CreatedOnUtc = GetDateTime;
                                 infraAccountServicesEntity.UpdatedOnUtc = GetDateTime;
                                 addList.Add(infraAccountServicesEntity);
-
-                                var priceHistoryList = new List<InfraAccountServicesPriceHistory>();
-                                foreach (var servicePriceHistory in addList)
-                                {
-                                    var infraAccountServicesPriceHistory = new InfraAccountServicesPriceHistory
-                                    {
-                                        InfraAccountServiceId = servicePriceHistory.Id,
-                                        Price = servicePriceHistory.Price,
-                                        StartDate = servicePriceHistory.StartDate,
-                                        CreatedOnUtc = GetDateTime,
-                                        CreatedById = LoggedUserId,
-                                        UpdatedById = LoggedUserId,
-                                        UpdatedOnUtc = GetDateTime,
-                                    };
-                                    priceHistoryList.Add(infraAccountServicesPriceHistory);
-                                }
-                                _infraAccountServiceCalculationService.InsertInfraAccountServicesPriceHistoryList(priceHistoryList);
+                               
                             }
                             else if (item.Flag == "Delete")
                             {
@@ -462,7 +446,25 @@ namespace Vsky.Api.Controllers
                     }
 
                     if (addList.Count > 0)
+                    {
                         _infraAccountServicesService.InsertInfraAccountServicesList(addList);
+                        var priceHistoryList = new List<InfraAccountServicesPriceHistory>();
+                        foreach (var servicePriceHistory in addList)
+                        {
+                            var infraAccountServicesPriceHistory = new InfraAccountServicesPriceHistory
+                            {
+                                InfraAccountServiceId = servicePriceHistory.Id,
+                                Price = servicePriceHistory.Price,
+                                StartDate = servicePriceHistory.StartDate,
+                                CreatedOnUtc = GetDateTime,
+                                CreatedById = LoggedUserId,
+                                UpdatedById = LoggedUserId,
+                                UpdatedOnUtc = GetDateTime,
+                            };
+                            priceHistoryList.Add(infraAccountServicesPriceHistory);
+                        }
+                        _infraAccountServiceCalculationService.InsertInfraAccountServicesPriceHistoryList(priceHistoryList);
+                    }
 
                     if (updateList.Count > 0)
                         _infraAccountServicesService.UpdateInfraAccountServicesList(updateList);

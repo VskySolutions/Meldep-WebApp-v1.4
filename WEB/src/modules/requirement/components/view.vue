@@ -97,6 +97,36 @@
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Planned Start Date :</div>
+                <div class="text-black">{{ model.plannedStartDate }}</div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Planned End Date :</div>
+                <div class="text-black">{{ model.plannedEndDate }}</div>
+              </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Actual Start Date :</div>
+                <div class="text-black">{{ model.actualStartDate }}</div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Actual End Date :</div>
+                <div class="text-black">{{ model.actualEndDate }}</div>
+              </div>
+            </div>
+             <div class="row q-col-gutter-x-md q-mb-md hidden">
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Confirmed By :</div>
+                <div class="text-black">{{ model.confirmedBy.person.fullName }}</div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Approved By :</div>
+                <div class="text-black">{{ model.approvedBy.person.fullName }}</div>
+              </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
               <div v-if="model.status.dropDownValue == 'Close'" class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Requirement Close Date :</div>
                 <div class="text-black">{{ model.closeDate }}</div>
@@ -315,6 +345,16 @@ const model = ref({
     dropDownValue: ""
   },
   requirementEntered: {
+    person: {
+      fullName: ""
+    }
+  },
+  confirmedBy: {
+    person: {
+      fullName: ""
+    }
+  },
+  approvedBy: {
     person: {
       fullName: ""
     }

@@ -96,7 +96,7 @@ namespace Vsky.Services.InfraAccounts
                 PriceInDollar = m.PriceInDollar,
                 WalletNumber = m.WalletNumber,
                 Instructions = m.Instructions,
-                PriceHistories = m.PriceHistories.Where(ph => !ph.Deleted).ToList(),
+                InfraAccountServicesPriceHistory = m.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).ToList(),
                 InfraAccount = new InfraAccount
                 {
                     Id = m.InfraAccount.Id,
@@ -132,7 +132,9 @@ namespace Vsky.Services.InfraAccounts
                     Id = m.WalletType.Id,
                     DropDownValue = m.WalletType.DropDownValue
                 },
-                Price = m.PriceHistories.OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.Price).FirstOrDefault(),
+                Price = m.InfraAccountServicesPriceHistory.OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.Price).FirstOrDefault(),
+                PriceEndDate = (DateTime)m.InfraAccountServicesPriceHistory.OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.EndDate).FirstOrDefault(),
+                PriceStartDate = m.InfraAccountServicesPriceHistory.OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.StartDate).FirstOrDefault(),
                 InfraProjectServices = m.InfraProjectServices.Where(m => !m.Deleted).Select(x => new InfraProjectServices
                 {
                     Id = x.Id,
@@ -147,7 +149,7 @@ namespace Vsky.Services.InfraAccounts
             var list = new PagedList<InfraAccountServices>(query, page, pageSize);
             foreach (var item in list)
             {
-                item.YTD = _calculationService.CalculateYTD(item.PriceHistories);
+                item.YTD = _calculationService.CalculateYTD(item.InfraAccountServicesPriceHistory);
             }
             return list;
         }
@@ -281,7 +283,34 @@ namespace Vsky.Services.InfraAccounts
                             Name = x.Project.Name
                         }
                     }).ToList(),
-                    Price = m.PriceHistories.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.StartDate).Select(ph => ph.Price).FirstOrDefault(),
+                    InfraAccountServicesPriceHistory = m.InfraAccountServicesPriceHistory.OrderByDescending(ph => ph.CreatedOnUtc).Where(ph => !ph.Deleted).Select(ph => new InfraAccountServicesPriceHistory
+                    {
+                        Price = ph.Price,
+                        StartDate = ph.StartDate,
+                        EndDate = ph.EndDate,
+                        CreatedOnUtc = ph.CreatedOnUtc,
+                        UpdatedOnUtc = ph.UpdatedOnUtc,
+                        CreatedBy = new ApplicationUser
+                        {
+                             Id = m.CreatedBy.Id,
+                             Person = new Person
+                             {
+                                 Id = m.CreatedBy.PersonId,
+                                 FullName = m.CreatedBy.Person.FirstName + " " + m.CreatedBy.Person.LastName
+                             }
+                        },
+                        UpdatedBy = new ApplicationUser
+                        {
+                            Id = m.UpdatedBy.Id,
+                            Person = new Person
+                            {
+                                Id = m.UpdatedBy.PersonId,
+                                FullName = m.UpdatedBy.Person.FirstName + " " + m.UpdatedBy.Person.LastName
+                            }
+                        },
+                    }).ToList(),
+
+                    Price = m.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.StartDate).Select(ph => ph.Price).FirstOrDefault(),
                 });
                 var item = await query.FirstOrDefaultAsync();
             return item;

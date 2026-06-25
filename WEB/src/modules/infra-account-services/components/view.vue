@@ -176,6 +176,54 @@
               </div>
             </div>
           </fieldset>
+          <fieldset class="q-mb-lg">
+            <legend>Price Details</legend>
+            <q-table
+              ref="tableRef"
+              v-model:pagination="pagination"
+              bordered
+              class="no-shadow"
+              :loading="loading"
+              :rows="priceHistoryRows"
+              :columns="priceHistoryColumns"
+              row-key="id"
+              separator="cell"
+              no-data-label="No data available"
+              binary-state-sort
+              :rows-per-page-options="[20, 50, 100, 200, 500] "
+            >
+              <template #header="props">
+                <q-tr :props="contactProps" class="bg-primary text-white">
+                  <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+                </q-tr>
+              </template>
+              <template #body="props">
+                <q-tr :props="props">
+                  <q-td class="text-right">
+                    {{ props.row.price }}
+                  </q-td>
+                  <q-td class="text-center">
+                    {{ props.row.startDate }}
+                  </q-td>
+                  <q-td class="text-center">
+                    {{ props.row.endDate ? props.row.endDate : '-' }}
+                  </q-td>
+                  <q-td>
+                    {{ props.row.createdBy.person.fullName }}
+                  </q-td>
+                  <q-td class="text-center">
+                    {{ props.row.createdOnUtc }}
+                  </q-td>
+                  <q-td>
+                    {{ props.row.updatedBy.person.fullName }}
+                  </q-td>
+                  <q-td class="text-center">
+                    {{ props.row.updatedOnUtc }}
+                  </q-td>
+                </q-tr>
+              </template>
+            </q-table>
+          </fieldset>
         </div>
       </div>
     </q-card>
@@ -194,6 +242,7 @@ import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSele
 
 // Common variables
 const loading = ref(true);
+const priceHistoryRows = ref([]);
 
 // Props values i.e. come from query string
 const props = defineProps({
@@ -246,6 +295,16 @@ const model = ref({
   }
 });
 
+const priceHistoryColumns = ref([
+  { name: "price", label: "Price", field: "price", align: "right", sortable: false },
+  { name: "startDate", label: "Price Start Date", field: "startDate", align: "center", sortable: false },
+  { name: "endDate", label: "Price End Date", field: "endDate", align: "center", sortable: false},
+  { name: "createdBy.person.fullName", label: "Created By", field: "createdBy.person.fullName", align: "left" , sortable: false},
+  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "center", sortable: false },
+  { name: "updatedBy.person.fullName", label: "Updated By", field: "updatedBy.person.fullName", align: "left", sortable: false},
+  { name: "updatedOnUtc", label: "Updated Date", field: "updatedOnUtc", align: "center", sortable: false }
+]);
+
 const getInfraAccountServicesInDetailById = async () => {
   try {
     loading.value = true;
@@ -257,6 +316,10 @@ const getInfraAccountServicesInDetailById = async () => {
         text: p.project.name,
         value: p.project.id,
         id: p.id
+      })) || [];
+      priceHistoryRows.value =
+      resp.infraAccountServicesPriceHistory?.map(item => ({
+        ...item,
       })) || [];
   } catch (error) {
     console.error("Failed to load Infra Account:", error);

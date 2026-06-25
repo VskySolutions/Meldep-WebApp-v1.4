@@ -62,3 +62,4 @@ function sendError (message, error) {
   notifyError({ message });
   console.error(message, error);
 }
+

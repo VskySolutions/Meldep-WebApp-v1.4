@@ -881,7 +881,6 @@ const onSubmit = async () => {
     if (await v$.value.$validate()) {
       processing.value = true;
       model.value.inventoryAssignments = rows.value;
-      console.log(rows.value);
       inventoryService.saveInventorys(props.id, model.value).then((resp) => {
         notifySuccess({ message: "Inventory is saved successfully." });
         onDialogOK();

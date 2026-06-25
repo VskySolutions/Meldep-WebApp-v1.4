@@ -254,7 +254,7 @@ function downloadFile (file) {
 }
 // ----------------------------------------------
 const documentUploaderRef = ref(null);
-const allowedExtensions = [".pdf", ".xls", ".xlsx", ".doc", ".docx", ".jpeg", ".jpg", ".png", ".gif", ".ppt", ".pptx"];
+const allowedExtensions = [".pdf", ".xls", ".xlsx", ".doc", ".docx", ".jpeg", ".jpg", ".png", ".gif", ".ppt", ".pptx", ".csv"];
 const allowedFileTypes = [
   "application/pdf", // PDF
   "application/vnd.ms-excel", // Excel (old format)
@@ -263,7 +263,9 @@ const allowedFileTypes = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // Word (new format)
   "image/jpeg", "image/png", "image/gif", // Images
   "application/vnd.ms-powerpoint", // PowerPoint (old format)
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation" // PowerPoint (new format)
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation", // PowerPoint (new format)
+  "text/csv", //  CSV MIME type
+  "application/csv"
 ];
 const isValidFile = (file) => {
   // Normalize type by trimming

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using MailKit.Search;
 using System.Globalization;
 using Ical.Net;
+using Microsoft.AspNetCore.JsonPatch.Internal;
 
 namespace Vsky.Services.MovementRegisters
 {
@@ -61,18 +62,17 @@ namespace Vsky.Services.MovementRegisters
             if (fromDate != null) query = query.Where(x => x.Date >= fromDate);
             if (toDate != null) query = query.Where(a => a.Date <= toDate);
 
-           // query = query.Where(x => x.MovementRegisterDetails.Any(m => !m.Deleted && (string.IsNullOrWhiteSpace(employeeId) || m.EmployeeId == employeeId)));
+            // query = query.Where(x => x.MovementRegisterDetails.Any(m => !m.Deleted && (string.IsNullOrWhiteSpace(employeeId) || m.EmployeeId == employeeId)));
 
             if (!string.IsNullOrEmpty(searchText))
-            
+
             {
                 var lower = searchText.ToLower();
                 DateTime.TryParse(searchText, out var parsedDate);
-
                 query = query.Where(m =>
                     m.MovementRegisterDetails.Any(d =>
                         (d.Employees.Person.FirstName + " " + d.Employees.Person.LastName).ToLower().Contains(lower)) ||
-                    m.MovementRegisterDetails.Any(d => d.Message.ToLower().Contains(lower) ) ||
+                    m.MovementRegisterDetails.Any(d => d.Message.ToLower().Contains(lower)) ||
                     m.MovementRegisterDetails.Any(d => (d.Approvers.Person.FirstName + " " + d.Approvers.Person.LastName).ToLower().Contains(lower)) ||
                     m.MovementRegisterDetails.Any(d => d.Type.DropDownValue.ToLower().Contains(lower)) ||
                     m.MovementRegisterDetails.Any(d => d.TimeInMinutes.ToString().Contains(searchText)) ||
@@ -100,54 +100,52 @@ namespace Vsky.Services.MovementRegisters
                                 d.Type.DropDownValue.ToLower().Contains(searchText.ToLower()) ||
                                 d.TimeInMinutes.ToString().Contains(searchText)
                             )
-                        )
-                        .OrderByDescending(m => m.CreatedOnUtc)
-                        .Select(d => new MovementRegisterDetails
-                        {
-                            Id = d.Id,
-                            EmployeeId = d.EmployeeId,
-                            ApproverById = d.ApproverById,
-                            Message = d.Message,
-                            TimeInMinutes = d.TimeInMinutes,
-                            Employees = new Employee
-                            {
-                                Id = d.EmployeeId,
-                                Person = new Person
-                                {
-                                    Id = d.Employees.Person.Id,
-                                    FullName = d.Employees.Person.FirstName + " " + d.Employees.Person.LastName
-                                }
-                            },
-                            Approvers = new Employee
-                            {
-                                Id = d.ApproverById,
-                                Person = new Person
-                                {
-                                    Id = d.Approvers.Person.Id,
-                                    FullName = d.Approvers.Person.FirstName + " " + d.Approvers.Person.LastName
-                                }
-                            },
-                            Type = new DropDown
-                            {
-                                Id = d.Type.Id,
-                                DropDownValue = d.Type.DropDownValue,
-                            },
-                            WFHDuration = new DropDown
-                            {
-                                Id = d.WFHDuration.Id,
-                                DropDownText = d.WFHDuration.DropDownText,
-                            },
-                        })
-                        .ToList()
-                       }).Where(r => r.MovementRegisterDetails.Any()).OrderByDescending(x => x.Date); 
+             )
+             .OrderByDescending(m => m.CreatedOnUtc)
+             .Select(d => new MovementRegisterDetails
+             {
+                 Id = d.Id,
+                 EmployeeId = d.EmployeeId,
+                 ApproverById = d.ApproverById,
+                 Message = d.Message,
+                 TimeInMinutes = d.TimeInMinutes,
+                 Employees = new Employee
+                 {
+                     Id = d.EmployeeId,
+                     Person = new Person
+                     {
+                         Id = d.Employees.Person.Id,
+                         FullName = d.Employees.Person.FirstName + " " + d.Employees.Person.LastName
+                     }
+                 },
+                 Approvers = new Employee
+                 {
+                     Id = d.ApproverById,
+                     Person = new Person
+                     {
+                         Id = d.Approvers.Person.Id,
+                         FullName = d.Approvers.Person.FirstName + " " + d.Approvers.Person.LastName
+                     }
+                 },
+                 Type = new DropDown
+                 {
+                     Id = d.Type.Id,
+                     DropDownValue = d.Type.DropDownValue,
+                 },
+                 WFHDuration = new DropDown
+                 {
+                     Id = d.WFHDuration.Id,
+                     DropDownText = d.WFHDuration.DropDownText,
+                 },
+             })
+             .ToList()
+            }).Where(r => r.MovementRegisterDetails.Any()).OrderByDescending(x => x.Date);
 
             var list = new PagedList<Models.MovementRegister>(query, page, pageSize);
 
             foreach (var mr in list)
             {
                 var details = mr.MovementRegisterDetails.Where(d => !d.Deleted);
-
-                // Sort by Type.DropDownValue if requested
                 if (!string.IsNullOrWhiteSpace(sortBy))
                 {
 

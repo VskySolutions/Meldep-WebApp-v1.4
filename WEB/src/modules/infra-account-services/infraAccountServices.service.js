@@ -33,6 +33,10 @@ export default {
     return http.put(`/infra-account-services/instructions/${id}`, model).then(response => response.data);
   },
 
+  updateInfraAccountServicePrice(id, model) {
+    return http.put(`/infra-account-services/price-history/${id}`, model).then(response => response.data);
+  },
+
   deleteAssignProject (id) {
     return http.delete(`/infra-account-services/assignProject/${id}`).then(response => response.data);
   },

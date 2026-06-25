@@ -145,7 +145,7 @@
                 <formDate
                   v-model="model.IdentifiedDateStr"
                   label="Requirement Identified Date"
-                  :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
+                  :readonly="model.editingStatus === 2"
                   :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                   :error="v$.IdentifiedDateStr.$error"
                   :error-message="v$.IdentifiedDateStr.$errors[0]?.$message"
@@ -173,7 +173,7 @@
                     :error-message="v$.statusId.$errors[0]?.$message"
                   />
                 </div>
-                <div v-if="statusText === 'Close'" class="col-12 col-sm-6 col-md-3 col-lg-3">
+                <div v-if="statusText === 'Close'" class="col-12 col-sm-6 col-md-3 col-lg-3 hidden">
                   <formDate
                     v-model="model.closeDateStr"
                     label="Requirement Close Date"
@@ -194,6 +194,62 @@
                     :filter="requirementApprovalStatusDropdownSingleSelect.filter"
                   />
                 </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
+                <formDate
+                  v-model="model.plannedStartDateStr"
+                  label="Planned Start Date"
+                  :required="false"
+                  :readonly="model.editingStatus === 2"
+                  :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
+                />
+                <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                  <formDate
+                    v-model="model.plannedEndDateStr"
+                    label="Planned End Date"
+                    :required="false"
+                    :readonly="model.editingStatus === 2"
+                    :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
+                    :dateOptions="disablePlannedDatesBeforeStartDate"
+                  />
+                </div>
+                <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                  <formDate
+                    v-model="model.actualStartDateStr"
+                    label="Actual Start Date"
+                    :required="false"
+                    :readonly="model.editingStatus === 2"
+                    :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
+                  />
+                </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
+                 <formDate
+                    v-model="model.actualEndDateStr"
+                    label="Actual End Date"
+                    :required="false"
+                    :readonly="model.editingStatus === 2"
+                    :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
+                    :dateOptions="disableActualDatesBeforeStartDate"
+                  />
+                  <formSingleSelectDropdown
+                    v-model="model.confirmedById"
+                    label="Confirmed By"
+                    class="hidden"
+                    :required="false"
+                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
+                    :options="activeEmployeesDropdownSingleSelect.list.value"
+                    :filter="activeEmployeesDropdownSingleSelect.filter"
+                  />
+                  <formSingleSelectDropdown
+                    v-model="model.approvedById"
+                    label="Approved By"
+                    class="hidden"
+                    :required="false"
+                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
+                    :options="activeEmployeesDropdownSingleSelect.list.value"
+                    :filter="activeEmployeesDropdownSingleSelect.filter"
+                  />
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">
@@ -721,7 +777,13 @@ const model = ref({
   identifiedUserType: "",
   employeeId: "",
   identifiedEmployeeId: user?.employeeId ? user.employeeId : "",
+  confirmedById: "",
+  approvedById: "",
   IdentifiedDateStr: format(new Date(), "MM/dd/yyyy"),
+  plannedStartDateStr: format(new Date(), "MM/dd/yyyy"),
+  plannedEndDateStr: format(new Date(), "MM/dd/yyyy"),
+  actualStartDateStr: format(new Date(), "MM/dd/yyyy"),
+  actualEndDateStr: format(new Date(), "MM/dd/yyyy"),
   requirementEnteredBy: user?.employeeId ? user.employeeId : "",
   statusId: "",
   approvalStatus: "",
@@ -799,6 +861,10 @@ const getRequirement = () => {
   requirementService.getRequirementDetails(props.id).then((resp) => {
     model.value = _.cloneDeep(resp);
     model.value.IdentifiedDateStr = resp.identifiedDate ? format(resp.identifiedDate, "MM/dd/yyyy") : "";
+    model.value.plannedStartDateStr = resp.plannedStartDate ? format(resp.plannedStartDate, "MM/dd/yyyy") : "";
+    model.value.plannedEndDateStr = resp.plannedEndDate ? format(resp.plannedEndDate, "MM/dd/yyyy") : "";
+    model.value.actualStartDateStr = resp.actualStartDate ? format(resp.actualStartDate, "MM/dd/yyyy") : "";
+    model.value.actualEndDateStr = resp.actualEndDate ? format(resp.actualEndDate, "MM/dd/yyyy") : "";
     model.value.closeDateStr = resp.closeDate ? format(resp.closeDate, "MM/dd/yyyy") : "";
     model.value.description = resp.description ? resp.description : "";
     rows.value = resp.filePathDetails.map(item => ({
@@ -929,6 +995,31 @@ const identifiedUserTypeText = computed(() => {
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 const editingRowV$ = useVuelidate(editingRowrules, editingRow, { $lazy: true, $autoDirty: true });
 const editingLogRowV$ = useVuelidate(editingLogRowrules, editingLogRow, { $lazy: true, $autoDirty: true });
+
+
+function disablePlannedDatesBeforeStartDate (date) {
+  // If no Start Date is set, allow all dates
+  if (!model.value.plannedStartDateStr) {
+    return true;
+  }
+  const start = new Date(model.value.plannedStartDateStr);
+  const current = new Date(date);
+
+  // Disable dates before the Start Date
+  return current >= start;
+}
+
+function disableActualDatesBeforeStartDate (date) {
+  // If no Start Date is set, allow all dates
+  if (!model.value.actualStartDateStr) {
+    return true;
+  }
+  const start = new Date(model.value.actualStartDateStr);
+  const current = new Date(date);
+
+  // Disable dates before the Start Date
+  return current >= start;
+}
 
 async function onSave () {
   if (mode.value === "addDocumentReference") {

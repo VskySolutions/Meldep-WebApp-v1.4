@@ -13,6 +13,19 @@ namespace Vsky.Models
         public virtual ICollection<MovementRegister> MoveRegisterList { get; set; } = new List<MovementRegister>();
         public int Total { get; set; }
     }
+
+    public class MovementRegisterDetailList
+    {
+        public virtual ICollection<MovementRegisterDetails> MovementRegisterDetailsList { get; set; } = new List<MovementRegisterDetails>();
+        public int Total { get; set; }
+    }
+
+    public class MovementRegisterGroup
+    {
+        public DateTime Date { get; set; }
+        public List<MovementRegisterDetails> Details { get; set; }
+    }
+
     public class MovementRegister : BaseEntity
     {
         public string SiteId { get; set; }
@@ -40,7 +53,6 @@ namespace Vsky.Models
         public string UpdatedById { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
         public bool Deleted { get; set; }
-
 
         public virtual MovementRegister MovementRegister { get; set; }
         public virtual Employee Employees { get; set; }

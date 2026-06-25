@@ -213,10 +213,78 @@
               />
             </q-td>
             <q-td style="width: 6%;" align="right">
-              <div v-if="editingRowId !== props.row.id">
+              <div>
                 ${{ props.row.price }}
               </div>
-              <q-input
+              <q-popup-edit
+                v-model="props.row.price"
+                v-slot="scope"
+                class="small-popup-title common-q-td"
+                style="width: 300px;"
+                @show="
+                  props.row.oldPrice = props.row.price;
+                  props.row.oldPriceStartDate = props.row.priceStartDate;
+                "
+              >
+                <div class="row items-center justify-between no-wrap q-mb-sm">
+                  <div class="text-subtitle2">
+                    Update Price :
+                    <span class="text-primary">{{ props.row.name }}</span>
+                  </div>
+                  <q-btn
+                    icon="o_close"
+                    size="sm"
+                    color="black"
+                    flat
+                    round
+                    dense
+                    @click="onPricePopupHide(props.row); scope.cancel()"
+                  />
+                </div>
+                <div class="q-mb-xs">
+                  <label class="label q-mb-xs text-black">Price<span class="required">*</span></label>
+                </div>
+                <q-input
+                  v-model="props.row.price"
+                  outlined
+                  hide-bottom-space
+                  prefix="$"
+                  inputmode="decimal"
+                  :error="!!props.row.priceError"
+                  :error-message="props.row.priceError"
+                  @update:model-value="props.row.priceError = ''"
+                />
+                <div class="q-mt-md">
+                  <formDate
+                    v-model="props.row.priceStartDate"
+                    label="Price Start Date"
+                    :wrapperClass="'col-12'"
+                    :dateOptions="date => disableFutureDates(date, props.row.priceEndDate)"
+                    :error="!!props.row.priceStartDateError"
+                    :error-message="props.row.priceStartDateError"
+                    :disable="!isPriceChanged(props.row)"
+                    @update:model-value="props.row.priceStartDateError = ''"
+                  />
+                </div>
+                <div class="row justify-end q-gutter-sm q-mt-md">
+                  <q-btn
+                    flat
+                    dense
+                    label="Cancel"
+                    color="primary"
+                    @click="onPricePopupHide(props.row), scope.cancel()"
+                  />
+                  <q-btn
+                    unelevated
+                    dense
+                    label="Save"
+                    color="primary"
+                    :disable="!isPriceChanged(props.row)"
+                    @click="onSubmitInfraAccountServicePrice(props.row, scope, 'price')"
+                  />
+                </div>
+              </q-popup-edit>
+              <!-- <q-input
                 v-else
                 v-model="props.row.price"
                 outlined
@@ -232,6 +300,7 @@
                 @focus="props.row._originalPrice = props.row.price"
                 @change="onPriceChange(props.row)"
               />
+               -->
             </q-td>
              <q-td style="width: 5%;" align="right">
               <div>
@@ -297,15 +366,22 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountServicesView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_add_task" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountServicesView(props.row.id, true, refreshInfraAccountServicesList)">
+              <q-icon
+                name="o_add_task"
+                class="cursor-pointer q-mr-sm"
+                :class="props.row.priceEndDate ? 'text-grey cursor-not-allowed q-mr-sm' : 'cursor-pointer q-mr-sm'"
+                size="xs"
+                @click="!props.row.priceEndDate && onInfraAccountServicesView(props.row.id, true, refreshInfraAccountServicesList)"
+              >
                 <q-tooltip>Assign Project</q-tooltip>
               </q-icon>
               <q-icon
                 v-if="editingRowId !== props.row.id"
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
+                :class="props.row.priceEndDate ? 'text-grey cursor-not-allowed q-mr-sm' : 'cursor-pointer q-mr-sm'"
                 size="xs"
-                @click="onEdit(props.row)"
+                @click="!props.row.priceEndDate && onEdit(props.row)"
               >
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
@@ -368,6 +444,42 @@
                 @click="onSubmitInfraAccountServiceDelete(props.row, refreshInfraAccountServicesList)"
               >
                 <q-tooltip>Delete</q-tooltip>
+              </q-icon>
+                <q-icon
+                name="o_stop_circle"
+                class="cursor-pointer q-ml-sm"
+                size="xs"
+                color="red"
+              >
+                <q-tooltip>Stop</q-tooltip>
+                <q-popup-edit
+                  v-model="props.row.priceEndDate"
+                  v-slot="scope"
+                  class="small-popup-title"
+                  style="width: 300px;"
+                  @show="props.row.priceEndDateError = ''"
+                >
+                  <div class="row items-center justify-between no-wrap q-mb-sm">
+                    <div class="text-subtitle2">
+                      Stop Account Service :
+                    <span class="text-primary">{{ props.row.name }}</span>
+                  </div>
+                    <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                  </div>
+                  <formDate
+                    v-model="scope.value"
+                    label="Price End Date"
+                    :wrapperClass="'col-12'"
+                    :dateOptions="date => disableBeforePriceStartDate(date, props.row.priceStartDate)"
+                    :error="!!props.row?.priceEndDateError"
+                    :error-message="props.row?.priceEndDateError || ''"
+                    @update:model-value="props.row.priceEndDateError = ''"
+                  />
+                  <div class="row justify-end q-gutter-sm q-mt-sm">
+                    <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                    <q-btn label="Save" color="primary" dense @click="onSubmitInfraAccountServicePrice(props.row, scope, 'endDate')" />
+                  </div>
+                </q-popup-edit>
               </q-icon>
             </q-td>
           </q-tr>
@@ -485,10 +597,10 @@ const columns = ref([
   { name: "ownerShipType.dropDownValue", label: "Ownership Type", field: "ownerShipType.dropDownValue", align: "left", sortable: true },
   { name: "name", label: "Name", field: "name", align: "left", sortable: true },
   { name: "url", label: "URL", field: "url", align: "left", sortable: true },
-  { name: "startDate", label: "Start Date", field: "startDate", align: "left", sortable: true },
+  { name: "startDate", label: "Service Start Date", field: "startDate", align: "left", sortable: true },
   { name: "paymentTerm.dropDownValue", label: "Payment Term", field: "paymentTerm.dropDownValue", align: "left", sortable: true },
-  { name: "price", label: "Price (Dollar)", field: "price", align: "right", sortable: true },
-  { name: "ytd", label: "Year To Date", field: "ytd", align: "right", sortable: true },
+  { name: "price", label: "Price (Dollar)", field: "price", align: "right", sortable: false },
+  { name: "ytd", label: "Year To Date", field: "ytd", align: "right", sortable: false },
   { name: "infraProjectServices", label: "Projects", field: "infraProjectServices", align: "left", sortable: false },
   { name: "infraAccountServiceId", label: "Infra Account Service", field: "infraAccountServiceId", align: "left", sortable: true }
 ]);
@@ -528,7 +640,6 @@ const getAllInfraAccountServicesForList = (props) => {
     pagination.value.sortBy = sortBy;
     pagination.value.descending = descending;
     pagination.value.rowsNumber = resp.total;
-    console.log(rows.value)
   }).finally(() => {
     loading.value = false;
     searchLoader.value = false;
@@ -550,7 +661,7 @@ const totalPrice = computed(() => {
 
 const totalYtd = computed(() => {
   return rows.value.reduce((sum, row) => {
-    return sum + (parseFloat(row.ytd) || 0);
+    return sum + (Number(row.ytd) || 0);
   }, 0);
 });
 
@@ -627,6 +738,29 @@ const onPriceChange = (row) => {
       row.price = oldValue;
     });
 }
+
+function disableBeforePriceStartDate(date, startDate) {
+  return new Date(date) >= new Date(startDate);
+}
+
+const disableFutureDates = (date, endDate) => {
+  const selectedDate = new Date(date);
+  selectedDate.setHours(0, 0, 0, 0);
+
+  // No End Date → allow only today and previous dates
+  if (!endDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return selectedDate <= today;
+  }
+
+  // End Date exists → allow only dates AFTER End Date
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  return selectedDate > end;
+};
 
 function getInfraAccountServicesByInfraAccountId(infraAccountId) {
   const row = rows.value.find(r => r.id === editingRowId.value);
@@ -737,6 +871,19 @@ const currentRow = computed(() =>
 );
 const v$ = useVuelidate(rules, currentRow, { $lazy: true, $autoDirty: true });
 
+const isValidDate = (value) => {
+  if (!value) return false;
+  const date = new Date(value);
+  return !isNaN(date.getTime());
+};
+
+const isPriceChanged = (row) => {
+  return (
+    row.price !== '' &&
+    Number(row.price) !== Number(row.oldPrice)
+  );
+};
+
 // =================================================================================
 // wallet details
 // =================================================================================
@@ -799,6 +946,79 @@ async function onSave (row) {
   }
 }
 
+const onPricePopupHide = (row) => {
+  if (!row.isPriceSaved) {
+    row.price = row.oldPrice;
+    row.priceStartDate = row.oldPriceStartDate;
+  }
+
+  row.priceError = "";
+  row.priceStartDateError = "";
+};
+
+const onSubmitInfraAccountServicePrice = async (row, scope, type) => {
+  row.priceError = "";
+  row.priceStartDateError = "";
+  row.priceEndDateError = "";
+
+  let isValid = true;
+
+  if (type === "price") {
+    if (row.price === null || row.price === undefined || row.price === "") {
+      row.priceError = "Price is required";
+      isValid = false;
+    } else if (Number(row.price) <= 0) {
+      row.priceError = "Price must be greater than 0";
+      isValid = false;
+    }
+
+    if (!row.priceStartDate) {
+      row.priceStartDateError = "Start Date is required";
+      isValid = false;
+    } else if (!isValidDate(row.priceStartDate)) {
+      row.priceStartDateError = "Please enter a valid Start Date";
+      isValid = false;
+    }
+  }
+
+  if (type === "endDate") {
+    if (!scope.value) {
+      row.priceEndDateError = "End Date is required";
+      isValid = false;
+    } else if (!isValidDate(scope.value)) {
+      row.priceEndDateError = "Please enter a valid End Date";
+      isValid = false;
+    } else {
+      row.priceEndDate = scope.value;
+    }
+  }
+  if (!isValid) return;
+  try {
+    if (type === "price" && row.oldPrice === row.price) {
+      scope.cancel();
+      return;
+    }
+    processing.value = true;
+    const payload = {
+      price: row.price,
+      startDate: row.priceStartDate,
+      endDate: row.priceEndDate ?? null
+    };
+    await infraAccountsServicesService.updateInfraAccountServicePrice(row.id, payload);
+    row.isPriceSaved = true;
+    getAllInfraAccountServicesForList({
+      pagination: pagination.value
+    });
+    scope.cancel();
+    notifySuccess({
+      message: "Updated successfully."
+    });
+  } catch (error) {
+    sendError("Error updating data", error);
+  } finally {
+    processing.value = false;
+  }
+};
 // ----------------------------
 // Save static search into localstorage.
 // ----------------------------

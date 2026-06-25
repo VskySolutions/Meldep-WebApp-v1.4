@@ -329,7 +329,7 @@ onMounted(async () => {
   areaForDropdownSingleSelect.load("Area");
   workspaceForDropdownSingleSelect.load("Workspace");
   activeEmployeesDropdownSingleSelect.load();
-  
+
   await issueTypeForDropdownSingleSelect.load("Issue Type");
   await issuePriorityDropdownSingleSelect.load("Issue Priority");
   await issueStatusDropdownSingleSelect.load("Issue Status");
@@ -339,8 +339,8 @@ onMounted(async () => {
   if (highPriority && props.id === "") {
     model.value.priorityId = highPriority;
   }
-  
-  // Set "New" status as the default if it exists  
+
+  // Set "New" status as the default if it exists
   const newStatus = await issueStatusDropdownSingleSelect.getValueByLabel("New");
   if (newStatus && props.id === "") {
     model.value.statusId = newStatus;
