@@ -5,7 +5,7 @@ export default {
   login (model) {
     return http2.post("/auth/login", model).then(response => response.data);
   },
-  mslogin (Authorization) { // Microsoft login Manish Dhuri
+  mslogin (Authorization) {
     return http2.post("/auth/mslogin", Authorization).then(response => response.data);
   },
   register (model) {
@@ -21,6 +21,9 @@ export default {
   },
   getUser (userid) {
     return http2.get(`/auth/user/?userid=${userid}`).then(response => response.data);
+  },
+  getUserByToken (token) {
+    return http2.get("/auth/user-by-token?token=" + token).then(response => response.data);
   }
 };
 

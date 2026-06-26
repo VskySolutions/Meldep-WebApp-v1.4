@@ -272,27 +272,23 @@ namespace Vsky.Api
                 {
                     OnTokenValidated = async ctx =>
                     {
-                        var user = (ApplicationUser)null;
+                        var userManager = ctx.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+                        var subClaim = ctx.Principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                                    ?? ctx.Principal.FindFirst(ClaimTypes.Email)?.Value;
 
-                        if (ctx.SecurityToken is JwtSecurityToken accessToken)
+                        if (string.IsNullOrEmpty(subClaim))
                         {
-                            var subClaim = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier);
-                            var roleClaim = ctx.Principal.FindFirst(ClaimTypes.Role);
-
-                            if (subClaim != null && roleClaim != null)
-                            {
-                                var userManager = ctx.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
-
-                                if (userManager != null)
-                                {
-                                    user = await userManager.GetUserAsync(ctx.Principal);
-                                }
-                            }
+                            ctx.Fail("Missing subject (sub) or email claim in token.");
+                            return;
                         }
+
+                        // Try to find the user based on email (since you changed Sub to store Email)
+                        var user = await userManager.FindByEmailAsync(subClaim);
 
                         if (user == null || !user.Active || user.Deleted)
                         {
                             ctx.Fail("No active user account found.");
+                            return;
                         }
                     },
                     OnAuthenticationFailed = async ctx =>
@@ -300,11 +296,12 @@ namespace Vsky.Api
                         ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         ctx.Response.ContentType = "application/json";
 
-                        var error = new AuthError(StatusCodes.Status401Unauthorized, "An error occurred processing your authentication.");
+                        var error = new AuthError(StatusCodes.Status401Unauthorized, "Authentication failed.");
                         await System.Text.Json.JsonSerializer.SerializeAsync(ctx.Response.Body, error);
                         await ctx.Response.Body.FlushAsync();
                     }
                 };
+
             });
 
             // mini profiler

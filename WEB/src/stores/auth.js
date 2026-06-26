@@ -1,6 +1,26 @@
 import { defineStore } from "pinia";
 import { LocalStorage } from "quasar";
+import { http } from "boot/axios";
 import authService from "modules/auth/auth.service";
+
+// Maps an auth/user API response to the user object stored in state & LocalStorage
+function mapUser(resp) {
+  return {
+    employeeId: resp.employeeId,
+    userId: resp.userId,
+    personId: resp.personId,
+    username: resp.username,
+    firstName: resp.firstName,
+    lastName: resp.lastName,
+    email: resp.email,
+    userEmail: resp.userEmail,
+    roles: resp.roles,
+    siteId: resp.siteId,
+    siteName: resp.siteName,
+    siteTimeZone: resp.siteTimeZone,
+    siteLandingPageLink: resp.siteLandingPageLink
+  };
+}
 
 export const useAuthStore = defineStore("auth", {
 
@@ -14,34 +34,13 @@ export const useAuthStore = defineStore("auth", {
   },
 
   actions: {
-
     async login(model) {
-
       try {
-
         const resp = await authService.login(model);
-
         if (resp.token) {
-
           LocalStorage.clear();
-
           const token = resp.token;
-
-          const user = {
-            employeeId: resp.employeeId,
-            userId: resp.userId,
-            personId: resp.personId,
-            username: resp.username,
-            firstName: resp.firstName,
-            lastName: resp.lastName,
-            email: resp.email,
-            userEmail: resp.userEmail,
-            roles: resp.roles,
-            siteId: resp.siteId,
-            siteName: resp.siteName,
-            siteTimeZone: resp.siteTimeZone,
-            siteLandingPageLink: resp.siteLandingPageLink
-          };
+          const user = mapUser(resp);
 
           this.token = token;
           this.user = user;
@@ -59,36 +58,17 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async mslogin(model) {
-
       try {
-
         const resp = await authService.mslogin(model);
-
         if (resp.loginErrorMessage) {
           return resp;
         }
 
         if (resp.token) {
-
           LocalStorage.clear();
 
           const token = resp.token;
-
-          const user = {
-            employeeId: resp.employeeId,
-            userId: resp.userId,
-            personId: resp.personId,
-            username: resp.username,
-            firstName: resp.firstName,
-            lastName: resp.lastName,
-            email: resp.email,
-            userEmail: resp.userEmail,
-            roles: resp.roles,
-            siteId: resp.siteId,
-            siteName: resp.siteName,
-            siteTimeZone: resp.siteTimeZone,
-            siteLandingPageLink: resp.siteLandingPageLink
-          };
+          const user = mapUser(resp);
 
           this.token = token;
           this.user = user;
@@ -106,21 +86,59 @@ export const useAuthStore = defineStore("auth", {
     },
 
     logout() {
-
       LocalStorage.clear();
-
       this.token = null;
       this.user = null;
+      delete http.defaults.headers.common.Authorization;
     },
 
     setUserInfo(payload) {
-
       this.user = {
         ...this.user,
         ...payload
       };
-
       LocalStorage.set("user", this.user);
+    },
+
+    // 🔹 NEW FUNCTION: Store JWT Token from URL
+    setTokenFromUrl (token) {
+      // console.log("auth.Token" + token);
+      if (token) {
+        this.setToken(token);
+      }
+    },
+
+    // 🔹 Helper function to store token in LocalStorage & set auth header
+    setToken (token) {
+      // console.log("setToken.Token" + token);
+      LocalStorage.set("token", token);
+      this.token = token;
+    },
+
+    async getUserByToken (token) {
+      try {
+        const resp = await authService.getUserByToken(token);
+        if (resp.status === 401 || resp.status === 400) {
+          console.error("Unauthorized access. Redirecting to login.");
+          window.location.href = "/auth/login";
+          return;
+        }
+
+        const user = mapUser(resp);
+
+        this.token = token;
+        this.user = user;
+
+        LocalStorage.set("token", token);
+        LocalStorage.set("user", user);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+
+        if (error.response && (error.response.status === 401 || error.response.status === 400)) {
+          console.error("Unauthorized access. Redirecting to login.");
+          window.location.href = "/auth/login";
+        }
+      }
     },
 
     changeTenant(siteId, siteTimeZone, name, landingPage, roles) {

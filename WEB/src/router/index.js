@@ -1,6 +1,7 @@
 import { route } from "quasar/wrappers";
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from "vue-router";
 import routes from "./routes";
+import { useAuthStore } from "stores/auth";
 
 /*
  * If not building with SSR mode, you can
@@ -143,7 +144,7 @@ routes.push(...sopAssignmentRoutes);
 routes.push(...siteSharing);
 routes.push(...sopProcessRoutes);
 
-export default route(function (/* { store, ssrContext } */) {
+export default route(function ({ store } /* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : (process.env.VUE_ROUTER_MODE === "history" ? createWebHistory : createWebHashHistory);
@@ -157,8 +158,23 @@ export default route(function (/* { store, ssrContext } */) {
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE)
   });
-  Router.beforeEach((to, from, next) => {
-    const token = localStorage.getItem("access_token");
+  Router.beforeEach(async (to, from, next) => {
+    // Cross-site SSO: a JWT may be passed in the URL (?token=...).
+    // Capture it BEFORE the auth check so we don't bounce to /auth/login,
+    // then strip it from the URL and continue to the intended route.
+    if (to.query.token) {
+      const tokenFromUrl = Array.isArray(to.query.token) ? to.query.token[0] : to.query.token;
+
+      const authStore = useAuthStore(store);
+      authStore.setToken(tokenFromUrl); // persists "token" in storage
+      await authStore.getUserByToken(tokenFromUrl);
+
+      const cleanedQuery = { ...to.query };
+      delete cleanedQuery.token;
+      return next({ path: to.path, query: cleanedQuery, replace: true });
+    }
+
+    const token = localStorage.getItem("token");
     const lastRoute = localStorage.getItem("last_route");
 
     // Always allow login page

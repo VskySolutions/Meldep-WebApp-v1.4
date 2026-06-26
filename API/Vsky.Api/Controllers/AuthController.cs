@@ -5,6 +5,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -100,8 +102,7 @@ namespace Vsky.Api.Controllers
                 new(JwtRegisteredClaimNames.Jti, jwtTokenConfig.JtiGenerator().Result),
                 new(JwtRegisteredClaimNames.Iat, ToUnixEpochDate(jwtTokenConfig.IssuedAt).ToString(), ClaimValueTypes.Integer64),
                 new(JwtRegisteredClaimNames.Email, user.Email),
-                new(JwtRegisteredClaimNames.Iss, jwtTokenConfig.Issuer),
-                //new Claim("SiteId", SiteId.ToString()),
+                new(JwtRegisteredClaimNames.Iss, jwtTokenConfig.Issuer)
             };
 
             // user roles as claims
@@ -124,6 +125,77 @@ namespace Vsky.Api.Controllers
             return encodedJwt;
         }
 
+        #endregion
+
+        #region Get user by token
+        [HttpGet("user-by-token")]
+        [AllowAnonymous]
+        public async Task<IActionResult> getUserByToken(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+            if (jwtToken != null)
+            {
+                var userEmail = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
+                var user = await _userManager.FindByEmailAsync(userEmail);
+                if (user != null && !user.Deleted && user.Active)
+                {
+                    //Get user roles
+                    var roles = await _userManager.GetRolesAsync(user);
+
+                    //Find Person Info
+                    var personMappingData = await _personsService.GetPersonSiteMappingByPersonId(user.PersonId, "");
+                    if (personMappingData == null || personMappingData.Person == null || personMappingData.Sites == null)
+                    {
+                        return BadRequest(new BadRequestError("Invalid User or Site Information."));
+                    }
+
+                    // Get last used site (fall back to default mapped site)
+                    var lastUsedSite = await _personSitesMappingService.GetLastUsedSiteByPersonId(personMappingData.PersonId);
+
+                    //Find Site details
+                    var personData = personMappingData.Person;
+                    var SiteData = lastUsedSite != null ? lastUsedSite.Sites : personMappingData.Sites;
+                    var LandingPageLink = await _sitesModulesMenusService.GetLandingPageBySiteId(SiteData.Id);
+                    var EmployeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteData.Id, user.Id);
+                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                    // Fetch the normalized (site-specific) role names
+                    var normalizedRoles = await _applicationUserRoleService.GetNormalizedRoleNamesByUserAndSite(user.Id, SiteData.Id);
+
+                    //Collect users info and token data (mirror the /auth/login response so
+                    //the SPA can set the X-Site-Id tenant header and resolve permissions)
+                    var tokenResult = new TokenResultModel
+                    {
+                        SiteId = SiteData.Id,
+                        UserId = user.Id,
+                        PersonId = personData.Id,
+                        EmployeeId = EmployeeId,
+                        SiteName = SiteData.Name,
+                        SiteLandingPageLink = LandingPageLink,
+                        SiteTimeZone = SiteData.TimeZone,
+                        Username = user.UserName,
+                        UserEmail = user.Email,
+                        Email = user.Email,
+                        FirstName = personData.FirstName,
+                        LastName = personData.LastName,
+                        Roles = roles.Any() ? normalizedRoles.ToArray() : null,
+                        Token = token,
+                        ExpiresIn = (int)_jwtTokenConfig.ValidFor.TotalSeconds,
+                        CreatedAt = GetDateTime,
+                    };
+                    return Ok(tokenResult);
+                }
+                else
+                {
+                    return BadRequest(new BadRequestError("Invalid login attempt."));
+                }
+            }
+            else
+            {
+                return BadRequest(new BadRequestError("Invalid login attempt."));
+            }
+        }
         #endregion
 
         #region Login

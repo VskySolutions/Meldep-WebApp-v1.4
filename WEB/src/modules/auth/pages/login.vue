@@ -123,9 +123,6 @@ const login = async () => {
       } else {
         clearLocalStorage(localStorageKey);
       }
-      if (resp?.token) {
-        localStorage.setItem("access_token", resp.token);
-      }
       if (resp?.roles?.includes("system-super-admin")) {
         router.push({ name: "settings", params: {} });
       } else {
@@ -159,9 +156,6 @@ async function handleLogin () {
         if (resp.loginErrorMessage) {
           router.push({ name: "not_authorized", params: {} });
         } else {
-          if (resp?.token) {
-            localStorage.setItem("access_token", resp.token);
-          }
           if (resp?.roles?.includes("system-super-admin")) {
             router.push({ name: "settings", params: {} });
           } else {
