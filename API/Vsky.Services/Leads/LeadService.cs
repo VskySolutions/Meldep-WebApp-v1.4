@@ -144,9 +144,10 @@ namespace Vsky.Services.Leads
                     DropDownValue = x.LeadGroup.DropDownValue,
                     Id = x.LeadGroup.Id
                 },
-                LeadActivityLogs = x.LeadActivityLogs.Where(x => !x.Deleted).Select(m => new LeadActivityLogs
+                LeadActivityLogs = x.LeadActivityLogs.Where(x => !x.Deleted).OrderByDescending(x => x.CreatedOnUtc).Select(m => new LeadActivityLogs
                 {
                     Id = m.Id,
+                    ActivityNote = m.ActivityNote,
                 }).ToList(),
                 LeadNotesCount = _notesRepository.TableNoTracking.Where(m => !m.Deleted && m.SubModuleId == x.Id && m.Type == "Lead").Count(),
             });
@@ -188,7 +189,8 @@ namespace Vsky.Services.Leads
                 {
                     FirstName = x.Person.FirstName,
                     LastName = x.Person.LastName,
-                    Id = x.Person.Id
+                    Id = x.Person.Id,
+                    PrimaryEmailAddress = x.Person.PrimaryEmailAddress,
                 },
                 Client = new CompanyClients
                 {
@@ -232,7 +234,7 @@ namespace Vsky.Services.Leads
                         FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                     }
                 },
-                LeadActivityLogs = x.LeadActivityLogs.Where(x => !x.Deleted).Select(m => new LeadActivityLogs
+                LeadActivityLogs = x.LeadActivityLogs.Where(x => !x.Deleted).OrderByDescending(x => x.CreatedOnUtc).Select(m => new LeadActivityLogs
                 {
                     Id = m.Id,
                     ActivityDate = m.ActivityDate,

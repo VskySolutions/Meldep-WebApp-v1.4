@@ -37,7 +37,7 @@
                   <div
                     class="note-wrapper RichTextEditor"
                   >
-                    <span class="text-black note-text" v-html="note.note" />
+                    <span class="text-black note-text" style="white-space: pre-wrap;" v-html="note.activityNote" />
                   </div>
               </div>
             </q-timeline-entry>
@@ -52,7 +52,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useAuthStore } from "stores/auth";
 import { useDialogPluginComponent } from "quasar";
-import commonService from "services/common.service";
+import leadService from "modules/lead/lead.service";
 import _ from "lodash";
 
 defineEmits([...useDialogPluginComponent.emits]);
@@ -61,7 +61,6 @@ const { dialogRef, onDialogHide } = useDialogPluginComponent();
 // Props values i.e. come from query string
 const props = defineProps({
   id: { type: String, default: "" },
-  notesType: { type: String, default: "" },
   label: { type: String, default: "" }
 });
 
@@ -73,17 +72,17 @@ const user = authStore.user;
 // notes
 const AllNotes = ref([]);
 
-// get all notes and map list
-const getAllNoteByTypeAndRecord = () => {
+// get all activity notes and map list
+const getAllActivityNoteById = () => {
   loading.value = true;
-  commonService.getAllNoteByTypeAndRecord(props.id, props.notesType, true).then((resp) => {
+  leadService.getAllActivityNoteByLeadId(props.id).then((resp) => {
     AllNotes.value = _.cloneDeep(resp);
   }).finally(() => {
     loading.value = false;
   });
 };
 
-// group the notes
+// group the activity notes
 const groupedNotes = computed(() => {
   return AllNotes.value.reduce((groups, note) => {
     // const date = new Date(note.createdDateStr).toDateString();
@@ -99,7 +98,7 @@ const groupedNotes = computed(() => {
 // ======================================================================
 // On page rendering
 onMounted(() => {
-  getAllNoteByTypeAndRecord();
+  getAllActivityNoteById();
 });
 
 </script>

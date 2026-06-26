@@ -184,6 +184,7 @@
                   max="100"
                   dense
                   :rules="[validateHours]"
+                  @focus="previousBillableHours = props.row.billablePercent"
                   @blur="onChangeBillableHrs(props.row.id, props.row.billablePercent)"
                   :style="{ marginBottom: validateHours(props.row.billablePercent) !== true ? '20px' : '0' }"
                 >
@@ -261,6 +262,7 @@ const searchLoader = ref(false);
 const currentYear = new Date().getFullYear();
 const defaultFromDate = format(new Date(currentYear, 0, 1), "MM/dd/yyyy");
 const defaultToDate = format(new Date(currentYear, 11, 31), "MM/dd/yyyy");
+const previousBillableHours = ref(null);
 
 // local storage values
 const localStorageKey = "Group Billing Timesheet";
@@ -343,7 +345,9 @@ function onChangeBillableHrs (id, billablePercent) {
     row.billablePercent = billablePercent; // Only for UI
     rows.value = [...rows.value];
   }
-
+  if (previousBillableHours.value === billablePercent) {
+    return;
+  }
   setTimeout(() => {
     timesheetService.updateBillableHrs(id, rows.value[rowIndex].billableHours).then(() => {
       notifySuccess({ message: "Billable hours updated successfully." });
@@ -351,6 +355,7 @@ function onChangeBillableHrs (id, billablePercent) {
     });
   });
 }
+
 function validateHours (value) {
   const num = parseFloat(value);
   if (isNaN(num)) return "Please enter a number.";

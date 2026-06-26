@@ -4,6 +4,7 @@ import viewLead from "modules/lead/components/view.vue";
 import editLead from "modules/lead/components/addEdit.vue";
 import addLeadActivities from "modules/lead/components/addActivity.vue";
 import assignUserToLeadGroup from "modules/lead/components/assignUserToLeadGroup.vue";
+import viewActivityNoteTimeLineView from "modules/lead/components/_activity_note_timeline_view.vue";
 
 let $q;
 let activeRowId;
@@ -51,11 +52,11 @@ export function onLeadEdit (id, refresh) {
   });
 }
 
-export function onLeadAddActivity (id, refresh) {
+export function onLeadAddActivity (id, label, refresh) {
   activeRowId.value = id;
   $q.dialog({
     component: addLeadActivities,
-    componentProps: { id }
+    componentProps: { id, label }
   }).onOk(() => {
     refresh();
   }).onCancel(() => {
@@ -74,4 +75,16 @@ export function onLeadGroupAdd (refresh) {
   })
     .onCancel(() => { })
     .onDismiss(() => { });
+}
+
+export function onActivityNoteTimelineView(id, label) {
+  activeRowId.value = id;
+  $q.dialog({
+    component: viewActivityNoteTimeLineView,
+    componentProps: { id, label}
+  })
+    .onOk(() => {
+    })
+    .onCancel(() => { activeRowId.value = id; })
+    .onDismiss(() => { activeRowId.value = id; });
 }

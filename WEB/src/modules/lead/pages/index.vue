@@ -147,8 +147,22 @@
               {{ props.row.person.primaryPhoneNumber }}
             </q-td>
             <q-td>
-              {{ props.row.person.primaryEmailAddress }}</q-td>
-            <q-td class="text-center" style="width: 5%;">
+              {{ props.row.person.primaryEmailAddress }}
+            </q-td>
+             <q-td class="hoverable-cell">
+              <span
+                @click="onActivityNoteTimelineView(
+                props.row.id,
+                `${props.row.person.fullName} : ${props.row.company.name}`
+                )"
+              >
+                {{ truncateText(props.row.leadActivityLogs?.[0]?.activityNote)  }}
+                <q-tooltip>
+                  View Activity Notes
+                </q-tooltip>
+              </span>
+            </q-td>
+            <q-td class="text-center">
               {{ props.row.leadArrivalDate }}
             </q-td>
             <q-td auto-width class="text-center actions">
@@ -156,7 +170,7 @@
                 style="position: relative;"
                 color="negative"
                 class="q-icon notranslate cursor-pointer q-mr-md"
-                @click="onLeadAddActivity(props.row.id, refreshLeadList)"
+                @click="onLeadAddActivity(props.row.id, `${props.row.person.fullName} : ${props.row.company.name}`, refreshLeadList)"
               >
                 <q-tooltip>Add Activity</q-tooltip>
                 <q-badge style="position: absolute;right: -16px;top: -15px;" color="green" text-color="white" :class="props.row.leadActivityLogs.length == 0 ? 'hidden': ''" :label="props.row.leadActivityLogs.length" />
@@ -233,6 +247,7 @@ import {
   onLeadView,
   onLeadAdd,
   onLeadEdit,
+  onActivityNoteTimelineView,
   onLeadAddActivity
 } from "src/modules/lead/utils/dialogs.js";
 
@@ -308,6 +323,7 @@ const columns = ref([
   { name: "leadSourceId", label: "Lead Source", field: "leadSourceId", align: "left", sortable: true },
   { name: "person.primaryPhoneNumber", label: "Phone Number", field: "person.primaryPhoneNumber", align: "left", sortable: true },
   { name: "person.primaryEmailAddress", label: "Email", field: "person.primaryEmailAddress", align: "left", sortable: true },
+  { name: "recentActivityNote", label: "Recent Activity Note", field: row => row.leadActivityLogs?.[0]?.activityNote || "-", align: "left", sortable: false },
   { name: "leadArrivalDate", label: "Lead Arrival Date", field: "leadArrivalDate", align: "center", sortable: true }
 ]);
 
@@ -376,6 +392,15 @@ const handleDocumentClick = (event) => {
     });
   }
 };
+
+// truncate text after 50 characters
+const truncateText = (htmlText, limit = 50) => {
+  const plainText = htmlText?.replace(/<[^>]*>/g, '')?.replace(/&nbsp;/g, ' ') || ''
+
+  return plainText.length > limit
+    ? plainText.substring(0, limit) + '...'
+    : plainText
+}
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
 // ----------------------------------------------------------------------------------------------------------------

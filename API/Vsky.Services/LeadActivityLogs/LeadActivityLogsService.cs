@@ -93,6 +93,26 @@ namespace Vsky.Services.LeadActivityLogss
             return list;
         }
 
+        public List<LeadActivityLogs> GetAllActivityNoteByLeadId(string leadId)
+        {
+            var query = _leadActivityLogsRepository.TableNoTracking.Where(x => x.LeadsId == leadId && !x.Deleted).OrderByDescending(x => x.CreatedOnUtc);
+            return query.Select(x => new LeadActivityLogs
+            {
+                Id = x.Id,
+                ActivityNote = x.ActivityNote,
+                CreatedOnUtc = x.CreatedOnUtc,
+                User = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.User.PersonId,
+                        FirstName = x.User.Person.FirstName,
+                        LastName = x.User.Person.LastName,
+                        FullName = x.User.Person.FirstName + " " + x.User.Person.LastName
+                    }
+                }
+            }).ToList();
+        }
         public async Task<LeadActivityLogs> GetById(string id)
         {
             var query = _leadActivityLogsRepository.TableNoTracking.Where(x => !x.Deleted && x.Id == id);
@@ -104,7 +124,7 @@ namespace Vsky.Services.LeadActivityLogss
         public List<LeadActivityLogs> GetByLeadId(string id)
         {
             var query = _leadActivityLogsRepository.Table;
-            query = query.Where(x => !x.Deleted && x.LeadsId == id).Include(m => m.LeadActivity).Include(m => m.LeadStage).Include(m=>m.User);
+            query = query.Where(x => !x.Deleted && x.LeadsId == id).OrderByDescending(x => x.CreatedOnUtc).Include(m => m.LeadActivity).Include(m => m.LeadStage).Include(m=>m.User);
             var item = query.ToList();
             return item;
         }

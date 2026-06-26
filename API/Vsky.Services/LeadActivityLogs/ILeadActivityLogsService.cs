@@ -11,6 +11,7 @@ namespace Vsky.Services.LeadActivityLogss
     public interface ILeadActivityLogsService
     {
         IPagedList<LeadActivityLogs> GetAllLeadActivityLogs(string SiteId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        List<LeadActivityLogs> GetAllActivityNoteByLeadId(string leadId);
         Task<LeadActivityLogs> GetById(string id);
         List<LeadActivityLogs> GetByLeadId(string id);
 

@@ -5,7 +5,7 @@
       style="width: 55vw !important;max-width: 55vw;"
     >
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div class="text-h2 text-white">Add Lead Activity</div>
+        <div class="text-h2 text-white">{{ props.label }}</div>
         <q-btn v-close-popup icon="o_close" color="white" class="close" flat round dense />
       </q-card-section>
       <q-separator />
@@ -88,7 +88,7 @@
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">
                   <div class="q-mb-xs text-black">Activity Note</div>
-                  <q-input v-model="model.activityNote" autogrow="" outlined stack-label hide-bottom-space :dense="false" maxlength="450" />
+                  <q-input v-model="model.activityNote" autogrow="" outlined stack-label hide-bottom-space :dense="false" />
                 </div>
               </div>
               <div class="q-gutter-md">
@@ -150,17 +150,17 @@
               <legend>Activity Log</legend>
               <div class="row">
                 <div class="col">
-                  <q-table 
-                    ref="tableRef" 
-                    v-model:pagination="pagination" 
-                    virtual-scroll 
-                    class="border Custom-DataTable" 
-                    :loading="loading" 
-                    :rows="rows" 
-                    :columns="columns" 
-                    row-key="id" 
-                    sseparator="cell" 
-                    no-data-label="No data available" 
+                  <q-table
+                    ref="tableRef"
+                    v-model:pagination="pagination"
+                    virtual-scroll
+                    class="border Custom-DataTable"
+                    :loading="loading"
+                    :rows="rows"
+                    :columns="columns"
+                    row-key="id"
+                    separator="cell"
+                    no-data-label="No data available"
                     binary-state-sort
                   >
                     <template #header="props">
@@ -175,22 +175,22 @@
                         <q-td style="width: 5%;">{{ props.row.leadActivity.activityName }}</q-td>
                         <q-td style="width: 5%;">{{ props.row.activityDate }}</q-td>
                         <!-- <q-td>{{ truncateText(props.row.activityNote) }}</q-td> -->
-                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;" class="RichTextEditor">
-                          <div class="text-black" v-html="props.row.activityNote ? props.row.activityNote : '-'" />
+                        <q-td style="white-space: break-spaces;" @click="showActivityNote(props.row.activityNote)">
+                          <div class="clamped-text RichTextEditor" v-html="removeLeadingSpaces(props.row.activityNote)" />
                         </q-td>
                         <q-td style="width: 5%;" class="text-center actions">
-                          <q-icon 
-                            name="o_edit" 
-                            class="cursor-pointer q-mr-sm" 
-                            :class="storedUser.username === props.row.user.userName ? '' : 'hidden'" 
+                          <q-icon
+                            name="o_edit"
+                            class="cursor-pointer q-mr-sm"
+                            :class="storedUser.username === props.row.user.userName ? '' : 'hidden'"
                             @click="onEdit(props.row)"
                           >
                             <q-tooltip>Edit</q-tooltip>
                           </q-icon>
                           <q-icon
-                            name="o_delete_outline" 
-                            class="cursor-pointer" 
-                            color="negative" 
+                            name="o_delete_outline"
+                            class="cursor-pointer"
+                            color="negative"
                             :class="storedUser.username === props.row.user.userName ? '' : 'hidden'"
                             @click="onSubmitLeadActivityDelete(props.row.id, props.row.leadActivity.activityName, refreshLeadActivityLogList)"
                           >
@@ -206,6 +206,29 @@
           </div>
         </div>
       </q-form>
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="isDialogOpen">
+    <q-card style="width: 700px; max-width: 80vw;">
+      <q-card-section style="background-color: #1b75ab">
+          <div class="text-h2 text-weight-medium text-white">{{ label || 'Note Summary' }}</div>
+        </q-card-section>
+        <q-card-section class="q-pt-sm">
+          <div style="white-space: pre-wrap;" class="RichTextEditor" v-html="currentActivityNote" />
+        </q-card-section>
+        <q-card-actions align="right" class="bg-white text-teal">
+          <q-btn
+            v-close-popup
+            color="grey-4"
+            style="width:100px"
+            push
+            outline
+            label="Close"
+            type="button"
+            class="text-grey-9 actionBtn"
+            no-caps
+          />
+        </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
@@ -241,6 +264,8 @@ const storedUser = getLocalStorage("user");
 const loading = ref(true);
 const processing = ref(false);
 const rows = ref([]);
+const isDialogOpen = ref(false);
+const currentActivityNote = ref("");
 // const futureActivityRows = ref([]);
 const activeRowId = ref(null);
 
@@ -262,7 +287,7 @@ const futureActivityRows = ref({
   time: ""
 });
 
-const props = defineProps({ id: { type: String, default: "" } });
+const props = defineProps({ id: { type: String, default: "" }, label: { type: String, default: "" } });
 
 const rules = {
   activityDate: { required: helpers.withMessage("Activity Date is required", required) },
@@ -310,6 +335,20 @@ const refreshLeadActivityLogList = () => {
   getLeadActivityLog();
 };
 
+const showActivityNote = (activityNote) => {
+  currentActivityNote.value = activityNote;
+  isDialogOpen.value = true;
+};
+
+
+function removeLeadingSpaces (html) {
+  if (!html) return "";
+
+  // Remove only plain leading spaces and &nbsp;, but keep tags
+  return html.replace(/^(?:\s|&nbsp;)+/, "");
+  // return html.replace(/^(?:\s|&nbsp;|<[^>]+>)*\s*/, "");
+}
+
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions
 // ------------------------------------------------------------------------------------
@@ -351,7 +390,7 @@ async function onSubmit () {
 // ------------------------------------------------------------------------------------
 // All Dropdowns
 // ------------------------------------------------------------------------------------
-const { 
+const {
   leadStageDropdown,
   leadActivityDropdown
 } = leadModule();
@@ -431,5 +470,12 @@ onMounted(() => {
 <style>
 .hidden {
   display: none;
+}
+.clamped-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4; /* Number of lines to show */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

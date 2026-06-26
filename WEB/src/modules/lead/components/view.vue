@@ -16,28 +16,28 @@
                 <div class="text-black">{{ model.fullName }}</div>
               </div>
               <div class="col-12 col-md-6 col-sm-6">
-                <div class="q-mb-xs">Company</div>
-                <div class="text-black">{{ model.companyName }}</div>
+                <div class="q-mb-xs">Lead</div>
+                <div class="text-black">{{ model.primaryEmailAddress }}</div>
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-md-6 col-sm-6">
-                <div class="q-mb-xs">Lead Group</div>
-                <div class="text-black">{{ model.leadGroupName }}</div>
+                <div class="q-mb-xs">Company</div>
+                <div class="text-black">{{ model.companyName }}</div>
               </div>
+              <div class="col-12 col-md-6 col-sm-6">
+                <div class="q-mb-xs">Lead Group</div>
+                <div class="text-black">{{  model.leadGroupName ? model.leadGroupName : "-"  }}</div>
+              </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-md-6 col-sm-6">
                 <div class="q-mb-xs">Lead Source</div>
                 <div class="text-black">{{ model.leadSource }}</div>
               </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-md-6 col-sm-6">
                 <div class="q-mb-xs">Lead Reference</div>
                 <div class="text-black">{{ model.leadReference ? model.leadReference : '-'}}</div>
-              </div>
-              <div class="col-12 col-md-6 col-sm-6">
-                <div class="q-mb-xs">Lead Arrival Date</div>
-                <div class="text-black">{{ model.leadArrivalDate }}</div>
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
@@ -47,6 +47,12 @@
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-md-6 col-sm-6">
+                <div class="q-mb-xs">Lead Arrival Date</div>
+                <div class="text-black">{{ model.leadArrivalDate }}</div>
+              </div>
+            </div>
+             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Created By</div>
                 <div class="text-black">
@@ -73,11 +79,11 @@
                   {{ model.updatedOnUtc ? model.updatedOnUtc : "-" }}
                 </div>
               </div>
-            </div>
+             </div>
           </fieldset>
           <fieldset>
             <legend>Activity Logs</legend>
-            <q-table virtual-scroll :rows="rows" :columns="contactColumns" row-key="id">
+            <q-table virtual-scroll :rows="rows" :columns="contactColumns" row-key="id" separator="cell">
               <template #header="contactProps">
                 <q-tr :props="contactProps" class="bg-primary text-white">
                   <q-th v-for="col in contactProps.cols" :key="col.name" :props="contactProps">{{ col.label }}</q-th>
@@ -88,7 +94,7 @@
                   <q-td>{{ contactProps.row.leadStage?.stageName || '' }}</q-td>
                   <q-td>{{ contactProps.row.leadActivity?.activityName || '' }}</q-td>
                   <q-td>{{ contactProps.row.activityDate || '' }}</q-td>
-                  <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 40%;">{{ contactProps.row.activityNote || '' }}</q-td>
+                  <q-td style="white-space: break-spaces;">{{ contactProps.row.activityNote || '' }}</q-td>
                 </q-tr>
               </template>
             </q-table>
@@ -117,6 +123,7 @@ const contactColumns = ref([
 const loading = ref(true);
 const model = ref({
   fullName: "",
+  primaryEmailAddress: "",
   clientName: "",
   leadSource: "",
   leadGroupName: "",
@@ -134,6 +141,7 @@ const getLeadDetails = () => {
   leadService.getLeadDetails(props.id).then((resp) => {
     model.value = _.cloneDeep(resp);
     model.value.fullName = resp.person.firstName + " " + resp.person.lastName;
+    model.value.primaryEmailAddress = resp.person.primaryEmailAddress;
     model.value.clientName = resp.client.company.name;
     model.value.companyName = resp.company.name;
     model.value.leadSource = resp.leadSources.dropDownValue;

@@ -428,23 +428,35 @@ namespace Vsky.Api.Controllers
                     else
                         entity.IdentifiedCustomerId = model.IdentifiedCustomerId;
 
-                    if (model.IdentifiedDateStr != "" && model.IdentifiedDateStr != null)
+                    if (!string.IsNullOrWhiteSpace(model.IdentifiedDateStr))
                         entity.IdentifiedDate = DateTime.ParseExact(model.IdentifiedDateStr, "MM/dd/yyyy", null);
+                    else
+                        entity.IdentifiedDate = null;
 
-                    if (model.CloseDateStr != "" && model.CloseDateStr != null)
+                    if (!string.IsNullOrWhiteSpace(model.CloseDateStr))
                         entity.CloseDate = DateTime.ParseExact(model.CloseDateStr, "MM/dd/yyyy", null);
+                    else
+                        entity.CloseDate = null;
 
-                    if (model.PlannedStartDateStr != "" && model.PlannedStartDateStr != null)
+                    if (!string.IsNullOrWhiteSpace(model.PlannedStartDateStr))
                         entity.PlannedStartDate = DateTime.ParseExact(model.PlannedStartDateStr, "MM/dd/yyyy", null);
+                    else
+                        entity.PlannedStartDate = null;
 
-                    if (model.PlannedEndDateStr != "" && model.PlannedEndDateStr != null)
+                    if (!string.IsNullOrWhiteSpace(model.PlannedEndDateStr))
                         entity.PlannedEndDate = DateTime.ParseExact(model.PlannedEndDateStr, "MM/dd/yyyy", null);
+                    else
+                        entity.PlannedEndDate = null;
 
-                    if (model.ActualStartDateStr != "" && model.ActualStartDateStr != null)
+                    if (!string.IsNullOrWhiteSpace(model.ActualStartDateStr))
                         entity.ActualStartDate = DateTime.ParseExact(model.ActualStartDateStr, "MM/dd/yyyy", null);
+                    else
+                        entity.ActualStartDate = null;
 
-                    if (model.ActualEndDateStr != "" && model.ActualEndDateStr != null)
+                    if (!string.IsNullOrWhiteSpace(model.ActualEndDateStr))
                         entity.ActualEndDate = DateTime.ParseExact(model.ActualEndDateStr, "MM/dd/yyyy", null);
+                    else
+                        entity.ActualEndDate = null;
 
                     if (model.RequirementEnteredBy != null && model.RequirementEnteredBy != "")
                         entity.RequirementEnteredBy = model.RequirementEnteredBy;

@@ -81,6 +81,23 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GetAllActivityNoteByLeadId
+        [HttpGet]
+        public async Task<IActionResult> GetAllActivityNoteByLeadId(string leadId)
+        {
+            try
+            {
+                var list = _leadActivityLogsService.GetAllActivityNoteByLeadId(leadId);
+                var model = _mapper.Map<List<LeadActivityLogs>>(list);
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region GetAllLeadStages
         [HttpGet("leadstages-list")]
         public async Task<IActionResult> GetAllLeadStages()

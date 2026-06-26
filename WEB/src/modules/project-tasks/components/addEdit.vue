@@ -276,7 +276,7 @@
                           <multiFileUploader
                             :initial-files="model.projectTaskFiles"
                             :allowed-extensions="[
-                              '.pdf','.xls','.xlsx','.doc','.docx','.jpeg','.jpg','.png','.ppt','.pptx'
+                              '.pdf','.xls','.xlsx','.doc','.docx','.jpeg','.jpg','.png','.ppt','.pptx', '.csv'
                             ]"
                             :max-size-in-mb="25"
                             label="Drag files here or (+) to upload."
@@ -868,7 +868,7 @@ function viewFile (file) {
 
   // const fileUrl = new URL(file, baseURL).href;
   const fileExtension = fileUrl.split(".").pop().toLowerCase();
-  const supportedFormats = ["pdf", "docx", "xlsx", "pptx"];
+  const supportedFormats = ["pdf", "docx", "xlsx", "pptx", ".csv"];
   const imageFormats = ["jpg", "jpeg", "png", "gif", "svg"];
 
   let viewerUrl = fileUrl;

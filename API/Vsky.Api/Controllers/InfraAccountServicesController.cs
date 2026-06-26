@@ -533,7 +533,7 @@ namespace Vsky.Api.Controllers
 
                         existingPriceHistory.DiffInYears = diffInYears;
                         existingPriceHistory.TotalPrice = Math.Round(diffInYears * existingPriceHistory.Price, 2);
-                        existingPriceHistory.EndDate = GetDateTime;
+                        existingPriceHistory.EndDate = GetDateTime.Date;
                         existingPriceHistory.UpdatedById = LoggedUserId;
                         existingPriceHistory.UpdatedOnUtc = GetDateTime;
                         _infraAccountServiceCalculationService.UpdateInfraAccountServicesPriceHistory(existingPriceHistory);

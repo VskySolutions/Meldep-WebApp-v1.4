@@ -89,4 +89,4 @@ yarn-error.log*
 
 # Local environment files
 .env.local*
-
+/API/Vsky.Api/appsettings.json

@@ -5,6 +5,10 @@ export default {
     return http.post("/leads/list", model).then(response => response.data);
   },
 
+  getAllActivityNoteByLeadId (id) {
+    return http.get(`/leads/?leadId=${id}`).then(response => response.data);
+  },
+
   getLead (id) {
     return http.get(`/leads/${id}`).then(response => response.data);
   },
