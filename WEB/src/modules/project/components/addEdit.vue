@@ -462,7 +462,7 @@ const getProject = (projectId) => {
   loading.value = true;
   projectService.getProject(projectId).then((resp) => {
     model.value = _.cloneDeep(resp);
-    console.log("resp", resp);
+    // console.log("resp", resp);
     companyContactDropdownSingleSelect.load(resp.customerId);
     projectSubCategoryDropdownSingleSelect.load(resp.projectCategoryId);
     activeEmployeesDropdownSingleSelect.load(user.siteId);

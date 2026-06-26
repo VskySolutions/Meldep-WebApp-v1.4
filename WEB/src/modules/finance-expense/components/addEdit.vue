@@ -622,7 +622,7 @@ const getExpenseDetails = async (id) => {
       rowIndex,
       expenseItem.expenseCategoryId
      );
-     console.log(resp);;
+     // console.log(resp);;
       return {
         ...expenseItem,
         id: expenseItem.id || uid(),

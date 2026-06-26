@@ -199,7 +199,7 @@ const props = defineProps({
   label: { type: String, default: ""}
 });
 
-console.log(props);
+// console.log(props);
 
 const isShow = props.isShow;
 // Define model values

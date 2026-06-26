@@ -515,7 +515,7 @@ const calculateLastWeekDates = () => {
   const weekFromDate = new Date();
   const weekToDate = new Date();
   const currentDay = weekFromDate.getDay();
-  console.log(weekFromDate);
+  // console.log(weekFromDate);
   // Calculate last week's Monday and Saturday
   const lastMondayOffset = (currentDay === 0 ? -6 : 1) - currentDay;
   const lastSaturdayOffset = 6 - currentDay - (currentDay === 0 ? 7 : 0);

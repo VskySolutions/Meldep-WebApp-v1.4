@@ -608,8 +608,7 @@ watch(
 onMounted(() => {
   tab.value = props.defaultTab; // set active tab
   personPrimaryEmailAddressDropdown.load(user.siteId);
-
-  console.log("personPrimaryEmailAddressDropdown", personPrimaryEmailAddressDropdown.list);
+  // console.log("personPrimaryEmailAddressDropdown", personPrimaryEmailAddressDropdown.list);
 });
 
 </script>
