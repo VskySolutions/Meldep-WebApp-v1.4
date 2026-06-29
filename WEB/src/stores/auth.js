@@ -18,7 +18,8 @@ function mapUser(resp) {
     siteId: resp.siteId,
     siteName: resp.siteName,
     siteTimeZone: resp.siteTimeZone,
-    siteLandingPageLink: resp.siteLandingPageLink
+    siteLandingPageLink: resp.siteLandingPageLink,
+    isMsLogin: resp.isMsLogin
   };
 }
 
@@ -83,6 +84,46 @@ export const useAuthStore = defineStore("auth", {
         console.error("MS Login failed:", error);
         throw error;
       }
+    },
+
+    mslogout () {
+      return new Promise((resolve, reject) => {
+        (async () => {
+          try {
+            // Dynamically import the MSAL instance
+            const { msalInstancePromise } = await import("modules/auth/auth.service");
+            const msalInstance = await msalInstancePromise; // Ensure the promise resolves
+            const accounts = msalInstance.getAllAccounts();
+            accounts.forEach(account => {
+              // msalInstance.removeAccount(account);
+              // msalInstance.getTokenCache().removeAccount(account);
+              // msalInstance.logout({ account });
+              msalInstance.clearCache(account);
+            });
+            msalInstance.clearCache();
+            // // Perform logout using redirect
+            await msalInstance.logoutRedirect({
+              postLogoutRedirectUri: process.env.MS_Logout_BASE_URL // Ensure this matches your MSAL config
+            });
+            await msalInstance.logout();
+
+            // Clear local storage and reset user/session data
+            LocalStorage.clear();
+            this.token = null;
+            this.user = null;
+            this.session = null;
+
+            // Remove authorization header
+            delete http.defaults.headers.common.Authorization;
+
+            // Resolve the promise to indicate successful logout
+            resolve();
+          } catch (error) {
+            console.error("Logout failed:", error);
+            reject(error); // Reject the promise to indicate logout failure
+          }
+        })();
+      });
     },
 
     logout() {

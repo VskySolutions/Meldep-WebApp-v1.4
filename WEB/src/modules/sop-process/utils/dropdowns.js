@@ -1,4 +1,4 @@
-import { useSingleSelectDropdown } from "composables/form-inputs/useDropdown.js";
+import { useSingleSelectDropdown, useMultiSelectDropdown } from "composables/form-inputs/useDropdown.js";
 import commonService from "services/common.service";
 
 export default function sOPProcessModule () {
@@ -18,9 +18,28 @@ export default function sOPProcessModule () {
     valueKey: "id"
   });
 
+  // Status (Multi Select)
+  const sopProcessCategoriesDropdown = useMultiSelectDropdown(commonService.getDropdownTypeByGroupName, {
+    labelKey: "type",
+    valueKey: "id"
+  });
+
+  const sopProcessSubCategoriesDropdown = useMultiSelectDropdown(commonService.getDropdownByTypeId, {
+    labelKey: "dropdownValue",
+    valueKey: "id"
+  });
+
+  const sopProcessStatusesDropdown = useMultiSelectDropdown(commonService.getDropDown, {
+    labelKey: "dropdownValue",
+    valueKey: "id"
+  });
+
   return {
     sopProcessCategoryDropdownSingleSelect,
     sopProcessSubCategoryDropdownSingleSelect,
-    sopProcessStatusDropdownSingleSelect
+    sopProcessStatusDropdownSingleSelect,
+    sopProcessCategoriesDropdown,
+    sopProcessSubCategoriesDropdown,
+    sopProcessStatusesDropdown
   };
 }

@@ -49,7 +49,7 @@ namespace Vsky.Api.Controllers
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
 
-                var list = _sOPProcessService.GetAllSOPProcesses(searchModel.SearchText, SiteId, LoggedUserId, searchModel.Title, searchModel.IsActive, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var list = _sOPProcessService.GetAllSOPProcesses(searchModel.SearchText, SiteId, LoggedUserId, searchModel.Title, searchModel.CategoryIds, searchModel.SubCategoryIds, searchModel.StatusIds, searchModel.IsActive, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
 
                 var model = new SOPProcessList
                 {

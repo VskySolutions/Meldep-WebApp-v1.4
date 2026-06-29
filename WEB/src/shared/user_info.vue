@@ -180,7 +180,7 @@ function getProfile () {
 const onLogout = async () => {
   authStore.user = null;
   if (user.isMsLogin) {
-    authStore.msLoggedOut();
+    authStore.mslogout();
     router.push({ name: "login", params: {} });
   } else {
     authStore.logout();

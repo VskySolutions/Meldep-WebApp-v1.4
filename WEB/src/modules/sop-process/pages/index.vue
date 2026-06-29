@@ -42,6 +42,24 @@
                           <q-input v-model="search.title" fill-input class="q-mx-sm w-100 h-auto" :dense="true" />
                         </div>
                       </div>
+                      <multiSelectDropdown
+                        v-model="search.categoryIds"
+                        label="Category"
+                        :options="sopProcessCategoriesDropdown.list.value"
+                        :filter="sopProcessCategoriesDropdown.filter"
+                      />
+                      <multiSelectDropdown
+                        v-model="search.subCategoryIds"
+                        label="Subcategory"
+                        :options="sopProcessSubCategoriesDropdown.list.value"
+                        :filter="sopProcessSubCategoriesDropdown.filter"
+                      />
+                      <multiSelectDropdown
+                        v-model="search.statusIds"
+                        label="Status"
+                        :options="sopProcessStatusesDropdown.list.value"
+                        :filter="sopProcessStatusesDropdown.filter"
+                      />
                       <div class="row items-center q-mb-sm">
                         <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
                           <label class="Cutomlabel q-mt-sm fs-13">Active/Inactive</label>
@@ -348,6 +366,9 @@ import sOPProcessModule from "src/modules/sop-process/utils/dropdowns.js";
 // SOP Change :- Shared DataTable Views
 import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSelect.vue";
 
+// SOP Change :- Shared Inputs
+import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
+
 // SOP Change :- Shared Project Dialogs
 import {
   initSOPProcessDialogs,
@@ -429,7 +450,7 @@ const columns = ref([
   { name: "purpose", label: "Purpose", field: "purpose", align: "left", sortable: true },
   { name: "version", label: "Version", field: "version", align: "left", sortable: true },
   { name: "category.type", label: "Category", field: "category.type", align: "left", sortable: true },
-  { name: "subCategory.dropDownValue", label: "SubCategory", field: "subCategory.dropDownValue", align: "left", sortable: true },
+  { name: "subCategory.dropDownValue", label: "Subcategory", field: "subCategory.dropDownValue", align: "left", sortable: true },
   { name: "statusId", label: "Status", field: "statusId", align: "left", sortable: true },
   // { name: "shortDescription", label: "Short Description", field: "shortDescription", align: "center", sortable: true },
   { name: "updatedByName", label: "Updated By", field: "updatedByName", align: "left", sortable: true },
@@ -522,6 +543,9 @@ const onSearch = () => {
 // Clear search
 const onClear = () => {
   search.value.title = "";
+  search.value.categoryIds = [];
+  search.value.subCategoryIds = [];
+  search.value.statusIds = [];
   clearLocalStorage(localStorageKey);
   onSearch();
 };
@@ -536,7 +560,10 @@ initSOPProcessActions(activeRowId);
 // Advance Filter :- All Dropdowns (SOP Change)
 // ------------------------------------------------------------------------------------
 const {
-  sopProcessStatusDropdownSingleSelect
+  sopProcessCategoriesDropdown,
+  sopProcessSubCategoriesDropdown,
+  sopProcessStatusDropdownSingleSelect,
+  sopProcessStatusesDropdown
 } = sOPProcessModule();
 
 const { getDropdownTypesByModuleNameForDropdown } = manageDropdownModule();
@@ -544,8 +571,25 @@ const { getDropdownTypesByModuleNameForDropdown } = manageDropdownModule();
 // ------------------------------------------------------------------------------------
 // Applied Filter Labels.
 // ------------------------------------------------------------------------------------
+
+const mapFilterToLabel = (ids, list, label) => {
+  if (!Array.isArray(ids) || !ids.length) return {};
+
+  const text = ids
+    .map(id => {
+      const match = list.value.find(item => item.value === id);
+      return match ? match.text : id;
+    })
+    .join(", ");
+
+  return { [label]: text };
+};
+
 const appliedFilters = computed(() => ({
   ...(search.value.title ? { "Process Title": search.value.title } : {}),
+  ...mapFilterToLabel(search.value.categoryIds, sopProcessCategoriesDropdown.list, "Category"),
+  ...mapFilterToLabel(search.value.subCategoryIds, sopProcessSubCategoriesDropdown.list, "Subcategory"),
+  ...mapFilterToLabel(search.value.statusIds, sopProcessStatusesDropdown.list, "Status"),
   ...(search.value.isActive !== null && search.value.isActive !== undefined
     ? {
         "Active/Inactive": search.value.isActive ? "Active" : "Inactive"
@@ -553,17 +597,15 @@ const appliedFilters = computed(() => ({
     : {})
 }));
 
-function getFilterCount (key) {
-  switch (key) {
-  case "Active/Inactive":
-    return search.value.isActive !== null && search.value.isActive !== undefined ? 1 : 0;
-  default: return null;
-  }
-}
-
 function onClearFilters (key) {
   if (key === "Process Title") {
     search.value.title = "";
+  } else if (key === "Category") {
+    search.value.categoryIds = [];
+  } else if (key === "Subcategory") {
+    search.value.subCategoryIds = [];
+  } else if (key === "Status") {
+    search.value.statusIds = [];
   } else if (key === "isActive") {
     search.value.isActive = search.value.isActive;
   }
@@ -571,12 +613,29 @@ function onClearFilters (key) {
   refreshSOPProcessList();
 }
 
+function getFilterCount (key) {
+  switch (key) {
+  case "Category": return search.value.categoryIds?.length || 0;
+  case "Subcategory": return search.value.subCategoryIds?.length || 0;
+  case "Status": return search.value.statusIds?.length || 0;
+  case "Active/Inactive":
+    return search.value.isActive !== null && search.value.isActive !== undefined ? 1 : 0;
+  default: return null;
+  }
+}
 // ----------------------------
 // Save static search into localstorage.
 // ----------------------------
 watch(() => search.value.searchText, () => {
   if (search.value.searchText) searchLoader.value = true;
   refreshSOPProcessList();
+});
+
+watch(() => search.value.categoryIds, async (newValue, oldValue) => {
+  if (newValue === oldValue) return;
+  if (newValue?.length === 0) sopProcessSubCategoriesDropdown.load();
+
+  sopProcessSubCategoriesDropdown.load(newValue);
 });
 
 onBeforeUnmount(() => {
@@ -594,7 +653,10 @@ onMounted(async () => {
     activeRowId.value = highlightProjectId;
   }
   document.addEventListener("click", handleDocumentClick);
+  sopProcessCategoriesDropdown.load("SOP Process Category");
+  sopProcessSubCategoriesDropdown.load();
   sopProcessStatusDropdownSingleSelect.load("SOP Process Status");
+  sopProcessStatusesDropdown.load("SOP Process Status");
 });
 
 </script>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
@@ -38,7 +39,7 @@ namespace Vsky.Services.SOPProcesses
 
         #region List
 
-        public IPagedList<Vsky.Models.SOPProcess> GetAllSOPProcesses(string searchText, string siteId, string logginuser, string title, bool isActive, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue)
+        public IPagedList<Vsky.Models.SOPProcess> GetAllSOPProcesses(string searchText, string siteId, string logginuser, string title, List<string> categoryIds, List<string> subCategoryIds, List<string> statusIds, bool isActive, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue)
         {
             var query = _sOPProcessRepository.TableNoTracking.Where(x => !x.Deleted && x.IsActive == isActive && x.SiteId == siteId);
 
@@ -66,6 +67,23 @@ namespace Vsky.Services.SOPProcesses
                             .FirstOrDefault() == "published"
                     );
                 }
+            }
+
+            if (!string.IsNullOrEmpty(title))
+                query = query.Where(x => x.Title.ToLower().Contains(title));
+
+            if (categoryIds?.Any() == true) query = query.Where(x => categoryIds.Contains(x.CategoryId));
+            if (subCategoryIds?.Any() == true) query = query.Where(x => subCategoryIds.Contains(x.SubCategoryId));
+            if (statusIds != null && statusIds.Any())
+            {
+                query = query.Where(x =>
+                    statusIds.Contains(
+                        x.SOPProcessStatusLog
+                         .OrderByDescending(p => p.CreatedOnUtc)
+                         .Select(p => p.Status.Id)
+                         .FirstOrDefault()
+                    )
+                );
             }
 
             if (!string.IsNullOrWhiteSpace(searchText))
@@ -164,9 +182,6 @@ namespace Vsky.Services.SOPProcesses
                     )
                 );
             }
-
-            if (!string.IsNullOrEmpty(title))
-                query = query.Where(x => x.Title.ToLower().Contains(title));
 
             if (!string.IsNullOrWhiteSpace(sortBy))
             {

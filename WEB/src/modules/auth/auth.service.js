@@ -77,7 +77,7 @@ export async function createMSALInstance () {
 export const msalInstancePromise = createMSALInstance();
 
 // Alternative logout with redirect
-export async function msLoggedOutRedirect () {
+export async function mslogoutRedirect () {
   try {
     const msalInstance = await msalInstancePromise;
     await msalInstance.logoutRedirect();
@@ -88,7 +88,7 @@ export async function msLoggedOutRedirect () {
   }
 }
 
-export async function msLoggedOut () {
+export async function mslogout () {
   try {
     const msalInstance = await msalInstancePromise;
     await msalInstance.logoutPopup();
