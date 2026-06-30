@@ -229,7 +229,7 @@ namespace Vsky.Services.Dashboard
                 //Get user roles
                 var roles = _userManager.GetRolesAsync(user).GetAwaiter().GetResult();
 
-                var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin");
+                var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
                 if (!isAdmin)
                 {
                     query = query.Where(p => p.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == logginuser && (m.FullAccess || m.ViewOnly || m.Notes)));
@@ -603,7 +603,7 @@ namespace Vsky.Services.Dashboard
             var userdata = await _userManager.FindByIdAsync(CId);
             var user = await _userManager.FindByNameAsync(userdata.UserName);
             var roles = await _userManager.GetRolesAsync(user);
-            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin");
+            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
 
             return isAdmin;
         }

@@ -16,7 +16,7 @@
                 <div class="text-black">{{ model.fullName }}</div>
               </div>
               <div class="col-12 col-md-6 col-sm-6">
-                <div class="q-mb-xs">Lead</div>
+                <div class="q-mb-xs">Email Address</div>
                 <div class="text-black">{{ model.primaryEmailAddress }}</div>
               </div>
             </div>

@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.Design;
 using Vsky.Services.Sites;
+using Vsky.Services.Common;
 
 namespace Vsky.Services.Leads
 {
@@ -23,18 +24,21 @@ namespace Vsky.Services.Leads
         private readonly IRepository<LeadStages> _leadStagesRepository;
         private readonly IRepository<LeadActivities> _leadActivitiesRepository;
         private readonly IRepository<Notes> _notesRepository;
+        private readonly ICommonService _commonService;
 
         public LeadService(
             UserManager<ApplicationUser> userManager,
             IRepository<Lead> leadRepository,
             IRepository<LeadStages> leadStagesRepository,
-            IRepository<LeadActivities> leadActivitiesRepository, IRepository<Notes> notesRepository)
+            IRepository<LeadActivities> leadActivitiesRepository, IRepository<Notes> notesRepository,
+            ICommonService commonService)
         {
             _userManager = userManager;
             _leadRepository = leadRepository;
             _leadStagesRepository = leadStagesRepository;
             _leadActivitiesRepository = leadActivitiesRepository;
             _notesRepository = notesRepository;
+            _commonService = commonService;
         }
         #endregion
 
@@ -58,6 +62,7 @@ namespace Vsky.Services.Leads
             List<string> leadGroupIds,
             string leadSourceId,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,
@@ -93,7 +98,11 @@ namespace Vsky.Services.Leads
                     (m.Person.FirstName.Contains(SearchText.ToLower()) || m.Person.LastName.Contains(SearchText.ToLower())) ||
                     m.LeadSources.DropDownValue.Contains(SearchText.ToLower()) ||
                     m.LeadGroup.DropDownValue.Contains(SearchText.ToLower()) ||
-                    m.LeadArrivalDate.Value.Date == parsedDate.Date
+                    m.LeadArrivalDate == parsedDate.Date ||
+                    m.LeadReference.Contains(SearchText.ToLower()) ||
+                    (m.CreatedBy.Person.FirstName + " " + m.CreatedBy.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
+                    (m.UpdatedBy.Person.FirstName + " " + m.UpdatedBy.Person.LastName).ToLower().Contains(SearchText.ToLower()) 
+
                 );
             }
 
@@ -105,12 +114,20 @@ namespace Vsky.Services.Leads
                 query = query.OrderBy(orderBy);
             }
 
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
+
             // projection
             query = query.Select(x => new Lead
             {
                 Id = x.Id,
                 LeadArrivalDate = x.LeadArrivalDate,
-                LeadNote = x.LeadNote,
+                LeadReference = x.LeadReference,
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 Person = new Person
                 {
                     FirstName = x.Person.FirstName,
@@ -143,6 +160,22 @@ namespace Vsky.Services.Leads
                 {
                     DropDownValue = x.LeadGroup.DropDownValue,
                     Id = x.LeadGroup.Id
+                },
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
+                    }
                 },
                 LeadActivityLogs = x.LeadActivityLogs.Where(x => !x.Deleted).OrderByDescending(x => x.CreatedOnUtc).Select(m => new LeadActivityLogs
                 {

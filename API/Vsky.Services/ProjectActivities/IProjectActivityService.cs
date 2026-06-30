@@ -34,6 +34,7 @@ namespace Vsky.Services.ProjectActivities
            string userId,
            string createdBy,
            string SearchText,
+           int projectTaskNumber,
            string activeStatus,
            List<string> projectIds,
            List<string> projectModuleIds,

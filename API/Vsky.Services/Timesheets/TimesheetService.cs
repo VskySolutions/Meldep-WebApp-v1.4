@@ -265,9 +265,17 @@ namespace Vsky.Services.Timesheets
             }
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
-                //var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
-                //query = query.OrderBy(orderBy);
-                //query = query.Where(x => x.TimesheetLines.Any()).OrderBy(orderBy);
+                if (sortBy == "timesheetDate")
+                {
+                    query = descending
+                        ? query.OrderByDescending(x => x.Timesheet.TimesheetDate)
+                        : query.OrderBy(x => x.Timesheet.TimesheetDate);
+                }
+                else
+                {
+                    var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+                    query = query.OrderBy(orderBy);
+                }
             }
             else
             {

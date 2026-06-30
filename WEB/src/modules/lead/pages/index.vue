@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <q-card class="q-pa-sm">
+    <q-card class="project6">
       <q-card-section class="card-header with-tools">
         <div class="row items-center">
           <div class="col-12 col-md-2">
@@ -98,129 +98,212 @@
                 >
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
+                <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                 <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
               </div>
             </div>
           </div>
         </div>
       </q-card-section>
       <q-separator />
-      <q-table
-        ref="tableRef"
-        v-model:pagination="pagination"
-        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-        :loading="loading"
-        :rows="rows"
-        :columns="columns"
-        row-key="id"
-        separator="cell"
-        no-data-label="No data available"
-        binary-state-sort
-        :rows-per-page-options="[20, 50, 100, 200, 500]"
-        @request="getLeads"
-      >
-        <template #loading>
-          <q-inner-loading showing color="primary">
-            <q-spinner-ios size="40px" class="q-mt-xl" />
-          </q-inner-loading>
-        </template>
-        <template #header="props">
-          <q-tr :props="props" class="bg-primary text-white">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-            <q-th auto-width class="text-center">Actions</q-th>
-          </q-tr>
-        </template>
-        <template #body="props">
-          <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
-            <q-td>
-              {{ props.row.person.fullName }}
-            </q-td>
-            <q-td>
-              {{ props.row.company.name }}
-            </q-td>
-            <q-td>
-              {{ props.row.leadGroup.dropDownValue }}
-            </q-td>
-            <q-td>
-              {{ props.row.leadSources.dropDownValue }}
-            </q-td>
-            <q-td>
-              {{ props.row.person.primaryPhoneNumber }}
-            </q-td>
-            <q-td>
-              {{ props.row.person.primaryEmailAddress }}
-            </q-td>
-             <q-td class="hoverable-cell">
-              <span
-                @click="onActivityNoteTimelineView(
-                props.row.id,
-                `${props.row.person.fullName} : ${props.row.company.name}`
-                )"
+      <div class="table-scroll-container">
+        <q-table
+          ref="tableRef"
+          v-model:pagination="pagination"
+          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+          :loading="loading"
+          :rows="rows"
+          :columns="computedColumns"
+          row-key="id"
+          separator="cell"
+          no-data-label="No data available"
+          binary-state-sort
+          :rows-per-page-options="[20, 50, 100, 200, 500]"
+          @request="getLeads"
+        >
+          <template #loading>
+            <q-inner-loading showing color="primary">
+              <q-spinner-ios size="40px" class="q-mt-xl" />
+            </q-inner-loading>
+          </template>
+          <template #header="props">
+            <q-tr :props="props" class="bg-primary text-white">
+              <!-- <q-th auto-width class="text-center" /> -->
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
+                >
+                  {{ col.label }}
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+              <q-th auto-width class="text-center">Actions</q-th>
+            </q-tr>
+          </template>
+          <template #body="props">
+            <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
+              <q-td v-if="selectedColumnNames.includes('person.firstName')">
+                {{ props.row.person.fullName }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('company.name')">
+                {{ props.row.company.name }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('leadGroup.dropDownValue')">
+                {{ props.row.leadGroup.dropDownValue }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('leadSources.dropDownValue')">
+                {{ props.row.leadSources.dropDownValue }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('person.primaryPhoneNumber')">
+                {{ props.row.person.primaryPhoneNumber }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('person.primaryEmailAddress')">
+                {{ props.row.person.primaryEmailAddress }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('recentActivityNote')" class="hoverable-cell">
+                <span
+                  @click="onActivityNoteTimelineView(
+                  props.row.id,
+                  `${props.row.person.fullName} : ${props.row.company.name}`
+                  )"
+                >
+                  {{ truncateText(props.row.leadActivityLogs?.[0]?.activityNote)  }}
+                  <q-tooltip>
+                    View Activity Notes
+                  </q-tooltip>
+                </span>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('leadArrivalDate')" class="text-center">
+                {{ props.row.leadArrivalDate }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('leadReference')">
+                {{ props.row.leadReference }}
+              </q-td>
+                <q-td
+                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                class="common-q-td"
               >
-                {{ truncateText(props.row.leadActivityLogs?.[0]?.activityNote)  }}
-                <q-tooltip>
-                  View Activity Notes
-                </q-tooltip>
-              </span>
-            </q-td>
-            <q-td class="text-center">
-              {{ props.row.leadArrivalDate }}
-            </q-td>
-            <q-td auto-width class="text-center actions">
-              <a
-                style="position: relative;"
-                color="negative"
-                class="q-icon notranslate cursor-pointer q-mr-md"
-                @click="onLeadAddActivity(props.row.id, `${props.row.person.fullName} : ${props.row.company.name}`, refreshLeadList)"
+                {{ props.row.createdBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('createdOnUtc')"
+                class="common-q-td"
               >
-                <q-tooltip>Add Activity</q-tooltip>
-                <q-badge style="position: absolute;right: -16px;top: -15px;" color="green" text-color="white" :class="props.row.leadActivityLogs.length == 0 ? 'hidden': ''" :label="props.row.leadActivityLogs.length" />
-                <i class="fas fa-plus" />
-              </a>
-              <q-icon
-                name="o_visibility"
-                class="cursor-pointer q-mr-sm"
-                @click="onLeadView(props.row.id)"
+                {{ props.row.createdOnUtc }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                class="common-q-td"
               >
-                <q-tooltip>View</q-tooltip>
-              </q-icon>
-              <q-icon
-                name="o_edit"
-                class="cursor-pointer q-mr-sm"
-                @click="onLeadEdit(props.row.id, refreshLeadList)"
+                {{ props.row.updatedBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedOnUtc')"
+                class="common-q-td"
               >
-                <q-tooltip>Edit</q-tooltip>
-              </q-icon>
-              <a
-                style="position: relative;"
-                class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
-                @click="onNoteAdd(props.row.id, 'Lead', props.row.id, props.row.name, props.row.name, '', refreshLeadList)"
-              >
-                <q-tooltip anchor="bottom middle" self="top middle">
-                  Note
-                </q-tooltip>
-                <q-icon name="o_assignment" />
-                <q-badge
-                  v-if="props.row.leadNotesCount > 0"
-                  style="position: absolute; right: -16px; top: -15px;"
-                  color="green"
-                  text-color="white"
-                  :label="props.row.leadNotesCount"
-                />
-              </a>
-              <q-icon
-                name="o_delete_outline"
-                class="cursor-pointer"
-                color="negative"
-                @click="onSubmitLeadDelete(props.row.id, props.row.person.fullName, refreshLeadList)"
-              >
-                <q-tooltip>Delete</q-tooltip>
-              </q-icon>
-            </q-td>
-          </q-tr><q-separator />
-        </template>
-      </q-table>
+                {{ props.row.updatedOnUtc }}
+              </q-td>
+              <q-td auto-width class="text-center actions">
+                <a
+                  style="position: relative;"
+                  color="negative"
+                  class="q-icon notranslate cursor-pointer q-mr-md"
+                  @click="onLeadAddActivity(props.row.id, `${props.row.person.fullName} : ${props.row.company.name}`, refreshLeadList)"
+                >
+                  <q-tooltip>Add Activity</q-tooltip>
+                  <q-badge style="position: absolute;right: -16px;top: -15px;" color="green" text-color="white" :class="props.row.leadActivityLogs.length == 0 ? 'hidden': ''" :label="props.row.leadActivityLogs.length" />
+                  <i class="fas fa-plus" />
+                </a>
+                <q-icon
+                  name="o_visibility"
+                  class="cursor-pointer q-mr-sm"
+                  @click="onLeadView(props.row.id)"
+                >
+                  <q-tooltip>View</q-tooltip>
+                </q-icon>
+                <q-icon
+                  name="o_edit"
+                  class="cursor-pointer q-mr-sm"
+                  @click="onLeadEdit(props.row.id, refreshLeadList)"
+                >
+                  <q-tooltip>Edit</q-tooltip>
+                </q-icon>
+                <a
+                  style="position: relative;"
+                  class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
+                  @click="onNoteAdd(props.row.id, 'Lead', props.row.id, props.row.name, props.row.name, '', refreshLeadList)"
+                >
+                  <q-tooltip anchor="bottom middle" self="top middle">
+                    Note
+                  </q-tooltip>
+                  <q-icon name="o_assignment" />
+                  <q-badge
+                    v-if="props.row.leadNotesCount > 0"
+                    style="position: absolute; right: -16px; top: -15px;"
+                    color="green"
+                    text-color="white"
+                    :label="props.row.leadNotesCount"
+                  />
+                </a>
+                <q-icon
+                  name="o_delete_outline"
+                  class="cursor-pointer"
+                  color="negative"
+                  @click="onSubmitLeadDelete(props.row.id, props.row.person.fullName, refreshLeadList)"
+                >
+                  <q-tooltip>Delete</q-tooltip>
+                </q-icon>
+              </q-td>
+            </q-tr><q-separator />
+          </template>
+        </q-table>
+      </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="columns"
+    :multi-sort="multiSort"
+    :exclude-columns="['Recent Activity Note']"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 import { ref, onBeforeUnmount, onMounted, computed, watch } from "vue";
@@ -232,6 +315,8 @@ import manageDropdownsService from "modules/dropdown/dropdown.service";
 // Shared DataTable Views
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
 import useSiteTableState from "composables/dataTable/useSiteTableState.js";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
 
 // Shared Dropdowns
 import leadModule from "src/modules/lead/utils/dropdowns.js";
@@ -240,6 +325,11 @@ import companyModule from "src/modules/company/utils/dropdowns.js";
 // Shared Inputs
 import singleSelectDropdown from "src/components/form-inputs/_singleSelectDropdown.vue";
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
+
+// Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
 
 // Shared Notes Dialogs
 import {
@@ -279,6 +369,27 @@ const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 const siteId = computed(() => authStore.user?.siteId);
+const showSortDialog = ref(false);
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Columns
+// ----------------------------------------------------------------------------------------------------------------
+
+const columns = ref([
+  { name: "person.firstName", label: "Lead", field: "person.firstName", align: "left", sortable: true, default: true },
+  { name: "company.name", label: "Company", field: "company.name", align: "left", sortable: true, default: true },
+  { name: "leadGroup.dropDownValue", label: "Group Name", field: "leadGroup.dropDownValue", align: "left", sortable: true, default: true  },
+  { name: "leadSources.dropDownValue", label: "Lead Source", field: "leadSources.dropDownValue", align: "left", sortable: true, default: true  },
+  { name: "person.primaryPhoneNumber", label: "Phone Number", field: "person.primaryPhoneNumber", align: "left", sortable: true, default: true  },
+  { name: "person.primaryEmailAddress", label: "Email", field: "person.primaryEmailAddress", align: "left", sortable: true, default: true  },
+  { name: "recentActivityNote", label: "Recent Activity Note", field: row => row.leadActivityLogs?.[0]?.activityNote || "-", align: "left", sortable: false, default: true  },
+  { name: "leadArrivalDate", label: "Lead Arrival Date", field: "leadArrivalDate", align: "center", sortable: true, default: true  },
+  { name: "leadReference", label: "Lead Reference", field: "leadReference", align: "left", sortable: true, default: false },
+  { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
+]);
 
 // ----------------------------------------------------------------------------------------------------------------
 // Local Storage:- DataTable and Advance Filter Values
@@ -288,7 +399,13 @@ const {
   search,
   pagination,
   activeRowId,
-  saveDataTableState
+  sorts,
+  resizeWidths,
+  saveDataTableState,
+  selectedColumnNames,
+
+  saveResizableWidthState,
+  saveColumnsState
 } = useSiteTableState({
   storageKey: "lead-Index",
   siteId,
@@ -305,36 +422,57 @@ const {
     descending: true,
     rowsPerPage: 20,
     page: 1
-  }
+  },
+
+  defaultSorts: {},
+
+  defaultResizableWidth: {},
+
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
 });
+
+const lsSorts = sorts.value || null;
 
 const highlightedId = computed(() => {
   return activeRowId.value;
 });
 
-// ----------------------------------------------------------------------------------------------------------------
-// DataTable:- Columns
-// ----------------------------------------------------------------------------------------------------------------
-
-const columns = ref([
-  { name: "personId", label: "Lead", field: "personId", align: "left", sortable: true },
-  { name: "companyId", label: "Company", field: "companyId", align: "left", sortable: true },
-  { name: "leadGroup.dropDownValue", label: "Group Name", field: "leadGroup.dropDownValue", align: "left", sortable: true },
-  { name: "leadSourceId", label: "Lead Source", field: "leadSourceId", align: "left", sortable: true },
-  { name: "person.primaryPhoneNumber", label: "Phone Number", field: "person.primaryPhoneNumber", align: "left", sortable: true },
-  { name: "person.primaryEmailAddress", label: "Email", field: "person.primaryEmailAddress", align: "left", sortable: true },
-  { name: "recentActivityNote", label: "Recent Activity Note", field: row => row.leadActivityLogs?.[0]?.activityNote || "-", align: "left", sortable: false },
-  { name: "leadArrivalDate", label: "Lead Arrival Date", field: "leadArrivalDate", align: "center", sortable: true }
-]);
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Get All Leads
 // ----------------------------------------------------------------------------------------------------------------
 
-const getLeads = (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+const getLeads = async ({ pagination: p }) => {
+   const { page, rowsPerPage, sortBy, descending } = p;
+
+    const sorts = {};
+    const multi = multiSort.value;
+    for (let i = 0; i < multi.length; i++) {
+      const s = multi[i];
+      if (s.column && s.direction) {
+        sorts[s.column] = s.direction;
+      }
+    }
+
+    const payload = {
+      page,
+      pageSize: rowsPerPage,
+      sortBy,
+      descending,
+      sorts,
+      ...search.value
+    };
+    saveDataTableState({
+      search: search.value,
+      pagination: p,
+      activeRowId: activeRowId.value,
+      sorts
+    });
+
   loading.value = true;
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
+  // const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
   leadsService.getLeads(payload).then((resp) => {
     rows.value = resp.data;
     pagination.value.page = page;
@@ -344,8 +482,9 @@ const getLeads = (props) => {
     pagination.value.rowsNumber = resp.total;
     saveDataTableState({
       search: search.value,
-      pagination: props.pagination,
-      activeRowId: activeRowId.value
+      pagination: p,
+      activeRowId: activeRowId.value,
+      sorts
     });
   }).finally(() => {
     loading.value = false;
@@ -401,6 +540,57 @@ const truncateText = (htmlText, limit = 50) => {
     ? plainText.substring(0, limit) + '...'
     : plainText
 }
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshLeadList();
+  }
+});
+
+
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
 // ----------------------------------------------------------------------------------------------------------------
@@ -503,6 +693,23 @@ watch(() => search.value.searchText, () => {
   refreshLeadList();
 });
 
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
+});
+
 // ----------------------------------------------------------------------------------------------------------------
 // On page load
 // ----------------------------------------------------------------------------------------------------------------
@@ -521,3 +728,9 @@ onMounted(() => {
   document.addEventListener("click", handleDocumentClick);
 });
 </script>
+<style scoped>
+.Custom-DataTable {
+  min-width: max-content;
+}
+</style>
+

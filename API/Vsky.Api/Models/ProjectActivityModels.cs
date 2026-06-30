@@ -69,6 +69,7 @@ namespace Vsky.Api.Models
 
     public record ProjectActivitySearchModel : BaseSearchModel
     {
+        public int ProjectTaskNumber { get; set; }
         public List<string> ProjectIds { get; set; }
         public string ProjectId { get; set; }
         public List<string> ProjectModuleIds { get; set; }

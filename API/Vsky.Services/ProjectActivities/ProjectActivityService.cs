@@ -257,6 +257,7 @@ namespace Vsky.Services.ProjectActivities
             string userId,
             string createdBy,
             string SearchText,
+            int projectTaskNumber,
             string activeStatus,
             List<string> projectIds,
             List<string> projectModuleIds,
@@ -287,6 +288,8 @@ namespace Vsky.Services.ProjectActivities
             //    query = query.Where(x => x.Project.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == userId && (m.FullAccess || m.ViewOnly || m.Notes)));
 
             // Apply filters
+            if (projectTaskNumber != 0) query = query.Where(x => x.Task.ProjectTaskNumber == projectTaskNumber);
+
             if (!string.IsNullOrWhiteSpace(activeStatus)) query = query.Where(x => activeStatus == "Active" ? x.Active : !x.Active);
 
             if (projectIds?.Any() == true)
@@ -335,6 +338,7 @@ namespace Vsky.Services.ProjectActivities
             {
                 DateTime.TryParse(SearchText, out var parsedDate);
                 query = query.Where(m =>
+                    m.Task.ProjectTaskNumber.ToString().Contains(SearchText) ||
                     m.Project.Name.ToLower().Contains(SearchText.ToLower()) ||
                     m.Task.Name.ToLower().Contains(SearchText.ToLower()) ||
                     m.ProjectModule.Name.ToLower().Contains(SearchText.ToLower()) ||
@@ -376,6 +380,7 @@ namespace Vsky.Services.ProjectActivities
                     Name = x.Task.Name,
                     ProjectId = x.Task.ProjectId,
                     ProjectModuleId = x.Task.ProjectModuleId,
+                    ProjectTaskNumber = x.Task.ProjectTaskNumber,
                     Status = new DropDown
                     {
                         Id = x.Task.Status.Id,

@@ -19,7 +19,13 @@
               <fieldset>
                 <legend>Project Task Info</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-lg-12 col-sm-6 col-md-6">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Task No</div>
+                    <div class="text-black">
+                      {{ model.projectTaskNumber ? model.projectTaskNumber: "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Project Task Name</div>
                     <div class="text-black">
                       {{ model.name ? model.name : "-" }}

@@ -70,7 +70,7 @@ namespace Vsky.Api.Controllers
                          .Select(x => x.LeadGroupId)
                          .ToList();
 
-            var list = await _leadService.GetAllLeads(SiteId, LoggedUserId, leadGroupIdsForUser, leadModels.SearchText, leadModels.PersonId, leadModels.CompanyId, leadModels.LeadGroupIds, leadModels.LeadSourceId, leadModels.SortBy, leadModels.Descending, leadModels.Page, leadModels.PageSize);
+            var list = await _leadService.GetAllLeads(SiteId, LoggedUserId, leadGroupIdsForUser, leadModels.SearchText, leadModels.PersonId, leadModels.CompanyId, leadModels.LeadGroupIds, leadModels.LeadSourceId, leadModels.SortBy, leadModels.Sorts, leadModels.Descending, leadModels.Page, leadModels.PageSize);
             var model = new LeadsListModel
             {
                 Data = _mapper.Map<IList<LeadModels>>(list),

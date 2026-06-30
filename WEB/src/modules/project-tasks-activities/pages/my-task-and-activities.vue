@@ -34,6 +34,14 @@
                   <!-- Dropdown Content -->
                   <q-menu v-model="showFilter" anchor="bottom left" self="top left" persistent no-parent-event style="width: 500px;" @click-outside="showFilter = false">
                     <q-card class="q-pa-sm">
+                      <div class="row items-center q-mb-sm">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel q-mt-sm fs-13">Task Number</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <q-input v-model="search.projectTaskNumber" fill-input class="q-mx-sm w-100 h-auto" :dense="true" />
+                        </div>
+                      </div>
                       <multiSelectDropdown
                         v-model="search.projectIds"
                         label="Project Name"
@@ -377,6 +385,11 @@
                           v-if="activityProps.row.showModuleName"
                         >
                           {{ activityProps.row.projectModule.name }}
+                        </span>
+                      </q-td>
+                       <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 5%;" class="text-right">
+                        <span v-if="activityProps.row.showTaskNumber">
+                          {{ activityProps.row.task.projectTaskNumber }}
                         </span>
                       </q-td>
 
@@ -773,6 +786,7 @@ const siteId = computed(() => authStore.user?.siteId);
 
 const defaultSearch = {
   searchText: "",
+  projectTaskNumber: 0,
   projectIds: [],
   projectModuleIds: [],
   assignedToIds: user?.employeeId ? [user.employeeId] : [],
@@ -835,6 +849,7 @@ const rows = ref([]);
 const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, hidden: true },
   { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true },
+  { name: "projectTaskNumber", label: "Task No", field: "projectTaskNumber", align: "right", sortable: true },
   { name: "task.name", label: "Task Name", field: "task.name", align: "left", sortable: true },
   { name: "weekDates", label: "Week", field: row => row.weekDates.join(", "), align: "center", sortable: false },
   { name: "task.status.dropDownValue", label: "Task Status", field: "task.status.dropDownValue", align: "left", sortable: true, style: "display: none", headerStyle: "display: none" },
@@ -856,6 +871,10 @@ const getProjectActivities = (props) => {
   } else {
     search.value.sprintWeekEndDate = toDate(search.value.sprintWeekEndDate);
   }
+  // sanitize task number
+  const taskNumber = (search.value.projectTaskNumber || "").replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "");
+  search.value.projectTaskNumber = taskNumber || "0";
+
   const validSorts = multiSort.value.filter(s => s.column && s.direction);
   // convert multi-sort array into the key-value object in dictionary
   const sortsObj = Object.fromEntries(validSorts.map(s => [s.column, s.direction]));
@@ -889,8 +908,15 @@ const getProjectActivities = (props) => {
           idx === 0 ||
           !prevActivity ||
           prevActivity.projectModule.id !== activity.projectModule.id ||
-          prevActivity.task.id !== activity.task.id
+          prevActivity.task.id !== activity.task.id,
+
+           showTaskNumber:
+          idx === 0 ||
+          !prevActivity ||
+          prevActivity.projectModule.id !== activity.projectModule.id ||
+          prevActivity.task.projectTaskNumber !== activity.task.projectTaskNumber
           };
+
         })
       };
     });
@@ -946,6 +972,7 @@ const onSearch = () => {
 
 // Clear search
 const onAdvanceClear = () => {
+  search.value.projectTaskNumber = "";
   search.value.activeStatus = defaultSearch.activeStatus;
   search.value.projectIds = [];
   search.value.projectModuleIds = [];
@@ -1385,6 +1412,7 @@ const mapSingleFilterToLabel = (id, list, label) => {
 
 const appliedFilters = computed(() => ({
   // ...mapSingleFilterToLabel(search.value.activeStatus, projectTaskActivityActiveInActiveDropdown.list, "Active/Inactive"),
+  ...(search.value.projectTaskNumber > 0 ? { "Task Number": search.value.projectTaskNumber } : {}),
   ...mapSingleFilterToLabel(search.value.activeStatus, statusList, "Active/Inactive"),
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
@@ -1396,7 +1424,9 @@ const appliedFilters = computed(() => ({
 }));
 
 function onClearFilters (key) {
-  if (key === "Active/Inactive") {
+  if (key === "Task Number") {
+    search.value.projectTaskNumber = "";
+  } else if (key === "Active/Inactive") {
     search.value.activeStatus = null;
   } else if (key === "Project Name") {
     search.value.projectIds = [];

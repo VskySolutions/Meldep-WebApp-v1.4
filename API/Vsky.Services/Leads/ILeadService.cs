@@ -21,6 +21,7 @@ namespace Vsky.Services.Leads
             List<string> leadGroupIds,
             string leadSourceId, 
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending, 
             int page = 1, 
             int pageSize = int.MaxValue, 

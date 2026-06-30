@@ -217,6 +217,7 @@
                 ${{ props.row.price }}
               </div>
               <q-popup-edit
+                v-if="!props.row.priceEndDate"
                 v-model="props.row.price"
                 v-slot="scope"
                 class="small-popup-title common-q-td"

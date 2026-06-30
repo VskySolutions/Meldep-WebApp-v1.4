@@ -109,7 +109,7 @@
                   </q-menu>
                 </div>
                 <div>
-                  <q-btn icon="o_group" class="text-white btnRounded bg-primary q-ml-xs" @click="$router.push({ path: '/billing-processing-employee' })"><q-tooltip>Group By Employee</q-tooltip></q-btn>
+                  <q-btn icon="o_group" class="text-white btnRounded bg-primary q-ml-xs hidden" @click="$router.push({ path: '/billing-processing-employee' })"><q-tooltip>Group By Employee</q-tooltip></q-btn>
                 </div>
               </div>
               <div class="q-ml-sm">
@@ -175,7 +175,7 @@
             <q-td class="text-right" style="width: 5%;">{{ props.row.hours }}</q-td>
             <q-td class="text-right" style="width: 5%;">
               <div class="row items-center no-wrap justify-end">
-                <q-input v-model="props.row.billableHours" class="billableHrsInput" :style="{ marginBottom: validateHours(props.row.billableHours) !== true ? '20px' : '0' }" maxlength="5" type="text" :rules="[validateHours]" dense @blur="onChangeBillableHrs(props.row.id, props.row.billableHours)">
+                <q-input v-model="props.row.billableHours" class="billableHrsInput" :style="{ marginBottom: validateHours(props.row.billableHours) !== true ? '20px' : '0' }" maxlength="5" type="text" :rules="[validateHours]" dense @blur="onChangeBillableHrs(props.row.id, props.row.billableHours, props.row.hours)">
                   <template #error>
                     <div>
                       {{ validateHours(props.row.billableHours) !== true ? validateHours(props.row.billableHours) : '' }}
@@ -298,7 +298,7 @@ function totalBillableHours () {
   return total.toFixed(2);
 }
 
-function onChangeBillableHrs (id, billableHrs) {
+function onChangeBillableHrs (id, billableHrs, actualHours) {
   if (validateHours(billableHrs) !== true) {
     return; // Stop execution if validation fails (No error message displayed)
   }
@@ -315,6 +315,15 @@ function onChangeBillableHrs (id, billableHrs) {
   if (rowIndex !== -1) {
     rows.value[rowIndex].billableHours = hours;
   }
+
+  if (billableHrs > actualHours) {
+    rows.value[rowIndex].billableHours = 0;
+    notifyError({
+      message: "Billable hours cannot be greater than actual hours."
+    });
+    return;
+  }
+
   rows.value = [...rows.value];
   setTimeout(function () {
     timesheetService.updateBillableHrs(id, hours).then(resp => {

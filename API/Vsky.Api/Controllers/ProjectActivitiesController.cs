@@ -175,6 +175,7 @@ namespace Vsky.Api.Controllers
                     LoggedUserId,
                     createdBy,
                     searchModel.SearchText,
+                    searchModel.ProjectTaskNumber,
                     searchModel.ActiveStatus,
                     searchModel.ProjectIds,
                     searchModel.ProjectModuleIds,
