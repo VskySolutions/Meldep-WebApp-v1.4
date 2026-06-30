@@ -285,7 +285,7 @@ const canApprove = computed(() =>
 const canEditDraft = computed(() =>
   !!props.id &&
   (role === "editor" || role === "both") &&
-  currentStatus.value === "draft"
+  (currentStatus.value === "draft" || currentStatus.value === "published")
 );
 
 // field ReadOnly Logic
@@ -305,7 +305,12 @@ const isReadOnlyMode = computed(() => {
     return false;
   }
 
-  // Approved / Published / Archived = locked
+  // status Published then enable
+  if (currentStatus.value === "published") {
+    return false;
+  }
+
+  // Approved / Archived = locked
   return true;
 });
 

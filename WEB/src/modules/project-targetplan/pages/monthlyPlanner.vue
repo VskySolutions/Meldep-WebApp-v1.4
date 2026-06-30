@@ -1062,6 +1062,23 @@ const getProjects = async (props) => {
   const resp = await projectService.getWeeklyProjects(payload);
   rows.value = resp.weeklyPlanList;
 
+  // Update Local Storage.
+  savePlannerState({
+    search: search.value,
+    pagination: {
+      ...pagination.value,
+      page,
+      rowsPerPage,
+      sortBy,
+      descending,
+      rowsNumber: resp.total
+    },
+
+    activeProjectPlanId: activeProjectPlanId.value,
+    activeProjectId: activeProjectId.value,
+    projectName: activeProjectName.value
+  });
+
   if (rows?.value?.length > 0) {
     pagination.value = {
       ...pagination.value,
@@ -1078,23 +1095,6 @@ const getProjects = async (props) => {
       const weeklyProjectPlanRow = rows.value.find(m => m.projectId === activeProjectId.value);
       if (weeklyProjectPlanRow) LoadProjectPlan(weeklyProjectPlanRow);
     }
-
-    // Update Local Storage.
-    savePlannerState({
-      search: search.value,
-      pagination: {
-        ...pagination.value,
-        page,
-        rowsPerPage,
-        sortBy,
-        descending,
-        rowsNumber: resp.total
-      },
-
-      activeProjectPlanId: activeProjectPlanId.value,
-      activeProjectId: activeProjectId.value,
-      projectName: activeProjectName.value
-    });
   } else {
     projectMonthlyPlanDates.value = [];
   }
@@ -1726,6 +1726,21 @@ watch(() => search.value.customerIds, async (newValue, oldValue) => {
 
   companyContactNameDropdown.load(newValue);
 });
+
+watch(
+  () => routeProjectId.value,
+  (projectId) => {
+    if (projectId) {
+      search.value.projectIds = [projectId];
+
+      savePlannerState({
+        ...getPlannerState(),
+        search: search.value
+      });
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped>

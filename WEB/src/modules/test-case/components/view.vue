@@ -128,20 +128,20 @@
                 </div>
               </fieldset>
             </q-tab-panel>
-            <q-tab-panel name="6_tab" class="items-center q-pa-md q-mx-auto">              
+            <q-tab-panel name="6_tab" class="items-center q-pa-md q-mx-auto">
               <fieldset>
                 <legend>Test Plan Info</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-md-6">
                     <div class="q-mb-xs">Project Name</div>
                     <div class="text-black q-mb-cs">
-                      {{ model.project?.name }}
+                      {{ testPlanModel.project?.name }}
                     </div>
                   </div>
                   <div class="col">
                     <div class="col-12 col-md-6">Test Plan Name</div>
                     <div class="text-black">
-                      {{ model.name }}
+                      {{ testPlanModel.name }}
                     </div>
                   </div>
                 </div>
@@ -149,13 +149,13 @@
                   <div class="col-12 col-md-6">
                     <div class="q-mb-xs">Area</div>
                     <div class="text-black q-mb-cs">
-                      {{ model.area?.dropDownValue }}
+                      {{ testPlanModel.area?.dropDownValue }}
                     </div>
                   </div>
                   <div class="col">
                     <div class="col-12 col-md-6">Workspace</div>
                     <div class="text-black">
-                      {{ model.workspace?.dropDownValue }}
+                      {{ testPlanModel.workspace?.dropDownValue }}
                     </div>
                   </div>
                 </div>
@@ -163,13 +163,13 @@
                   <div class="col-12 col-md-6">
                     <div class="q-mb-xs">Plan Maker</div>
                     <div class="text-black">
-                      {{ model.planMaker?.person?.fullName }}
+                      {{ testPlanModel.planMaker?.person?.fullName }}
                     </div>
                   </div>
                   <div class="col-12 col-md-6">
                     <div class="q-mb-xs">Plan Reviewer</div>
                     <div class="text-black">
-                      {{ model.planReviewer?.person?.fullName }}
+                      {{ testPlanModel.planReviewer?.person?.fullName }}
                     </div>
                   </div>
                 </div>
@@ -177,7 +177,7 @@
                   <div class="col-12">
                     <div class="q-mb-xs">Description</div>
                     <div class="text-black RichTextEditor">
-                      <p v-html="model.description ? model.description : '-'" />
+                      <p v-html="testPlanModel.description ? testPlanModel.description : '-'" />
                     </div>
                   </div>
                 </div>
@@ -249,6 +249,20 @@ const model = ref({
   },
   status: {
     dropDownValue: ""
+  }
+});
+
+const testPlanModel = ref({
+  name: "-",
+  description: "",
+  project: {
+    name: ""
+  },
+  area: {
+    dropDownValue: ""
+  },
+  workspace: {
+    dropDownValue: ""
   },
   planReviewer: {
     person: {
@@ -276,7 +290,7 @@ const getTestCaseDetails = () => {
 const getTestPlanDetails = () => {
   loading.value = true;
   testplansService.getTestPlanDetails(props.testPlanId).then((resp) => {
-    model.value = _.cloneDeep(resp);
+    testPlanModel.value = _.cloneDeep(resp);
   }).finally(() => {
     loading.value = false;
   });
