@@ -188,10 +188,10 @@
               {{ props.row.version }}
             </q-td>
             <q-td style="width: 8%;">
-              {{ props.row.category.type }}
+              {{ props.row.category?.type }}
             </q-td>
             <q-td style="width: 8%;">
-              {{ props.row.subCategory.dropDownValue }}
+              {{ props.row.subCategory?.dropDownValue }}
             </q-td>
             <q-td
               style="width: 14%;"
@@ -262,7 +262,7 @@
               </q-icon>
             </q-td>
             <q-td style="width: 8%;">
-              {{ props.row.updatedBy.person.fullName }}
+              {{ props.row.updatedBy?.person.fullName }}
             </q-td>
             <q-td class="text-center" style="width: 8%;">
               {{ toDate(props.row.updatedOnUtc) }}
@@ -422,8 +422,8 @@ const role =
 
 // permissions
 const canEdit = (row) =>
-  role === "both" && loggedUserId === row.createdBy.id ||
-  (role === "editor" && loggedUserId === row.createdBy.id);
+  role === "both" && loggedUserId === row.createdBy?.id ||
+  (role === "editor" && loggedUserId === row.createdBy?.id);
 
 const canApprove = () =>
   role === "both" ||
@@ -431,7 +431,7 @@ const canApprove = () =>
 
 const canDelete = (row) =>
   role === "both" ||
-  (role === "editor" && loggedUserId === row.createdBy.id);
+  (role === "editor" && loggedUserId === row.createdBy?.id);
 
 const showManageDropdownOptions = ref(false);
 const { toDate } = useFilters();

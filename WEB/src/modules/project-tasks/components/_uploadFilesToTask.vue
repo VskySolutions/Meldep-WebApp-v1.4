@@ -31,8 +31,19 @@
                 <div class="col-xxl-3 col-lg-3 col-md-3 col-sm-3 col-xs-12">
                   <div class="form-group">
                     <q-uploader
-                      ref="documentUploaderRef" class="prodUploader" color="white" text-color="dark" with-credentials hide-upload-btn multiple
-                      field-name="ProjectTaskFiles" flat bordered label="Drag files here or (+) to upload." @added="onFileAdded"
+                      ref="documentUploaderRef"
+                      class="prodUploader"
+                      color="white"
+                      text-color="dark"
+                      with-credentials
+                      hide-upload-btn
+                      multiple
+                      field-name="ProjectTaskFiles"
+                      flat
+                      bordered
+                      label="Drag files here or (+) to upload."
+                      @added="onFileAdded"
+                      @removed="onFileRemoved"
                     />
                     <div class="text-grey-7 text-caption q-mt-xs">
                       <i>Allowed Files: jpg, png, jpeg, pdf, excel, doc, ppt</i>
@@ -308,6 +319,24 @@ const onFileAdded = (files) => {
   model.value.projectFileFlag = "edit"; // Set the overall flag for tracking
 };
 
+function onFileRemoved(files) {
+  files.forEach(file => {
+    const index = model.value.projectTaskFiles.findIndex(f =>
+      f.name === file.name &&
+      f.size === file.size &&
+      f.lastModified === file.lastModified
+    );
+
+    if (index !== -1) {
+      model.value.projectTaskFiles.splice(index, 1);
+    }
+  });
+
+  if (model.value.projectTaskFiles.length === 0) {
+    model.value.projectFileFlag = "remove";
+  }
+}
+
 function getFilePreview (file) {
   return file && file instanceof File ? URL.createObjectURL(file) : "";
 }
@@ -352,6 +381,8 @@ function removeFile (index) {
     file.flag = "remove";
     model.value.projectTaskFiles.splice(index, 1);
   } else {
+    // Remove from q-uploader
+    documentUploaderRef.value?.removeFile(file);
     // For new files, just remove them from the list
     model.value.projectTaskFiles.splice(index, 1);
   }
@@ -379,6 +410,14 @@ const onDelete = (item) => {
 // Submit form
 const onSubmit = async () => {
   processing.value = true;
+
+   // Validate file selection
+  if (!model.value.projectTaskFiles || model.value.projectTaskFiles.length === 0) {
+    notifyError({ message: "Please select at least one file." });
+    processing.value = false;
+    return;
+  }
+
   try {
     const formData = new FormData();
     // Append other fields
@@ -446,7 +485,7 @@ const filterRows = (data, searchTerm) => {
   const lowerCaseTerm = searchTerm.toLowerCase();
 
   return data.filter(row => {
-    const fileName = extractFileName(row.file?.virtualPath);
+    const fileName = extractFileName(row.file.seoFilename);
     const createdBy = `${row.createdBy?.person?.firstName || ""} ${row.createdBy?.person?.lastName || ""}`;
     const createdDate = row.createdOnUtc?.replaceAll("-", "/") || "";
 

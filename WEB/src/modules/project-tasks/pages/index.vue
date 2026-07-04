@@ -1643,6 +1643,7 @@ watch(selectedField, (newVal) => {
         refreshProjectTaskList,
         setDefaultsForMultiSelects
       );
+      selectedField.value = null;
       return;
     }
     if (newVal === "Status") {

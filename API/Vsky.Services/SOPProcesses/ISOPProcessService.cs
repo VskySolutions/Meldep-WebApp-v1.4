@@ -10,7 +10,8 @@ namespace Vsky.Services.SOPProcesses
         IPagedList<Vsky.Models.SOPProcess> GetAllSOPProcesses(string searchText, string siteId, string logginuser, string title, List<string> categoryIds, List<string> subCategoryIds, List<string> statusIds, bool isActive, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue);
         SOPProcess GetSOPProcessById(string siteId, string Id);
         Task<Vsky.Models.SOPProcess> GetSOPProcessByIdInDetail(string siteId, string Id);
-        Task<SOPProcess> GetSOPProcessByTitle(string SiteId, string title, string id = null);
+        Task<SOPProcess> GetSOPProcessByTitle(string SiteId, string title, string version = null, string id = null);
+        Task<string> GetNextSOPProcessVersion(string currentVersion = null);
         void InsertSOPProcess(SOPProcess entity);
         void UpdateSOPProcess(SOPProcess entity);
         void DeleteSOPProcess(SOPProcess entity);

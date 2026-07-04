@@ -75,6 +75,7 @@ namespace Vsky.Models
         public string Purpose { get; set; }
         public string StatusId { get; set; }
         public string Version { get; set; }
+        public string ActionType { get; set; }
         public bool IsActive { get; set; }
     }
 }

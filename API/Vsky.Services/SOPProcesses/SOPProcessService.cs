@@ -38,7 +38,6 @@ namespace Vsky.Services.SOPProcesses
         #endregion
 
         #region List
-
         public IPagedList<Vsky.Models.SOPProcess> GetAllSOPProcesses(string searchText, string siteId, string logginuser, string title, List<string> categoryIds, List<string> subCategoryIds, List<string> statusIds, bool isActive, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue)
         {
             var query = _sOPProcessRepository.TableNoTracking.Where(x => !x.Deleted && x.IsActive == isActive && x.SiteId == siteId);
@@ -183,6 +182,18 @@ namespace Vsky.Services.SOPProcesses
                 );
             }
 
+            var latestIds = query
+                .AsEnumerable()
+                .Where(x => Version.TryParse(x.Version, out _))
+                .GroupBy(x => Version.Parse(x.Version).Major)
+                .Select(g => g
+                    .OrderByDescending(x => Version.Parse(x.Version))
+                    .First()
+                    .Id)
+                .ToList();
+
+            query = _sOPProcessRepository.TableNoTracking.Where(x => latestIds.Contains(x.Id));
+
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
                 if (sortBy == "statusId")
@@ -218,7 +229,7 @@ namespace Vsky.Services.SOPProcesses
             else
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
 
-            query = query.Select(x => new SOPProcess
+            var result = query.Select(x => new SOPProcess
             {
                 Id = x.Id,
                 Title = x.Title,
@@ -228,53 +239,79 @@ namespace Vsky.Services.SOPProcesses
                 IsActive = x.IsActive,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
-                Category = new DropDownType
+
+                Category = x.Category == null ? null : new DropDownType
                 {
                     Id = x.Category.Id,
                     Type = x.Category.Type
                 },
-                SubCategory = new DropDown
+
+                SubCategory = x.SubCategory == null ? null : new DropDown
                 {
                     Id = x.SubCategory.Id,
                     DropDownValue = x.SubCategory.DropDownValue
                 },
-                CreatedBy = new ApplicationUser
+
+                CreatedBy = x.CreatedBy == null ? null : new ApplicationUser
                 {
                     Id = x.CreatedBy.Id,
-                    Person = new Person
+                    Person = x.CreatedBy.Person == null ? null : new Person
                     {
                         Id = x.CreatedBy.PersonId,
-                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+                        FullName = (x.CreatedBy.Person.FirstName ?? "") + " " +
+                       (x.CreatedBy.Person.LastName ?? "")
                     }
                 },
-                UpdatedBy = new ApplicationUser
+
+                UpdatedBy = x.UpdatedBy == null ? null : new ApplicationUser
                 {
                     Id = x.UpdatedBy.Id,
-                    Person = new Person
+                    Person = x.UpdatedBy.Person == null ? null : new Person
                     {
                         Id = x.UpdatedBy.PersonId,
-                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
+                        FullName = (x.UpdatedBy.Person.FirstName ?? "") + " " +
+                       (x.UpdatedBy.Person.LastName ?? "")
                     }
                 },
-                StatusText = x.SOPProcessStatusLog.OrderByDescending(p => p.CreatedOnUtc).Select(p => p.Status.DropDownValue).FirstOrDefault(),
-                StatusId = x.SOPProcessStatusLog.OrderByDescending(p => p.CreatedOnUtc).Select(p => p.Status.Id).FirstOrDefault(),
+
+                StatusText = x.SOPProcessStatusLog
+        .OrderByDescending(p => p.CreatedOnUtc)
+        .Select(p => p.Status.DropDownValue)
+        .FirstOrDefault(),
+
+                StatusId = x.SOPProcessStatusLog
+        .OrderByDescending(p => p.CreatedOnUtc)
+        .Select(p => p.Status.Id)
+        .FirstOrDefault()
             });
 
-            var list = new PagedList<Vsky.Models.SOPProcess>(query, page, pageSize);
-            return list;
+            return new PagedList<SOPProcess>(result, page, pageSize);
+
+            //var list = new PagedList<Vsky.Models.SOPProcess>(query, page, pageSize);
+            //return list;
         }
 
         #endregion
 
         #region Get By Id
+        //public SOPProcess GetSOPProcessById(string siteId, string id)
+        //{
+        //    var query = _sOPProcessRepository.Table
+        //        .Where(x => !x.Deleted && x.SiteId == siteId && x.Id == id)
+        //        .Include(x => x.SOPProcessStatusLog).ThenInclude(x => x.Status).OrderByDescending(s => s.CreatedOnUtc)
+        //        .FirstOrDefault();
+
+        //    return query;
+        //}
         public SOPProcess GetSOPProcessById(string siteId, string id)
         {
-            var query = _sOPProcessRepository.Table
-                .Where(x => !x.Deleted && x.SiteId == siteId && x.Id == id)
-                .Include(x => x.SOPProcessStatusLog.OrderByDescending(s => s.CreatedOnUtc))
-                .FirstOrDefault();
-
-            return query;
+            return _sOPProcessRepository.Table
+                .Include(x => x.SOPProcessStatusLog)
+                    .ThenInclude(x => x.Status)
+                .FirstOrDefault(x =>
+                    !x.Deleted &&
+                    x.SiteId == siteId &&
+                    x.Id == id);
         }
 
         public async Task<Vsky.Models.SOPProcess> GetSOPProcessByIdInDetail(string siteId, string Id)
@@ -354,16 +391,93 @@ namespace Vsky.Services.SOPProcesses
         #region GetSOPProcessByTitle
         // Title: GetSOPProcessByTitle
         // Description: This method retrieves a SOP Process based on its title and Id. It allows an optional exclusion of a SOP Process by its ID, which can be useful for scenarios like checking for duplicates. while excluding a specific SOP Process. The method returns the first matching SOP Process or null if no match is found.
-        public async Task<SOPProcess> GetSOPProcessByTitle(string SiteId, string title, string id = null)
+        //public async Task<SOPProcess> GetSOPProcessByTitle(string SiteId, string title, string id = null)
+        //{
+        //    var query = _sOPProcessRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.Title.ToLower() == title.ToLower());
+
+        //    if (!string.IsNullOrEmpty(id))
+        //        query = query.Where(x => x.Id != id);
+
+        //    var item = await query.FirstOrDefaultAsync();
+
+        //    return item;
+        //}
+        public async Task<SOPProcess> GetSOPProcessByTitle(string siteId, string title, string version = null, string id = null)
         {
-            var query = _sOPProcessRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.Title.ToLower() == title.ToLower());
+            var query = _sOPProcessRepository.TableNoTracking
+                .Where(x => !x.Deleted
+                         && x.SiteId == siteId && x.Title.ToLower() == title.ToLower());
 
             if (!string.IsNullOrEmpty(id))
                 query = query.Where(x => x.Id != id);
 
-            var item = await query.FirstOrDefaultAsync();
+            if (!string.IsNullOrEmpty(id))
+            {
+                var majorVersion = version.Split('.')[0];
+                // Exclude records having the same version prefix
+                query = query.Where(x => !x.Version.StartsWith(majorVersion + "."));
+            }
 
-            return item;
+            return await query.FirstOrDefaultAsync();
+        }
+        #endregion
+
+        #region GetLastSOPProcessNumber
+        // Title: GetLastSOPProcessNumber
+        // Description: This method retrieves the highest SOPProcessNumber from the database or returns 1 if none are found. 
+        //public async Task<string> GetNextSOPProcessVersion()
+        //{
+        //    var versions = await _sOPProcessRepository.TableNoTracking
+        //        .Select(x => x.Version)
+        //        .Where(x => !string.IsNullOrWhiteSpace(x))
+        //        .ToListAsync();
+
+        //    if (!versions.Any())
+        //        return "1.0";
+
+        //    int maxMajor = versions
+        //        .Select(v =>
+        //        {
+        //            var parts = v.Split('.');
+        //            return int.TryParse(parts[0], out int major) ? major : 0;
+        //        })
+        //        .Max();
+
+        //    return $"{maxMajor + 1}.0";
+        //}
+        public async Task<string> GetNextSOPProcessVersion(string currentVersion = null)
+        {
+            // Existing SOP - increment current version
+            if (!string.IsNullOrWhiteSpace(currentVersion))
+            {
+                var parts = currentVersion.Split('.');
+
+                if (int.TryParse(parts[^1], out int last))
+                {
+                    parts[^1] = (last + 1).ToString();
+                }
+
+                return string.Join(".", parts);
+            }
+
+            // New SOP - generate next major version
+            var versions = await _sOPProcessRepository.TableNoTracking
+                .Select(x => x.Version)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToListAsync();
+
+            if (!versions.Any())
+                return "1.0";
+
+            int maxMajor = versions
+                .Select(v =>
+                {
+                    var parts = v.Split('.');
+                    return int.TryParse(parts[0], out int major) ? major : 0;
+                })
+                .Max();
+
+            return $"{maxMajor + 1}.0";
         }
         #endregion
 

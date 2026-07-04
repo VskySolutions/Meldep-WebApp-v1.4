@@ -249,7 +249,7 @@
             </q-td>
           </q-tr>
           <q-tr v-for="(line) in props.row.timesheetLines" :key="line.id" :class="highlightedId == line.id ? 'highlight' : ''" :set="(preProjectName = null, preProjectTask = null, preProjectDate = null, preProjectTaskDate = null, resetTracking())">
-             <q-td class="text-center">
+            <q-td style="width: 2%;" class="text-center">
                 <q-checkbox
                   v-if="line.projectActivity?.activityStatus?.dropDownValue === 'Open' &&
                         line.projectActivity?.active &&
@@ -258,8 +258,8 @@
                   @update:model-value="onSelectCheckbox(line, $event)"
                   size="sm"
                 />
-              </q-td>
-             <q-td class="hoverable-cell common-q-td">
+            </q-td>
+            <q-td style="width: 14%;" class="hoverable-cell common-q-td">
               <div class="row no-wrap items-center justify-between">
                 <span
                   v-if="preProjectName !== line.project.name || preProjectDate !== props.row.timesheetDate" :set="(preProjectName = line.project.name, preProjectDate = props.row.timesheetDate)"
@@ -286,8 +286,8 @@
                 </div>
               </div>
             </q-td>
-            <q-td class="text-left common-q-td" >{{ line.projectModule.name }}</q-td>
-            <q-td class="hoverable-cell common-q-td">
+            <q-td style="width: 14%;" class="text-left common-q-td" >{{ line.projectModule.name }}</q-td>
+            <q-td style="width: 18%;" class="hoverable-cell common-q-td">
               <div class="row no-wrap items-center justify-between">
                 <span
                   v-if="preProjectTask !== line.task.name || preProjectTaskDate !== props.row.timesheetDate"
@@ -299,8 +299,7 @@
                 </span>
               </div>
             </q-td>
-            <q-td
-              class="text-left common-q-td"
+            <q-td style="width: 14%;" class="text-left common-q-td"
             >
               {{ line.projectActivity.name }}
               <q-icon
@@ -314,13 +313,13 @@
                 </q-tooltip>
               </q-icon>
             </q-td>
-            <q-td class="RichTextEditor common-q-td">
+            <q-td style="width: 24%; max-width: 800px;" class="RichTextEditor common-q-td">
               <div v-html="line.description" />
             </q-td>
-            <q-td class="text-left common-q-td">
+            <q-td style="width: 10%;" class="text-left common-q-td">
               {{ props.row.user.person.fullName }}
             </q-td>
-            <q-td class="text-right">
+            <q-td style="width: 4%;"class="text-right">
               {{ line.hours }}
             </q-td>
           </q-tr>

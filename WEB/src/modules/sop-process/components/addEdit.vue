@@ -100,7 +100,7 @@
                 stack-label
                 hide-bottom-space
                 :dense="true"
-                :readonly="isReadOnlyMode"
+                readonly
                 :error="v$.version.$error"
                 :error-message="v$.version.$errors[0]?.$message"
                 @click="v$.version.$touch"
@@ -326,6 +326,15 @@ const getSOPProcessInDetailsById = (ProcessId) => {
   });
 };
 
+const getNextSOPProcessVersion = () => {
+  sopProcessService.getNextSOPProcessVersion().then((resp) => {
+    const version = model.value.version ? model.value.version : resp
+    model.value.version = version;
+  }).finally(() => {
+    loading.value = false;
+  });
+};
+
 function getSubCategoriesByCategoryId (categoryId) {
   model.value.subCategoryId = "";
   sopProcessSubCategoryDropdownSingleSelect.load(categoryId);
@@ -426,6 +435,8 @@ const onSubmit = async (type) => {
     const isValid = await v$.value.$validate();
     if (!isValid) { v$.value.$touch(); return; }
 
+    model.value.actionType = type;
+
     // Set status based on button type
     if (type === "save") {
       model.value.statusId = await sopProcessStatusDropdownSingleSelect.getValueByLabel("Draft"); // Draft
@@ -472,6 +483,7 @@ onMounted(async () => {
 
   // Set Default values for advance filter
   if (model.value.statusId === null || model.value.statusId === undefined) model.value.statusId = setSOPProcessStatus.value;
+  getNextSOPProcessVersion();
 });
 </script>
 <style scoped>

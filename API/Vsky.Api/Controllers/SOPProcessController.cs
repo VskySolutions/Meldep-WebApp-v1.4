@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using Microsoft.AspNetCore.Mvc;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
@@ -85,6 +86,22 @@ namespace Vsky.Api.Controllers
             }
         }
 
+        [HttpGet("version")]
+        public async Task<IActionResult> GetNextSOPProcessVersion()
+        {
+            try
+            {
+                string version;
+                version = await _sOPProcessService.GetNextSOPProcessVersion();
+
+                return Ok(version);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         #region CreateSOPProcess
         // Title: CreateSOPProcess
         // Description: This endpoint handles the creation of a new test plan. It maps the test plan model to the test plan entity, sets the creation details, and inserts the test plan into the database. 
@@ -107,13 +124,13 @@ namespace Vsky.Api.Controllers
                     var SOPProcessEntity = new SOPProcess
                     {
                         Id = Guid.NewGuid().ToString(),
+                        Version = model.Version,
                         SiteId = SiteId,
                         Title = model.Title,
                         CategoryId = model.CategoryId,
                         SubCategoryId = model.SubCategoryId,
                         ShortDescription = model.ShortDescription,
                         Purpose = model.Purpose,
-                        Version = model.Version,
                         IsActive = model.IsActive,
                         CreatedById = LoggedUserId,
                         UpdatedById = LoggedUserId,
@@ -172,40 +189,84 @@ namespace Vsky.Api.Controllers
                         return BadRequest(new BadRequestError("No sop process found with the specified id."));
 
                     //Check if the sop process already exists
-                    var exists = await _sOPProcessService.GetSOPProcessByTitle(SiteId, model.Title, id);
+                    var exists = await _sOPProcessService.GetSOPProcessByTitle(SiteId, model.Title, model.Version, id);
                     if (exists != null)
                         return BadRequest(new BadRequestError("sop process title already exists, try with another."));
 
-                    entity.Title = model.Title;
-                    entity.CategoryId = model.CategoryId;
-                    entity.SubCategoryId = model.SubCategoryId;
-                    entity.ShortDescription = model.ShortDescription;
-                    entity.Purpose = model.Purpose;
-                    entity.Version = model.Version;
-                    entity.IsActive = model.IsActive;
-                    entity.UpdatedById = LoggedUserId;
-                    entity.UpdatedOnUtc = GetDateTime;
+                    //var lastStatus = entity.SOPProcessStatusLog?.Select(x => x.StatusId && x.Status.DropDownValue).FirstOrDefault();
+                    //bool IsSOPProcessStatusChanged = model.StatusId != lastStatus.statusId;
+                    var lastStatus = entity.SOPProcessStatusLog?.OrderByDescending(x => x.CreatedOnUtc).FirstOrDefault();
 
-                    if (!string.IsNullOrEmpty(model.Description))
+                    bool IsSOPProcessStatusChanged = model.StatusId != lastStatus?.StatusId;
+
+                    string statusName = lastStatus?.Status?.DropDownValue;
+
+                    if ((entity.Description != model.Description && (model.ActionType == "submit" || model.ActionType == "approve")) || statusName == "Published")
                     {
-                        entity.Description = await _azureBlobImageServices
-                            .ProcessHtmlAndManageImagesAsync(
-                                model.Description,
-                                SiteData.Name,
-                                "SOP-Process",
-                                entity.Id,
-                                entity.Description
-                            );
+                        var SOPProcessEntity = new SOPProcess
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            Version = await _sOPProcessService.GetNextSOPProcessVersion(entity.Version),
+                            SiteId = SiteId,
+                            Title = model.Title,
+                            CategoryId = model.CategoryId,
+                            SubCategoryId = model.SubCategoryId,
+                            ShortDescription = model.ShortDescription,
+                            Purpose = model.Purpose,
+                            IsActive = model.IsActive,
+                            CreatedById = LoggedUserId,
+                            UpdatedById = LoggedUserId,
+                            CreatedOnUtc = GetDateTime,
+                            UpdatedOnUtc = GetDateTime,
+                        };
+
+                        if (!string.IsNullOrEmpty(model.Description))
+                        {
+                            SOPProcessEntity.Description = await _azureBlobImageServices
+                                .ProcessHtmlAndManageImagesAsync(
+                                    model.Description,
+                                    SiteData.Name,
+                                    "SOP-Process",
+                                    SOPProcessEntity.Id
+                                );
+                        }
+                        _sOPProcessService.InsertSOPProcess(SOPProcessEntity);
+
+                        if (IsSOPProcessStatusChanged)
+                        {
+                            // Add Status Log
+                            AddSOPProcessStatusLog(SOPProcessEntity.Id, model.StatusId, LoggedUserId, GetDateTime);
+                        }
                     }
-                    _sOPProcessService.UpdateSOPProcess(entity);
-
-                    var lastStatusId = entity.SOPProcessStatusLog?.Select(x => x.StatusId).FirstOrDefault();
-                    bool IsSOPProcessStatusChanged = model.StatusId != lastStatusId;
-
-                    if (IsSOPProcessStatusChanged)
+                    else
                     {
-                        // Add Status Log
-                        AddSOPProcessStatusLog(entity.Id, model.StatusId, LoggedUserId, GetDateTime);
+                        entity.Title = model.Title;
+                        entity.CategoryId = model.CategoryId;
+                        entity.SubCategoryId = model.SubCategoryId;
+                        entity.ShortDescription = model.ShortDescription;
+                        entity.Purpose = model.Purpose;
+                        entity.IsActive = model.IsActive;
+                        entity.UpdatedById = LoggedUserId;
+                        entity.UpdatedOnUtc = GetDateTime;
+
+                        if (!string.IsNullOrEmpty(model.Description))
+                        {
+                            entity.Description = await _azureBlobImageServices
+                                .ProcessHtmlAndManageImagesAsync(
+                                    model.Description,
+                                    SiteData.Name,
+                                    "SOP-Process",
+                                    entity.Id,
+                                    entity.Description
+                                );
+                        }
+                        _sOPProcessService.UpdateSOPProcess(entity);
+
+                        if (IsSOPProcessStatusChanged)
+                        {
+                            // Add Status Log
+                            AddSOPProcessStatusLog(entity.Id, model.StatusId, LoggedUserId, GetDateTime);
+                        }
                     }
                 }
                 return NoContent();

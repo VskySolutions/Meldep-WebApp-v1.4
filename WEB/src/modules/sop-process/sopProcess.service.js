@@ -9,6 +9,10 @@ export default {
     return http.get(`/sop-process/details/${id}`).then(response => response.data);
   },
 
+  getNextSOPProcessVersion () {
+    return http.get("/sop-process/version").then(response => response.data);
+  },
+
   saveSOPProcess (id, model) {
     if (id) {
       return http.put(`/sop-process/${id}`, model).then(response => response.data);

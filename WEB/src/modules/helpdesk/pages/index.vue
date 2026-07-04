@@ -367,7 +367,7 @@
                       persistent
                       label-set="Save"
                       label-cancel="Cancel"
-                      @save="val => onSaveComment(props.row.id, val)"
+                      @save="val => onSaveComment(props.row, val)"
                     >
                       <template #default="scope">
                         <div class="relative-position q-pa-sm" style="min-width: 260px;">
@@ -817,18 +817,25 @@ const handleDocumentClick = (event) => {
   }
 };
 
-function onSaveComment (id, comment) {
+function onSaveComment(model, comment) {
+  const trimmedComment = comment?.trim() ?? "";
+
+  // If nothing has changed, don't call the API.
+  if (trimmedComment === (model.closingComment ?? "").trim()) {
+    return;
+  }
+
   setTimeout(function () {
     const payload = {
-      closingComment: comment
+      closingComment: trimmedComment
     };
-    helpDeskService.addorUpdateHelpDeskStatusComment(id, payload).then(resp => {
+
+    helpDeskService.addorUpdateHelpDeskStatusComment(model.id, payload).then(() => {
       notifySuccess({ message: "Ticket comment is saved successfully." });
-      refreshHelpDeskList();
+      refreshGetHelpDesk();
     });
   });
 }
-
 // ===========================================================
 // Status Flow
 // ===========================================================

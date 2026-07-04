@@ -31,6 +31,7 @@
                       bordered
                       label="Drag files here or (+) to upload."
                       @added="onFileAdded"
+                      @removed="onFileRemoved"
                     />
                     <div class="text-grey-7 text-caption q-mt-xs">
                       <i>Allowed Files: jpg, png, jpeg, pdf, excel, doc, ppt</i>
@@ -176,7 +177,7 @@ const activeRowId = ref(null);
 const columns = ref([
   { name: "type", label: "Source", field: "type", align: "left" },
   { name: "sub_Module", label: "Source Name", field: "sub_Module", align: "left" },
-  { name: "virtualPath", label: "File Name", field: "virtualPath", align: "left" },
+  { name: "virtualPath", label: "File Name", field: row => extractFileName(row.seoFilename), align: "left" },
   { name: "createdBy.person.fullName", label: "Created By", field: "createdByPersonFullName", align: "left", sortable: false },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left" }
 ]);
@@ -445,6 +446,24 @@ const onFileAdded = (files) => {
   model.value.projectFileFlag = "edit"; // Set the overall flag for tracking
 };
 
+function onFileRemoved(files) {
+  files.forEach(file => {
+    const index = model.value.projectFiles.findIndex(f =>
+      f.name === file.name &&
+      f.size === file.size &&
+      f.lastModified === file.lastModified
+    );
+
+    if (index !== -1) {
+      model.value.projectFiles.splice(index, 1);
+    }
+  });
+
+  if (model.value.projectFiles.length === 0) {
+    model.value.projectFileFlag = "remove";
+  }
+}
+
 function getFilePreview (file) {
   return file && file instanceof File ? URL.createObjectURL(file) : "";
 }
@@ -581,6 +600,8 @@ function removeFile (index) {
     file.flag = "remove";
     model.value.projectFiles.splice(index, 1);
   } else {
+    // Remove from q-uploader
+    documentUploaderRef.value?.removeFile(file);
     // For new files, just remove them from the list
     model.value.projectFiles.splice(index, 1);
   }
@@ -608,6 +629,14 @@ const onDelete = (item) => {
 // Submit form
 const onSubmit = async () => {
   processing.value = true;
+
+   // Validate file selection
+  if (!model.value.projectFiles || model.value.projectFiles.length === 0) {
+    notifyError({ message: "Please select at least one file." });
+    processing.value = false;
+    return;
+  }
+
   try {
     const formData = new FormData();
     // Append other fields
