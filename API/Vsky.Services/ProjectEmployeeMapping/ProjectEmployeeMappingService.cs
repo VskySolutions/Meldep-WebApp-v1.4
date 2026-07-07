@@ -155,140 +155,111 @@ namespace Vsky.Services.ProjectEmployeeMappings
         #endregion
 
         #region GetProjectCharterEmployeeByProjectId
-        // Title: GetProjectCharterEmployeeByProjectId
-        //public async Task<List<ProjectEmployeeMapping>> GetProjectCharterEmployeeByProjectId(string projectId, DateTime? currentDate = null)
+        //public async Task<List<ProjectEmployeeMapping>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, DateTime? currentDate = null)
         //{
-        //    //var query = _projectEmployeeMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.ProjectId == projectId);
-        //    //query = query.Select(x => new ProjectEmployeeMapping
-        //    //{
-        //    //    Id = x.Id,
-        //    //    Employee = new Employee
-        //    //    {
-        //    //        Id = x.Employee.Id,
-        //    //        Person = new Person
-        //    //        {
-        //    //            FullName = x.Employee.Person.FirstName + " " + x.Employee.Person.LastName,
-        //    //        },
-        //    //        EmployeeAssignedHours = x.Employee.EmployeeAssignedHours.Where(c => c.WeekendDate.Month == currentDate.Value.Month && c.WeekendDate.Year == currentDate.Value.Year).Select(p => new VWEmployeeAssignedHours
-        //    //        {                
-        //    //            TotalHours = p.TotalHours,
-        //    //            WeekendDate = p.WeekendDate
-        //    //        }).ToList(),
-        //    //    }
-        //    //});
-
-        //    //// Group by Employee.Id and take the first for each
-        //    //var distinctByEmployee = await query
-        //    //    .GroupBy(x => x.Employee.Id)
-        //    //    .Select(g => g.First())
-        //    //    .ToListAsync();
-
-        //    //return distinctByEmployee;
-
         //    if (string.IsNullOrEmpty(projectId) || !currentDate.HasValue)
         //        return new List<ProjectEmployeeMapping>();
 
         //    var month = currentDate.Value.Month;
         //    var year = currentDate.Value.Year;
 
-        //    // Step 1: Fetch all EmployeeAssignedHours for the current month
-        //    var assignedHoursList = await _vWEmployeeAssignedHoursRepository.TableNoTracking
-        //        .Where(h => h.WeekendDate.Month == month && h.WeekendDate.Year == year)
-        //        .Select(h => new
+        //    var result = await _projectEmployeeMappingRepository.TableNoTracking
+        //        .Where(x => !x.Deleted && x.ProjectId == projectId && x.Employee.Active)
+
+        //        // GROUP BY Employee to remove duplicates
+        //        .GroupBy(x => new
         //        {
-        //            h.EmployeeId,
-        //            h.TotalHours,
-        //            h.WeekendDate
+        //            x.Employee.Id,
+        //            x.Employee.Person.FirstName,
+        //            x.Employee.Person.LastName
         //        })
-        //        .ToListAsync(); // fetch to memory
-
-        //    // Step 2: Fetch all project employees
-        //    var employeesList = await _projectEmployeeMappingRepository.TableNoTracking
-        //        .Where(x => !x.Deleted && x.ProjectId == projectId)
-        //        .Select(x => new
+        //        .Select(g => new ProjectEmployeeMapping
         //        {
-        //            MappingId = x.Id,
-        //            EmployeeId = x.Employee.Id,
-        //            FullName = x.Employee.Person.FirstName + " " + x.Employee.Person.LastName
-        //        })
-        //        .ToListAsync(); // fetch to memory first
-
-        //    // Step 3: Deduplicate employees in-memory
-        //    var employees = employeesList
-        //        .GroupBy(x => x.EmployeeId)
-        //        .Select(g => g.First())
-        //        .ToList();
-
-        //    // Step 4: Combine assigned hours and employee info in-memory
-        //    var result = employees.Select(e => new ProjectEmployeeMapping
-        //    {
-        //        Id = e.MappingId,
-        //        Employee = new Employee
-        //        {
-        //            Id = e.EmployeeId,
-        //            Person = new Person
+        //            Id = g.First().Id,
+        //            Employee = new Employee
         //            {
-        //                FullName = e.FullName
-        //            },
-        //            EmployeeAssignedHours = assignedHoursList
-        //                .Where(h => h.EmployeeId == e.EmployeeId)
-        //                .Select(p => new VWEmployeeAssignedHours
+        //                Id = g.Key.Id,
+        //                Person = new Person
         //                {
-        //                    TotalHours = p.TotalHours,
-        //                    WeekendDate = p.WeekendDate
-        //                })
-        //                .ToList()
-        //        }
-        //    })
-        //       .OrderBy(x => x.Employee.Person.FullName)
-        //       .ToList();
+        //                    FullName = g.Key.FirstName + " " + g.Key.LastName
+        //                },
+        //                EmployeeAssignedHours = _vWEmployeeAssignedHoursRepository.TableNoTracking
+        //                    .Where(h => h.EmployeeId == g.Key.Id
+        //                             && h.WeekendDate.Month == month
+        //                             && h.WeekendDate.Year == year)
+        //                    .Select(h => new VWEmployeeAssignedHours
+        //                    {
+        //                        TotalHours = h.TotalHours,
+        //                        WeekendDate = h.WeekendDate
+        //                    })
+        //                    .ToList()
+        //            }
+        //        })
+
+        //        .OrderBy(x => x.Employee.Person.FullName)
+        //        .ToListAsync();
 
         //    return result;
         //}
-
-        public async Task<List<ProjectEmployeeMapping>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, DateTime? currentDate = null)
+        public async Task<List<ProjectCharterEmployee>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, DateTime? currentDate = null)
         {
             if (string.IsNullOrEmpty(projectId) || !currentDate.HasValue)
-                return new List<ProjectEmployeeMapping>();
+                return new List<ProjectCharterEmployee>();
 
             var month = currentDate.Value.Month;
             var year = currentDate.Value.Year;
 
-            var result = await _projectEmployeeMappingRepository.TableNoTracking
-                .Where(x => !x.Deleted && x.ProjectId == projectId && x.Employee.Active)
+            var startDate = new DateTime(year, month, 1);
+            var endDate = startDate.AddMonths(1);
 
-                // GROUP BY Employee to remove duplicates
+            var result = await _projectEmployeeMappingRepository.TableNoTracking
+                .Where(x => !x.Deleted &&
+                            x.ProjectId == projectId &&
+                            x.Employee.Active)
                 .GroupBy(x => new
                 {
                     x.Employee.Id,
                     x.Employee.Person.FirstName,
                     x.Employee.Person.LastName
                 })
-                .Select(g => new ProjectEmployeeMapping
+                .Select(g => new ProjectCharterEmployee
                 {
                     Id = g.First().Id,
-                    Employee = new Employee
-                    {
-                        Id = g.Key.Id,
-                        Person = new Person
-                        {
-                            FullName = g.Key.FirstName + " " + g.Key.LastName
-                        },
-                        EmployeeAssignedHours = _vWEmployeeAssignedHoursRepository.TableNoTracking
-                            .Where(h => h.EmployeeId == g.Key.Id
-                                     && h.WeekendDate.Month == month
-                                     && h.WeekendDate.Year == year)
-                            .Select(h => new VWEmployeeAssignedHours
-                            {
-                                TotalHours = h.TotalHours,
-                                WeekendDate = h.WeekendDate
-                            })
-                            .ToList()
-                    }
+                    EmployeeId = g.Key.Id,
+                    EmployeeName = g.Key.FirstName + " " + g.Key.LastName
                 })
-
-                .OrderBy(x => x.Employee.Person.FullName)
+                .OrderBy(x => x.EmployeeName)
                 .ToListAsync();
+
+            if (!result.Any())
+                return result;
+
+            var employeeIds = result.Select(x => x.EmployeeId).ToList();
+
+            var employeeAssignedHours = await _vWEmployeeAssignedHoursRepository.TableNoTracking
+                .Where(x => employeeIds.Contains(x.EmployeeId)
+                         && x.WeekendDate >= startDate
+                         && x.WeekendDate < endDate)
+                .Select(x => new
+                {
+                    x.EmployeeId,
+                    x.TotalHours,
+                    x.WeekendDate
+                })
+                .ToListAsync();
+
+            var lookup = employeeAssignedHours.ToLookup(x => x.EmployeeId);
+
+            foreach (var item in result)
+            {
+                item.EmployeeAssignedHours = lookup[item.EmployeeId]
+                    .Select(x => new ProjectCharterEmployeeAssignedHours
+                    {
+                        TotalHours = x.TotalHours,
+                        WeekendDate = x.WeekendDate
+                    })
+                    .ToList();
+            }
 
             return result;
         }

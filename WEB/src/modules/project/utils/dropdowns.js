@@ -37,10 +37,10 @@ export default function projectModule () {
   });
 
  const projectCharterEmployeesWithWeeklyPlanHoursForDropdown =  useSingleSelectDropdown(projectService.getProjectCharterEmployeesWithWeeklyPlanHoursByProjectId, {
-      valueKey: "employee.id",
+      valueKey: "employeeId",
       labelKey: (item) => {
-        const weekendHours = item.employee.employeeAssignedHours
-          ? item.employee.employeeAssignedHours
+        const weekendHours = item.employeeAssignedHours
+          ? item.employeeAssignedHours
               .map(h => {
                 const date = new Date(h.weekendDate).toLocaleDateString("en-US", {
                   month: "2-digit",
@@ -51,8 +51,9 @@ export default function projectModule () {
               .join("; ")
           : "0";
 
-        return `${item.employee.person.fullName} (${weekendHours})`;
-      }
+        return `${item.employeeName} (${weekendHours})`;
+      },
+      dataKey: "employeeName"
     }
   );
 

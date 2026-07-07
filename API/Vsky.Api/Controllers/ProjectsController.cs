@@ -1688,7 +1688,7 @@ namespace Vsky.Api.Controllers
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
                 var list = await _projectEmployeeMappingService.GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(id, GetDateTime);
-                var model = _mapper.Map<List<ProjectEmployeeMappingModel>>(list);
+                var model = _mapper.Map<List<ProjectCharterEmployee>>(list);
                 return Ok(model);
             }
             catch (Exception ex)

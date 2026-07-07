@@ -462,6 +462,14 @@
                                     <q-item-section avatar><q-icon name="o_edit" color="" size="xs" /></q-item-section>
                                     <q-item-section class="">Edit</q-item-section>
                                   </q-item>
+                                  <q-item
+                                    v-if="props.row.isEditable"
+                                    v-ripple clickable
+                                    @click="onProjectEdit(props.row.id, true)"
+                                  >
+                                    <q-item-section avatar><q-icon name="o_groups" size="xs" /></q-item-section>
+                                    <q-item-section>Charter</q-item-section>
+                                  </q-item>
                                   <q-item v-if="props.row.isEditable || props.row.isNotes" v-ripple clickable @click="onNoteAdd(props.row.id, 'Projects', props.row.id, props.row.name, props.row.name, '', refreshProjectList)">
                                     <q-item-section avatar><q-icon name="o_assignment" size="xs" /></q-item-section>
                                     <q-item-section>Note</q-item-section>
@@ -1676,11 +1684,11 @@
                                   <q-tooltip v-if="props.row.activityOwner">
                                     <div>
                                       <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
-                                      <span>{{ activityOwnerList.find(e => e.value === props.row.activityOwner)?.text || props.row.activityOwner }}</span>
+                                      <span>{{ projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.find(e => e.value === props.row.activityOwner)?.text || props.row.activityOwner }}</span>
                                     </div>
                                   </q-tooltip>
                                   <span v-if="props.row.activityOwner" class="q-mr-md" style="font-size: 12px;">
-                                    <span class="Person">{{ getInitialsOwner(activityOwnerList.find(e => e.value === props.row.activityOwner)?.name || props.row.activityOwner) }}
+                                    <span class="Person">{{ getInitialsOwner(projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.find(e => e.value === props.row.activityOwner)?.data || props.row.activityOwner) }}
                                     </span>
                                   </span>
                                   <q-btn v-else size="xs" round icon="o_add" color="white" style="padding: 5px 5px;min-height: 15px;background-color: gray !important">
@@ -1700,7 +1708,7 @@
 
                                     <q-select
                                       v-model="scope.value"
-                                      :options="activityOwnerList"
+                                      :options="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value"
                                       class="w-100 h-auto"
                                       use-input
                                       clearable
@@ -1712,7 +1720,7 @@
                                       option-value="value"
                                       option-label="text"
                                       dropdown-icon="o_arrow_drop_down"
-                                      @filter="getownerfilter"
+                                      @filter="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.filter"
                                     >
                                       <template #option="{ itemProps, opt }">
                                         <q-item v-bind="itemProps">
@@ -2490,7 +2498,6 @@ async function loadProjectModules (projectId) {
   if (projectId) {
     activeRowId.value = projectId;
     searchProjectModule.value.projectId = projectId;
-    activityOwnerList.value = [];
     getAllProjectTaskOwnersListForDropdown(selectedProjectId.value);
     projectEmployeesForDropdown.load(selectedProjectId.value);
     try {
@@ -3747,53 +3754,6 @@ function getActivitiesDropDownFilter (val, update, abort) {
   });
 }
 
-// Get all Activity Owner list
-const activityOwnerList = ref([]);
-const activityOwnerListFilter = ref([]);
-function getAllProjectEmployeesListForDropdown (projectId) {
-  projectService.getProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(projectId).then((resp) => {
-    const responseData = resp.map((item) => {
-      // Build weekend breakdown string
-      const weekendHours = item.employee.employeeAssignedHours
-        ? item.employee.employeeAssignedHours
-          .map(h => {
-            const date = new Date(h.weekendDate).toLocaleDateString("en-US", {
-              month: "2-digit",
-              day: "2-digit"
-            });
-            return `${date}-${h.totalHours}`;
-          })
-          .join("; ")
-        : "0";
-
-      return {
-        text: `${item.employee.person.fullName} (${weekendHours})`,
-        value: item.employee.id,
-        name: `${item.employee.person.fullName}`
-      };
-    });
-    activityOwnerList.value = responseData;
-    activityOwnerListFilter.value = responseData;
-
-    // const responseData1 = resp.map((item) => ({ text: item.employee.person.fullName, value: item.employee.id }));
-    // taskOwnerList.value = responseData1;
-    // taskOwnerListFilter.value = responseData1;
-  });
-}
-// Search  Activity Owner for dropdown
-function getownerfilter (val, update, abort) {
-  update(() => {
-    const needle = val ? val.toLowerCase() : "";
-    if (needle === "") {
-      activityOwnerList.value = activityOwnerListFilter.value;
-      taskOwnerList.value = taskOwnerListFilter.value;
-    } else {
-      activityOwnerList.value = activityOwnerListFilter.value.filter(v => v.text.toLowerCase().includes(needle));
-      taskOwnerList.value = taskOwnerListFilter.value.filter(v => v.text.toLowerCase().includes(needle));
-    }
-  });
-}
-
 // Get all Task Owner list
 const taskOwnerList = ref([]);
 const taskOwnerListFilter = ref([]);
@@ -4064,12 +4024,8 @@ async function runSequentially () {
     // --------------------------------------------------------------------------
     // Load Employees
     // --------------------------------------------------------------------------
-    activityOwnerList.value = [];
-
     if (selectedProjectId.value) {
-      getAllProjectEmployeesListForDropdown(
-        selectedProjectId.value
-      );
+      projectCharterEmployeesWithWeeklyPlanHoursForDropdown.load(selectedProjectId.value);
 
       getAllProjectTaskOwnersListForDropdown(
         selectedProjectId.value
@@ -4241,7 +4197,8 @@ const {
   projectActiveInActiveDropdown,
   projectTypesDropdown,
   projectPrioritiesDropdown,
-  projectEmployeesForDropdown
+  projectEmployeesForDropdown,
+  projectCharterEmployeesWithWeeklyPlanHoursForDropdown
 } = projectModule();
 
 const { activeEmployeesDropdown } = employeeModule();

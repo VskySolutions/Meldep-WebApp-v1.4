@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Vsky.Core;
 
 namespace Vsky.Models;
@@ -32,4 +33,19 @@ public class ProjectEmployeeMapping : BaseEntity
 
     public virtual VW_Project VW_Project { get; set; }
 
+}
+
+public class ProjectCharterEmployee
+{
+    public string Id { get; set; }
+    public string EmployeeId { get; set; }
+    public string EmployeeName { get; set; }
+
+    public List<ProjectCharterEmployeeAssignedHours> EmployeeAssignedHours { get; set; } = new();
+}
+
+public class ProjectCharterEmployeeAssignedHours
+{
+    public DateTime WeekendDate { get; set; }
+    public decimal TotalHours { get; set; }
 }

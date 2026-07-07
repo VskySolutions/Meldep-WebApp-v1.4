@@ -49,8 +49,8 @@ export function onProjectEdit (id, isCharter = false, refresh, refreshProjectNam
     component: editProject,
     componentProps: { id, isCharter }
   }).onOk(() => {
-    refresh();
-    refreshProjectNameDropdown();
+    refresh?.();
+    refreshProjectNameDropdown?.();
   })
     .onCancel(() => { })
     .onDismiss(() => { });
