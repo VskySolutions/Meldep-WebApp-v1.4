@@ -102,7 +102,7 @@ namespace Vsky.Services.JobsCreate
         #region GetAllJobPostListForDropdown
         public async Task<List<CommonDropDown>> GetAllJobPostListForDropdown(string SiteId)
         {
-            var query = _jobCreateRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
+            var query = _jobCreateRepository.TableNoTracking.Where(x => !x.Deleted && x.IsActive && x.SiteId == SiteId);
 
             var list = await query
                   .OrderBy(x => x.JobTitle)

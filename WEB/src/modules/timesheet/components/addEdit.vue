@@ -356,7 +356,6 @@ const model = ref({
 // ----------------------------------------------------------------------------------------------------------------
 // Table variables
 // ----------------------------------------------------------------------------------------------------------------
-const tableRef = ref();
 const timesheetRows = ref([]);
 const pagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 100, page: 1 });
 const columns = ref([
@@ -422,16 +421,35 @@ const { projectTasksByProjectIdAndModuleIdForDropdownSingleSelectWithRowIndex } 
 
 const projectList = ref([]);
 const projectListForFilter = ref([]);
-function getAllProjectListForDropdown () {
+// function getAllProjectListForDropdown () {
+//   const statuses = ["Open", "New", "In progress"];
+//   projectService.getAllProjectListForDropdown(statuses).then((resp) => {
+//     const responseData = resp.map((item) => ({
+//       text: `${item.name} (${item.totalModuleCount})`,
+//       value: item.id
+//     }));
+//     projectList.value = responseData;
+//     projectListForFilter.value = responseData;
+//   });
+// }
+async function getAllProjectListForDropdown() {
   const statuses = ["Open", "New", "In progress"];
-  projectService.getAllProjectListForDropdown(statuses).then((resp) => {
-    const responseData = resp.map((item) => ({
-      text: `${item.name} (${item.totalModuleCount})`,
-      value: item.id
-    }));
-    projectList.value = responseData;
-    projectListForFilter.value = responseData;
+
+  const projects = await projectService.getAllProjectListForDropdown(statuses);
+
+  const responseData = projects.map(item => ({
+    text: `${item.name} (${item.totalModuleCount})`,
+    value: item.id
+  }));
+
+  editProjects.value.forEach(project => {
+    if (!responseData.some(x => x.value === project.value)) {
+      responseData.push(project);
+    }
   });
+
+  projectList.value = responseData;
+  projectListForFilter.value = [...responseData];
 }
 // Search project for dropdown
 function getAllProjectListForFilter (val, update, abort) {
@@ -449,6 +467,7 @@ function getAllProjectListForFilter (val, update, abort) {
 // ----------------------------------------------------------------------------------------------------------------
 // Get Timesheet Details
 // ----------------------------------------------------------------------------------------------------------------
+const editProjects = ref([]);
 const getTimesheet = async () => {
   loading.value = true;
   try {
@@ -458,6 +477,7 @@ const getTimesheet = async () => {
       ? format(resp.timesheetDate, "MM/dd/yyyy")
       : "";
     const rows = [];
+    editProjects.value = [];
     for (const [index, lines] of resp.timesheetLines.entries()) {
       const rowIndex = index;
       projectModulesByProjectIdForDropdownSingleSelectWithRowIndex.load(
@@ -478,6 +498,13 @@ const getTimesheet = async () => {
         lines.projectModule.id,
         lines.task.id
       );
+      if (lines.project?.id) {
+        editProjects.value.push({
+          value: lines.project.id,
+          text: `${lines.project.name} (${lines.project.totalModuleCount})`
+        });
+      }
+
       rows.push({
         ...lines,
         editing: false,
