@@ -640,6 +640,7 @@ const getCompany = () => {
       companyId: model.value.companyId,
       flag: "Edit"
     }));
+    console.log(model.value.stateProvinceId);
   }).finally(() => {
     loading.value = false;
   });
@@ -1093,6 +1094,7 @@ watch(() => model.value.countryId, (newValue, oldValue) => {
 onMounted(() => {
   businessTypeForSiteIdDropdownSingleSelect.load(selectedSiteId.value, "Business Type");
   countryNameDropdownSingleSelect.load();
+  stateNameDropdownSingleSelect.load(model.value.countryId);
   personNameDropdownSingleSelect.load(selectedSiteId.value);
   activeEmployeesDropdownSingleSelect.load(selectedSiteId.value);
 });

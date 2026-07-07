@@ -627,7 +627,7 @@
                   </template>
                   <template #bottom-row>
                     <q-tr class="bg-grey-2 text-black">
-                      <q-td colspan="7" class="text-right text-weight-bold">
+                      <q-td colspan="8" class="text-right text-weight-bold">
                         Total Hours:
                       </q-td>
 
