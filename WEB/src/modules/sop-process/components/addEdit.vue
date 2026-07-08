@@ -160,6 +160,7 @@
             outline
             label="Close"
             class="text-grey-9 actionBtn"
+            :class="{ 'same-size-btn': isPublished }"
             no-caps
             @click="onDialogCancel()"
           />
@@ -174,9 +175,7 @@
               @click="onSubmit('approve')"
             />
           </template>
-
-          <!-- EDITOR / OTHER USERS -->
-          <template v-else-if="canAdd && (!props.id || canEditDraft)">
+          <!-- <template v-else-if="canAdd && (!props.id || canEditDraft)">
             <q-btn
               label="Save & Close"
               color="primary"
@@ -186,6 +185,38 @@
               :disable="isReadOnlyMode"
               @click="onSubmit('save')"
             />
+            <q-btn
+              color="primary"
+              label="Save & Submit"
+              class="actionBtn"
+              :loading="processingSubmit"
+              no-caps
+              :disable="isReadOnlyMode"
+              @click="onSubmit('submit')"
+            />
+          </template> -->
+          <template v-if="isPublished && canAdd && canEditDraft">
+            <q-btn
+              color="primary"
+              label="Save & Revert to Draft"
+              class="actionBtn"
+              :loading="processingSave"
+              no-caps
+              @click="onSaveRevertToDraft"
+            />
+          </template>
+
+          <template v-else-if="canAdd && (!props.id || canEditDraft)">
+            <q-btn
+              color="primary"
+              label="Save & Close"
+              class="actionBtn"
+              :loading="processingSave"
+              no-caps
+              :disable="isReadOnlyMode"
+              @click="onSubmit('save')"
+            />
+
             <q-btn
               color="primary"
               label="Save & Submit"
@@ -205,10 +236,10 @@
 <script setup>
 // Import libraries
 import _ from "lodash";
-import { notifyError, notifySuccess } from "assets/utils";
+import { notifyError, notifySuccess, zwConfirm } from "assets/utils";
 import { useAuthStore } from "stores/auth";
 import useVuelidate from "@vuelidate/core";
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, watch, computed, version } from "vue";
 import { useQuasar, useDialogPluginComponent } from "quasar";
 import { required, helpers, numeric } from "@vuelidate/validators";
 
@@ -243,9 +274,15 @@ const processingSubmit = ref(false);
 // Define model values
 const model = ref({
   description: "",
+  version: "1.0",
   isActive: true
 });
 
+const isPublished = computed(() => {
+  return (
+    model.value?.statusText?.toLowerCase() === "published"
+  );
+});
 // check login user role
 const authStore = useAuthStore();
 const user = authStore.user;
@@ -326,14 +363,29 @@ const getSOPProcessInDetailsById = (ProcessId) => {
   });
 };
 
-const getNextSOPProcessVersion = () => {
-  sopProcessService.getNextSOPProcessVersion().then((resp) => {
-    const version = model.value.version ? model.value.version : resp
-    model.value.version = version;
-  }).finally(() => {
-    loading.value = false;
-  });
+const onSaveRevertToDraft = () => {
+  zwConfirm(
+    {
+      title: "Confirmation",
+      message:
+        "Are you sure you want to revert this published SOP to Draft? The current published version will remain visible to employees until the new version is published.",
+      okLabel: "Yes",
+      cancelLabel: "No"
+    },
+    () => {
+      onSubmit("revertToDraft");
+    }
+  );
 };
+
+// const getNextSOPProcessVersion = () => {
+//   sopProcessService.getNextSOPProcessVersion().then((resp) => {
+//     const version = model.value.version ? model.value.version : resp
+//     model.value.version = version;
+//   }).finally(() => {
+//     loading.value = false;
+//   });
+// };
 
 function getSubCategoriesByCategoryId (categoryId) {
   model.value.subCategoryId = "";
@@ -440,6 +492,8 @@ const onSubmit = async (type) => {
     // Set status based on button type
     if (type === "save") {
       model.value.statusId = await sopProcessStatusDropdownSingleSelect.getValueByLabel("Draft"); // Draft
+    } else if(type === "revertToDraft") {
+      model.value.statusId = await sopProcessStatusDropdownSingleSelect.getValueByLabel("Draft"); // Draft
     } else if(type === "approve") {
       model.value.statusId = await sopProcessStatusDropdownSingleSelect.getValueByLabel("Approved"); // Approved
     } else {
@@ -483,7 +537,7 @@ onMounted(async () => {
 
   // Set Default values for advance filter
   if (model.value.statusId === null || model.value.statusId === undefined) model.value.statusId = setSOPProcessStatus.value;
-  getNextSOPProcessVersion();
+  // getNextSOPProcessVersion();
 });
 </script>
 <style scoped>
@@ -492,5 +546,9 @@ onMounted(async () => {
 }
 .q-dialog__inner--minimized{
   padding: 0;
+}
+.same-size-btn {
+  min-width: 150px;
+  height: 50px;
 }
 </style>

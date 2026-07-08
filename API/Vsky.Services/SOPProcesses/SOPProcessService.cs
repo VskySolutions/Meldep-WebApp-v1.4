@@ -42,29 +42,52 @@ namespace Vsky.Services.SOPProcesses
         {
             var query = _sOPProcessRepository.TableNoTracking.Where(x => !x.Deleted && x.IsActive == isActive && x.SiteId == siteId);
 
+            //var userdata = _userManager.FindByIdAsync(logginuser).GetAwaiter().GetResult();
+            //var user = _userManager.FindByNameAsync(userdata.UserName).GetAwaiter().GetResult();
+            //if (user != null && !user.Deleted && user.Active)
+            //{
+            //    //Get user roles
+            //    var roles = _userManager.GetRolesAsync(user).GetAwaiter().GetResult();
+            //    // Fetch the NormalizedName of each role
+            //    //var normalizedRoles = _db.Roles.Where(r => roles.Contains(r.Name)).Select(r => r.NormalizedName).ToArray();
+            //    var normalizedRoles = _applicationUserRoleService
+            //        .GetNormalizedRoleNamesByUserAndSite(user.Id, siteId)
+            //        .GetAwaiter()
+            //        .GetResult()
+            //        .ToArray();
+
+            //    // If user is NOT SOP Approver or SOP Editor
+            //    if (!normalizedRoles.Contains("sop approver") && !normalizedRoles.Contains("sop editor"))
+            //    {
+            //        query = query.Where(x =>
+            //            x.SOPProcessStatusLog
+            //                .OrderByDescending(p => p.CreatedOnUtc)
+            //                .Select(p => p.Status.DropDownValue.ToLower())
+            //                .FirstOrDefault() == "published"
+            //        );
+            //    }
+            //}
+            List<string> normalizedRoles = new();
+
             var userdata = _userManager.FindByIdAsync(logginuser).GetAwaiter().GetResult();
             var user = _userManager.FindByNameAsync(userdata.UserName).GetAwaiter().GetResult();
+
             if (user != null && !user.Deleted && user.Active)
             {
-                //Get user roles
-                var roles = _userManager.GetRolesAsync(user).GetAwaiter().GetResult();
-                // Fetch the NormalizedName of each role
-                //var normalizedRoles = _db.Roles.Where(r => roles.Contains(r.Name)).Select(r => r.NormalizedName).ToArray();
-                var normalizedRoles = _applicationUserRoleService
+                normalizedRoles = _applicationUserRoleService
                     .GetNormalizedRoleNamesByUserAndSite(user.Id, siteId)
                     .GetAwaiter()
                     .GetResult()
-                    .ToArray();
+                    .ToList();
 
-                // If user is NOT SOP Approver or SOP Editor
-                if (!normalizedRoles.Contains("sop approver") && !normalizedRoles.Contains("sop editor"))
+                if (!normalizedRoles.Contains("sop approver") &&
+                    !normalizedRoles.Contains("sop editor"))
                 {
                     query = query.Where(x =>
                         x.SOPProcessStatusLog
                             .OrderByDescending(p => p.CreatedOnUtc)
                             .Select(p => p.Status.DropDownValue.ToLower())
-                            .FirstOrDefault() == "published"
-                    );
+                            .FirstOrDefault() == "published");
                 }
             }
 
@@ -182,17 +205,22 @@ namespace Vsky.Services.SOPProcesses
                 );
             }
 
-            var latestIds = query
-                .AsEnumerable()
-                .Where(x => Version.TryParse(x.Version, out _))
-                .GroupBy(x => Version.Parse(x.Version).Major)
-                .Select(g => g
-                    .OrderByDescending(x => Version.Parse(x.Version))
-                    .First()
-                    .Id)
-                .ToList();
+            bool isEditorOrApprover =
+             normalizedRoles.Contains("sop approver") ||
+             normalizedRoles.Contains("sop editor");
 
-            query = _sOPProcessRepository.TableNoTracking.Where(x => latestIds.Contains(x.Id));
+                    var latestIds = query
+             .AsEnumerable()
+             .Where(x => Version.TryParse(x.Version, out _))
+             .GroupBy(x => x.SOPProcessNumber)
+             .Select(g => g
+                 .OrderByDescending(x => Version.Parse(x.Version))
+                 .First()
+                 .Id)
+             .ToList();
+
+            //query = _sOPProcessRepository.TableNoTracking.Where(x => latestIds.Contains(x.Id));
+            query = query.Where(x => latestIds.Contains(x.Id));
 
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
@@ -233,6 +261,7 @@ namespace Vsky.Services.SOPProcesses
             {
                 Id = x.Id,
                 Title = x.Title,
+                SOPProcessNumber = x.SOPProcessNumber,
                 Version = x.Version,
                 ShortDescription = x.ShortDescription,
                 Purpose = x.Purpose,
@@ -321,6 +350,7 @@ namespace Vsky.Services.SOPProcesses
             query = query.Select(x => new SOPProcess
             {
                 Id = x.Id,
+                SOPProcessNumber = x.SOPProcessNumber,
                 Title = x.Title,
                 ShortDescription = x.ShortDescription,
                 Description = x.Description,
@@ -402,7 +432,7 @@ namespace Vsky.Services.SOPProcesses
 
         //    return item;
         //}
-        public async Task<SOPProcess> GetSOPProcessByTitle(string siteId, string title, string version = null, string id = null)
+        public async Task<SOPProcess> GetSOPProcessByTitle(string siteId, string title, int number = 0, string id = null)
         {
             var query = _sOPProcessRepository.TableNoTracking
                 .Where(x => !x.Deleted
@@ -413,9 +443,8 @@ namespace Vsky.Services.SOPProcesses
 
             if (!string.IsNullOrEmpty(id))
             {
-                var majorVersion = version.Split('.')[0];
                 // Exclude records having the same version prefix
-                query = query.Where(x => !x.Version.StartsWith(majorVersion + "."));
+                query = query.Where(x => x.SOPProcessNumber != number);
             }
 
             return await query.FirstOrDefaultAsync();
@@ -424,9 +453,31 @@ namespace Vsky.Services.SOPProcesses
 
         #region GetLastSOPProcessNumber
         // Title: GetLastSOPProcessNumber
-        // Description: This method retrieves the highest SOPProcessNumber from the database or returns 1 if none are found. 
-        //public async Task<string> GetNextSOPProcessVersion()
+        // Description: This method retrieves the highest IssueNumber from the database or returns 1 if none are found. 
+        public async Task<int> GetLastSOPProcessNumber()
+        {
+            var query = await _sOPProcessRepository.TableNoTracking.OrderByDescending(m => m.SOPProcessNumber).FirstOrDefaultAsync();
+            return query == null ? 1 : query.SOPProcessNumber;
+        }
+        #endregion
+
+        #region GetNextSOPProcessVersion
+        //public async Task<string> GetNextSOPProcessVersion(string currentVersion = null)
         //{
+        //    // Existing SOP - increment current version
+        //    if (!string.IsNullOrWhiteSpace(currentVersion))
+        //    {
+        //        var parts = currentVersion.Split('.');
+
+        //        if (int.TryParse(parts[^1], out int last))
+        //        {
+        //            parts[^1] = (last + 1).ToString();
+        //        }
+
+        //        return string.Join(".", parts);
+        //    }
+
+        //    // New SOP - generate next major version
         //    var versions = await _sOPProcessRepository.TableNoTracking
         //        .Select(x => x.Version)
         //        .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -445,36 +496,32 @@ namespace Vsky.Services.SOPProcesses
 
         //    return $"{maxMajor + 1}.0";
         //}
-        public async Task<string> GetNextSOPProcessVersion(string currentVersion = null)
+        public async Task<string> GetNextSOPProcessVersion(string currentVersion = null, bool createMajorVersion = false)
         {
-            // Existing SOP - increment current version
             if (!string.IsNullOrWhiteSpace(currentVersion))
             {
-                var parts = currentVersion.Split('.');
+                if (!Version.TryParse(currentVersion, out var version))
+                    return "1.0";
 
-                if (int.TryParse(parts[^1], out int last))
-                {
-                    parts[^1] = (last + 1).ToString();
-                }
-
-                return string.Join(".", parts);
+                return createMajorVersion
+                    ? $"{version.Major + 1}.0"
+                    : $"{version.Major}.{version.Minor + 1}";
             }
 
-            // New SOP - generate next major version
             var versions = await _sOPProcessRepository.TableNoTracking
+                .Where(x => !string.IsNullOrWhiteSpace(x.Version))
                 .Select(x => x.Version)
-                .Where(x => !string.IsNullOrWhiteSpace(x))
                 .ToListAsync();
-
-            if (!versions.Any())
-                return "1.0";
 
             int maxMajor = versions
                 .Select(v =>
                 {
-                    var parts = v.Split('.');
-                    return int.TryParse(parts[0], out int major) ? major : 0;
+                    if (Version.TryParse(v, out var version))
+                        return version.Major;
+
+                    return 0;
                 })
+                .DefaultIfEmpty(0)
                 .Max();
 
             return $"{maxMajor + 1}.0";

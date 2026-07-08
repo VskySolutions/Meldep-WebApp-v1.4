@@ -157,6 +157,7 @@
                 :class="['dot-circle q-mr-xs', props.row.isActive ? 'dot-active' : 'dot-inactive']" style="cursor: default;"
               />
             </q-td>
+            <q-td>{{ props.row.sopProcessNumber }}</q-td>
             <q-td style="width: 17%;" class="hoverable-cell">
               <span
                 class="cursor-pointer"
@@ -267,7 +268,7 @@
             <q-td class="text-center" style="width: 8%;">
               {{ toDate(props.row.updatedOnUtc) }}
             </q-td>
-            <q-td style="width: 5%;" class="text-center actions">
+            <q-td style="width: 5%;" class="actions" align="left">
               <q-icon
                 v-if="
                   canEdit(props.row) &&
@@ -446,6 +447,7 @@ const pagination = ref(filterLocalStorage?.pagination || { sortBy: "updatedOnUtc
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
+  { name: "sopProcessNumber", label: "SOP Id", field: "sopProcessNumber", align: "left", sortable: true },
   { name: "title", label: "Process Title", field: "title", align: "left", sortable: true },
   { name: "purpose", label: "Purpose", field: "purpose", align: "left", sortable: true },
   { name: "version", label: "Version", field: "version", align: "left", sortable: true },

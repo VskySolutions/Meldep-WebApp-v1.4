@@ -15,6 +15,7 @@ namespace Vsky.Models
         public string SiteId { get; set; }
         public string CategoryId { get; set; }
         public string SubCategoryId { get; set; }
+        public int SOPProcessNumber { get; set; }
         public string Title { get; set; }
         public string ShortDescription { get; set; }
         public string Description { get; set; }
@@ -69,6 +70,7 @@ namespace Vsky.Models
         public string SiteId { get; set; }
         public string CategoryId { get; set; }
         public string SubCategoryId { get; set; }
+        public int SOPProcessNumber { get; set; }
         public string Title { get; set; }
         public string ShortDescription { get; set; }
         public string Description { get; set; }

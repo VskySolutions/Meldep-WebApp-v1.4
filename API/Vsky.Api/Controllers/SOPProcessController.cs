@@ -124,6 +124,7 @@ namespace Vsky.Api.Controllers
                     var SOPProcessEntity = new SOPProcess
                     {
                         Id = Guid.NewGuid().ToString(),
+                        SOPProcessNumber = await _sOPProcessService.GetLastSOPProcessNumber() + 1,
                         Version = model.Version,
                         SiteId = SiteId,
                         Title = model.Title,
@@ -178,10 +179,10 @@ namespace Vsky.Api.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var LoggedUserId = User.GetLoggedInUserId<string>();
+                    var loggedUserId = User.GetLoggedInUserId<string>();
                     var SiteId = _globalVariable.SiteId;
                     var SiteData = await _siteService.GetById(SiteId);
-                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+                    var currentDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
                     var entity = _sOPProcessService.GetSOPProcessById(SiteId, id);
                     // If no sop process is found with the given ID, return a bad request with an error message
@@ -189,7 +190,7 @@ namespace Vsky.Api.Controllers
                         return BadRequest(new BadRequestError("No sop process found with the specified id."));
 
                     //Check if the sop process already exists
-                    var exists = await _sOPProcessService.GetSOPProcessByTitle(SiteId, model.Title, model.Version, id);
+                    var exists = await _sOPProcessService.GetSOPProcessByTitle(SiteId, model.Title, model.SOPProcessNumber, id);
                     if (exists != null)
                         return BadRequest(new BadRequestError("sop process title already exists, try with another."));
 
@@ -201,12 +202,24 @@ namespace Vsky.Api.Controllers
 
                     string statusName = lastStatus?.Status?.DropDownValue;
 
-                    if ((entity.Description != model.Description && (model.ActionType == "submit" || model.ActionType == "approve")) || statusName == "Published")
+                    bool isDescriptionChanged = !string.Equals(
+                        entity.Description?.Trim(),
+                        model.Description?.Trim(),
+                        StringComparison.Ordinal);
+
+                    bool shouldCreateVersion = (isDescriptionChanged && model.ActionType == "approve") || statusName == "Published";
+
+                    if (shouldCreateVersion)
                     {
-                        var SOPProcessEntity = new SOPProcess
+                        bool createMajorVersion = statusName == "Published";
+
+                        var sopProcess = new SOPProcess
                         {
                             Id = Guid.NewGuid().ToString(),
-                            Version = await _sOPProcessService.GetNextSOPProcessVersion(entity.Version),
+                            SOPProcessNumber = model.SOPProcessNumber,
+                            Version = await _sOPProcessService.GetNextSOPProcessVersion(
+                                entity.Version,
+                                createMajorVersion),
                             SiteId = SiteId,
                             Title = model.Title,
                             CategoryId = model.CategoryId,
@@ -214,29 +227,29 @@ namespace Vsky.Api.Controllers
                             ShortDescription = model.ShortDescription,
                             Purpose = model.Purpose,
                             IsActive = model.IsActive,
-                            CreatedById = LoggedUserId,
-                            UpdatedById = LoggedUserId,
-                            CreatedOnUtc = GetDateTime,
-                            UpdatedOnUtc = GetDateTime,
+                            CreatedById = loggedUserId,
+                            UpdatedById = loggedUserId,
+                            CreatedOnUtc = currentDateTime,
+                            UpdatedOnUtc = currentDateTime
                         };
 
-                        if (!string.IsNullOrEmpty(model.Description))
+                        if (!string.IsNullOrWhiteSpace(model.Description))
                         {
-                            SOPProcessEntity.Description = await _azureBlobImageServices
-                                .ProcessHtmlAndManageImagesAsync(
+                            sopProcess.Description =
+                                await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
                                     model.Description,
                                     SiteData.Name,
                                     "SOP-Process",
-                                    SOPProcessEntity.Id
-                                );
+                                    sopProcess.Id);
                         }
-                        _sOPProcessService.InsertSOPProcess(SOPProcessEntity);
 
-                        if (IsSOPProcessStatusChanged)
-                        {
-                            // Add Status Log
-                            AddSOPProcessStatusLog(SOPProcessEntity.Id, model.StatusId, LoggedUserId, GetDateTime);
-                        }
+                        _sOPProcessService.InsertSOPProcess(sopProcess);
+
+                        AddSOPProcessStatusLog(
+                            sopProcess.Id,
+                            model.StatusId,
+                            loggedUserId,
+                            currentDateTime);
                     }
                     else
                     {
@@ -246,26 +259,29 @@ namespace Vsky.Api.Controllers
                         entity.ShortDescription = model.ShortDescription;
                         entity.Purpose = model.Purpose;
                         entity.IsActive = model.IsActive;
-                        entity.UpdatedById = LoggedUserId;
-                        entity.UpdatedOnUtc = GetDateTime;
+                        entity.UpdatedById = loggedUserId;
+                        entity.UpdatedOnUtc = currentDateTime;
 
-                        if (!string.IsNullOrEmpty(model.Description))
+                        if (!string.IsNullOrWhiteSpace(model.Description))
                         {
-                            entity.Description = await _azureBlobImageServices
-                                .ProcessHtmlAndManageImagesAsync(
+                            entity.Description =
+                                await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
                                     model.Description,
                                     SiteData.Name,
                                     "SOP-Process",
                                     entity.Id,
-                                    entity.Description
-                                );
+                                    entity.Description);
                         }
+
                         _sOPProcessService.UpdateSOPProcess(entity);
 
                         if (IsSOPProcessStatusChanged)
                         {
-                            // Add Status Log
-                            AddSOPProcessStatusLog(entity.Id, model.StatusId, LoggedUserId, GetDateTime);
+                            AddSOPProcessStatusLog(
+                                entity.Id,
+                                model.StatusId,
+                                loggedUserId,
+                                currentDateTime);
                         }
                     }
                 }
