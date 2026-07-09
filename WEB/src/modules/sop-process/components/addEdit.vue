@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
-  <q-dialog ref="dialogRef" class="customDialog" persistent full-height position="right" @hide="onDialogHide">
-    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="min-width:80vw; max-width: 100vw;">
+  <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" full-height persistent position="right" @hide="onDialogHide">
+    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 70vw !important;max-width: 70vw;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
         <div class="text-h2 text-white">{{ props.id ? "Edit" : "Add" }} SOP Process</div>
         <q-btn icon="o_close" class="close" color="white" flat round dense @click="onDialogCancel()" />
@@ -540,7 +540,7 @@ onMounted(async () => {
   // getNextSOPProcessVersion();
 });
 </script>
-<style scoped>
+<style>
 .q-dialog__inner--minimized > div{
   max-height: calc(100vh) !important;
 }
