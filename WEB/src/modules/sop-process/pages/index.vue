@@ -402,7 +402,7 @@ const loggedUserId = user.userId;
 
 // check login user role
 const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
-const editorRoles = ["admin", "site-super-admin", "system-super-admin", "sop editor"];
+const editorRoles = ["sop editor"];
 const approverRoles = ["sop approver"];
 
 const hasAdminRole = user?.roles?.some(r => adminRoles.includes(r));

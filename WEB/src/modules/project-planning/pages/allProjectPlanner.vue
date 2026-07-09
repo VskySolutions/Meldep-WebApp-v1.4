@@ -2493,8 +2493,12 @@ async function loadProjectModules (projectId) {
   }
 
   isProjectModule.value = true;
-  ProjectName = getProjectProjectSingleRow(projectId)?.name;
-  selectedProjectId.value = projectId;
+  // ProjectName = getProjectProjectSingleRow(projectId)?.name;
+  // selectedProjectId.value = projectId;
+  const project = getProjectProjectSingleRow(projectId);
+
+  ProjectName = project?.name ?? "";
+  storedProjectName.value = ProjectName;
   if (projectId) {
     activeRowId.value = projectId;
     searchProjectModule.value.projectId = projectId;
@@ -2507,7 +2511,8 @@ async function loadProjectModules (projectId) {
         ...getOutlookState(),
         isProjectModule: isProjectModule.value,
         projectId,
-        projectName: storedProjectName.value
+        // projectName: storedProjectName.value
+        projectName: selectedProject.value?.name ?? ""
       };
 
       saveOutlookState(updatedLocalStorage);
@@ -3997,8 +4002,18 @@ async function runSequentially () {
     // --------------------------------------------------------------------------
     // Restore Names
     // --------------------------------------------------------------------------
-    storedProjectName.value =
-      savedState?.projectName || "";
+    // storedProjectName.value =
+    //   savedState?.projectName || "";
+
+    const restoredProject =
+      rows.value.find(x => x.id === restoredProjectId);
+
+    if (restoredProject) {
+      selectedProject.value = restoredProject;
+      storedProjectName.value = restoredProject.name;
+    } else {
+      storedProjectName.value = "";
+    }
 
     storedModuleName.value =
       savedState?.moduleName || "";
@@ -4051,7 +4066,8 @@ async function runSequentially () {
       projectModuleId: selectedModuleId.value,
       projectTaskId: selectedTaskId.value,
 
-      projectName: storedProjectName.value,
+      // projectName: storedProjectName.value,
+      projectName: selectedProject.value?.name ?? "",
       moduleName: storedModuleName.value,
       taskName: storedTaskName.value,
 
