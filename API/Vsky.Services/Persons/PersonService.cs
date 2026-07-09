@@ -26,6 +26,7 @@ namespace Vsky.Services.Persons
         private readonly IRepository<Picture> _pictureRepository;
         private readonly IRepository<CompanyClients> _customerRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IRepository<Employee> _employeeRepository;
         #endregion
 
         #region Services Initializations
@@ -39,7 +40,8 @@ namespace Vsky.Services.Persons
             IRepository<Picture> pictureRepository,
             IRepository<PersonSitesMapping> personSitesMappingRepository,
             IRepository<CompanyClients> customerRepository,
-            UserManager<ApplicationUser> userManager
+            UserManager<ApplicationUser> userManager,
+            IRepository<Employee> employeeRepository
         )
         {
             _personRepository = personRepository;
@@ -47,6 +49,7 @@ namespace Vsky.Services.Persons
             _personSitesMappingRepository = personSitesMappingRepository;
             _customerRepository = customerRepository;
             _userManager = userManager;
+            _employeeRepository = employeeRepository;
         }
         #endregion
 
@@ -182,23 +185,14 @@ namespace Vsky.Services.Persons
         #endregion
 
         #region GetAllPersonPrimaryEmailAddressListForDropdown
-        //public async Task<List<Person>> GetAllPersonPrimaryEmailAddressListForDropdown(string SiteId)
-        //{
-        //    var query = _personRepository.TableNoTracking.Where(x => !x.Deleted && !string.IsNullOrWhiteSpace(x.PrimaryEmailAddress) && x.PersonSitesMapping.Any(x => !x.Deleted && x.SiteId == SiteId));
-        //    query = query.OrderBy(m => m.PrimaryEmailAddress).Select(x => new Person
-        //    {
-        //        Id = x.Id,
-        //        PrimaryEmailAddress = x.PrimaryEmailAddress,
-        //    });
-
-        //    var list = await query.ToListAsync();
-        //    return list;
-        //}
-
-        public async Task<List<Person>> GetAllPersonPrimaryEmailAddressListForDropdown(string SiteId)
+        public async Task<List<Person>> GetAllPersonPrimaryEmailAddressListForDropdown(string siteId)
         {
             var list = await _personRepository.TableNoTracking
-                .Where(x => !x.Deleted && !string.IsNullOrWhiteSpace(x.PrimaryEmailAddress) && x.PersonSitesMapping.Any(ps => !ps.Deleted && ps.SiteId == SiteId))
+                .Where(x =>
+                    !x.Deleted &&
+                    !string.IsNullOrWhiteSpace(x.PrimaryEmailAddress) &&
+                    x.PersonSitesMapping.Any(ps => !ps.Deleted && ps.SiteId == siteId) &&
+                    _employeeRepository.TableNoTracking.Any(e => !e.Deleted && e.Active && e.PersonId == x.Id))
                 .OrderBy(x => x.PrimaryEmailAddress)
                 .ToListAsync();
 
