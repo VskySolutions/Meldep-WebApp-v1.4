@@ -108,6 +108,23 @@ namespace Vsky.Services.SOPProcesses
                 );
             }
 
+            bool isEditorOrApprover =
+             normalizedRoles.Contains("sop approver") ||
+             normalizedRoles.Contains("sop editor");
+
+                    var latestIds = query
+             .AsEnumerable()
+             .Where(x => Version.TryParse(x.Version, out _))
+             .GroupBy(x => x.SOPProcessNumber)
+             .Select(g => g
+                 .OrderByDescending(x => Version.Parse(x.Version))
+                 .First()
+                 .Id)
+             .ToList();
+
+            //query = _sOPProcessRepository.TableNoTracking.Where(x => latestIds.Contains(x.Id));
+            query = query.Where(x => latestIds.Contains(x.Id));
+
             if (!string.IsNullOrWhiteSpace(searchText))
             {
                 searchText = searchText.Trim().ToLower();
@@ -204,23 +221,6 @@ namespace Vsky.Services.SOPProcesses
                     )
                 );
             }
-
-            bool isEditorOrApprover =
-             normalizedRoles.Contains("sop approver") ||
-             normalizedRoles.Contains("sop editor");
-
-                    var latestIds = query
-             .AsEnumerable()
-             .Where(x => Version.TryParse(x.Version, out _))
-             .GroupBy(x => x.SOPProcessNumber)
-             .Select(g => g
-                 .OrderByDescending(x => Version.Parse(x.Version))
-                 .First()
-                 .Id)
-             .ToList();
-
-            //query = _sOPProcessRepository.TableNoTracking.Where(x => latestIds.Contains(x.Id));
-            query = query.Where(x => latestIds.Contains(x.Id));
 
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
