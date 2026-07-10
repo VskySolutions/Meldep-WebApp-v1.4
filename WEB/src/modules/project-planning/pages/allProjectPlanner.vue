@@ -1708,7 +1708,6 @@
 
                                     <q-select
                                       v-model="scope.value"
-                                      :options="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value"
                                       class="w-100 h-auto"
                                       use-input
                                       clearable
@@ -1720,7 +1719,8 @@
                                       option-value="value"
                                       option-label="text"
                                       dropdown-icon="o_arrow_drop_down"
-                                      @filter="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.filter"
+                                      :options="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value"
+                                      @filter="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.filter"
                                     >
                                       <template #option="{ itemProps, opt }">
                                         <q-item v-bind="itemProps">
@@ -4262,7 +4262,10 @@ onMounted(async () => {
   projectTaskTagsDropdown.load();
   tagsDropdown.load();
 
-  if (selectedProjectId.value) projectModulesByProjectIdForDropdown.load(false, false, selectedProjectId.value);
+  if (selectedProjectId.value){
+     projectModulesByProjectIdForDropdown.load(false, false, selectedProjectId.value);
+     projectCharterEmployeesWithWeeklyPlanHoursForDropdown.load(selectedProjectId.value);
+  }
   projectModuleStatusForDropdown.load("WO Status");
 
   projectTaskStatusForDropdown.load("Task Status");
