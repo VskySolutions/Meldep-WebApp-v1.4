@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Vsky.Core;
 using Vsky.Models;
 
 namespace Vsky.Services.ProjectReleaseTrackings
@@ -20,6 +16,10 @@ namespace Vsky.Services.ProjectReleaseTrackings
 
         #region GetAllProjectReleaseTrackingReqPlanTaskIssueMappingByProjectReleaseTrackingId
         Task<List<ProjectReleaseTrackingReqPlanTaskIssueMapping>> GetAllProjectReleaseTrackingReqPlanTaskIssueMappingByProjectReleaseTrackingId(string ProjectReleaseTrackingId);
+        #endregion
+
+        #region GetReleaseWiseTestCaseHistory
+        Task<List<ReleaseWiseTestCaseHistoryDto>> GetReleaseWiseTestCaseHistory(string testCaseId);
         #endregion
 
         #region InsertProjectReleaseTrackingReqPlanTaskIssueMappingList

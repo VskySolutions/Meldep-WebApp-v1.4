@@ -169,6 +169,7 @@ namespace Vsky.Data
         // SDLC -> Test Plan & Test Cases
         public virtual DbSet<TestPlan> TestPlan { get; set; }
         public virtual DbSet<TestCase> TestCase { get; set; }
+        public virtual DbSet<TestCaseExecutionLog> TestCaseExecutionLog { get; set; }
 
         // SDLC -> Issues
         public virtual DbSet<Issue> Issue { get; set; }
@@ -1334,7 +1335,7 @@ namespace Vsky.Data
             });
 
             #endregion
-             
+
             #region Project Release Tracking
 
             builder.Entity<ProjectReleaseTracking>(entity =>
@@ -1357,6 +1358,7 @@ namespace Vsky.Data
                 entity.ToTable("ProjectReleaseTracking_ReqPlanTaskIssueMapping");
 
                 entity.HasOne(d => d.ReleaseTracking).WithMany().HasForeignKey(d => d.ReleaseTrackingId);
+                entity.HasOne(x => x.TestCase).WithMany(x => x.ProjectReleaseTrackingReqPlanTaskIssueMappings).HasForeignKey(x => x.TestCaseId);
             });
 
             builder.Entity<ProjectReleaseTrackingStatusLog>(entity =>
@@ -1696,7 +1698,7 @@ namespace Vsky.Data
                 entity.HasOne(e => e.ProjectModule).WithMany().HasForeignKey(e => e.ProjectModuleId);
                 entity.HasOne(d => d.Task).WithMany().HasForeignKey(d => d.ProjectTaskId);
                 entity.HasOne(d => d.ProjectActivity).WithMany().HasForeignKey(d => d.ProjectActivityId);
-                 entity.HasOne(d => d.BillableCreatedBy).WithMany().HasForeignKey(d => d.BillableCreatedById);
+                entity.HasOne(d => d.BillableCreatedBy).WithMany().HasForeignKey(d => d.BillableCreatedById);
             });
 
             builder.Entity<TimesheetAISummary>(entity =>
@@ -1841,48 +1843,54 @@ namespace Vsky.Data
                 entity.HasOne(d => d.TestedByEmployee).WithMany().HasForeignKey(d => d.TestedBy);
             });
 
+            builder.Entity<TestCaseExecutionLog>(entity =>
+            {
+                entity.ToTable("TestCaseExecutionLog");
+                entity.HasOne(e => e.ProjectReleaseTracking_ReqPlanTaskIssueMapping).WithMany(x => x.TestCaseExecutionLog).HasForeignKey(e => e.ProjectReleaseTracking_ReqPlanTaskIssueMappingId);
+            });
+
             #endregion
 
             #region SDLC -> Issue
 
             builder.Entity<Issue>(entity =>
-            {
-                entity.ToTable("Issue");
-                entity.Property(e => e.SiteId).IsRequired().HasMaxLength(450);
-                entity.Property(e => e.ProjectId).HasMaxLength(450);
-                entity.Property(e => e.ProjectModuleId).HasMaxLength(450);
-                entity.Property(e => e.PriorityId).HasMaxLength(450);
-                entity.Property(e => e.StatusId).HasMaxLength(450);
-                entity.Property(e => e.TypeId).HasMaxLength(450);
-                entity.Property(e => e.EmployeeId).HasMaxLength(450);
-                entity.Property(e => e.TestCaseId).HasMaxLength(450);
-                entity.Property(e => e.ClosedBy).HasMaxLength(450);
-                entity.Property(e => e.LastModifiedBy).HasMaxLength(450);
-                entity.Property(e => e.ReportedById).HasMaxLength(450);
-                entity.Property(e => e.Name).HasMaxLength(200);
-                entity.Property(e => e.Description);
-                entity.Property(e => e.LastUpdatedDate).HasPrecision(6);
-                entity.Property(e => e.CloseDate).HasPrecision(6);
-                entity.Property(e => e.DueDate).HasPrecision(6);
-                entity.Property(e => e.IsTaskCreated);
-                entity.Property(e => e.IssueNumber);
-                entity.Property(e => e.CreatedById).IsRequired().HasMaxLength(450);
-                entity.Property(e => e.CreatedOnUtc).IsRequired().HasPrecision(6);
-                entity.Property(e => e.UpdatedById).HasMaxLength(450);
-                entity.Property(e => e.UpdatedOnUtc).HasPrecision(6);
+        {
+            entity.ToTable("Issue");
+            entity.Property(e => e.SiteId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.ProjectId).HasMaxLength(450);
+            entity.Property(e => e.ProjectModuleId).HasMaxLength(450);
+            entity.Property(e => e.PriorityId).HasMaxLength(450);
+            entity.Property(e => e.StatusId).HasMaxLength(450);
+            entity.Property(e => e.TypeId).HasMaxLength(450);
+            entity.Property(e => e.EmployeeId).HasMaxLength(450);
+            entity.Property(e => e.TestCaseId).HasMaxLength(450);
+            entity.Property(e => e.ClosedBy).HasMaxLength(450);
+            entity.Property(e => e.LastModifiedBy).HasMaxLength(450);
+            entity.Property(e => e.ReportedById).HasMaxLength(450);
+            entity.Property(e => e.Name).HasMaxLength(200);
+            entity.Property(e => e.Description);
+            entity.Property(e => e.LastUpdatedDate).HasPrecision(6);
+            entity.Property(e => e.CloseDate).HasPrecision(6);
+            entity.Property(e => e.DueDate).HasPrecision(6);
+            entity.Property(e => e.IsTaskCreated);
+            entity.Property(e => e.IssueNumber);
+            entity.Property(e => e.CreatedById).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.CreatedOnUtc).IsRequired().HasPrecision(6);
+            entity.Property(e => e.UpdatedById).HasMaxLength(450);
+            entity.Property(e => e.UpdatedOnUtc).HasPrecision(6);
 
-                entity.HasOne(e => e.Site).WithMany().HasForeignKey(e => e.SiteId);
-                entity.HasOne(d => d.Project).WithMany(m => m.Issue).HasForeignKey(d => d.ProjectId);
-                entity.HasOne(e => e.ProjectModule).WithMany().HasForeignKey(e => e.ProjectModuleId);
-                entity.HasOne(e => e.Priority).WithMany().HasForeignKey(e => e.PriorityId);
-                entity.HasOne(e => e.Status).WithMany().HasForeignKey(e => e.StatusId);
-                entity.HasOne(e => e.Type).WithMany().HasForeignKey(e => e.TypeId);
-                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId);
-                entity.HasOne(e => e.TestCase).WithMany().HasForeignKey(e => e.TestCaseId);
-                entity.HasOne(e => e.ClosedByEmployee).WithMany().HasForeignKey(e => e.ClosedBy);
-                entity.HasOne(e => e.LastModifiedByEmployee).WithMany().HasForeignKey(e => e.LastModifiedBy);
-                entity.HasOne(e => e.ReportedBy).WithMany().HasForeignKey(e => e.ReportedById);
-            });
+            entity.HasOne(e => e.Site).WithMany().HasForeignKey(e => e.SiteId);
+            entity.HasOne(d => d.Project).WithMany(m => m.Issue).HasForeignKey(d => d.ProjectId);
+            entity.HasOne(e => e.ProjectModule).WithMany().HasForeignKey(e => e.ProjectModuleId);
+            entity.HasOne(e => e.Priority).WithMany().HasForeignKey(e => e.PriorityId);
+            entity.HasOne(e => e.Status).WithMany().HasForeignKey(e => e.StatusId);
+            entity.HasOne(e => e.Type).WithMany().HasForeignKey(e => e.TypeId);
+            entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId);
+            entity.HasOne(e => e.TestCase).WithMany().HasForeignKey(e => e.TestCaseId);
+            entity.HasOne(e => e.ClosedByEmployee).WithMany().HasForeignKey(e => e.ClosedBy);
+            entity.HasOne(e => e.LastModifiedByEmployee).WithMany().HasForeignKey(e => e.LastModifiedBy);
+            entity.HasOne(e => e.ReportedBy).WithMany().HasForeignKey(e => e.ReportedById);
+        });
 
             builder.Entity<IssueStatusChangedLog>(entity =>
             {
@@ -2618,7 +2626,7 @@ namespace Vsky.Data
                 entity.HasOne(d => d.HelpDesk).WithMany().HasForeignKey(d => d.HelpDeskId);
                 entity.HasOne(d => d.SitesEmailNotifications).WithMany().HasForeignKey(d => d.SiteEmailNotificationId);
             });
-            
+
             builder.Entity<HelpDeskEmailRepliesMapping>(entity =>
             {
                 entity.ToTable("HelpDesk_EmailReplies_Mapping");
@@ -2929,6 +2937,7 @@ namespace Vsky.Data
             builder.Entity<SOPProcess>(entity =>
             {
                 entity.ToTable("SOPProcess");
+                entity.Property(e => e.SOPProcessNumber);
             });
 
             //builder.Entity<SOPProcessItems>(entity =>

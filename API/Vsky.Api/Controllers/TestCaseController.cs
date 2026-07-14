@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
@@ -14,22 +11,11 @@ using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
 using Vsky.Services.Common;
 using Vsky.Services.DropDowns;
-using Vsky.Services.DropDownTypes;
-using Vsky.Services.EmployeeClientLocations;
-using Vsky.Services.EmployeeDepartments;
-using Vsky.Services.EmployeeDesignations;
-using Vsky.Services.EmployeeOrgLocations;
-using Vsky.Services.Employees;
-using Vsky.Services.EmployeeStatuses;
-using Vsky.Services.EmployeeTypes;
 using Vsky.Services.Issues;
-using Vsky.Services.Persons;
-using Vsky.Services.ProjectTasks;
+using Vsky.Services.ProjectReleaseTrackings;
 using Vsky.Services.Sites;
+using Vsky.Services.SitesModifiedLog;
 using Vsky.Services.TestCases;
-using Vsky.Services.TestPlans;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using static Vsky.Api.Models.EmployeeModel;
 
 namespace Vsky.Api.Controllers
 {
@@ -45,8 +31,11 @@ namespace Vsky.Api.Controllers
         private readonly ICommonService _commonService;
         private readonly IIssueService _issueService;
         private readonly ISiteService _siteService;
-        private readonly ApplicationDbContext _db;
         private readonly IAzureBlobImageServices _azureBlobImageServices;
+        private readonly IProjectReleaseTrackingReqPlanTaskIssueMappingService _projectReleaseTrackingReqPlanTaskIssueMappingService;
+        private readonly ITestCaseExecutionLogExecutionLogService _testCaseExecutionLogExecutionLogService;
+        private readonly ISitesModifiedLogsService _sitesModifiedLogsService;
+        private readonly IDropDownService _dropDownService;
 
         #endregion
 
@@ -54,12 +43,15 @@ namespace Vsky.Api.Controllers
         public TestCaseController(
             GlobalVariable globalVariable,
             IMapper mapper,
-            ITestCaseService testCaseService, 
+            ITestCaseService testCaseService,
             ICommonService commonService,
-            IIssueService issueService, 
-            ISiteService siteService, 
-            ApplicationDbContext db,
-            IAzureBlobImageServices azureBlobImageServices)
+            IIssueService issueService,
+            ISiteService siteService,
+            IAzureBlobImageServices azureBlobImageServices,
+            IProjectReleaseTrackingReqPlanTaskIssueMappingService projectReleaseTrackingReqPlanTaskIssueMappingService,
+            ITestCaseExecutionLogExecutionLogService testCaseExecutionLogExecutionLogService,
+            ISitesModifiedLogsService sitesModifiedLogsService,
+            IDropDownService dropDownService)
         {
             _globalVariable = globalVariable;
             _mapper = mapper;
@@ -67,8 +59,11 @@ namespace Vsky.Api.Controllers
             _commonService = commonService;
             _issueService = issueService;
             _siteService = siteService;
-            _db = db;
             _azureBlobImageServices = azureBlobImageServices;
+            _projectReleaseTrackingReqPlanTaskIssueMappingService = projectReleaseTrackingReqPlanTaskIssueMappingService;
+            _testCaseExecutionLogExecutionLogService = testCaseExecutionLogExecutionLogService;
+            _sitesModifiedLogsService = sitesModifiedLogsService;
+            _dropDownService = dropDownService;
         }
         #endregion
 
@@ -92,6 +87,7 @@ namespace Vsky.Api.Controllers
                     searchModel.PlanIds,
                     searchModel.TestedBys,
                     searchModel.StatusIds,
+                    searchModel.VersionNumber,
                     searchModel.FromDate,
                     searchModel.ToDate,
                     searchModel.SortBy,
@@ -176,6 +172,41 @@ namespace Vsky.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+        #endregion
+
+        #region GetReleaseWiseTestCaseHistory
+        // Title: GetReleaseWiseTestCaseHistory
+        // Description: This endpoint retrieves the details of a specific test case based on its unique identifier (ID). 
+        [HttpGet("history/{id}")]
+        public async Task<IActionResult> GetReleaseWiseTestCaseHistory(string id)
+        {
+            try
+            {
+                // Fetch the test case entity by its ID from the service
+                var list = await _projectReleaseTrackingReqPlanTaskIssueMappingService.GetReleaseWiseTestCaseHistory(id);
+                // If the test case entity is not found, return a BadRequest response with an error message
+                if (list == null)
+                    return BadRequest(new BadRequestError("No test case found with the specified id."));
+
+                // Map the test case entity to a ReleaseWiseTestCaseHistoryDto object
+                var model = _mapper.Map<List<ReleaseWiseTestCaseHistoryDto>>(list);
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetStatusChangeLog
+        // Title: GetStatusChangeLog
+        // Description: This endpoint retrieves the list of statuses of a specific test case based on its unique identifier (ID). 
+        [HttpGet("change-log")]
+        public async Task<IActionResult> GetStatusChangeLog(string mappingId)
+        {
+            return Ok(await _testCaseService.GetStatusChangeLog(mappingId));
         }
         #endregion
 
@@ -342,30 +373,30 @@ namespace Vsky.Api.Controllers
                                 entity.TestCaseNumber.ToString(),
                                 entity.Description
                     );
-                   entity.Steps = await _azureBlobImageServices
-                            .ProcessHtmlAndManageImagesAsync(
-                                model.Steps,
-                                SiteData.Name,
-                                "test-case",
-                                entity.TestCaseNumber.ToString(),
-                                entity.Steps
-                            );
-                  entity.ExpectedResult = await _azureBlobImageServices
-                            .ProcessHtmlAndManageImagesAsync(
-                                model.ExpectedResult,
-                                SiteData.Name,
-                                "test-case",
-                                entity.TestCaseNumber.ToString(),
-                                entity.ExpectedResult
-                            );
-                   entity.ActualResult = await _azureBlobImageServices
-                            .ProcessHtmlAndManageImagesAsync(
-                                model.ActualResult,
-                                SiteData.Name,
-                                "test-case",
-                                entity.TestCaseNumber.ToString(),
-                                entity.ActualResult
-                            );
+                    entity.Steps = await _azureBlobImageServices
+                             .ProcessHtmlAndManageImagesAsync(
+                                 model.Steps,
+                                 SiteData.Name,
+                                 "test-case",
+                                 entity.TestCaseNumber.ToString(),
+                                 entity.Steps
+                             );
+                    entity.ExpectedResult = await _azureBlobImageServices
+                              .ProcessHtmlAndManageImagesAsync(
+                                  model.ExpectedResult,
+                                  SiteData.Name,
+                                  "test-case",
+                                  entity.TestCaseNumber.ToString(),
+                                  entity.ExpectedResult
+                              );
+                    entity.ActualResult = await _azureBlobImageServices
+                             .ProcessHtmlAndManageImagesAsync(
+                                 model.ActualResult,
+                                 SiteData.Name,
+                                 "test-case",
+                                 entity.TestCaseNumber.ToString(),
+                                 entity.ActualResult
+                             );
                     entity.AreaId = model.AreaId;
                     entity.WorkspaceId = model.WorkspaceId;
                     entity.UpdatedById = LoggedUserId;
@@ -430,77 +461,111 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region UpdateTestCaseStatus
-        [HttpPut("updateTestCaseStatus/{id}/{statusId}")]
-        public async Task<IActionResult> UpdateTestCaseStatus(string id, string statusId)
+        [HttpPut("updateTestCaseStatus/{id}/{statusId}/{mappingId}")]
+        public async Task<IActionResult> UpdateTestCaseStatus(string id, string statusId, string mappingId)
         {
             try
             {
-                if (ModelState.IsValid)
-                {
-                    var LoggedUserId = User.GetLoggedInUserId<string>();
-                    var SiteId = _globalVariable.SiteId;
-                    var SiteData = await _siteService.GetById(SiteId);
-                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+                if (!ModelState.IsValid)
+                    return ModelStateError(ModelState);
 
-                    var entity = await _testCaseService.GetTestCaseById(id);
-                    if (entity == null)
-                        return BadRequest(new BadRequestError("No test case found with the specified id."));
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var SiteData = await _siteService.GetById(SiteId);
+                var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                var entity = await _testCaseService.GetTestCaseById(id);
+                if (entity == null)
+                    return BadRequest(new BadRequestError("No test case found with the specified id."));
+
+                bool hasMapping = !string.IsNullOrWhiteSpace(mappingId) &&
+                      !mappingId.Equals("undefined", StringComparison.OrdinalIgnoreCase);
+
+                if (!hasMapping)
+                {
+                    bool IsTestCaseStatusChanged = statusId != entity.StatusId;
 
                     entity.StatusId = statusId;
                     entity.UpdatedById = LoggedUserId;
                     entity.UpdatedOnUtc = GetDateTime;
                     _testCaseService.UpdateTestCase(entity);
 
-                    var testcasestatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Test Case Status", "Fail");
-                    if (statusId == testcasestatus)
+                    if (IsTestCaseStatusChanged)
                     {
-                        //var EmployeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                        var testCaseStatus = await _dropDownService.GetDropDownById(statusId);
+                        var status = testCaseStatus.DropDownValue;
+
+                        _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "TestCase", entity.Id, entity.Name, entity.Id, entity.Name, "Test Case Status", status, LoggedUserId, GetDateTime);
+                    }
+                }
+
+                string issueId = null;
+                var failStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Test Case Status", "Fail");
+                if (statusId == failStatusId)
+                {
+                    var newstatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Status", "New from Test Plan");
+                    var medium = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Priority", "Medium");
+                    var bug = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Type", "Bug");
+                    var issue = await _issueService.GetIssueByName(SiteId, entity.Name, entity.ProjectId);
+                    if (issue == null)
+                    {
                         var EmployeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
-                        var newstatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Status", "New from Test Plan");
-                        var medium = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Priority", "Medium");
-                        var bug = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Type", "Bug");
-                        var exists = await _issueService.GetIssueByName(SiteId, entity.Name, entity.ProjectId);
-                        if (exists == null)
+
+                        issue = new Issue();
+                        issue.IssueNumber = await _issueService.GetLastIssueNumber() + 1;
+                        issue.SiteId = SiteId;
+                        issue.TestCaseId = entity.Id;
+                        issue.ProjectId = entity.ProjectId;
+                        issue.Name = entity.Name;
+                        issue.PriorityId = medium;
+                        issue.StatusId = newstatus;
+                        issue.EmployeeId = entity.EmployeeId;
+                        issue.TypeId = bug;
+                        issue.ReportedById = EmployeeId;
+                        //issue.Description = issue.Description = model.Description + "<br><br>Steps:" + model.Steps + "<br><br>Expected Result:<br>" + model.ExpectedResult + "<br><br>Actual Result:<br>" + model.ActualResult;
+
+                        if (!string.IsNullOrEmpty(entity.Description))
                         {
-                            var issue = new Issue();
-                            issue.IssueNumber = await _issueService.GetLastIssueNumber() + 1;
-                            issue.SiteId = SiteId;
-                            issue.TestCaseId = entity.Id;
-                            issue.ProjectId = entity.ProjectId;
-                            issue.Name = entity.Name;
-                            issue.PriorityId = medium;
-                            issue.StatusId = newstatus;
-                            issue.EmployeeId = entity.EmployeeId;
-                            issue.TypeId = bug;
-                            issue.ReportedById = EmployeeId;
-                            //issue.Description = issue.Description = model.Description + "<br><br>Steps:" + model.Steps + "<br><br>Expected Result:<br>" + model.ExpectedResult + "<br><br>Actual Result:<br>" + model.ActualResult;
+                            var formattedDescription = issue.Description = entity.Description + "<br><br>Steps:" + entity.Steps + "<br><br>Expected Result:<br>" + entity.ExpectedResult + "<br><br>Actual Result:<br>" + entity.ActualResult;
 
-                            if (!string.IsNullOrEmpty(entity.Description))
-                            {
-                                var formattedDescription = issue.Description = entity.Description + "<br><br>Steps:" + entity.Steps + "<br><br>Expected Result:<br>" + entity.ExpectedResult + "<br><br>Actual Result:<br>" + entity.ActualResult;
-
-                                issue.Description = await _azureBlobImageServices
-                                    .ProcessHtmlAndManageImagesAsync(
-                                        formattedDescription,
-                                        SiteData.Name,
-                                        "test-case",
-                                        issue.IssueNumber.ToString()
-                                    );
-                            }
-
-                            issue.AreaId = entity.AreaId;
-                            issue.WorkspaceId = entity.WorkspaceId;
-                            issue.CreatedById = LoggedUserId;
-                            issue.UpdatedById = LoggedUserId;
-                            issue.CreatedOnUtc = GetDateTime;
-                            issue.UpdatedOnUtc = GetDateTime;
-                            _issueService.InsertIssue(issue);
+                            issue.Description = await _azureBlobImageServices
+                                .ProcessHtmlAndManageImagesAsync(
+                                    formattedDescription,
+                                    SiteData.Name,
+                                    "test-case",
+                                    issue.IssueNumber.ToString()
+                                );
                         }
+
+                        issue.AreaId = entity.AreaId;
+                        issue.WorkspaceId = entity.WorkspaceId;
+                        issue.CreatedById = LoggedUserId;
+                        issue.UpdatedById = LoggedUserId;
+                        issue.CreatedOnUtc = GetDateTime;
+                        issue.UpdatedOnUtc = GetDateTime;
+                        _issueService.InsertIssue(issue);
                     }
 
-                    return NoContent();
+                    issueId = issue.Id;
                 }
-                return ModelStateError(ModelState);
+                if (hasMapping)
+                {
+                    _testCaseExecutionLogExecutionLogService.InsertTestCaseExecutionLog(
+                        new TestCaseExecutionLog
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            ProjectReleaseTracking_ReqPlanTaskIssueMappingId = mappingId,
+                            StatusId = statusId,
+                            Comment = null,
+                            IssueId = issueId,
+                            CreatedById = LoggedUserId,
+                            CreatedOnUtc = GetDateTime,
+                            UpdatedById = LoggedUserId,
+                            UpdatedOnUtc = GetDateTime
+                        });
+                }
+
+                return NoContent();
             }
             catch (Exception ex)
             {

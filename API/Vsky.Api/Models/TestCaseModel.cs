@@ -25,6 +25,7 @@ namespace Vsky.Api.Models
         public string TestedDateStr { get; set; }
         public int TestCaseNumber { get; set; }
         public DateTime CreatedOnUtc { get; set; }
+        public string ProjectReleaseTrackingReqPlanTaskIssueMappingId { get; set; }
 
         public virtual Site Site { get; set; }
         public virtual DropDown Area { get; set; }
@@ -49,6 +50,7 @@ namespace Vsky.Api.Models
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
         public string SearchText { get; set; }
+        public string VersionNumber { get; set; }
     }
 
     public record TestCaseListModel : BasePagedListModel<TestCaseModel>

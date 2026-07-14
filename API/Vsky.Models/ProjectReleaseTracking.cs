@@ -59,6 +59,7 @@ namespace Vsky.Models
         public string MonthlyPlanId { get; set; }
         public string TaskId { get; set; }
         public string IssueId { get; set; }
+        public string TestCaseId { get; set; }
         public string Description { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public string CreatedById { get; set; }
@@ -70,7 +71,66 @@ namespace Vsky.Models
         public virtual ProjectWeeklyPlan MonthlyPlan { get; set; }
         public virtual ProjectTask Task { get; set; }
         public virtual Issue Issue { get; set; }
+        public virtual TestCase TestCase { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }
+        public virtual ICollection<TestCaseExecutionLog> TestCaseExecutionLog { get; set; }
+    }
+    public class TestCaseExecutionLog : BaseEntity
+    {
+        public string ProjectReleaseTracking_ReqPlanTaskIssueMappingId { get; set; }
+        public string StatusId { get; set; }
+        public string IssueId { get; set; }
+        public string Comment { get; set; }
+        public DateTime CreatedOnUtc { get; set; }
+        public string CreatedById { get; set; }
+        public DateTime UpdatedOnUtc { get; set; }
+        public string UpdatedById { get; set; }
+        public bool Deleted { get; set; }
+
+        public virtual ProjectReleaseTrackingReqPlanTaskIssueMapping ProjectReleaseTracking_ReqPlanTaskIssueMapping { get; set; }
+        public virtual DropDown Status { get; set; }
+        public virtual Issue Issue { get; set; }
+        public virtual ApplicationUser CreatedBy { get; set; }
+    }
+    public class ReleaseWiseTestCaseHistoryDto
+    {
+        public string MappingId { get; set; }
+        public string TestCaseId { get; set; }
+        public string TestCaseName { get; set; }
+        public string ReleaseTrackingId { get; set; }
+        public string ReleaseVersion { get; set; }
+        public bool IsRemoved { get; set; }
+        public string CurrentStatus { get; set; }
+        public string TestedBy { get; set; }
+        public DateTime? TestedDate { get; set; }
+        public string Comment { get; set; }
+        public int? IssueNumber { get; set; }
+        public string IssueId { get; set; }
+
+        public List<ReleaseWiseTestCaseHistoryLogDto> Logs { get; set; } = new();
+    }
+    public class ReleaseWiseTestCaseHistoryLogDto
+    {
+        public string Status { get; set; }
+        public string TestedBy { get; set; }
+        public DateTime? TestedDate { get; set; }
+        public string Comment { get; set; }
+        public int? IssueNumber { get; set; }
+        public string IssueId { get; set; }
+    }
+    public class TestCaseStatusChangeLogDto
+    {
+        public string Id { get; set; }
+
+        public string Status { get; set; }
+
+        public string Comment { get; set; }
+
+        public string ChangedBy { get; set; }
+
+        public DateTime ChangedDate { get; set; }
+
+        public bool IsRemoved { get; set; }
     }
     public class ProjectReqPlanTaskIssueItemDto
     {

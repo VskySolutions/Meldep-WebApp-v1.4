@@ -9,7 +9,7 @@
                 <q-icon size="1.5em" name="o_chevron_right" color="primary" />
               </template>
               <q-breadcrumbs-el label="SDLC" />
-              <q-breadcrumbs-el v-if="search.projectIds.length > 0 && search.planIds.length > 0" label="Test Plans" clickable to="/test-plan" />
+              <q-breadcrumbs-el v-if="search.projectIds?.length > 0 && search.planIds?.length > 0" label="Test Plans" clickable to="/test-plan" />
               <q-breadcrumbs-el label="Test Cases" />
             </q-breadcrumbs>
           </div>
@@ -55,6 +55,14 @@
                         :options="testPlansByProjectIdForDropdown.list.value"
                         :filter="testPlansByProjectIdForDropdown.filter"
                       />
+                      <div class="row items-center q-mb-sm">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel q-mt-sm fs-13">Release Version</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <q-input v-model="search.versionNumber" fill-input class="q-mx-sm w-100 h-auto" :dense="true" />
+                        </div>
+                      </div>
                       <multiSelectDropdown
                         v-model="search.testedBys"
                         label="Tested By"
@@ -143,7 +151,7 @@
               </q-menu>
               <div class="q-ml-xs">
                 <q-btn icon="o_add" outline label="Create Test Case" no-caps class="text-primary btnRounded" @click="onTestCaseAdd(refreshTestCaseList)" />
-                <q-btn v-if="search.projectIds.length > 0 && search.planIds.length > 0" icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.back()" />
+                <q-btn v-if="search.projectIds?.length > 0 && search.planIds?.length > 0" icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.back()" />
                 <q-btn v-if="role === 'admin'" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
@@ -257,9 +265,11 @@
                 :editable="props.row.isEditable"
                 :options="testCaseStatusDropdownSingleSelect.list.value"
                 :active-edit="activeEdit"
-                :show-history="false"
+                :show-history="true"
+                :loading="updatingRow.status === props.row.id"
                 @cancel="activeEdit = { rowId: null, field: null }"
-                @submit="({ rowId, value }) => onSubmitTestCaseStatus(rowId, value, refreshTestCaseList)"
+                @submit="({ rowId, value }) => onSubmitTestCaseStatus(rowId, value, props.row.projectReleaseTrackingReqPlanTaskIssueMappingId, refreshTestCaseList)"
+                @history="() => onTestCaseStatusChangeLog(null, props.row.id, props.row.projectReleaseTrackingReqPlanTaskIssueMappingId, props.row.name, 'Test Case Status')"
               />
             </q-td>
             <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 8%;">
@@ -276,6 +286,14 @@
                 @click="onTestCaseView(props.row.id, props.row.testPlan.id)"
               >
                 <q-tooltip>View</q-tooltip>
+              </q-icon>
+              <q-icon
+                name="o_manage_history"
+                class="cursor-pointer q-mr-sm"
+                size="xs"
+                @click="onTestCaseReleaseHistory(props.row.id)"
+              >
+                <q-tooltip>History</q-tooltip>
               </q-icon>
               <q-icon
                 v-if="props.row.isEditable"
@@ -310,7 +328,7 @@ import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
 import { useRoute } from "vue-router";
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
-import { getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
+// import { getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
 
 import testcasesService from "modules/test-case/testCase.service";
 import manageDropdownsService from "modules/dropdown/dropdown.service";
@@ -333,7 +351,9 @@ import {
   initTestCaseDialogs,
   onTestCaseView,
   onTestCaseAdd,
-  onTestCaseEdit
+  onTestCaseEdit,
+  onTestCaseReleaseHistory,
+  onTestCaseStatusChangeLog
 } from "src/modules/test-case/utils/dialogs.js";
 
 // SOP Change :- Shared Project Dialogs
@@ -351,8 +371,12 @@ import {
 import {
   initTestCaseActions,
   onSubmitTestCaseStatus,
-  onSubmitTestCaseDelete
+  onSubmitTestCaseDelete,
+  updatingRow
 } from "src/modules/test-case/utils/actions.js";
+
+// SOP Change :- Shared Scripts DataTable Features
+import useSiteTableState from "composables/datatable/useSiteTableState.js";
 
 // Common variables
 const expandedRows = ref([]);
@@ -369,15 +393,25 @@ const showManageDropdownOptions = ref(false);
 const { toDate } = useFilters();
 const activeEdit = ref({ rowId: null, field: null });
 
+const currentSiteId = computed(() => user?.siteId || null);
 // local storage values
-const localStorageKey = "Test Case";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const projectIds = filterLocalStorage ? filterLocalStorage.projectIds : [];
-const planIds = filterLocalStorage ? filterLocalStorage.planIds : [];
-const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
+// const localStorageKey = "Test Case";
+// const filterLocalStorage = getLocalStorage(localStorageKey);
+// const projectIds = filterLocalStorage ? filterLocalStorage.projectIds : [];
+// const planIds = filterLocalStorage ? filterLocalStorage.planIds : [];
+
+// const search = ref({
+//   searchText: getFilterValue("searchText", ""),
+//   testedBys: getFilterValue("testedBys", []),
+//   testCaseNumber: getFilterValue("testCaseNumber", 0),
+//   statusIds: getFilterValue("statusIds", []),
+//   fromDate: getFilterValue("fromDate", ""),
+//   toDate: getFilterValue("toDate", toDate),
+//   projectIds: route.query.projectId && route.query.projectId !== "" ? (Array.isArray(route.query.projectId) ? route.query.projectId : [route.query.projectId]) : projectIds,
+//   planIds: route.query.planId && route.query.planId !== "" ? (Array.isArray(route.query.planId) ? route.query.planId : [route.query.planId]) : planIds
+// });
 
 // Table variables
-const tableRef = ref();
 const rows = ref([]);
 const shownProjects = new Set();
 const columns = ref([
@@ -390,25 +424,135 @@ const columns = ref([
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "center", sortable: true }
 ]);
 
-const highlightTestCaseId = filterLocalStorage?.activeRowId || null;
-const activeRowId = ref(highlightTestCaseId);
+const getAllTestCase = async ({ pagination: pageData }) => {
+  try {
+    loading.value = true;
+
+    const { page, rowsPerPage, sortBy, descending } = pageData;
+
+    search.value.fromDate = search.value.fromDate
+      ? toDate(search.value.fromDate)
+      : null;
+
+    search.value.toDate = search.value.toDate
+      ? toDate(search.value.toDate)
+      : null;
+
+    const number = search.value.testCaseNumber
+      ? search.value.testCaseNumber
+          .replace(/[^0-9]/g, "")
+          .replace(/^0+(?!$)/, "")
+      : "";
+
+    search.value.testCaseNumber = number || "0";
+
+    const payload = {
+      page,
+      pageSize: rowsPerPage,
+      sortBy,
+      descending,
+      ...search.value
+    };
+
+    const resp = await testcasesService.getAllTestCase(payload);
+
+    rows.value = resp.data.map(testCase => {
+      const hasFullAccess =
+        testCase?.project?.projectUserMappings?.[0]?.fullAccess ?? false;
+
+      return {
+        ...testCase,
+        isNotes: testCase?.project?.projectUserMappings?.[0]?.notes ?? false,
+        isEditable: role === "admin" || hasFullAccess
+      };
+    });
+
+    Object.assign(pagination.value, {
+      page,
+      rowsPerPage,
+      sortBy,
+      descending,
+      rowsNumber: resp.total
+    });
+
+    saveDataTableState({
+      search: search.value,
+      pagination: pagination.value,
+      activeRowId: activeRowId.value
+    });
+  } finally {
+    loading.value = false;
+    searchLoader.value = false;
+  }
+};
+
+const defaultSearch = {
+  searchText: "",
+  testedBys: [],
+  testCaseNumber: 0,
+  statusIds: [],
+  fromDate: "",
+  toDate: "",
+  projectIds: route.query.projectId && route.query.projectId !== ""
+    ? (Array.isArray(route.query.projectId)
+        ? route.query.projectId
+        : [route.query.projectId])
+    : [],
+
+  planIds: route.query.planId && route.query.planId !== ""
+    ? (Array.isArray(route.query.planId)
+        ? route.query.planId
+        : [route.query.planId])
+    : []
+};
+
+const defaultPagination = {
+  sortBy: "createdOnUtc",
+  descending: true,
+  rowsPerPage: 20,
+  page: 1
+};
+
+const {
+  search,
+  pagination,
+  activeRowId,
+  saveDataTableState
+} = useSiteTableState({
+  storageKey: "test-Case-Index",
+  siteId: currentSiteId,
+
+  defaultSearch,
+  defaultPagination
+});
+
 const highlightedId = computed(() => {
   return activeRowId.value;
 });
 
-function setActiveRowIdInLocalStorage (id) {
-  const storedData = getLocalStorage(localStorageKey) || {};
-  setLocalStorage(localStorageKey, { ...storedData, activeRowId: id });
+function setActiveRowIdInLocalStorage(id) {
   activeRowId.value = id;
+
+  saveDataTableState({
+    activeRowId: id
+  });
 }
 
 const handleDocumentClick = (event) => {
+  if (event.target.closest(".q-dialog")) {
+    return;
+  }
+
   const highlightElement = document.querySelector(".highlight");
-  // Check if clicked inside the highlighted row or icons
+
   if (highlightElement && !highlightElement.contains(event.target)) {
     activeRowId.value = null;
-    const storedData = getLocalStorage(localStorageKey) || {};
-    setLocalStorage(localStorageKey, { ...storedData, activeRowId: null });
+
+    saveDataTableState({
+      search: search.value,
+      pagination: pagination.value,
+      activeRowId: null
+    });
   }
 };
 
@@ -451,47 +595,6 @@ function shouldShowIcons (projectName) {
   }
 }
 
-// Added colors for dropdown list
-// function getStatusColor (statusText) {
-//   if (statusText) {
-//     switch (statusText) {
-//     case "Reopen":
-//       return "purple-4";
-//     case "Pass":
-//       return "green-4";
-//     case "Fail":
-//       return "red-4";
-//     case "Testing":
-//       return "deep-orange-4";
-//     case "New":
-//       return "blue-4";
-//     default:
-//       return "#ffffff";
-//     }
-//   }
-// }
-
-// ------------------------------------------------------------------------------------
-// Advance Filter :- On Submit & Cancel
-// ------------------------------------------------------------------------------------
-
-const getFilterValue = (key, defaultValue) => {
-  const val = filterLocalStorage?.[key];
-  return val && val.length > 0 ? val : defaultValue;
-};
-
-// Search variables
-const search = ref({
-  searchText: getFilterValue("searchText", ""),
-  testedBys: getFilterValue("testedBys", []),
-  testCaseNumber: getFilterValue("testCaseNumber", 0),
-  statusIds: getFilterValue("statusIds", []),
-  fromDate: getFilterValue("fromDate", ""),
-  toDate: getFilterValue("toDate", toDate),
-  projectIds: route.query.projectId && route.query.projectId !== "" ? (Array.isArray(route.query.projectId) ? route.query.projectId : [route.query.projectId]) : projectIds,
-  planIds: route.query.planId && route.query.planId !== "" ? (Array.isArray(route.query.planId) ? route.query.planId : [route.query.planId]) : planIds
-});
-
 // Search records as per parameters
 const onAdvanceSearch = () => {
   refreshTestCaseList();
@@ -504,43 +607,15 @@ const onAdvanceClear = () => {
   search.value.planIds = [];
   search.value.testedBys = [];
   search.value.statusIds = [];
+  search.value.versionNumber = "";
   search.value.fromDate = null;
   search.value.toDate = null;
-  clearLocalStorage(localStorageKey);
-  onAdvanceSearch();
-};
-
-// --------------------------------------------------------------------------------------------------------------------------------------------------
-// DataTable:- Get Test Case List
-// --------------------------------------------------------------------------------------------------------------------------------------------------
-
-const getAllTestCase = (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
-  loading.value = true;
-  search.value.fromDate = search.value.fromDate ? toDate(search.value.fromDate) : null;
-  search.value.toDate = search.value.toDate ? toDate(search.value.toDate) : null;
-  const number = search.value.testCaseNumber ? search.value.testCaseNumber.replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "") : "";
-  search.value.testCaseNumber = number || "0";
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
-  setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination, activeRowId: activeRowId.value });
-  testcasesService.getAllTestCase(payload).then((resp) => {
-    rows.value = resp.data.map(testCase => {
-      const hasFullAccess = testCase?.project?.projectUserMappings[0]?.fullAccess ?? false;
-      return {
-        ...testCase,
-        isNotes: testCase?.project?.projectUserMappings[0]?.notes ?? false,
-        isEditable: role === "admin" || hasFullAccess
-      };
-    });
-    pagination.value.page = page;
-    pagination.value.rowsPerPage = rowsPerPage;
-    pagination.value.sortBy = sortBy;
-    pagination.value.descending = descending;
-    pagination.value.rowsNumber = resp.total;
-  }).finally(() => {
-    loading.value = false;
-    searchLoader.value = false;
+  saveDataTableState({
+    search: {
+      ...defaultSearch
+    }
   });
+  onAdvanceSearch();
 };
 
 // ------------------------------------------------------------------------------------
@@ -573,6 +648,7 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.testedBys, activeEmployeesDropdown.list, "Tested By"),
   ...mapFilterToLabel(search.value.statusIds, testCaseStatusForDropdown.list, "Test Case Status"),
   ...(search.value.testCaseNumber > 0 ? { "Test Case Id": search.value.testCaseNumber } : {}),
+  ...(search.value.versionNumber > 0 ? { "Release Version": search.value.versionNumber } : {}),
   ...(search.value.fromDate ? { "Created From Date": search.value.fromDate } : {}),
   ...(search.value.toDate ? { "Created To Date": search.value.toDate } : {})
 }));
@@ -598,12 +674,20 @@ function onClearFilters (key) {
     search.value.testedBys = [];
   } else if (key === "Test Case Status") {
     search.value.statusIds = [];
+  } else if (key === "Release Version") {
+    search.value.versionNumber = "";
   } else if (key === "Created From Date") {
     search.value.fromDate = "";
   } else if (key === "Created To Date") {
     search.value.toDate = "";
   }
-  delete appliedFilters.value[key];
+  // delete appliedFilters.value[key];
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: activeRowId.value
+  });
   refreshTestCaseList();
 }
 
@@ -644,16 +728,13 @@ onBeforeUnmount(() => {
 // ------------------------------------------------------------------------------------
 
 onMounted(() => {
-  tableRef.value.requestServerInteraction();
+  refreshTestCaseList();
   activeEmployeesDropdown.load();
   projectNameDropdown.load();
   testCaseStatusForDropdown.load("Test Case Status");
   testCaseStatusDropdownSingleSelect.load("Test Case Status");
-  if (search.value.projectIds.length > 0) testPlansByProjectIdForDropdown.load(search.value.projectIds);
+  if (search.value.projectIds?.length > 0) testPlansByProjectIdForDropdown.load(search.value.projectIds);
   getDropdownTypeByModuleName("SDLC");
-  if (!activeRowId.value && highlightTestCaseId) {
-    activeRowId.value = highlightTestCaseId;
-  }
   document.addEventListener("click", handleDocumentClick);
 });
 

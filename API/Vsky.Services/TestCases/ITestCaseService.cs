@@ -9,7 +9,24 @@ namespace Vsky.Services.TestCases
     public interface ITestCaseService
     {
         #region GetAllTestCases
-        Task<IPagedList<TestCase>> GetAllTestCases(string SiteId, string LoggedUserId, string SearchText, int testCaseNumber, List<string> projectIds, List<string> planIds, List<string> testedBys, List<string> statusIds, DateTime? fromDate, DateTime? toDate, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        Task<IPagedList<TestCase>> GetAllTestCases(
+            string SiteId, 
+            string LoggedUserId, 
+            string SearchText, 
+            int testCaseNumber, 
+            List<string> projectIds, 
+            List<string> planIds, 
+            List<string> testedBys, 
+            List<string> statusIds,
+            string versionNumber,
+            DateTime? fromDate,
+            DateTime? toDate,
+            string sortBy,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
         IPagedList<TestCase> GetAllTestCasesForDashboard(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
         #endregion
 
@@ -27,6 +44,10 @@ namespace Vsky.Services.TestCases
 
         #region GetAllTestCasesListForDropdown
         Task<List<TestCase>> GetAllTestCasesListForDropdown(string SiteId);
+        #endregion
+
+        #region GetStatusChangeLog
+        Task<List<TestCaseStatusChangeLogDto>> GetStatusChangeLog(string mappingId);
         #endregion
 
         #region GetTestCaseDetailsById

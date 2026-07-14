@@ -9,7 +9,6 @@ using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.ApplicationUserRoles;
-using Vsky.Services.Sites;
 
 namespace Vsky.Services.TestCases
 {
@@ -17,6 +16,7 @@ namespace Vsky.Services.TestCases
     {
         #region Define Services
         private readonly IRepository<TestPlan> _testPlanRepository;
+        private readonly IRepository<TestCaseExecutionLog> _testCaseExecutionLogRepository;
         private readonly IRepository<TestCase> _testCaseRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
@@ -25,13 +25,15 @@ namespace Vsky.Services.TestCases
         #region Services Initializations
 
         public TestCaseService(
-            IRepository<TestPlan> testPlanRepository, 
+            IRepository<TestPlan> testPlanRepository,
+            IRepository<TestCaseExecutionLog> testCaseExecutionLogRepository,
             IRepository<TestCase> testCaseRepository,
             UserManager<ApplicationUser> userManager,
             IApplicationUserRoleService applicationUserRoleService
         )
         {
             _testPlanRepository = testPlanRepository;
+            _testCaseExecutionLogRepository = testCaseExecutionLogRepository;
             _testCaseRepository = testCaseRepository;
             _userManager = userManager;
             _applicationUserRoleService = applicationUserRoleService;
@@ -61,6 +63,7 @@ namespace Vsky.Services.TestCases
             List<string> planIds,
             List<string> testedBys,
             List<string> statusIds,
+            string versionNumber,
             DateTime? fromDate,
             DateTime? toDate,
             string sortBy,
@@ -69,7 +72,6 @@ namespace Vsky.Services.TestCases
             int pageSize = int.MaxValue,
             bool lookup = false)
         {
-            //var query = _testCaseRepository.TableNoTracking.Where(x => !x.Deleted);
             var query = _testCaseRepository.TableNoTracking.Where(x => !x.Deleted && !x.TestPlan.Deleted && x.SiteId == SiteId);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
@@ -90,7 +92,26 @@ namespace Vsky.Services.TestCases
                 query = query.Where(x => testedBys.Contains(x.TestedBy));
 
             if (statusIds != null && statusIds.Any())
-                query = query.Where(x => statusIds.Contains(x.StatusId));
+            {
+                query = query.Where(x =>
+                    statusIds.Contains(
+                        x.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                            .SelectMany(m => m.TestCaseExecutionLog)
+                            .OrderByDescending(l => l.CreatedOnUtc)
+                            .Select(l => l.StatusId)
+                            .FirstOrDefault()
+                        ?? x.StatusId
+                    ));
+            }
+
+            if (!string.IsNullOrWhiteSpace(versionNumber))
+            {
+                versionNumber = versionNumber.Trim();
+
+                query = query.Where(x =>
+                    x.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                        .Any(m => m.ReleaseTracking.VersionNumber.Contains(versionNumber)));
+            }
 
             //Search by FromDate and Todate
             if (fromDate != null)
@@ -107,19 +128,37 @@ namespace Vsky.Services.TestCases
             {
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
             }
-            if (!string.IsNullOrEmpty(SearchText))
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
             {
+                SearchText = SearchText.Trim().ToLower();
                 DateTime.TryParse(SearchText, out var parsedDate);
+
                 query = query.Where(m =>
-                      m.TestCaseNumber.ToString().Contains(SearchText.ToLower()) ||
-                      m.Project.Name.ToLower().Contains(SearchText.ToLower()) || 
-                      m.TestPlan.Name.ToLower().Contains(SearchText.ToLower()) ||   
-                      m.Name.ToLower().Contains(SearchText.ToLower()) ||              
-                      m.Status.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||    
-                      (m.TestedByEmployee.Person.FirstName + " " + m.TestedByEmployee.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
-                      m.CreatedOnUtc.Date == parsedDate.Date
+                    m.TestCaseNumber.ToString().Contains(SearchText) ||
+                    m.Project.Name.ToLower().Contains(SearchText) ||
+                    m.TestPlan.Name.ToLower().Contains(SearchText) ||
+                    m.Name.ToLower().Contains(SearchText) ||
+                    (
+                        m.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                            .SelectMany(x => x.TestCaseExecutionLog)
+                            .OrderByDescending(x => x.CreatedOnUtc)
+                            .Select(x => x.Status.DropDownValue)
+                            .FirstOrDefault()
+                        ?? m.Status.DropDownValue
+                    ).ToLower().Contains(SearchText) ||
+
+                     m.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                        .Any(x => x.ReleaseTracking.VersionNumber.ToLower().Contains(SearchText)) ||
+
+                    (m.TestedByEmployee.Person.FirstName + " " + m.TestedByEmployee.Person.LastName)
+                        .ToLower()
+                        .Contains(SearchText) ||
+
+                    m.CreatedOnUtc.Date == parsedDate.Date
                 );
             }
+
             query = query.Select(x => new TestCase
             {
                 Id = x.Id,
@@ -138,6 +177,13 @@ namespace Vsky.Services.TestCases
                 WorkspaceId = x.WorkspaceId,
                 TestCaseNumber=x.TestCaseNumber,
                 CreatedOnUtc = x.CreatedOnUtc,
+
+                ProjectReleaseTrackingReqPlanTaskIssueMappingId = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                .Where(m => !m.Deleted)
+                .OrderByDescending(m => m.ReleaseTracking.CreatedOnUtc)
+                .Select(m => m.Id)
+                .FirstOrDefault(),
+
                 Employee = new Employee
                 {
                     Person = new Person
@@ -166,7 +212,20 @@ namespace Vsky.Services.TestCases
                         Notes = mapping.Notes
                     }).Take(1).ToList(),
                 },
-                Status = new DropDown
+                Status = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                .Where(m => !m.Deleted)
+                .OrderByDescending(m => m.ReleaseTracking.CreatedOnUtc)
+                .SelectMany(m => m.TestCaseExecutionLog
+                    .Where(l => !l.Deleted)
+                    .OrderByDescending(l => l.CreatedOnUtc)
+                    .Take(1))
+                .Select(l => new DropDown
+                {
+                    Id = l.Status.Id,
+                    DropDownValue = l.Status.DropDownValue
+                })
+                .FirstOrDefault()
+                ?? new DropDown
                 {
                     Id = x.Status.Id,
                     DropDownValue = x.Status.DropDownValue
@@ -282,6 +341,25 @@ namespace Vsky.Services.TestCases
 
             var list = await query.ToListAsync();
             return list;
+        }
+        #endregion
+
+        #region GetStatusChangeLog
+        public async Task<List<TestCaseStatusChangeLogDto>> GetStatusChangeLog(string mappingId)
+        {
+            return await _testCaseExecutionLogRepository.TableNoTracking
+                .Where(x => x.ProjectReleaseTracking_ReqPlanTaskIssueMappingId == mappingId)
+                .OrderByDescending(x => x.CreatedOnUtc)
+                .Select(x => new TestCaseStatusChangeLogDto
+                {
+                    Id = x.Id,
+                    Status = x.Status.DropDownValue,
+                    Comment = x.Comment,
+                    ChangedBy = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    ChangedDate = x.CreatedOnUtc,
+                    IsRemoved = x.Deleted
+                })
+                .ToListAsync();
         }
         #endregion
 

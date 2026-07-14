@@ -13,6 +13,14 @@ export default {
     return http.get(`/test-case/details/${id}`).then(response => response.data);
   },
 
+  getReleaseWiseTestCaseHistory (id) {
+    return http.get(`/test-case/history/${id}`).then(response => response.data);
+  },
+
+  getStatusChangeLog(mappingId) {
+    return http.get(`test-case/change-log?mappingId=${mappingId}`).then(response => response.data);
+  },
+
   saveTestCase (id, model) {
     if (id) {
       return http.put(`/test-case/${id}`, model).then(response => response.data);
@@ -21,8 +29,8 @@ export default {
     }
   },
 
-  updateTestCaseStatus (id, statusId) {
-    return http.put(`/test-case/updateTestCaseStatus/${id}/${statusId}`, statusId).then(response => response.data);
+  updateTestCaseStatus (id, statusId, mappingId) {
+    return http.put(`/test-case/updateTestCaseStatus/${id}/${statusId}/${mappingId}`, statusId).then(response => response.data);
   },
   deleteTestCase (id) {
     return http.delete(`/test-case/${id}`).then(response => response.data);

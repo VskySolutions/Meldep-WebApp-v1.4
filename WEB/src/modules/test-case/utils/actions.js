@@ -1,4 +1,5 @@
 import { useQuasar } from "quasar";
+import { ref, nextTick } from "vue";
 import { notifySuccess, notifyError, zwConfirmDelete } from "assets/utils";
 import testcasesService from "modules/test-case/testCase.service";
 
@@ -10,17 +11,28 @@ export function initTestCaseActions (rowRef) {
   activeRowId = rowRef;
 }
 
-// Update Test Case Status
-export const onSubmitTestCaseStatus = async (id, statusId, refreshTestCaseList) => {
-  try {
-    await testcasesService.updateTestCaseStatus(id, statusId);
+export const updatingRow = ref({
+  status: null
+});
 
-    notifySuccess({ message: "Test case status is saved successfully." });
-    refreshTestCaseList();
+// Update Test Case Status
+export const onSubmitTestCaseStatus = async (
+  testCaseId,
+  statusId,
+  mappingId,
+  refreshTestCaseList
+) => {
+  try {
+    await withRowLoader(
+      "status",
+      testCaseId,
+      () => testcasesService.updateTestCaseStatus(testCaseId, statusId, mappingId),
+      "Test case status updated successfully.",
+      "Failed to update test case status.",
+      refreshTestCaseList
+    );
   } catch (error) {
     sendError("Error updating test case status", error);
-  } finally {
-    activeRowId.value = id;
   }
 };
 
@@ -49,6 +61,34 @@ export const onSubmitTestCaseDelete = async (
       activeRowId.value = null;
     }
   );
+};
+
+const withRowLoader = async (
+  field,
+  rowId,
+  apiCall,
+  successMessage = "Updated successfully.",
+  errorMessage = "Update failed.",
+  afterSuccess = null
+) => {
+  updatingRow.value[field] = rowId;
+
+  await nextTick();
+  document.activeElement?.blur();
+
+  try {
+    await apiCall();
+
+    if (afterSuccess) {
+      await afterSuccess();
+    }
+
+    notifySuccess({ message: successMessage });
+  } catch (error) {
+    notifyError({ message: errorMessage });
+  } finally {
+    updatingRow.value[field] = null;
+  }
 };
 
 function sendError (message, error) {

@@ -12,7 +12,8 @@
             <q-card>
               <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator>
                 <q-tab name="1_tab" label="Release Info." class="q-px-lg q-mr-md" />
-                <q-tab name="2_tab" label="Release Tracking Items" class="q-px-lg" :disable="disableTab" />
+                <q-tab name="2_tab" label="Release Tracking Items" class="q-px-lg" />
+                <q-tab v-if="id && status !== 'draft'" name="3_tab" label="Retest Test Cases" class="q-px-lg" :disable="disableTab" />
               </q-tabs>
               <q-separator />
               <q-tab-panels v-model="tab" animated>
@@ -172,10 +173,19 @@
                 </q-tab-panel>
                 <q-tab-panel name="2_tab">
                   <div>
-                    <div class="q-mb-sm q-gutter-sm flex justify-end">
+                    <div class="q-mb-sm row items-center justify-between">
+                      <div class="text-h6 text-weight-bold">
+                        <b>Select Deployment Items</b>
+                      </div>
+
                       <q-input
-                        v-model="filterItems" outlined class="bg-white q-mr-sm search-box" debounce="300" placeholder="Search"
-                        dense clearable
+                        v-model="filterDeploymentItems"
+                        outlined
+                        class="bg-white search-box"
+                        debounce="300"
+                        placeholder="Search"
+                        dense
+                        clearable
                       >
                         <template #prepend>
                           <q-icon name="o_search" />
@@ -189,7 +199,7 @@
                       class="no-shadow"
                       virtual-scroll
                       :loading="loading"
-                      :rows="filteredRows"
+                      :rows="filteredDeploymentRows"
                       :columns="columns"
                       row-key="id"
                       separator="cell"
@@ -264,6 +274,97 @@
                     />
                   </div>
                 </q-tab-panel>
+                <q-tab-panel name="3_tab">
+                  <div>
+                    <div class="q-mb-sm row items-center justify-between">
+                      <div class="text-h6 text-weight-bold">
+                        <b>Select Test Cases for Retesting</b>
+                      </div>
+
+                      <q-input
+                        v-model="filterTestCases"
+                        outlined
+                        class="bg-white search-box"
+                        debounce="300"
+                        placeholder="Search"
+                        dense
+                        clearable
+                      >
+                        <template #prepend>
+                          <q-icon name="o_search" />
+                        </template>
+                      </q-input>
+                    </div>
+                    <q-table
+                      ref="tableRef"
+                      v-model:pagination="pagination"
+                      bordered
+                      class="no-shadow"
+                      virtual-scroll
+                      :loading="loading"
+                      :rows="filteredTestCaseRows"
+                      :columns="testCaseColumns"
+                      row-key="id"
+                      separator="cell"
+                      binary-state-sort
+                      :rows-per-page-options="[20, 50, 100, 200, 500]"
+                    >
+                      <template #header="props">
+                        <q-tr :props="props" class="bg-primary text-white">
+                          <q-th
+                            v-for="col in props.cols"
+                            :key="col.name"
+                            :props="props"
+                          >
+                            {{ col.label }}
+                          </q-th>
+                        </q-tr>
+                      </template>
+                      <template #body="props">
+                        <q-tr>
+                          <q-td class="text-center" style="width: 10%;">
+                            <q-checkbox :disable="isTestCaseSubmitted" v-model="props.row.checkboxStatus" />
+                          </q-td>
+                          <!-- <q-td style="width: 12%;">{{ props.row.type }}</q-td> -->
+                          <q-td class="text-right" style="width: 8%;">#{{ props.row.number }}</q-td>
+                          <q-td class="ellipsis-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 60%;">
+                            <div>
+                              {{ isExpanded(props.row.id) ? props.row.name : truncateText(props.row.name) }}
+
+                              <span
+                                v-if="props.row.name?.length > 80"
+                                class="text-primary cursor-pointer q-ml-xs"
+                                @click="toggleExpand(props.row.id)"
+                              >
+                                {{ isExpanded(props.row.id) ? 'less' : '...more' }}
+                              </span>
+                            </div>
+                          </q-td>
+                          <q-td style="width: 10%;">{{ props.row.date }}</q-td>
+                        </q-tr>
+                      </template>
+                    </q-table>
+                  </div>
+                  <div align="center" class="q-gutter-sm justify-center q-mt-sm">
+                    <q-btn
+                      color="grey-4"
+                      outline
+                      label="Close"
+                      class="text-grey-9 actionBtn same-size-btn"
+                      no-caps
+                      @click="onDialogCancel"
+                    />
+                    <q-btn
+                      label="Save & Close"
+                      color="primary"
+                      outline
+                      class="actionBtn same-size-btn"
+                      no-caps
+                      :loading="processingClose"
+                      @click="onSubmitDraftClose"
+                    />
+                  </div>
+                </q-tab-panel>
               </q-tab-panels>
             </q-card>
           </div>
@@ -299,7 +400,6 @@ import { format } from "date-fns";
 
 const $q = useQuasar();
 const { fonts, toolbar } = getEditorConfig($q);
-const filterItems = ref("");
 const isEdit = computed(() => !!props.id);
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 defineEmits([...useDialogPluginComponent.emits]);
@@ -327,6 +427,13 @@ const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1
 const columns = ref([
   { name: "selection", label: "Selection", field: "checkboxStatus", align: "center", sortable: true },
   { name: "type", label: "Type", field: "type", align: "left", sortable: true },
+  { name: "number", label: "Number", field: "number", align: "left" },
+  { name: "name", label: "Name", field: "name", align: "left" },
+  { name: "date", label: "Date", field: "date", align: "left" }
+]);
+
+const testCaseColumns = ref([
+  { name: "selection", label: "Selection", field: "checkboxStatus", align: "center", sortable: true },
   { name: "number", label: "Number", field: "number", align: "left" },
   { name: "name", label: "Name", field: "name", align: "left" },
   { name: "date", label: "Date", field: "date", align: "left" }
@@ -423,6 +530,10 @@ const progressCloseLabel = computed(() => {
   }
   return "Save as In Progress & Close";
 });
+
+const isTestCaseSubmitted = computed(() =>
+    model.value.testCaseSubmitted === true
+);
 // ==================================================================
 
 const getReleaseTrackingInDetailsById = (releaseTrackingId) => {
@@ -485,18 +596,37 @@ const loadMappedItems = async () => {
   }
 };
 
-const filteredRows = computed(() => {
-  if (!filterItems.value) return rows.value;
+const deploymentRows = computed(() =>
+  rows.value.filter(x => x.type?.toLowerCase() !== "testcase")
+);
 
-  const search = filterItems.value.toLowerCase();
+const testCaseRows = computed(() =>
+  rows.value.filter(x => x.type?.toLowerCase() === "testcase")
+);
 
-  return rows.value.filter(row =>
-    row.type?.toLowerCase().includes(search) ||
-    row.name?.toLowerCase().includes(search) ||
-    row.number?.toString().includes(search) ||
-    row.date?.toLowerCase().includes(search)
+const filterDeploymentItems = ref("");
+const filterTestCases = ref("");
+
+const filterData = (list, search) => {
+  if (!search) return list;
+
+  const value = search.toLowerCase();
+
+  return list.filter(row =>
+    row.type?.toLowerCase().includes(value) ||
+    row.name?.toLowerCase().includes(value) ||
+    row.number?.toString().includes(value) ||
+    row.date?.toLowerCase().includes(value)
   );
-});
+};
+
+const filteredDeploymentRows = computed(() =>
+  filterData(deploymentRows.value, filterDeploymentItems.value)
+);
+
+const filteredTestCaseRows = computed(() =>
+  filterData(testCaseRows.value, filterTestCases.value)
+);
 
 // ------------------------------------------------------------------------------------
 // Advance Filter :- All Dropdowns (SOP Change)
@@ -620,9 +750,22 @@ const onSubmit = async (type, isClose = 0, isDraft = null) => {
     }
 
     // Tab 2 validation
-    if (tab.value === "2_tab" && rows.value.length === 0) {
-      notifyError({ message: "Add at least one item in release tracking." });
-      return;
+    if (tab.value === "2_tab") {
+      if (!deploymentRows.value.some(x => x.checkboxStatus)) {
+          notifyError({
+              message: "Select at least one deployment item."
+          });
+          return;
+      }
+    }
+
+    if (tab.value === "3_tab") {
+        if (!testCaseRows.value.some(x => x.checkboxStatus)) {
+            notifyError({
+                message: "Select at least one test case for retesting."
+            });
+            return;
+        }
     }
     const selected = projectNameDropdownSingleSelect.value
       ?.find(p => p.value === model.value.projectId);
@@ -698,7 +841,7 @@ watch(
 );
 
 watch(() => tab.value, async (newTab) => {
-  if (newTab !== "2_tab") return;
+  if (newTab !== "2_tab" && newTab !== "3_tab") return;
 
   if (model.value.projectId) await getAllReqPlanTaskIssuesByProjectId(model.value.projectId);
 

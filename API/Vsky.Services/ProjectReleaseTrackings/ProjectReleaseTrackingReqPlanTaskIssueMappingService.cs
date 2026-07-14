@@ -16,7 +16,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
         private readonly IRepository<Requirement> _requirementRepository;
         private readonly IRepository<Issue> _issueRepository;
         private readonly IRepository<ProjectTask> _projectTaskRepository;
-        private readonly IRepository<Models.ProjectWeeklyPlan> _projectWeeklyPlanRepository;
+        private readonly IRepository<TestCase> _testCaseRepository;
         #endregion
 
         #region Services Initializations
@@ -25,14 +25,14 @@ namespace Vsky.Services.ProjectReleaseTrackings
             IRepository<Requirement> requirementRepository,
             IRepository<Issue> issueRepository,
             IRepository<ProjectTask> projectTaskRepository,
-            IRepository<Models.ProjectWeeklyPlan> projectWeeklyPlanRepository
+            IRepository<TestCase> testCaseRepository
         )
         {
             _ProjectReleaseTrackingReqPlanTaskIssueMappingRepository = ProjectReleaseTrackingReqPlanTaskIssueMappingRepository;
             _requirementRepository = requirementRepository;
             _issueRepository = issueRepository;
             _projectTaskRepository = projectTaskRepository;
-            _projectWeeklyPlanRepository = projectWeeklyPlanRepository;
+            _testCaseRepository = testCaseRepository;
         }
         #endregion
 
@@ -114,14 +114,31 @@ namespace Vsky.Services.ProjectReleaseTrackings
                     Date = (DateTime?)x.StartDate
                 });
 
+            var testCases = _testCaseRepository.TableNoTracking
+                .Where(x =>
+                    !x.Deleted &&
+                    x.SiteId == SiteId &&
+                    x.ProjectId == projectId
+                )
+                .Select(x => new ProjectReqPlanTaskIssueItemDto
+                {
+                    Id = x.Id,
+                    Type = "TestCase",
+                    Number = x.TestCaseNumber,
+                    Name = x.Name,
+                    Date = (DateTime?)x.CreatedOnUtc
+                });
+
             // Combine all
             var reqList = await requirements.ToListAsync();
             var issueList = await issues.ToListAsync();
             var taskList = await tasks.ToListAsync();
+            var testCaseList = await testCases.ToListAsync();
 
             var result = reqList
                 .Concat(issueList)
                 .Concat(taskList)
+                .Concat(testCaseList)
                 .OrderByDescending(x => x.Date)
                 .ToList();
 
@@ -140,6 +157,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
                 RequirementId = m.RequirementId,
                 TaskId = m.TaskId,
                 IssueId = m.IssueId,
+                TestCaseId = m.TestCaseId,
 
                 Requirement = m.RequirementId != null ? new Requirement
                 {
@@ -163,11 +181,154 @@ namespace Vsky.Services.ProjectReleaseTrackings
                     IssueNumber = m.Issue.IssueNumber,
                     Name = m.Issue.Name,
                     CreatedOnUtc = m.Issue.CreatedOnUtc
+                } : null,
+
+                TestCase = m.TestCaseId != null ? new TestCase
+                {
+                    Id = m.TestCase.Id,
+                    TestCaseNumber = m.TestCase.TestCaseNumber,
+                    Name = m.TestCase.Name,
+                    CreatedOnUtc = m.TestCase.CreatedOnUtc
                 } : null
             });
 
             var list = await query.ToListAsync();
             return list;
+        }
+        #endregion
+
+        #region GetReleaseWiseTestCaseHistory
+        public async Task<List<ReleaseWiseTestCaseHistoryDto>> GetReleaseWiseTestCaseHistory(string testCaseId)
+        {
+            var mappings = await _ProjectReleaseTrackingReqPlanTaskIssueMappingRepository
+                .TableNoTracking
+                .Where(x => x.TestCaseId == testCaseId)
+                .Select(m => new
+                {
+                    m.Id,
+                    m.TestCaseId,
+                    m.Deleted,
+                    m.CreatedOnUtc,
+                    TestCaseName = m.TestCase.Name,
+
+                    ReleaseVersion = m.ReleaseTracking.VersionNumber,
+
+                    Logs = m.TestCaseExecutionLog
+                        .OrderByDescending(x => x.CreatedOnUtc)
+                        .Select(x => new
+                        {
+                            x.Id,
+                            x.Comment,
+                            x.CreatedOnUtc,
+
+                            Status = x.Status.DropDownValue,
+
+                            TestedBy = x.CreatedBy == null
+                                ? null
+                                : x.CreatedBy.Person.FirstName + " " +
+                                  x.CreatedBy.Person.LastName,
+
+                            IssueNumber = x.Issue != null
+                                ? (int?)x.Issue.IssueNumber
+                                : null,
+
+                            IssueId = x.Issue != null
+                                ? x.Issue.Id
+                                : null
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            var result = new List<ReleaseWiseTestCaseHistoryDto>();
+
+            foreach (var mapping in mappings)
+            {
+                var dto = new ReleaseWiseTestCaseHistoryDto
+                {
+                    MappingId = mapping.Id,
+                    TestCaseId = mapping.TestCaseId,
+                    TestCaseName = mapping.TestCaseName,
+                    ReleaseVersion = mapping.ReleaseVersion,
+                    IsRemoved = mapping.Deleted
+                };
+
+                var latest = mapping.Logs.FirstOrDefault();
+                if (latest != null)
+                {
+                    dto.CurrentStatus = latest.Status;
+                    dto.TestedBy = latest.TestedBy;
+                    dto.TestedDate = latest.CreatedOnUtc;
+                    dto.Comment = latest.Comment;
+                    dto.IssueNumber = latest.IssueNumber;
+                    dto.IssueId = latest.IssueId;
+                }
+
+                dto.Logs = mapping.Logs
+                    .Skip(1)
+                    .Select(x => new ReleaseWiseTestCaseHistoryLogDto
+                    {
+                        Status = x.Status,
+                        TestedBy = x.TestedBy,
+                        TestedDate = x.CreatedOnUtc,
+                        Comment = x.Comment,
+                        IssueNumber = x.IssueNumber,
+                        IssueId = x.IssueId
+                    })
+                    .ToList();
+
+                result.Add(dto);
+            }
+
+            var testCase = await _testCaseRepository.TableNoTracking
+                .Where(x => !x.Deleted && x.Id == testCaseId)
+                .Select(x => new
+                {
+                    x.Name,
+                    x.TestedDate,
+                    x.TestResult,
+
+                    Status = x.Status.DropDownValue,
+
+                    TestedBy = x.TestedByEmployee == null
+                        ? null
+                        : x.TestedByEmployee.Person.FirstName + " " +
+                          x.TestedByEmployee.Person.LastName
+                })
+                .FirstOrDefaultAsync();
+
+            var issue = await _issueRepository.TableNoTracking
+                .Where(x => !x.Deleted && x.TestCaseId == testCaseId)
+                .OrderByDescending(x => x.CreatedOnUtc)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.IssueNumber
+                })
+                .FirstOrDefaultAsync();
+
+            if (testCase != null)
+            {
+                result.Add(new ReleaseWiseTestCaseHistoryDto
+                {
+                    MappingId = null,
+                    TestCaseId = testCaseId,
+                    TestCaseName = testCase.Name,
+                    ReleaseVersion = "Initial Test Case",
+                    CurrentStatus = testCase.Status,
+                    TestedBy = testCase.TestedBy,
+                    TestedDate = testCase.TestedDate,
+                    Comment = testCase.TestResult,
+                    IssueNumber = issue?.IssueNumber,
+                    IssueId = issue?.Id,
+                    IsRemoved = false,
+                    Logs = new List<ReleaseWiseTestCaseHistoryLogDto>()
+                });
+            }
+
+            return result
+                .OrderByDescending(x => x.TestedDate ?? DateTime.MinValue)
+                .ToList();
         }
         #endregion
 

@@ -392,6 +392,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<INoteService, NoteService>();
             builder.Services.AddScoped<ITestPlanService, TestPlanService>();
             builder.Services.AddScoped<ITestCaseService, TestCaseService>();
+            builder.Services.AddScoped<ITestCaseExecutionLogExecutionLogService, TestCaseExecutionLogExecutionLogService>();
             builder.Services.AddScoped<IIssueService, IssueService>();
             builder.Services.AddScoped<IImageMigrationService, ImageMigrationService>();
             builder.Services.AddScoped<IIssueStatusChangedLogService, IssueStatusChangedLogService>();

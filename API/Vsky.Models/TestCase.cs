@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 using Vsky.Core;
 
 namespace Vsky.Models;
@@ -30,6 +28,8 @@ public class TestCase : BaseEntity
     public string UpdatedById { get; set; }
     public DateTime? UpdatedOnUtc { get; set; }
     public bool Deleted { get; set; }
+    [NotMapped]
+    public string ProjectReleaseTrackingReqPlanTaskIssueMappingId { get; set; }
 
     public virtual Site Site { get; set; }
     public virtual TestPlan TestPlan { get; set; }
@@ -40,4 +40,5 @@ public class TestCase : BaseEntity
     public virtual ApplicationUser CreatedByUser { get; set; }
     public virtual Employee TestedByEmployee { get; set; }
     public virtual Project Project { get; set; }
+    public virtual ICollection<ProjectReleaseTrackingReqPlanTaskIssueMapping> ProjectReleaseTrackingReqPlanTaskIssueMappings { get; set; } = new List<ProjectReleaseTrackingReqPlanTaskIssueMapping>();
 }

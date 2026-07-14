@@ -12,9 +12,9 @@ using System.Collections.Generic;
 using Vsky.Api.Models;
 using Vsky.Services.DropDowns;
 using Vsky.Services.AzureBlobImage;
-using AngleSharp.Dom;
 using Vsky.Services.SitesModifiedLog;
 using Vsky.Services.ProjectReleaseTrackings;
+using Vsky.Services.TestCases;
 
 namespace Vsky.Api.Controllers
 {
@@ -32,6 +32,7 @@ namespace Vsky.Api.Controllers
         private readonly IProjectReleaseTrackingService _projectReleaseTrackingService;
         private readonly IProjectReleaseTrackingReqPlanTaskIssueMappingService _projectReleaseTrackingReqPlanTaskIssueMappingService;
         private readonly IProjectReleaseTrackingStatusLogService _projectReleaseTrackingStatusLogService;
+        private readonly ITestCaseExecutionLogExecutionLogService _testCaseExecutionLogExecutionLogService;
         #endregion
 
         #region Services Initializations
@@ -45,7 +46,8 @@ namespace Vsky.Api.Controllers
             IAzureBlobImageServices azureBlobImageServices,
             IProjectReleaseTrackingService projectReleaseTrackingService,
             IProjectReleaseTrackingReqPlanTaskIssueMappingService projectReleaseTrackingReqPlanTaskIssueMappingService,
-            IProjectReleaseTrackingStatusLogService projectReleaseTrackingStatusLogService
+            IProjectReleaseTrackingStatusLogService projectReleaseTrackingStatusLogService,
+            ITestCaseExecutionLogExecutionLogService testCaseExecutionLogExecutionLogService
         )
         {
             _globalVariable = globalVariable;
@@ -58,6 +60,7 @@ namespace Vsky.Api.Controllers
             _projectReleaseTrackingService = projectReleaseTrackingService;
             _projectReleaseTrackingReqPlanTaskIssueMappingService = projectReleaseTrackingReqPlanTaskIssueMappingService;
             _projectReleaseTrackingStatusLogService = projectReleaseTrackingStatusLogService;
+            _testCaseExecutionLogExecutionLogService = testCaseExecutionLogExecutionLogService;
         }
         #endregion
 
@@ -118,27 +121,32 @@ namespace Vsky.Api.Controllers
                     var isReq = x.RequirementId != null;
                     var isIssue = x.IssueId != null;
                     var isTask = x.TaskId != null;
+                    var isTestCase = x.TestCaseId != null;
                     var isWeekly = x.WeeklyPlanId != null;
                     var isMonthly = x.MonthlyPlanId != null;
 
                     return new
                     {
-                        RefId = x.RequirementId ?? x.IssueId ?? x.TaskId ?? x.WeeklyPlanId ?? x.MonthlyPlanId,
+                        RefId = x.RequirementId ?? x.IssueId ?? x.TaskId ?? x.TestCaseId ?? x.WeeklyPlanId ?? x.MonthlyPlanId,
 
                         Type = isReq ? "requirement" :
                                isIssue ? "issue" :
+                               isTestCase ? "testcase" :
                                isTask ? "task" : null,
 
                         Name = isReq ? x.Requirement?.Title :
                                isIssue ? x.Issue?.Name :
+                               isTestCase ? x.TestCase?.Name :
                                isTask ? x.Task?.Name : null,
 
                         Number = isReq ? x.Requirement?.RequirementNumber.ToString() :
                                  isIssue ? x.Issue?.IssueNumber.ToString() :
+                                 isTestCase ? x.TestCase?.TestCaseNumber.ToString() :
                                  isTask ? x.Task?.ProjectTaskNumber.ToString() : null,
 
                         Date = isReq ? x.Requirement?.CreatedOnUtc.ToString("MM/dd/yyyy") :
                                isIssue ? x.Issue?.CreatedOnUtc.ToString("MM/dd/yyyy") :
+                               isTestCase ? x.TestCase?.CreatedOnUtc.ToString("MM/dd/yyyy") :
                                isTask ? x.Task?.CreatedOnUtc.ToString("MM/dd/yyyy") : null
                     };
                 })
@@ -409,11 +417,19 @@ namespace Vsky.Api.Controllers
                         var existingSet = existingList
                             .Select(x => new
                             {
-                                RefId = x.RequirementId ?? x.IssueId ?? x.TaskId ?? x.WeeklyPlanId ?? x.MonthlyPlanId,
+                                RefId = x.RequirementId ??
+                                        x.IssueId ??
+                                        x.TaskId ??
+                                        x.TestCaseId ??
+                                        x.WeeklyPlanId ??
+                                        x.MonthlyPlanId,
+
                                 Type =
                                     x.RequirementId != null ? "requirement" :
                                     x.IssueId != null ? "issue" :
-                                    x.TaskId != null ? "task" : ""
+                                    x.TaskId != null ? "task" :
+                                    x.TestCaseId != null ? "testcase" :
+                                    ""
                             })
                             .ToHashSet();
 
@@ -438,32 +454,127 @@ namespace Vsky.Api.Controllers
                         }
 
                         var itemsToDelete = existingList
-                        .Where(x =>
-                        {
-                            var refId =
-                                x.RequirementId ??
-                                x.IssueId ??
-                                x.TaskId;
-
-                            var type =
-                                x.RequirementId != null ? "requirement" :
-                                x.IssueId != null ? "issue" :
-                                x.TaskId != null ? "task" : "";
-
-                            // If NOT present in incoming delete
-                            return !incomingSet.Contains(new
+                            .Where(x =>
                             {
-                                RefId = refId,
-                                Type = type
-                            });
-                        })
-                        .Select(x => x.Id)
-                        .ToList();
+                                var refId =
+                                    x.RequirementId ??
+                                    x.IssueId ??
+                                    x.TaskId ??
+                                    x.TestCaseId;
+
+                                var type =
+                                    x.RequirementId != null ? "requirement" :
+                                    x.IssueId != null ? "issue" :
+                                    x.TaskId != null ? "task" :
+                                    x.TestCaseId != null ? "testcase" :
+                                    "";
+
+                                return !incomingSet.Contains(new
+                                {
+                                    RefId = refId,
+                                    Type = type
+                                });
+                            })
+                            .Select(x => x.Id)
+                            .ToList();
 
                         foreach (var mappingId in itemsToDelete)
                         {
                             var mappingEntity = await _projectReleaseTrackingReqPlanTaskIssueMappingService.GetProjectReleaseTrackingReqPlanTaskIssueMappingById(mappingId);
                             _projectReleaseTrackingReqPlanTaskIssueMappingService.DeleteProjectReleaseTrackingReqPlanTaskIssueMapping(mappingEntity);
+                        }
+                    }
+
+                    if (model.Tab == "3_tab")
+                    {
+                        var incomingTestCases = (model.ProjectReleaseTrackingReqPlanTaskIssueList ??
+                            new List<SaveProjectReleaseTrackingReqPlanTaskIssueMapping>())
+                            .Where(x => x.Type.Equals("TestCase", StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+
+                        var existingMappings =
+                            (await _projectReleaseTrackingReqPlanTaskIssueMappingService
+                                .GetAllProjectReleaseTrackingReqPlanTaskIssueMappingByProjectReleaseTrackingId(id))
+                            .Where(x => x.TestCaseId != null)
+                            .ToList();
+
+                        var incomingIds = incomingTestCases
+                            .Select(x => x.RefId)
+                            .ToHashSet();
+
+                        var existingIds = existingMappings
+                            .Select(x => x.TestCaseId)
+                            .ToHashSet();
+
+                        var statusId = await _dropDownService.GetDropDownByTypeNameAndName(
+                            SiteId,
+                            "Test Case Status",
+                            "Not Tested");
+
+                        // Add newly selected test cases
+                        foreach (var item in incomingTestCases.Where(x => !existingIds.Contains(x.RefId)))
+                        {
+                            var mapping = new ProjectReleaseTrackingReqPlanTaskIssueMapping
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                ReleaseTrackingId = id,
+                                TestCaseId = item.RefId,
+                                CreatedById = LoggedUserId,
+                                CreatedOnUtc = GetDateTime
+                            };
+
+                            _projectReleaseTrackingReqPlanTaskIssueMappingService
+                                .InsertProjectReleaseTrackingReqPlanTaskIssueMapping(mapping);
+
+                            _testCaseExecutionLogExecutionLogService.InsertTestCaseExecutionLog(
+                                new TestCaseExecutionLog
+                                {
+                                    Id = Guid.NewGuid().ToString(),
+                                    ProjectReleaseTracking_ReqPlanTaskIssueMappingId = mapping.Id,
+                                    StatusId = statusId,
+                                    Comment = null,
+                                    CreatedById = LoggedUserId,
+                                    CreatedOnUtc = GetDateTime,
+                                    UpdatedById = LoggedUserId,
+                                    UpdatedOnUtc = GetDateTime
+                                });
+                        }
+
+                        // Remove deselected test cases
+                        foreach (var mapping in existingMappings.Where(x => !incomingIds.Contains(x.TestCaseId)))
+                        {
+                            var projectReleaseTrackingReqPlanTaskIssueMapping = await _projectReleaseTrackingReqPlanTaskIssueMappingService.GetProjectReleaseTrackingReqPlanTaskIssueMappingById(mapping.Id);
+
+                            _projectReleaseTrackingReqPlanTaskIssueMappingService
+                                .DeleteProjectReleaseTrackingReqPlanTaskIssueMapping(projectReleaseTrackingReqPlanTaskIssueMapping);
+
+                            var logs = await _testCaseExecutionLogExecutionLogService
+                                .GetTestCaseExecutionLogsByMappingId(mapping.Id);
+
+                            foreach (var log in logs)
+                            {
+                                _testCaseExecutionLogExecutionLogService.DeleteTestCaseExecutionLog(log);
+                            }
+                        }
+
+                        // Existing selected test cases
+                        foreach (var mapping in existingMappings.Where(x => incomingIds.Contains(x.TestCaseId)))
+                        {
+                            var logs = await _testCaseExecutionLogExecutionLogService
+                                .GetTestCaseExecutionLogsByMappingId(mapping.Id);
+
+                            var latestLog = logs
+                                .OrderByDescending(x => x.CreatedOnUtc)
+                                .FirstOrDefault();
+
+                            if (latestLog != null && latestLog.StatusId != statusId)
+                            {
+                                latestLog.StatusId = statusId;
+                                latestLog.UpdatedById = LoggedUserId;
+                                latestLog.UpdatedOnUtc = GetDateTime;
+
+                                _testCaseExecutionLogExecutionLogService.UpdateTestCaseExecutionLog(latestLog);
+                            }
                         }
                     }
 
@@ -571,6 +682,10 @@ namespace Vsky.Api.Controllers
 
                 case "task":
                     entity.TaskId = item.RefId;
+                    break;
+
+                case "test case":
+                    entity.TestCaseId = item.RefId;
                     break;
 
                 case "weeklyplan":
