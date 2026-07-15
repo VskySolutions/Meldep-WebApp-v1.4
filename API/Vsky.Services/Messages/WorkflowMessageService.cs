@@ -255,6 +255,55 @@ namespace Vsky.Services.Messages
                 await _emailSender.SendEmailAsync(emailAccount, subject, body, emailAccount.Email, emailAccount.DisplayName, employee.Person.PrimaryEmailAddress, null);
             }
         }
+        public async Task SendLeaveApplicationMailToApprover(Employee recipient, EmployeeLeave leave)
+        {
+            var template = await _db.MessageTemplates.FirstOrDefaultAsync(x => x.Name == MessageTemplateSystemNames.LeaveSendToApproverToken && x.Active);
+
+            if (template != null)
+            {
+                var ApproverFullName = recipient.Person.FirstName + " " + recipient.Person.LastName;
+                var EmployeeFullName = leave.Employee.Person.FirstName + " " + leave.Employee.Person.LastName;
+
+                var tokens = new List<Token>
+                {
+                    new Token("Leave.SendToApprover", leave),
+                    new Token("Leave.ApproverFullName", ApproverFullName),
+                    new Token("Leave.EmployeeFullName", EmployeeFullName),
+                    new Token("Leave.FromDate", leave.FromDate.ToString("MM-dd-yyyy")),
+                    new Token("Leave.ToDate", leave.ToDate.ToString("MM-dd-yyyy")),
+                    new Token("Leave.Reason", leave.Reason),
+                    new Token("Leave.LeaveType", leave.LeaveCategories.DropDownValue),
+                    new Token("Leave.HalfDayType", leave.HalfDayType),
+                    new Token("Leave.NoofLeaves", leave.NoofLeaves)
+                };
+
+                // Build Email Layout
+                var FullEmail = BuildEmailLayout(template.Body, null, true);
+
+                // email account
+                var emailAccount = await _db.EmailAccounts.FirstOrDefaultAsync(x => x.Id == template.EmailAccountId && x.SiteId == recipient.SiteId) ?? await _db.EmailAccounts.FirstOrDefaultAsync(x => x.SiteId == recipient.SiteId);
+                if (emailAccount == null)
+                {
+                    throw new NullReferenceException("Email account not found");
+                }
+
+                // replace subject and body tokens
+                var subject = _tokenizer.Replace(template.Subject, tokens, false);
+                var body = _tokenizer.Replace(FullEmail, tokens, true);
+
+                // send email
+                await _emailSender.SendEmailAsync(
+                    emailAccount, 
+                    subject, 
+                    body, 
+                    emailAccount.Email, 
+                    emailAccount.DisplayName,
+                    recipient.OfficialEmail,
+                    null
+                );
+            }
+        }
+
         public async Task SendMailToApprover(Employee employee, EmployeeLeave code)
         {
             var template = await _db.MessageTemplates.FirstOrDefaultAsync(x => x.Name == MessageTemplateSystemNames.LeaveForwardToken && x.Active);

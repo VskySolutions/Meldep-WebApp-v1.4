@@ -121,7 +121,8 @@ namespace Vsky.Api.Controllers
                     searchModel.ToDate,
                     searchModel.ThisWeek,
                     searchModel.LastNumberOfWeeks,
-                    searchModel.SortBy, 
+                    searchModel.SortBy,
+                    searchModel.Sorts,
                     searchModel.Descending,
                     searchModel.Page, 
                     searchModel.PageSize
@@ -397,6 +398,7 @@ namespace Vsky.Api.Controllers
                 searchModel.ThisWeek,
                 searchModel.LastNumberOfWeeks, 
                 searchModel.SortBy, 
+                searchModel.Sorts,
                 searchModel.Descending,
                 searchModel.Page, 
                 searchModel.PageSize

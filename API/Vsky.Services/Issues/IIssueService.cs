@@ -8,7 +8,25 @@ namespace Vsky.Services.Issues
     public interface IIssueService
     {
         #region GetAllIssues
-        Task<IPagedList<Issue>> GetAllIssues(string SiteId, string LoggedUserId, string SearchText, int issueNumber,List<string> projectIds, List<string> projectModuleIds , string name, List<string> priorityIds, List<string> statusIds, List<string> issueTypeIds, List<string> employeeIds, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        Task<IPagedList<Issue>> GetAllIssues(
+            string SiteId,
+            string LoggedUserId,
+            string SearchText,
+            int issueNumber,
+            List<string> projectIds, 
+            List<string> projectModuleIds,
+            string name, 
+            List<string> priorityIds,
+            List<string> statusIds,
+            List<string> issueTypeIds,
+            List<string> employeeIds, 
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1, 
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
         IPagedList<Issue> GetAllIssuesForDashboard(string SiteId, string projectId, string targetMonthStr, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
         List<VWProjectIssueStatusSummary> GetIssueStatusSummaryByProjectIds(List<string> projectIds);
         #endregion

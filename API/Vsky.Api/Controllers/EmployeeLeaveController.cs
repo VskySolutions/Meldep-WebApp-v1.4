@@ -543,9 +543,9 @@ namespace Vsky.Api.Controllers
 
                         //var employee = _commonService.GetEmployeeIdByUserId(SiteId, user.Id);
                         var employee = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, user.Id);
-                        var employeeData = await _employeeService.GetEmployeeDetailsById(employee);
+                        var hrEmployeeData = await _employeeService.GetEmployeeDetailsById(employee);
                         // Send an email with the new password if the password reset was successful
-                        await _workflowMessageService.SendMailToHr(employeeData, employeeleave);
+                        await _workflowMessageService.SendMailToHr(hrEmployeeData, employeeleave);
 
                         var HrEmployee = _commonService.GetLoggeduserIdByEmployeeId(SiteId, employee);
                         var MasterNotificationData = await _masterNotificationService.GetMasterNotificationByNumber(SiteId, "ForwardLeave1", HrEmployee);
@@ -557,6 +557,32 @@ namespace Vsky.Api.Controllers
                             var Notification = _notificationService.AddNotification(SiteId, MasterNotificationData.Title, message, MasterNotificationData.Type, entity.CreatedById, entity.Id, "/forward-leaves", HrEmployee, entity.CreatedById, GetDateTime);
                         }
                     }
+
+                    if (!string.IsNullOrEmpty(entity.LeaveApproverId))
+                    {
+                        var approverEmployee = await _employeeService.GetEmployeeDetailsById(entity.LeaveApproverId);
+
+                        if (approverEmployee != null && !string.IsNullOrWhiteSpace(approverEmployee.OfficialEmail))
+                        {
+                            var userId = await _userService.GetUserByEmployeeId(SiteId, approverEmployee.Id);
+
+                            var canSendEmail = await _sitesEmailNotificationsPermissionServices
+                                .ShouldSendNotification(
+                                    SiteId,
+                                    userId.Id,
+                                    "Leave.SendToApprover"
+                                );
+
+                            if (canSendEmail)
+                            {
+                                await _workflowMessageService.SendLeaveApplicationMailToApprover(
+                                    approverEmployee,
+                                    employeeleave
+                                );
+                            }
+                        }
+                    }
+
                     return NoContent();
                 }
             }

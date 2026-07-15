@@ -50,6 +50,7 @@ namespace Vsky.Services.EmployeeDesignations
                     {
                         Id = x.LeaveApprover.Person.Id,
                         FullName = x.LeaveApprover.Person.FirstName + " " + x.LeaveApprover.Person.LastName,
+                        PrimaryEmailAddress = x.LeaveApprover.OfficialEmail
                     }
                 }
             }).FirstOrDefaultAsync();

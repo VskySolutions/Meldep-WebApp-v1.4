@@ -15,6 +15,10 @@ namespace Vsky.Api.Models
         public string WorkspaceId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public string CreatedById { get; set; }
+        public DateTime CreatedOnUtc { get; set; }
+        public string UpdatedById { get; set; }
+        public DateTime? UpdatedOnUtc { get; set; }
 
         public virtual Site Site { get; set; }
         public virtual DropDown Area { get; set; }
@@ -22,6 +26,8 @@ namespace Vsky.Api.Models
         public virtual Employee PlanMaker { get; set; }
         public virtual Employee PlanReviewer { get; set; }
         public virtual Project Project { get; set; }
+        public virtual ApplicationUser CreatedBy { get; set; }
+        public virtual ApplicationUser UpdatedBy { get; set; }
         public int TestPlanNumber { get; set; }
     }
 

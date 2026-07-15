@@ -83,6 +83,7 @@ namespace Vsky.Api.Controllers
                     searchModel.PlanMakerIds,
                     searchModel.PlanReviewerIds,
                     searchModel.SortBy,
+                    searchModel.Sorts,
                     searchModel.Descending,
                     searchModel.Page,
                     searchModel.PageSize

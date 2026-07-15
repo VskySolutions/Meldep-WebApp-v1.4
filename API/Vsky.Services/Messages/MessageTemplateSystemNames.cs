@@ -13,6 +13,7 @@
         public const string LeaveForwardToken = "Leave.Forward";
 
         public const string LeaveSendToHRToken = "Leave.SendToHR";
+        public const string LeaveSendToApproverToken = "Leave.SendToApprover";
 
         // Help Desk
         public const string RequestProcessingToken = "HelpDesk.RequestProcessing";

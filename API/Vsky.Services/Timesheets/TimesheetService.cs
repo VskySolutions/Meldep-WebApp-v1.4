@@ -9,6 +9,7 @@ using Org.BouncyCastle.Bcpg.Sig;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
+using Vsky.Services.Common;
 using Vsky.Services.Sites;
 
 namespace Vsky.Services.Timesheets
@@ -18,13 +19,19 @@ namespace Vsky.Services.Timesheets
         #region Define Services
         private readonly IRepository<Timesheet> _timesheetRepository;
         private readonly IRepository<TimesheetLines> _timesheetLinerepository;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
-        public TimesheetService(IRepository<Timesheet> timesheetRepository, IRepository<TimesheetLines> timesheetLinerepository)
+        public TimesheetService(
+            IRepository<Timesheet> timesheetRepository, 
+            IRepository<TimesheetLines> timesheetLinerepository,
+            ICommonService commonService
+        )
         {
             _timesheetRepository = timesheetRepository;
             _timesheetLinerepository = timesheetLinerepository;
+            _commonService = commonService;
         }
         #endregion
 
@@ -55,7 +62,8 @@ namespace Vsky.Services.Timesheets
             DateTime? toDate,
             bool thisWeek,
             int lastNumberOfWeeks,
-            string sortBy, 
+            string sortBy,
+            Dictionary<string, string> sorts,
             bool descending, 
             int page = 1, 
             int pageSize = int.MaxValue, 
@@ -127,6 +135,12 @@ namespace Vsky.Services.Timesheets
             else
             {
                 query = query.OrderByDescending(x => x.TimesheetDate);
+            }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
             }
 
             query = query.OrderByDescending(x => x.TimesheetDate).Select(x => new Timesheet

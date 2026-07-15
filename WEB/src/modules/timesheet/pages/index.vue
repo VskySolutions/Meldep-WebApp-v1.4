@@ -193,63 +193,114 @@
                     </div>
                   </div>
                 </q-btn-dropdown>
-                <!-- </div> -->
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs hidden"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
               </div>
             </div>
           </div>
         </div>
       </q-card-section>
       <q-separator />
-      <q-table
-        ref="tableRef"
-        v-model:pagination="pagination"
-        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-        :loading="loading"
-        :columns="columns"
-        :rows="rows"
-        row-key="id"
-        separator="cell"
-        binary-state-sort
-        :rows-per-page-options="[20, 50, 100, 200, 500]"
-        @request="getTimesheets"
-      >
-        <template #loading>
-          <q-inner-loading showing color="primary">
-            <q-spinner-ios size="40px" class="q-mt-xl" />
-          </q-inner-loading>
-        </template>
-        <template #header="props">
-          <q-tr :props="props" class="bg-primary text-white">
-            <q-th></q-th>
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-          </q-tr>
-        </template>
-        <template #body="props">
-          <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-            <q-td colspan="7" style="background: #dbf2ff;" class="text-center">{{ toDate(props.row.timesheetDate) }}</q-td>
-            <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
-              <q-icon
-                v-if="props.row.isActionVisible && storedUser.username === props.row.user.userName"
-                name="o_edit"
-                class="cursor-pointer q-mr-sm"
-                @click="onTimesheetEdit(props.row.id, false, null, refreshTimesheetList)"
-              >
-                <q-tooltip>Edit</q-tooltip>
-              </q-icon>
-              <q-icon
-                v-if="props.row.isActionVisible && storedUser.username === props.row.user.userName"
-                name="o_delete_outline"
-                class="cursor-pointer"
-                :class="storedUser.username === props.row.user.userName ? '' : 'hidden'"
-                color="negative"
-                @click="onSubmitTimesheetDelete(props.row.id, props.row.timesheetDate, refreshTimesheetList)"
-              >
-                <q-tooltip>Delete</q-tooltip>
-              </q-icon>
-            </q-td>
-          </q-tr>
-          <q-tr v-for="(line) in props.row.timesheetLines" :key="line.id" :class="highlightedId == line.id ? 'highlight' : ''" :set="(preProjectName = null, preProjectTask = null, preProjectDate = null, preProjectTaskDate = null, resetTracking())">
-            <q-td style="width: 2%;" class="text-center">
+      <div class="table-scroll-container">
+        <q-table
+          ref="tableRef"
+          v-model:pagination="pagination"
+          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+          :loading="loading"
+          :columns="computedColumns"
+          :rows="rows"
+          row-key="id"
+          separator="cell"
+          binary-state-sort
+          :rows-per-page-options="[20, 50, 100, 200, 500]"
+          @request="getTimesheets"
+        >
+          <template #loading>
+            <q-inner-loading showing color="primary">
+              <q-spinner-ios size="40px" class="q-mt-xl" />
+            </q-inner-loading>
+          </template>
+          <template #header="props">
+            <q-tr :props="props" class="bg-primary text-white">
+              <q-th></q-th>
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->             
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
+                >
+                  {{ col.label }}
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+            </q-tr>
+          </template>
+          <template #body="props">
+            <q-tr
+              :props="props"
+              :class="activeRowId == props.row.id ? 'highlight' : ''"
+            >
+              <q-td colspan="7" style="background: #dbf2ff;" class="text-center">{{ toDate(props.row.timesheetDate) }}</q-td>
+              <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
+                <q-icon
+                  v-if="props.row.isActionVisible && storedUser.username === props.row.user.userName"
+                  name="o_edit"
+                  class="cursor-pointer q-mr-sm"
+                  @click="onTimesheetEdit(props.row.id, false, null, refreshTimesheetList)"
+                >
+                  <q-tooltip>Edit</q-tooltip>
+                </q-icon>
+                <q-icon
+                  v-if="props.row.isActionVisible && storedUser.username === props.row.user.userName"
+                  name="o_delete_outline"
+                  class="cursor-pointer"
+                  :class="storedUser.username === props.row.user.userName ? '' : 'hidden'"
+                  color="negative"
+                  @click="onSubmitTimesheetDelete(props.row.id, props.row.timesheetDate, refreshTimesheetList)"
+                >
+                  <q-tooltip>Delete</q-tooltip>
+                </q-icon>
+              </q-td>
+            </q-tr>
+            <q-tr 
+              v-for="(line) in props.row.timesheetLines"
+              :key="line.id"
+              :class="highlightedId == line.id ? 'highlight' : ''"
+              :set="(preProjectName = null, preProjectTask = null, preProjectDate = null, preProjectTaskDate = null, resetTracking())">
+              <q-td style="width: 2%;" class="text-center">
                 <q-checkbox
                   v-if="line.projectActivity?.activityStatus?.dropDownValue === 'Open' &&
                         line.projectActivity?.active &&
@@ -258,87 +309,100 @@
                   @update:model-value="onSelectCheckbox(line, $event)"
                   size="sm"
                 />
-            </q-td>
-            <q-td style="width: 14%;" class="hoverable-cell common-q-td">
-              <div class="row no-wrap items-center justify-between">
-                <span
-                  v-if="preProjectName !== line.project.name || preProjectDate !== props.row.timesheetDate" :set="(preProjectName = line.project.name, preProjectDate = props.row.timesheetDate)"
-                  style="flex: 1; word-break: break-word; white-space: normal;" @click="onProjectView(line.project.id)"
-                >{{ line.project.name }}</span>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('project.name')" class="hoverable-cell common-q-td">
+                <div class="row no-wrap items-center justify-between">
+                  <span
+                    v-if="preProjectName !== line.project.name || preProjectDate !== props.row.timesheetDate" :set="(preProjectName = line.project.name, preProjectDate = props.row.timesheetDate)"
+                    style="flex: 1; word-break: break-word; white-space: normal;" @click="onProjectView(line.project.id)"
+                  >{{ line.project.name }}</span>
 
-                <div v-if="shouldShowIcons(line.project.name, 'project', props.row.timesheetDate)" class="row items-center q-gutter-sm q-ml-sm hidden" style="flex-shrink: 0;">
-                  <q-icon
-                    name="o_radio_button_checked" size="xs"
-                    class="cursor-pointer"
-                    @click="setActiveRowIdInLocalStorage(line.id);
-                            $router.push({ path: '/project-center', state: { projectId: line.project.id } })"
-                  >
-                    <q-tooltip>Project Center</q-tooltip>
-                  </q-icon>
-                  <q-icon
-                    name="o_developer_board" size="xs"
-                    class="cursor-pointer"
-                    @click="setActiveRowIdInLocalStorage(line.id);
-                            $router.push({ path: '/project-planning/workboard', state: {projectId: line.project.id } })"
-                  >
-                    <q-tooltip>Work Board</q-tooltip>
-                  </q-icon>
+                  <div v-if="shouldShowIcons(line.project.name, 'project', props.row.timesheetDate)" class="row items-center q-gutter-sm q-ml-sm hidden" style="flex-shrink: 0;">
+                    <q-icon
+                      name="o_radio_button_checked" size="xs"
+                      class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(line.id);
+                              $router.push({ path: '/project-center', state: { projectId: line.project.id } })"
+                    >
+                      <q-tooltip>Project Center</q-tooltip>
+                    </q-icon>
+                    <q-icon
+                      name="o_developer_board" size="xs"
+                      class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(line.id);
+                              $router.push({ path: '/project-planning/workboard', state: {projectId: line.project.id } })"
+                    >
+                      <q-tooltip>Work Board</q-tooltip>
+                    </q-icon>
+                  </div>
                 </div>
-              </div>
-            </q-td>
-            <q-td style="width: 14%;" class="text-left common-q-td" >{{ line.projectModule.name }}</q-td>
-            <q-td style="width: 18%;" class="hoverable-cell common-q-td">
-              <div class="row no-wrap items-center justify-between">
-                <span
-                  v-if="preProjectTask !== line.task.name || preProjectTaskDate !== props.row.timesheetDate"
-                  :set="(preProjectTask = line.task.name, preProjectTaskDate = props.row.timesheetDate)"
-                  style="flex: 1; word-break: break-word; white-space: normal;"
-                  @click="onProjectTaskView(line.task.id)"
-                >
-                  {{ line.task.name }}
-                </span>
-              </div>
-            </q-td>
-            <q-td style="width: 14%;" class="text-left common-q-td"
-            >
-              {{ line.projectActivity.name }}
-              <q-icon
-                v-if="line.activityNameDescription"
-                name="o_info"
-                size="15px"
-                class="q-ml-sm"
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('projectModule.name')" class="text-left common-q-td" >
+                {{ line.projectModule.name }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('task.name')" class="hoverable-cell common-q-td">
+                <div class="row no-wrap items-center justify-between">
+                  <span
+                    v-if="preProjectTask !== line.task.name || preProjectTaskDate !== props.row.timesheetDate"
+                    :set="(preProjectTask = line.task.name, preProjectTaskDate = props.row.timesheetDate)"
+                    style="flex: 1; word-break: break-word; white-space: normal;"
+                    @click="onProjectTaskView(line.task.id)"
+                  >
+                    {{ line.task.name }}
+                  </span>
+                </div>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('projectActivity.name')" class="text-left common-q-td"
               >
-                <q-tooltip v-if="line.activityNameDescription" class="text-wrap break-words" max-width="300px">
-                  <div v-html="line.activityNameDescription" />
-                </q-tooltip>
-              </q-icon>
-            </q-td>
-            <q-td style="width: 24%; max-width: 800px;" class="RichTextEditor common-q-td">
-              <div v-html="line.description" />
-            </q-td>
-            <q-td style="width: 10%;" class="text-left common-q-td">
-              {{ props.row.user.person.fullName }}
-            </q-td>
-            <q-td style="width: 4%;"class="text-right">
-              {{ line.hours }}
-            </q-td>
-          </q-tr>
-          <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-            <q-td colspan="7" class="text-right">Total:</q-td>
-            <q-td class="text-right">
-              {{ calculateLineTotal(props.row.timesheetLines) }}
-            </q-td>
-          </q-tr>
-          <q-tr v-if="props.pageIndex === rows.length - 1">
-            <q-td colspan="7" class="text-right">Total Hours:</q-td>
-            <q-td class="text-right">
-              {{ calculateGrandTotal(rows) }}
-            </q-td>
-          </q-tr><q-separator />
-        </template>
-      </q-table>
+                {{ line.projectActivity.name }}
+                <q-icon
+                  v-if="line.activityNameDescription"
+                  name="o_info"
+                  size="15px"
+                  class="q-ml-sm"
+                >
+                  <q-tooltip v-if="line.activityNameDescription" class="text-wrap break-words" max-width="300px">
+                    <div v-html="line.activityNameDescription" />
+                  </q-tooltip>
+                </q-icon>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('description')" class="RichTextEditor common-q-td">
+                <div v-html="line.description" />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('createdById')" class="text-left common-q-td">
+                {{ props.row.user.person.fullName }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('hours')" class="text-right">
+                {{ line.hours }}
+              </q-td>
+            </q-tr>
+            <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+              <q-td colspan="7" class="text-right">Total:</q-td>
+              <q-td class="text-right">
+                {{ calculateLineTotal(props.row.timesheetLines) }}
+              </q-td>
+            </q-tr>
+            <q-tr v-if="props.pageIndex === rows.length - 1">
+              <q-td colspan="7" class="text-right">Total Hours:</q-td>
+              <q-td class="text-right">
+                {{ calculateGrandTotal(rows) }}
+              </q-td>
+            </q-tr>
+            <q-separator />
+          </template>
+        </q-table>
+      </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="columns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 // Import libraries
@@ -362,6 +426,14 @@ import singleSelectDropdown from "src/components/form-inputs/_singleSelectDropdo
 
 // Shared DataTable Views
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 // Shared Timesheet Dialogs
 import {
@@ -402,6 +474,7 @@ const showFilter = ref(false);
 const searchLoader = ref(false);
 const shownProjects = new Set();
 const shownTasks = new Set();
+const showSortDialog = ref(false);
 
 // ----------------------------------------------------------------------------------------------------------------
 // Local Storage:- DataTable and Advance Filter Values
@@ -409,7 +482,25 @@ const shownTasks = new Set();
 
 const localStorageKey = "Timesheet";
 const filterLocalStorage = getLocalStorage(localStorageKey);
-const pagination = ref(filterLocalStorage?.pagination || { sortBy: "", descending: true, rowsPerPage: 20, page: 1 });
+// const pagination = ref(filterLocalStorage?.pagination || { sortBy: "", descending: true, rowsPerPage: 20, page: 1 });
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Columns
+// ----------------------------------------------------------------------------------------------------------------
+
+const tableRef = ref();
+const rows = ref([]);
+const createdByList = ref(["Created By Me", "View All"]);
+const weekFilterList = ref(["Last Week", "This Week", "This Month"]);
+const columns = ref([
+  { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, checkedStatus: true, type: "P", default: true },
+  { name: "projectModule.name", label: "Module Name", field: "projectModule.name", align: "left", sortable: true, checkedStatus: true, type: "PM", default: true },
+  { name: "task.name", label: "Task", field: "task.name", align: "left", sortable: true, checkedStatus: true, type: "PT", default: true },
+  { name: "projectActivity.name", label: "Project Activity", field: "projectActivity.name", align: "left", sortable: true, checkedStatus: true, type: "PA", default: true },
+  { name: "description", label: "Activity Details", field: "description", align: "left", sortable: true, checkedStatus: true, type: "D", default: true },
+  { name: "createdById", label: "Created By", field: "createdById", align: "left", sortable: true, checkedStatus: true, type: "U", default: true },
+  { name: "hours", label: "Actual Hours", field: "hours", align: "right", sortable: true, checkedStatus: true, type: "H", default: true }
+]);
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Get All Timesheet
@@ -446,14 +537,23 @@ const pagination = ref(filterLocalStorage?.pagination || { sortBy: "", descendin
 //   });
 // };
 
-const getTimesheets = (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+const getTimesheets = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;
   loading.value = true;
   search.value.activityDate = isValidDate(search.value.activityDate) ? search.value.activityDate : null;
   search.value.toDate = isValidDate(search.value.toDate) ? search.value.toDate : null;
   search.value.fromDate = isValidDate(search.value.fromDate) ? search.value.fromDate : null;
   search.value.projectId = search.value.projectId === "" ? null : search.value.projectId;
   search.value.projectModuleId = search.value.projectModuleId === "" ? null : search.value.projectModuleId;
+
+  const sorts = {};
+  const multi = multiSort.value;
+  for (let i = 0; i < multi.length; i++) {
+    const s = multi[i];
+    if (s.column && s.direction) {
+      sorts[s.column] = s.direction;
+    }
+  }
 
   const payload = {
     thisWeek: true,
@@ -462,12 +562,19 @@ const getTimesheets = (props) => {
     pageSize: rowsPerPage,
     sortBy,
     descending,
+    sorts,
     ...search.value
   };
-  setLocalStorage(localStorageKey, {
-    ...search.value,
-    pagination: props.pagination,
-    activeRowId: activeRowId.value
+  // setLocalStorage(localStorageKey, {
+  //   ...search.value,
+  //   pagination: p,
+  //   activeRowId: activeRowId.value
+  // });
+  saveDataTableState({
+    search: search.value,
+    pagination: p,
+    activeRowId: activeRowId.value,
+    sorts
   });
 
   timesheetService.getTimesheets(payload)
@@ -481,11 +588,19 @@ const getTimesheets = (props) => {
           )
         })) || []
       }));
-      pagination.value.page = page;
-      pagination.value.rowsPerPage = rowsPerPage;
-      pagination.value.sortBy = sortBy;
-      pagination.value.descending = descending;
-      pagination.value.rowsNumber = resp.total;
+      // pagination.value.page = page;
+      // pagination.value.rowsPerPage = rowsPerPage;
+      // pagination.value.sortBy = sortBy;
+      // pagination.value.descending = descending;
+      // pagination.value.rowsNumber = resp.total;
+      pagination.value = {
+        ...pagination.value,
+        page,
+        rowsPerPage,
+        sortBy,
+        descending,
+        rowsNumber: resp.total
+      };
     })
     .finally(() => {
       loading.value = false;
@@ -493,20 +608,70 @@ const getTimesheets = (props) => {
     });
 };
 
+const {
+  search,
+  pagination,
+  activeRowId,
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
+} = useSiteTableState({
+  storageKey: "timesheet-Index",
+  siteId: user?.siteId,
+
+  defaultSearch: {
+    searchText: "",
+    createdBy: "",
+    employeeId: "",
+    projectId: "",
+    projectModuleId: "",
+    projectTaskId: "",
+    activityDate: "",
+    fromDate: null,
+    toDate: null,
+    weekFilter: ""
+  },
+
+  defaultPagination: {
+    sortBy: "createdOnUtc",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  },
+
+  defaultSorts: {},
+
+  defaultResizableWidth: {},
+
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
+
+const lsSorts = sorts.value || null;
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals
 // ----------------------------------------------------------------------------------------------------------------
 
-const highlightTimesheetId = filterLocalStorage?.activeRowId || null;
-const activeRowId = ref(highlightTimesheetId);
-const highlightedId = computed(() => {
-  return activeRowId.value;
-});
+// const highlightTimesheetId = filterLocalStorage?.activeRowId || null;
+// const activeRowId = ref(highlightTimesheetId);
 
-function setActiveRowIdInLocalStorage (id) {
-  const storedData = getLocalStorage(localStorageKey) || {};
-  setLocalStorage(localStorageKey, { ...storedData, activeRowId: id });
+const highlightedId = computed(() => { return activeRowId.value; });
+
+// function setActiveRowIdInLocalStorage (id) {
+//   const storedData = getLocalStorage(localStorageKey) || {};
+//   setLocalStorage(localStorageKey, { ...storedData, activeRowId: id });
+//   activeRowId.value = id;
+// }
+function setActiveRowIdInLocalStorage(id) {
   activeRowId.value = id;
+
+  saveDataTableState({
+    activeRowId: id
+  });
 }
 
 // Function to calculate dates
@@ -663,45 +828,73 @@ const onSelectCheckbox = (line, flag) => {
 // };
 
 // ----------------------------------------------------------------------------------------------------------------
-// DataTable:- Columns
+// DataTable:- Column resize functionality (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
 
-const tableRef = ref();
-const rows = ref([]);
-const createdByList = ref(["Created By Me", "View All"]);
-const weekFilterList = ref(["Last Week", "This Week", "This Month"]);
-const columns = ref([
-  { name: "project.name", label: "Project Name", field: "ProjectId", align: "left", sortable: true, checkedStatus: true, type: "P" },
-  { name: "projectModule.name", label: "Module Name", field: "projectModule.name", align: "left", sortable: true, checkedStatus: true, type: "PM" },
-  { name: "task.name", label: "Task", field: "task.name", align: "left", sortable: true, checkedStatus: true, type: "PT" },
-  { name: "projectActivity.name", label: "Project Activity", field: "projectActivity.name", align: "left", sortable: true, checkedStatus: true, type: "PA" },
-  { name: "description", label: "Activity Details", field: "description", align: "left", sortable: true, checkedStatus: true, type: "D" },
-  { name: "createdById", label: "Created By", field: "createdById", align: "left", sortable: true, checkedStatus: true, type: "U" },
-  { name: "hours", label: "Actual Hours", field: "hours", align: "right", sortable: true, checkedStatus: true, type: "H" }
-]);
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
 
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshTimesheetList();
+  }
+});
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
 // ----------------------------------------------------------------------------------------------------------------
 
 // Search variables
-const getFilterValue = (key, defaultValue) => {
-  const val = filterLocalStorage?.[key];
-  return val && val.length > 0 ? val : defaultValue;
-};
+// const getFilterValue = (key, defaultValue) => {
+//   const val = filterLocalStorage?.[key];
+//   return val && val.length > 0 ? val : defaultValue;
+// };
 
-const search = ref({
-  searchText: getFilterValue("searchText", ""),
-  createdBy: getFilterValue("createdBy", "Created By Me"),
-  employeeId: getFilterValue("employeeId", null),
-  projectId: getFilterValue("projectId", null),
-  projectModuleId: getFilterValue("projectModuleId", null),
-  projectTaskId: getFilterValue("projectTaskId", null),
-  activityDate: getFilterValue("activityDate", ""),
-  fromDate: getFilterValue("fromDate", ""),
-  toDate: getFilterValue("toDate", ""),
-  weekFilter: getFilterValue("weekFilter", "")
-});
+// const search = ref({
+//   searchText: getFilterValue("searchText", ""),
+//   createdBy: getFilterValue("createdBy", "Created By Me"),
+//   employeeId: getFilterValue("employeeId", null),
+//   projectId: getFilterValue("projectId", null),
+//   projectModuleId: getFilterValue("projectModuleId", null),
+//   projectTaskId: getFilterValue("projectTaskId", null),
+//   activityDate: getFilterValue("activityDate", ""),
+//   fromDate: getFilterValue("fromDate", ""),
+//   toDate: getFilterValue("toDate", ""),
+//   weekFilter: getFilterValue("weekFilter", "")
+// });
 
 const refreshTimesheetList = () => {
   getTimesheets({ pagination: pagination.value });
@@ -724,7 +917,10 @@ const onAdvanceClear = () => {
   search.value.activityDate = null;
   search.value.fromDate = null;
   search.value.toDate = null;
-  clearLocalStorage(localStorageKey);
+  // clearLocalStorage(localStorageKey);
+  saveDataTableState({
+    search: search.value
+  });
   onAdvanceSearch();
 };
 
@@ -849,6 +1045,22 @@ watch(() => search.value.projectModuleId, (newValue, oldValue) => {
   projectTasksByProjectIdAndModuleIdForDropdownSingleSelect.load(false, search.value.projectId, search.value.projectModuleId);
 }, { immediate: true });
 
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
+});
 // ----------------------------------------------------------------------------------------------------------------
 // On page load
 // ----------------------------------------------------------------------------------------------------------------
@@ -861,12 +1073,19 @@ onMounted(() => {
   if (search.value.projectId) projectModulesByProjectIdForDropdownSingleSelect.load(false, false, search.value.projectId);
   if (search.value.projectModuleId) projectTasksByProjectIdAndModuleIdForDropdownSingleSelect.load(false, search.value.projectId, search.value.projectModuleId);
 
-  if (!activeRowId.value && highlightTimesheetId) {
-    activeRowId.value = highlightTimesheetId;
+  // if (!activeRowId.value && highlightTimesheetId) {
+  //   activeRowId.value = highlightTimesheetId;
+  // }
+  if (!activeRowId.value) {
+    activeRowId.value = null;
   }
-
   document.addEventListener("click", handleDocumentClick);
   refreshTimesheetList();
 });
 
 </script>
+<style scoped>
+.Custom-DataTable {
+  min-width: max-content;
+}
+</style>

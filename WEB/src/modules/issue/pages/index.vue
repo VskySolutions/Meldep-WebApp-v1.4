@@ -157,256 +157,356 @@
                 <q-btn v-if="role === 'admin'" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
-                <q-btn v-if="selectedProjectId" icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded no-space-between q-ml-sm" @click="$router.back()" />
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
+                <q-btn
+                  v-if="selectedProjectId"
+                  icon="o_chevron_left"
+                  outline
+                  label="Back"
+                  no-caps
+                  class="text-primary btnRounded no-space-between q-ml-sm"
+                  @click="$router.back()"
+                />
               </div>
             </div>
           </div>
         </div>
       </q-card-section>
       <q-separator />
-      <q-table
-        ref="tableRef"
-        v-model:pagination="pagination"
-        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-        :loading="loading"
-        :rows="rows"
-        :columns="columns"
-        row-key="id"
-        separator="cell"
-        no-data-label="No data available"
-        binary-state-sort
-        :rows-per-page-options="[20, 50, 100, 200, 500]"
-        @request="getAllIssue"
-      >
-        <template #loading>
-          <q-inner-loading showing color="primary">
-            <q-spinner-ios size="40px" class="q-mt-xl" />
-          </q-inner-loading>
-        </template>
-        <template #header="props">
-          <q-tr :props="props" class="bg-primary text-white">
-            <q-th auto-width class="text-center" />
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-            <q-th auto-width class="text-center">Actions</q-th>
-          </q-tr>
-        </template>
-        <template #body="props">
-          <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
-            <q-td auto-width class="text-center hidden">
-              <q-icon :name="isExpanded(props.row.id) ? '-' : '+'" class="cursor-pointer custom-plus-minus-icon" @click="toggleExpand(props.row.id)">
-                <q-tooltip>{{ isExpanded(props.row.id) ? 'Collapse' : 'Expand' }}</q-tooltip>
-              </q-icon>
-            </q-td>
-            <q-td class="text-center" style="width: 3%;"><q-checkbox v-model="props.row.checkboxStatus" @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.id, props.row.name, $event)" /></q-td>
-            <q-td style="width: 3%;" class="text-right">#{{ props.row.issueNumber }}</q-td>
-            <q-td style="width: 20%; white-space: normal;" class="hoverable-cell">
-              <div class="row no-wrap items-center justify-between">
-                <span style="flex: 1; word-break: break-word; white-space: normal;" @click="onProjectView(props.row.project.id)">{{ props.row.project.name }}</span>
-                <div class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
-                  <q-icon
-                    name="o_radio_button_checked" size="xs"
-                    class="cursor-pointer"
-                    @click="setActiveRowIdInLocalStorage(props.row.id);
-                            $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
-                  >
-                    <q-tooltip>Project Center</q-tooltip>
-                  </q-icon>
-                  <q-icon
-                    v-if="props.row.isEditable"
-                    name="o_developer_board" size="xs"
-                    class="cursor-pointer"
-                    @click="setActiveRowIdInLocalStorage(props.row.id);
-                            $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
-                  >
-                    <q-tooltip>Work Board</q-tooltip>
-                  </q-icon>
-                  <!-- New info icon for issue status -->
-                  <!-- <q-icon name="o_info" size="xs" class="cursor-pointer text-primary" v-if="statusSummary.find(x => x.projectId === props.row.project.id)"> -->
-                  <q-icon name="o_info" size="xs" class="cursor-pointer text-primary">
-                    <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-white shadow-2">
-                      <div class="text-caption">
-                        <table class="table boarded statusTable">
-                          <thead>
-                            <tr>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus > 0">No Status</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.new > 0">New</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan > 0">Test Plan</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.toDo > 0">To Do</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment > 0">In Development</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inReview > 0">In Review</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting > 0">In Testing</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.reopen > 0">Reopen</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT > 0">In UAT</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed > 0">UAT Passed</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask > 0">Converted To Task</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.onHold > 0">On Hold</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.closed > 0">Closed</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.done > 0">Done</th>
-                              <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.total > 0">Total</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.new > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.new }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.toDo > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.toDo }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inReview > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inReview }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.reopen > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.reopen }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.onHold > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.onHold }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.closed > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.closed }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.done > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.done }}</td>
-                              <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.total > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.total }}</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-              </div>
-            </q-td>
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">{{ props.row.projectModule.name }}</q-td>
-            <q-td style="width: 3%;">
-              <span v-if="props.row.projectTaskRelatedMappings?.length">
-                <template v-for="(item, index) in props.row.projectTaskRelatedMappings" :key="index">
-                  <span class="hoverable-cell" style="cursor: pointer;" @click="onProjectTaskView(item.taskId)">#{{ item.projectTask?.projectTaskNumber }}
-                    <span v-if="item.projectTask?.status">
-                      ({{ item.projectTask.status.dropDownValue }})
-                    </span>
-                  </span>
-                  <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">, </span>
-                  <br>
-                </template>
-              </span>
-            </q-td>
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.name }}</q-td>
-            <q-td style="width: 5%;">{{ props.row.priority.dropDownValue }}</q-td>
-            <q-td style="width: 5%;">{{ props.row.type.dropDownValue }}</q-td>
-            <q-td
-              class="common-q-td"
-              :class="{ 'hoverable-cell' : props.row.isEditable }"
-              @click="activeEdit = { rowId: props.row.id, field: 'status' }"
-              style="width: 5%;"
-            >
-              <quickEditSingleSelect
-                field="status"
-                :row-id="props.row.id"
-                :value="props.row.status.id"
-                :display-value="props.row.status.dropDownValue"
-                :editable="props.row.isEditable"
-                :options="issueStatusDropdownSingleSelect.list.value"
-                :active-edit="activeEdit"
-                :show-history="false"
-                @cancel="activeEdit = { rowId: null, field: null }"
-                @submit="({ rowId, value }) => onSubmitIssueStatus(rowId, value, refreshIssueList)"
-              />
-            </q-td>
-            <q-td style="width: 8%;">{{ props.row.employee.person.fullName }}</q-td>
-            <q-td style="width: 8%;">{{ props.row.reportedBy.person.fullName }}</q-td>
-            <q-td class="text-center" style="width: 5%;">{{ props.row.createdOnUtc }}</q-td>
-            <q-td style="width: 5%;" class="text-center actions">
-              <q-icon
-                name="o_visibility"
-                class="cursor-pointer q-mr-sm"
-                size="xs"
-                @click="onIssueView(props.row.id)"
+      <div class="table-scroll-container">
+        <q-table
+          ref="tableRef"
+          v-model:pagination="pagination"
+          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+          :loading="loading"
+          :rows="rows"
+          :columns="computedColumns"
+          row-key="id"
+          separator="cell"
+          no-data-label="No data available"
+          binary-state-sort
+          :rows-per-page-options="[20, 50, 100, 200, 500]"
+          @request="getAllIssue"
+        >
+          <template #loading>
+            <q-inner-loading showing color="primary">
+              <q-spinner-ios size="40px" class="q-mt-xl" />
+            </q-inner-loading>
+          </template>
+          <template #header="props">
+            <q-tr :props="props" class="bg-primary text-white">
+              <q-th auto-width class="text-center" />
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->               
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
+                @click="!isResizing && col.sortable"
               >
-                <q-tooltip>View</q-tooltip>
-              </q-icon>
-                <a
-                  v-if="props.row.isEditable || props.row.isNotes"
-                  style="position: relative;"
-                  class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
-                  @click="onNoteAdd(props.row.id, 'Issue', props.row.project.id, props.row.project.name, props.row.name,`${props.row.project.name} : ${props.row.name}`, refreshIssueList)"
+                {{ col.label }}
+                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+              </q-th>
+              <q-th auto-width class="text-center">Actions</q-th>
+            </q-tr>
+          </template>
+          <template #body="props">
+            <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
+              <q-td auto-width class="text-center hidden">
+                <q-icon :name="isExpanded(props.row.id) ? '-' : '+'" class="cursor-pointer custom-plus-minus-icon" @click="toggleExpand(props.row.id)">
+                  <q-tooltip>{{ isExpanded(props.row.id) ? 'Collapse' : 'Expand' }}</q-tooltip>
+                </q-icon>
+              </q-td>
+              <q-td class="text-center">
+                <q-checkbox v-model="props.row.checkboxStatus" @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.id, props.row.name, $event)" />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('issueNumber')" class="text-right">
+                #{{ props.row.issueNumber }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
+                <div class="row no-wrap items-center justify-between">
+                  <span style="flex: 1; word-break: break-word; white-space: normal;" @click="onProjectView(props.row.project.id)">{{ props.row.project.name }}</span>
+                  <div class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
+                    <q-icon
+                      name="o_radio_button_checked" size="xs"
+                      class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(props.row.id);
+                              $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                    >
+                      <q-tooltip>Project Center</q-tooltip>
+                    </q-icon>
+                    <q-icon
+                      v-if="props.row.isEditable"
+                      name="o_developer_board" size="xs"
+                      class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(props.row.id);
+                              $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
+                    >
+                      <q-tooltip>Work Board</q-tooltip>
+                    </q-icon>
+                    <!-- New info icon for issue status -->
+                    <!-- <q-icon name="o_info" size="xs" class="cursor-pointer text-primary" v-if="statusSummary.find(x => x.projectId === props.row.project.id)"> -->
+                    <q-icon name="o_info" size="xs" class="cursor-pointer text-primary">
+                      <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-white shadow-2">
+                        <div class="text-caption">
+                          <table class="table boarded statusTable">
+                            <thead>
+                              <tr>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus > 0">No Status</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.new > 0">New</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan > 0">Test Plan</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.toDo > 0">To Do</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment > 0">In Development</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inReview > 0">In Review</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting > 0">In Testing</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.reopen > 0">Reopen</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT > 0">In UAT</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed > 0">UAT Passed</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask > 0">Converted To Task</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.onHold > 0">On Hold</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.closed > 0">Closed</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.done > 0">Done</th>
+                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.total > 0">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.new > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.new }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.toDo > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.toDo }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inReview > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inReview }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.reopen > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.reopen }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.onHold > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.onHold }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.closed > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.closed }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.done > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.done }}</td>
+                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.total > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.total }}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </q-tooltip>
+                    </q-icon>
+                  </div>
+                </div>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('projectModule.name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.projectModule.name }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('projectTaskRelatedMappings')">
+                <span v-if="props.row.projectTaskRelatedMappings?.length">
+                  <template v-for="(item, index) in props.row.projectTaskRelatedMappings" :key="index">
+                    <span class="hoverable-cell" style="cursor: pointer;" @click="onProjectTaskView(item.taskId)">#{{ item.projectTask?.projectTaskNumber }}
+                      <span v-if="item.projectTask?.status">
+                        ({{ item.projectTask.status.dropDownValue }})
+                      </span>
+                    </span>
+                    <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">, </span>
+                    <br>
+                  </template>
+                </span>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.name }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('priority.dropDownValue')">
+                {{ props.row.priority.dropDownValue }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('type.dropDownValue')">
+                {{ props.row.type.dropDownValue }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('status.dropDownValue')"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : props.row.isEditable }"
+                @click="activeEdit = { rowId: props.row.id, field: 'status' }"
+              >
+                <quickEditSingleSelect
+                  field="status"
+                  :row-id="props.row.id"
+                  :value="props.row.status.id"
+                  :display-value="props.row.status.dropDownValue"
+                  :editable="props.row.isEditable"
+                  :options="issueStatusDropdownSingleSelect.list.value"
+                  :active-edit="activeEdit"
+                  :show-history="false"
+                  @cancel="activeEdit = { rowId: null, field: null }"
+                  @submit="({ rowId, value }) => onSubmitIssueStatus(rowId, value, refreshIssueList)"
+                />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('employee.person.firstName')">
+                {{ props.row.employee.person.fullName }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('reportedBy.person.firstName')">
+                {{ props.row.reportedBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.createdBy.person.fullName }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('createdOnUtc')" class="text-center">
+                {{ props.row.createdOnUtc }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedOnUtc }}
+              </q-td>
+              <q-td class="text-center actions">
+                <q-icon
+                  name="o_visibility"
+                  class="cursor-pointer q-mr-sm"
+                  size="xs"
+                  @click="onIssueView(props.row.id)"
                 >
-                  <q-tooltip anchor="bottom middle" self="top middle">
-                    Note
-                  </q-tooltip>
-                  <q-icon name="o_assignment" />
-                  <q-badge
-                    v-if="props.row.issueNotesCount > 0"
-                    style="position: absolute; right: -16px; top: -15px;"
-                    color="green"
-                    text-color="white"
-                    :label="props.row.issueNotesCount"
-                  />
-                </a>
-                <q-btn dense flat icon="o_more_vert" color="primary">
-                  <q-tooltip>More Options</q-tooltip>
-                  <q-menu auto-close>
-                    <q-list style="min-width: 180px">
-                      <q-item
-                        v-if="props.row.isEditable"
-                        v-ripple clickable
-                        @click="setActiveRowIdInLocalStorage(props.row.id); onIssueEdit(props.row.id, refreshIssueList)"
-                      >
-                        <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
-                        <q-item-section>Edit</q-item-section>
-                      </q-item>
-                      <q-item
-                        v-if="props.row.isEditable"
-                        v-ripple clickable
-                        @click="setActiveRowIdInLocalStorage(props.row.id); onIssueStatusLog(props.row.id)"
-                      >
-                        <q-item-section avatar><q-icon name="o_groups" size="xs" /></q-item-section>
-                        <q-item-section>Issue Status change log</q-item-section>
-                      </q-item>
-                      <q-item
-                        v-if="props.row.isEditable"
-                        v-ripple clickable
-                        :class="{ 'disabled-icon': props.row.status.dropDownValue === 'Converted to Task' }"
-                        @click="setActiveRowIdInLocalStorage(props.row.id); onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.name, props.row.description, true)"
-                      >
-                        <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
-                        <q-item-section>Convert into Task</q-item-section>
-                      </q-item>
-                      <q-item
-                        v-if="props.row.isEditable"
-                        v-ripple clickable
-                        @click="setActiveRowIdInLocalStorage(props.row.id); onIssueAddActivity(props.row.id, refreshIssueList)"
-                      >
-                        <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
-                        <q-item-section>Add Activities</q-item-section>
-                      </q-item>
-                      <q-item
-                        v-if="props.row.isEditable"
-                        v-ripple
-                        clickable
-                        @click="onSubmitIssueDelete(props.row.id, props.row.name, refreshIssueList)"
-                      >
-                        <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
-                        <q-item-section class="text-negative">Delete</q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
-            </q-td>
-          </q-tr>
-          <q-tr v-if="props.pageIndex === rows.length - 1" class="hidden">
-            <q-td colspan="9" class="text-right"><b>Total  Issues:</b></q-td>
-            <q-td class="text-center"><b>{{ rows.length }}</b></q-td>
-            <q-td />
-          </q-tr><q-separator />
-        </template>
-      </q-table>
+                  <q-tooltip>View</q-tooltip>
+                </q-icon>
+                  <a
+                    v-if="props.row.isEditable || props.row.isNotes"
+                    style="position: relative;"
+                    class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
+                    @click="onNoteAdd(props.row.id, 'Issue', props.row.project.id, props.row.project.name, props.row.name,`${props.row.project.name} : ${props.row.name}`, refreshIssueList)"
+                  >
+                    <q-tooltip anchor="bottom middle" self="top middle">
+                      Note
+                    </q-tooltip>
+                    <q-icon name="o_assignment" />
+                    <q-badge
+                      v-if="props.row.issueNotesCount > 0"
+                      style="position: absolute; right: -16px; top: -15px;"
+                      color="green"
+                      text-color="white"
+                      :label="props.row.issueNotesCount"
+                    />
+                  </a>
+                  <q-btn dense flat icon="o_more_vert" color="primary">
+                    <q-tooltip>More Options</q-tooltip>
+                    <q-menu auto-close>
+                      <q-list style="min-width: 180px">
+                        <q-item
+                          v-if="props.row.isEditable"
+                          v-ripple clickable
+                          @click="setActiveRowIdInLocalStorage(props.row.id); onIssueEdit(props.row.id, refreshIssueList)"
+                        >
+                          <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
+                          <q-item-section>Edit</q-item-section>
+                        </q-item>
+                        <q-item
+                          v-if="props.row.isEditable"
+                          v-ripple clickable
+                          @click="setActiveRowIdInLocalStorage(props.row.id); onIssueStatusLog(props.row.id)"
+                        >
+                          <q-item-section avatar><q-icon name="o_groups" size="xs" /></q-item-section>
+                          <q-item-section>Issue Status change log</q-item-section>
+                        </q-item>
+                        <q-item
+                          v-if="props.row.isEditable"
+                          v-ripple clickable
+                          :class="{ 'disabled-icon': props.row.status.dropDownValue === 'Converted to Task' }"
+                          @click="setActiveRowIdInLocalStorage(props.row.id); onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.name, props.row.description, true)"
+                        >
+                          <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
+                          <q-item-section>Convert into Task</q-item-section>
+                        </q-item>
+                        <q-item
+                          v-if="props.row.isEditable"
+                          v-ripple clickable
+                          @click="setActiveRowIdInLocalStorage(props.row.id); onIssueAddActivity(props.row.id, refreshIssueList)"
+                        >
+                          <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
+                          <q-item-section>Add Activities</q-item-section>
+                        </q-item>
+                        <q-item
+                          v-if="props.row.isEditable"
+                          v-ripple
+                          clickable
+                          @click="onSubmitIssueDelete(props.row.id, props.row.name, refreshIssueList)"
+                        >
+                          <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
+                          <q-item-section class="text-negative">Delete</q-item-section>
+                        </q-item>
+                      </q-list>
+                    </q-menu>
+                  </q-btn>
+              </q-td>
+            </q-tr>
+            <q-tr v-if="props.pageIndex === rows.length - 1" class="hidden">
+              <q-td colspan="9" class="text-right"><b>Total  Issues:</b></q-td>
+              <q-td class="text-center"><b>{{ rows.length }}</b></q-td>
+              <q-td />
+            </q-tr><q-separator />
+          </template>
+        </q-table>
+      </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="columns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 // Import libraries
-import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useQuasar } from "quasar";
-import { notifySuccess, notifyError, getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
+import { notifySuccess, notifyError } from "assets/utils";
 import { useAuthStore } from "stores/auth";
+import { useRoute } from "vue-router";
+
 import issuesService from "modules/issue/issue.service";
 import taskService from "modules/project-tasks/projectTasks.service";
-
 import editProjectTask from "modules/project-tasks/components/addEdit.vue";
 import selectMultiIssue from "modules/issue/components/_multiIssueQuickActions.vue";
 import linkTaskToPlan from "modules/project-targetplan/components/_linkRequirementTaskIssueToWeeklyMonthlyPlan.vue";
@@ -415,6 +515,8 @@ import manageDropdownsService from "modules/dropdown/dropdown.service";
 // SOP Change :- Shared DataTable Views
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
 import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSelect.vue";
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
 
 // SOP Change :- Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
@@ -424,6 +526,12 @@ import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 import issueModule from "src/modules/issue/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 // Shared Issue Dialogs
 import {
@@ -473,27 +581,31 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
-const selectedProjectId = history.state?.projectId;
+// const selectedProjectId = history.state?.projectId;
+const route = useRoute();
 const processing = ref(false);
 const dropdownTypes = ref([]);
 const showManageDropdownOptions = ref(false);
+const showSortDialog = ref(false);
 const activeEdit = ref({ rowId: null, field: null });
 
 // local storage values
-const localStorageKey = "Issue";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
+// const localStorageKey = "Issue";
+// const filterLocalStorage = getLocalStorage(localStorageKey);
+// const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 
-const highlightIssueId = filterLocalStorage?.activeRowId || null;
-const activeRowId = ref(highlightIssueId);
+// const highlightIssueId = filterLocalStorage?.activeRowId || null;
+// const activeRowId = ref(highlightIssueId);
 const highlightedId = computed(() => {
   return activeRowId.value;
 });
 
-function setActiveRowIdInLocalStorage (id) {
-  const storedData = getLocalStorage(localStorageKey) || {};
-  setLocalStorage(localStorageKey, { ...storedData, activeRowId: id });
+function setActiveRowIdInLocalStorage(id) {
   activeRowId.value = id;
+
+  saveDataTableState({
+    activeRowId: id
+  });
 }
 
 const isExpanded = (rowId) => {
@@ -504,28 +616,31 @@ const isExpanded = (rowId) => {
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
-  { name: "issueNumber", label: "Id", field: "issueNumber", align: "left", sortable: true },
-  { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true },
-  { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true },
-  { name: "projectTaskRelatedMappings", label: "Task", field: "projectTaskRelatedMappings", align: "left", sortable: false },
-  { name: "name", label: "Issue Name", field: "name", align: "left", sortable: true },
-  { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true },
-  { name: "type.dropDownValue", label: "Type", field: "type.dropDownValue", align: "left", sortable: true },
-  { name: "status.dropDownValue", label: "Status", field: "status.dropDownValue", align: "left", sortable: true },
-  { name: "employee.person.firstName", label: "Assign To", field: "employee.person.firstName", align: "left", sortable: true },
-  { name: "reportedBy.person.firstName", label: "Reported By", field: "reportedBy.person.firstName", align: "left", sortable: true },
-  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "center", sortable: true }
+  { name: "issueNumber", label: "Id", field: "issueNumber", align: "left", sortable: true, default: true},
+  { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
+  { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true, default: true },
+  { name: "projectTaskRelatedMappings", label: "Task", field: "projectTaskRelatedMappings", align: "left", sortable: false, default: true },
+  { name: "name", label: "Issue Name", field: "name", align: "left", sortable: true, default: true },
+  { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "type.dropDownValue", label: "Type", field: "type.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "status.dropDownValue", label: "Status", field: "status.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "employee.person.firstName", label: "Assign To", field: "employee.person.firstName", align: "left", sortable: true, default: true },
+  { name: "reportedBy.person.firstName", label: "Reported By", field: "reportedBy.person.firstName", align: "left", sortable: true, default: true },
+  { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "center", sortable: true, default: true },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 
-const handleDocumentClick = (event) => {
-  const highlightElement = document.querySelector(".highlight");
-  // Check if clicked inside the highlighted row or icons
-  if (highlightElement && !highlightElement.contains(event.target)) {
-    activeRowId.value = null;
-    const storedData = getLocalStorage(localStorageKey) || {};
-    setLocalStorage(localStorageKey, { ...storedData, activeRowId: null });
-  }
-};
+// const handleDocumentClick = (event) => {
+//   const highlightElement = document.querySelector(".highlight");
+//   // Check if clicked inside the highlighted row or icons
+//   if (highlightElement && !highlightElement.contains(event.target)) {
+//     activeRowId.value = null;
+//     const storedData = getLocalStorage(localStorageKey) || {};
+//     setLocalStorage(localStorageKey, { ...storedData, activeRowId: null });
+//   }
+// };
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
@@ -538,23 +653,23 @@ const refreshIssueList = () => {
 // Advance Filter :- On Submit & Cancel
 // ------------------------------------------------------------------------------------
 
-const getFilterValue = (key, defaultValue) => {
-  const val = filterLocalStorage?.[key];
-  return val && val.length > 0 ? val : defaultValue;
-};
+// const getFilterValue = (key, defaultValue) => {
+//   const val = filterLocalStorage?.[key];
+//   return val && val.length > 0 ? val : defaultValue;
+// };
 
 // Search variables
-const search = ref({
-  searchText: getFilterValue("searchText", ""),
-  projectIds: getFilterValue("projectIds", selectedProjectId ? [selectedProjectId] : (filterLocalStorage?.projectIds || [])),
-  projectModuleIds: getFilterValue("projectModuleIds", []),
-  issueTypeIds: getFilterValue("issueTypeIds", []),
-  priorityIds: getFilterValue("priorityIds", []),
-  statusIds: getFilterValue("statusIds", []),
-  employeeIds: getFilterValue("employeeIds", []),
-  issueNumber: getFilterValue("issueNumber", 0),
-  name: getFilterValue("name", "")
-});
+// const search = ref({
+//   searchText: getFilterValue("searchText", ""),
+//   projectIds: getFilterValue("projectIds", selectedProjectId ? [selectedProjectId] : (filterLocalStorage?.projectIds || [])),
+//   projectModuleIds: getFilterValue("projectModuleIds", []),
+//   issueTypeIds: getFilterValue("issueTypeIds", []),
+//   priorityIds: getFilterValue("priorityIds", []),
+//   statusIds: getFilterValue("statusIds", []),
+//   employeeIds: getFilterValue("employeeIds", []),
+//   issueNumber: getFilterValue("issueNumber", 0),
+//   name: getFilterValue("name", "")
+// });
 
 // Search records as per parameters
 const onAdvanceSearch = () => {
@@ -571,21 +686,135 @@ const onAdvanceClear = () => {
   search.value.statusIds = [];
   search.value.issueTypeIds = [];
   search.value.employeeIds = [];
-  clearLocalStorage(localStorageKey);
+  saveDataTableState({
+    search: search.value
+  });
   onAdvanceSearch();
 };
+
+const {
+  search,
+  pagination,
+  activeRowId,
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
+} = useSiteTableState({
+  storageKey: "issue-Index",
+  siteId: user?.siteId,
+
+  defaultSearch: {
+    searchText: "",
+    issueNumber: "",
+    projectIds: route.query.projectId && route.query.projectId !== ""
+      ? (Array.isArray(route.query.projectId)
+          ? route.query.projectId
+          : [route.query.projectId])
+      : [],
+    projectModuleIds: [],
+    issueTypeIds: [],
+    priorityIds: [],
+    statusIds: [],
+    employeeIds: [],
+    name: null
+  },
+
+  defaultPagination: {
+    sortBy: "createdOnUtc",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  },
+
+  defaultSorts: {},
+
+  defaultResizableWidth: {},
+
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
+
+const lsSorts = sorts.value || null;
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshIssueList();
+  }
+});
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // DataTable:- Get Issue List
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
-const getAllIssue = (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+const getAllIssue = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;
   loading.value = true;
   const number = search.value.issueNumber ? search.value.issueNumber.replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "") : "";
   search.value.issueNumber = number || "0";
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
-  setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination, activeRowId: activeRowId.value });
+
+  const sorts = {};
+  const multi = multiSort.value;
+  for (let i = 0; i < multi.length; i++) {
+    const s = multi[i];
+    if (s.column && s.direction) {
+      sorts[s.column] = s.direction;
+    }
+  }
+
+  const payload = { page, pageSize: rowsPerPage, sortBy, descending, sorts, ...search.value };
+  saveDataTableState({
+    search: search.value,
+    pagination: p,
+    activeRowId: activeRowId.value,
+    sorts
+  });
+
+  // setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination, activeRowId: activeRowId.value });
   const storedIssueIds = localStorage.getItem("selectedIssueIds") || [];
   issuesService.getAllIssue(payload).then((resp) => {
     rows.value = resp.data.map(requirement => {
@@ -598,11 +827,14 @@ const getAllIssue = (props) => {
       };
     });
     statusSummary.value = resp.statusSummary;
-    pagination.value.page = page;
-    pagination.value.rowsPerPage = rowsPerPage;
-    pagination.value.sortBy = sortBy;
-    pagination.value.descending = descending;
-    pagination.value.rowsNumber = resp.total;
+    pagination.value = {
+      ...pagination.value,
+      page,
+      rowsPerPage,
+      sortBy,
+      descending,
+      rowsNumber: resp.total
+    };
   }).finally(() => {
     loading.value = false;
     searchLoader.value = false;
@@ -615,9 +847,9 @@ function getDropdownTypeByModuleName (moduleName) {
   });
 }
 
-function disableOption (option) {
-  return option.text && (option.text.toLowerCase() === "new" || option.text.toLowerCase() === "new from test plan");
-}
+// function disableOption (option) {
+//   return option.text && (option.text.toLowerCase() === "new" || option.text.toLowerCase() === "new from test plan");
+// }
 
 const toggleExpand = (rowId) => {
   if (expandedRows.value.includes(rowId)) {
@@ -991,9 +1223,26 @@ watch(() => search.value.searchText, () => {
   refreshIssueList();
 });
 
-onBeforeUnmount(() => {
-  document.removeEventListener("click", handleDocumentClick);
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
 });
+
+// onBeforeUnmount(() => {
+//   document.removeEventListener("click", handleDocumentClick);
+// });
 
 // ----------------------------------------------------------------------------------------------------------------
 // On page rendering
@@ -1010,11 +1259,11 @@ onMounted(() => {
   issueStatusDropdownSingleSelect.load("Issue Status");
   issueTypeForDropdown.load("Issue Type");
   localStorage.removeItem("selectedIssueIds");
-  if (!activeRowId.value && highlightIssueId) {
-    activeRowId.value = highlightIssueId;
+  if (!activeRowId.value) {
+    activeRowId.value = null;
   }
 
-  document.addEventListener("click", handleDocumentClick);
+  // document.addEventListener("click", handleDocumentClick);
 });
 
 </script>
@@ -1023,5 +1272,8 @@ onMounted(() => {
   color: gray;
   pointer-events: none;
   opacity: 0.6;
+}
+.Custom-DataTable {
+  min-width: max-content;
 }
 </style>

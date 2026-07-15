@@ -80,6 +80,7 @@ namespace Vsky.Api.Controllers
                     searchModel.IssueTypeIds,
                     searchModel.EmployeeIds,
                     searchModel.SortBy,
+                    searchModel.Sorts,
                     searchModel.Descending,
                     searchModel.Page,
                     searchModel.PageSize

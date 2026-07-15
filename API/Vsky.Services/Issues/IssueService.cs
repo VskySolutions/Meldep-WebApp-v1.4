@@ -11,6 +11,7 @@ using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.ApplicationUserRoles;
+using Vsky.Services.Common;
 using Vsky.Services.Sites;
 
 namespace Vsky.Services.Issues
@@ -23,6 +24,7 @@ namespace Vsky.Services.Issues
         private readonly IRepository<VWProjectIssueStatusSummary> _vwProjectIssueStatusSummary;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
@@ -31,7 +33,8 @@ namespace Vsky.Services.Issues
             IRepository<Notes> notesRepository,
             IRepository<VWProjectIssueStatusSummary> vwProjectIssueStatusSummary,
             UserManager<ApplicationUser> userManager,
-            IApplicationUserRoleService applicationUserRoleService
+            IApplicationUserRoleService applicationUserRoleService,
+            ICommonService commonService
         )
         {
             _issueRepository = issueRepository;
@@ -39,6 +42,7 @@ namespace Vsky.Services.Issues
             _vwProjectIssueStatusSummary = vwProjectIssueStatusSummary;
             _userManager = userManager;
             _applicationUserRoleService = applicationUserRoleService;
+            _commonService = commonService;
         }
 
         #endregion
@@ -69,6 +73,7 @@ namespace Vsky.Services.Issues
             List<string> issueTypeIds,
             List<string> employeeIds,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,
@@ -136,6 +141,13 @@ namespace Vsky.Services.Issues
                     m.CreatedOnUtc.Date == parsedDate.Date
                 );
             }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
+
             query = query.Select(x => new Issue
             {
                 Id = x.Id,
@@ -153,6 +165,7 @@ namespace Vsky.Services.Issues
                 IsTaskCreated = x.IsTaskCreated,
                 IssueNumber = x.IssueNumber,
                 CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 Priority = new DropDown
                 {
                     Id = x.Priority.Id,
@@ -222,6 +235,22 @@ namespace Vsky.Services.Issues
                 {
                     Id = x.TestCase.Id,
                     Name = x.TestCase.Name
+                },
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
+                    }
                 },
                 ProjectTaskRelatedMappings = x.ProjectTaskRelatedMappings.Where(m => m.IssueId == x.Id && !m.Deleted && m.IssueId != null)
                 .Select(m => new ProjectTaskRelatedMapping
@@ -557,7 +586,7 @@ namespace Vsky.Services.Issues
             var user = await _userManager.FindByNameAsync(userdata.UserName);
             //var roles = await _userManager.GetRolesAsync(user);
             var roles = await _applicationUserRoleService.GetRoleNamesByUserAndSite(user.Id, SiteId);
-            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin");
+            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
 
             return isAdmin;
         }

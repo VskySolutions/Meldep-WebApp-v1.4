@@ -546,7 +546,8 @@ namespace Vsky.Services.Employees
                         Person = new Person
                         {
                             Id = p.LeaveApprover.Person.Id,
-                            FullName = p.LeaveApprover.Person.FirstName + " " + p.LeaveApprover.Person.LastName
+                            FullName = p.LeaveApprover.Person.FirstName + " " + p.LeaveApprover.Person.LastName,
+                            //PrimaryEmailAddress = p.LeaveApprover.OfficialEmail
                         }
                     }
                 }).ToList(),

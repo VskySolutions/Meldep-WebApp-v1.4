@@ -12,6 +12,7 @@ namespace Vsky.Services.Messages
         Task SendResetPasswordEmail(ApplicationUser user, string password);
         Task SendTwoFactorToken(ApplicationUser user, string code);
         Task SendMailToHr(Employee employee, EmployeeLeave code);
+        Task SendLeaveApplicationMailToApprover(Employee recipient, EmployeeLeave leave);
         Task SendMailToApprover(Employee employee, EmployeeLeave code);
         Task SendLeaveStatusEmailToEmployee(Employee employee, EmployeeLeave code);
         Task SendPasswordResetEmail(ApplicationUser user, string code);

@@ -719,7 +719,7 @@ namespace Vsky.Services.Requirements
             var user = await _userManager.FindByNameAsync(userdata.UserName);
             //var roles = await _userManager.GetRolesAsync(user);
             var roles = await _applicationUserRoleService.GetRoleNamesByUserAndSite(user.Id, SiteId);
-            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin");
+            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
 
             return isAdmin;
         }

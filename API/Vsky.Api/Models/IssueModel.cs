@@ -50,6 +50,8 @@ namespace Vsky.Api.Models
         public virtual Employee ReportedBy { get; set; }
         public virtual TestCase TestCase { get; set; }
         public virtual ProjectModule ProjectModule { get; set; }
+        public virtual ApplicationUser CreatedBy { get; set; }
+        public virtual ApplicationUser UpdatedBy { get; set; }
         public virtual ICollection<IssueStatusChangedLog> IssueStatusChangedLog { get; set; } = new List<IssueStatusChangedLog>();
         public virtual ICollection<ProjectTaskRelatedMapping> ProjectTaskRelatedMappings { get; set; } = new List<ProjectTaskRelatedMapping>();
         //public virtual ICollection<ProjectTask> ProjectTasks { get; set; } = new List<ProjectTask>();

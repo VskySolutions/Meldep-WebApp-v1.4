@@ -8,6 +8,7 @@ using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.ApplicationUserRoles;
+using Vsky.Services.Common;
 using Vsky.Services.Sites;
 
 namespace Vsky.Services.TestPlans
@@ -18,6 +19,7 @@ namespace Vsky.Services.TestPlans
         private readonly IRepository<TestPlan> _testPlanRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
@@ -25,12 +27,14 @@ namespace Vsky.Services.TestPlans
         public TestPlanService(
             IRepository<TestPlan> testPlanRepository, 
             UserManager<ApplicationUser> userManager,
-            IApplicationUserRoleService applicationUserRoleService
+            IApplicationUserRoleService applicationUserRoleService,
+            ICommonService commonService
         )
         {
             _testPlanRepository = testPlanRepository;
             _userManager = userManager;
             _applicationUserRoleService = applicationUserRoleService;
+            _commonService = commonService;
         }
 
         #endregion
@@ -48,7 +52,7 @@ namespace Vsky.Services.TestPlans
         // Title: GetAllTestPlans
         // Description: This method retrieves a paginated list of test plan based on various search criteria such as name, 
         // It also supports sorting and includes related data .The method allows for both full and lookup (limited) data retrieval modes.
-        public async Task<IPagedList<TestPlan>> GetAllTestPlans(string SiteId, string LoggedUserId, string SearchText, int testPlanNumber, List<string> projectIds, string name, List<string> planMakerIds, List<string> planReviewerIds, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public async Task<IPagedList<TestPlan>> GetAllTestPlans(string SiteId, string LoggedUserId, string SearchText, int testPlanNumber, List<string> projectIds, string name, List<string> planMakerIds, List<string> planReviewerIds, string sortBy, Dictionary<string, string> sorts, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
         {
             var query = _testPlanRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
 
@@ -94,6 +98,13 @@ namespace Vsky.Services.TestPlans
                     (m.PlanReviewer.Person.FirstName + " " + m.PlanReviewer.Person.LastName).ToLower().Contains(SearchText.ToLower())
                 );
             }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
+
             query = query.Select(x => new TestPlan
             {
                 Id = x.Id,
@@ -103,6 +114,18 @@ namespace Vsky.Services.TestPlans
                 Name = x.Name,
                 Description = x.Description,
                 TestPlanNumber = x.TestPlanNumber,
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
+                Area = new DropDown
+                {
+                    Id = x.Area.Id,
+                    DropDownValue = x.Area.DropDownValue
+                },
+                Workspace = new DropDown
+                {
+                    Id = x.Workspace.Id,
+                    DropDownValue = x.Workspace.DropDownValue
+                },
                 PlanMaker = new Employee
                 {
                     Person = new Person
@@ -130,6 +153,22 @@ namespace Vsky.Services.TestPlans
                         ViewOnly = mapping.ViewOnly,
                         Notes = mapping.Notes
                     }).Take(1).ToList(),
+                },
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
+                    }
                 },
             });
 
@@ -339,7 +378,7 @@ namespace Vsky.Services.TestPlans
             var user = await _userManager.FindByNameAsync(userdata.UserName);
             //var roles = await _userManager.GetRolesAsync(user);
             var roles = await _applicationUserRoleService.GetRoleNamesByUserAndSite(user.Id, SiteId);
-            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin");
+            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
 
             return isAdmin;
         }

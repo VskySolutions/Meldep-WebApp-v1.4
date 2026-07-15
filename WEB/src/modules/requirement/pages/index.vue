@@ -293,15 +293,6 @@
                 >
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
-                <q-btn
-                  v-if="selectedProjectId || search.projectIds?.length > 0 && search.requirementGroupIds?.length > 0"
-                  icon="o_chevron_left"
-                  outline
-                  label="Back"
-                  no-caps
-                  class="text-primary btnRounded q-ml-xs no-space-between"
-                  @click="$router.back()"
-                />
                  <!-- Reset Column Width -->
                 <q-btn
                   icon="o_refresh"
@@ -332,6 +323,15 @@
                   </q-badge>
                   <q-tooltip>Sort</q-tooltip>
                 </q-btn>
+                <q-btn
+                  v-if="selectedProjectId || search.projectIds?.length > 0 && search.requirementGroupIds?.length > 0"
+                  icon="o_chevron_left"
+                  outline
+                  label="Back"
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs no-space-between"
+                  @click="$router.back()"
+                />
               </div>
             </div>
           </div>
@@ -1736,6 +1736,7 @@ watch(activeRowId, (val) => {
     sorts: formattedSorts
   });
 });
+
 // On page rendering
 onMounted(async () =>  {
   activeEmployeesDropdown.load(user.siteId);

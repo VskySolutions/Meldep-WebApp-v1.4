@@ -98,9 +98,53 @@
                 </q-card>
               </q-menu>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Create Test Plan" no-caps class="text-primary btnRounded" @click="onTestPlanAdd(refreshTestPlanList)" />
-                <q-btn v-if="role === 'admin'" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
+                <q-btn
+                  icon="o_add"
+                  outline
+                  label="Create Test Plan"
+                  no-caps
+                  class="text-primary btnRounded"
+                  @click="onTestPlanAdd(refreshTestPlanList)"
+                />
+                <q-btn
+                  v-if="role === 'admin'"
+                  icon="o_playlist_add"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-sm"
+                  @click="showManageDropdownOptions = !showManageDropdownOptions"
+                >
                   <q-tooltip>Manage Dropdowns</q-tooltip>
+                </q-btn>
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
                 </q-btn>
               </div>
             </div>
@@ -108,107 +152,177 @@
         </div>
       </q-card-section>
       <q-separator />
-      <q-table
-        ref="tableRef" 
-        v-model:pagination="pagination" 
-        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'" 
-        :loading="loading" 
-        :rows="rows" 
-        :columns="columns" 
-        row-key="id" 
-        separator="cell"
-        no-data-label="No data available" 
-        binary-state-sort 
-        :rows-per-page-options="[20, 50, 100, 200, 500]" 
-        @request="getAllTestPlan"
-      >
-        <template #loading>
-          <q-inner-loading showing color="primary">
-            <q-spinner-ios size="40px" class="q-mt-xl" />
-          </q-inner-loading>
-        </template>
-        <template #header="props">
-          <q-tr :props="props" class="bg-primary text-white">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-            <q-th auto-width class="text-center">Actions</q-th>
-          </q-tr>
-        </template>
-        <template #body="props">
-          <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''" :set="(preProjectName = null, resetTracking())">
-            <q-td style="width: 3%;" class="hidden">#{{ props.row.testPlanNumber }}</q-td>
-            <!-- <q-td>{{ props.row.project.name }}</q-td> -->
-            <!-- <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;"><span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name">{{ props.row.project.name }}</span></q-td> -->
-            <q-td style="width: 15%; white-space: normal;" class="hoverable-cell">
-              <div class="row no-wrap items-center justify-between">
-                <span style="flex: 1; word-break: break-word; white-space: normal;">
-                  <span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name" @click="onProjectView(props.row.project.id)">{{ props.row.project.name }}</span>
-                </span>
-                <div v-if="shouldShowIcons(props.row.project.name, index)" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
-                  <q-icon
-                    name="o_radio_button_checked" size="xs"
-                    class="cursor-pointer"
-                    @click="setActiveRowIdInLocalStorage(props.row.id);
-                            $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
-                  >
-                    <q-tooltip>Project Center</q-tooltip>
-                  </q-icon>
-                  <q-icon
-                    v-if="props.row.isEditable"
-                    name="o_developer_board" size="xs"
-                    class="cursor-pointer"
-                    @click="setActiveRowIdInLocalStorage(props.row.id);
-                            $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
-                  >
-                    <q-tooltip>Work Board</q-tooltip>
-                  </q-icon>
+      <div class="table-scroll-container">
+        <q-table
+          ref="tableRef" 
+          v-model:pagination="pagination" 
+          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'" 
+          :loading="loading" 
+          :rows="rows" 
+          :columns="computedColumns" 
+          row-key="id" 
+          separator="cell"
+          no-data-label="No data available" 
+          binary-state-sort 
+          :rows-per-page-options="[20, 50, 100, 200, 500]" 
+          @request="getAllTestPlan"
+        >
+          <template #loading>
+            <q-inner-loading showing color="primary">
+              <q-spinner-ios size="40px" class="q-mt-xl" />
+            </q-inner-loading>
+          </template>
+          <template #header="props">
+            <q-tr :props="props" class="bg-primary text-white">
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
+                @click="!isResizing && col.sortable"
+              >
+                {{ col.label }}
+                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+              </q-th>
+              <q-th auto-width class="text-center">Actions</q-th>
+            </q-tr>
+          </template>
+          <template #body="props">
+            <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''" :set="(preProjectName = null, resetTracking())">
+              <q-td v-if="selectedColumnNames.includes('testPlanNumber')" class="hidden">
+                #{{ props.row.testPlanNumber }}
+              </q-td>
+              <!-- <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;"><span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name">{{ props.row.project.name }}</span></q-td> -->
+              <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
+                <div class="row no-wrap items-center justify-between">
+                  <span style="flex: 1; word-break: break-word; white-space: normal;">
+                    <span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name" @click="onProjectView(props.row.project.id)">
+                      {{ props.row.project.name }}
+                    </span>
+                  </span>
+                  <div v-if="shouldShowIcons(props.row.project.name, index)" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
+                    <q-icon
+                      name="o_radio_button_checked" size="xs"
+                      class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(props.row.id);
+                              $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                    >
+                      <q-tooltip>Project Center</q-tooltip>
+                    </q-icon>
+                    <q-icon
+                      v-if="props.row.isEditable"
+                      name="o_developer_board" size="xs"
+                      class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(props.row.id);
+                              $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
+                    >
+                      <q-tooltip>Work Board</q-tooltip>
+                    </q-icon>
+                  </div>
                 </div>
-              </div>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.name }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('area.dropDownValue')"
+                class="common-q-td"
+              >
+                {{ props.row.area.dropDownValue }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('workspace.dropDownValue')"
+                class="common-q-td"
+              >
+                {{ props.row.workspace.dropDownValue }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('planMaker.person.firstName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.planMaker.person.fullName }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('planReviewer.person.firstName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.planReviewer.person.fullName }}
+              </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+              class="common-q-td"
+            >
+              {{ props.row.createdBy.person.fullName }}
             </q-td>
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">{{ props.row.name }}</q-td>
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 12%;">{{ props.row.planMaker.person.fullName }}</q-td>
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 12%;">{{ props.row.planReviewer.person.fullName }}</q-td>
-            <q-td style="width: 5%;" class="text-center actions">
-              <q-icon 
-                name="o_visibility" 
-                class="cursor-pointer q-mr-sm" 
-                size="xs" 
-                @click="onTestPlanView(props.row.id)"
-              >
-                <q-tooltip>View</q-tooltip>
-              </q-icon>
-              <q-icon 
-                v-if="props.row.isEditable"
-                name="o_edit" 
-                class="cursor-pointer q-mr-sm" 
-                size="xs" 
-                @click="onTestPlanEdit(props.row.id, refreshTestPlanList)"
-              >
-                <q-tooltip>Edit</q-tooltip>
-              </q-icon>
-              <q-icon 
-                name="o_checklist" 
-                class="cursor-pointer q-mr-sm" 
-                size="xs" 
-                @click="$router.push('/test-case?planId='+props.row.id+'&&projectId='+props.row.projectId)"
-              >
-                <q-tooltip>Test Case</q-tooltip>
-              </q-icon>
-              <q-icon 
-                v-if="props.row.isEditable" 
-                name="o_delete_outline" 
-                class="cursor-pointer" 
-                color="negative" 
-                size="xs" 
-                @click="onSubmitTestPlanDelete(props.row.id, props.row.name, refreshTestPlanList)"
-              >
-                <q-tooltip>Delete</q-tooltip>
-              </q-icon>
+            <q-td
+              v-if="selectedColumnNames.includes('createdOnUtc')"
+              class="common-q-td"
+            >
+              {{ props.row.createdOnUtc }}
             </q-td>
-          </q-tr><q-separator />
-        </template>
-      </q-table>
+            <q-td
+              v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedBy.person.fullName }}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('updatedOnUtc')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedOnUtc }}
+            </q-td>
+              <q-td class="text-center actions">
+                <q-icon 
+                  name="o_visibility" 
+                  class="cursor-pointer q-mr-sm" 
+                  size="xs" 
+                  @click="onTestPlanView(props.row.id)"
+                >
+                  <q-tooltip>View</q-tooltip>
+                </q-icon>
+                <q-icon 
+                  v-if="props.row.isEditable"
+                  name="o_edit" 
+                  class="cursor-pointer q-mr-sm" 
+                  size="xs" 
+                  @click="onTestPlanEdit(props.row.id, refreshTestPlanList)"
+                >
+                  <q-tooltip>Edit</q-tooltip>
+                </q-icon>
+                <q-icon 
+                  name="o_checklist" 
+                  class="cursor-pointer q-mr-sm" 
+                  size="xs" 
+                  @click="$router.push('/test-case?planId='+props.row.id+'&&projectId='+props.row.projectId)"
+                >
+                  <q-tooltip>Test Case</q-tooltip>
+                </q-icon>
+                <q-icon 
+                  v-if="props.row.isEditable" 
+                  name="o_delete_outline" 
+                  class="cursor-pointer" 
+                  color="negative" 
+                  size="xs" 
+                  @click="onSubmitTestPlanDelete(props.row.id, props.row.name, refreshTestPlanList)"
+                >
+                  <q-tooltip>Delete</q-tooltip>
+                </q-icon>
+              </q-td>
+            </q-tr><q-separator />
+          </template>
+        </q-table>
+      </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="columns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 // Import libraries
@@ -220,6 +334,8 @@ import manageDropdownsService from "modules/dropdown/dropdown.service";
 
 // Shared DataTable Views
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
 
 // Shared Dropdowns
 import projectModule from "src/modules/project/utils/dropdowns.js";
@@ -227,6 +343,12 @@ import employeeModule from "src/modules/employee/utils/dropdowns.js";
 
 // Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 // Shared Customer Dialogs
 import {
@@ -254,53 +376,60 @@ const showFilter = ref(false);
 const searchLoader = ref(false);
 const dropdownTypes = ref([]);
 const showManageDropdownOptions = ref(false);
+const showSortDialog = ref(false);
+const shownProjects = new Set();
 const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 
 // local storage values
-const localStorageKey = "Test Plan";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
+// const localStorageKey = "Test Plan";
+// const filterLocalStorage = getLocalStorage(localStorageKey);
+// const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 
-const highlightTestPlanId = filterLocalStorage?.activeRowId || null;
-const activeRowId = ref(highlightTestPlanId);
+// const highlightTestPlanId = filterLocalStorage?.activeRowId || null;
+// const activeRowId = ref(highlightTestPlanId);
 const highlightedId = computed(() => { return activeRowId.value; });
 
-function setActiveRowIdInLocalStorage (id) {
-  const storedData = getLocalStorage(localStorageKey) || {};
-  setLocalStorage(localStorageKey, { ...storedData, activeRowId: id });
+// function setActiveRowIdInLocalStorage (id) {
+//   const storedData = getLocalStorage(localStorageKey) || {};
+//   setLocalStorage(localStorageKey, { ...storedData, activeRowId: id });
+//   activeRowId.value = id;
+// }
+function setActiveRowIdInLocalStorage(id) {
   activeRowId.value = id;
-}
 
+  saveDataTableState({
+    activeRowId: id
+  });
+}
 // Table variables
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
-  // { name: "testPlanNumber", label: "Test Plan Id", field: "testPlanNumber", align: "left", sortable: true },
-  { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true },
-  { name: "name", label: "Name", field: "name", align: "left", sortable: true },
-  { name: "planMaker.person.firstName", label: "Plan Maker", field: "planMaker.person.firstName", align: "left", sortable: true },
-  { name: "planReviewer.person.firstName", label: "Plan Reviewer", field: "planReviewer.person.firstName", align: "left", sortable: true }
+  // { name: "testPlanNumber", label: "Test Plan Id", field: "testPlanNumber", align: "left", sortable: true, default: true },
+  { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
+  { name: "name", label: "Name", field: "name", align: "left", sortable: true, default: true },
+  { name: "area.dropDownValue", label: "Area", field: "area.dropDownValue", align: "left", sortable: true, default: false },
+  { name: "workspace.dropDownValue", label: "Workspace", field: "workspace.dropDownValue", align: "left", sortable: true, default: false },
+  { name: "planMaker.person.firstName", label: "Plan Maker", field: "planMaker.person.firstName", align: "left", sortable: true, default: true },
+  { name: "planReviewer.person.firstName", label: "Plan Reviewer", field: "planReviewer.person.firstName", align: "left", sortable: true, default: true },
+  { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 
-const handleDocumentClick = (event) => {
-  const highlightElement = document.querySelector(".highlight");
-  // Check if clicked inside the highlighted row or icons
-  if (highlightElement && !highlightElement.contains(event.target)) {
-    activeRowId.value = null;
-    const storedData = getLocalStorage(localStorageKey) || {};
-    setLocalStorage(localStorageKey, { ...storedData, activeRowId: null });
-  }
-};
-
-// ------------------------------------------------------------------------------------
-// DataTable:- Initialization Of Dialogs, Actions (SOP Change)
-// ------------------------------------------------------------------------------------
-initTestPlanDialogs(activeRowId);
-initProjectDialogs(activeRowId);
-initTestPlanActions(activeRowId);
+// const handleDocumentClick = (event) => {
+//   const highlightElement = document.querySelector(".highlight");
+//   // Check if clicked inside the highlighted row or icons
+//   if (highlightElement && !highlightElement.contains(event.target)) {
+//     activeRowId.value = null;
+//     const storedData = getLocalStorage(localStorageKey) || {};
+//     setLocalStorage(localStorageKey, { ...storedData, activeRowId: null });
+//   }
+// };
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
@@ -312,21 +441,6 @@ const refreshTestPlanList = () => {
 // ------------------------------------------------------------------------------------
 // Advance Filter :- On Submit & Cancel
 // ------------------------------------------------------------------------------------
-
-const getFilterValue = (key, defaultValue) => {
-  const val = filterLocalStorage?.[key];
-  return val && val.length > 0 ? val : defaultValue;
-};
-
-// Search variables
-const search = ref({
-  searchText: getFilterValue("searchText", ""),
-  projectIds: getFilterValue("projectIds", []),
-  planMakerIds: getFilterValue("planMakerIds", []),
-  planReviewerIds: getFilterValue("planReviewerIds", []),
-  name: getFilterValue("name", ""),
-  testPlanNumber: getFilterValue("testPlanNumber", 0)
-});
 
 // Search records as per parameters
 const onAdvanceSearch = () => {
@@ -340,7 +454,9 @@ const onAdvanceClear = () => {
   search.value.name = "";
   search.value.planMakerIds = [];
   search.value.planReviewerIds = [];
-  clearLocalStorage(localStorageKey);
+  saveDataTableState({
+    search: search.value
+  });
   onAdvanceSearch();
 };
 
@@ -349,8 +465,6 @@ function getDropdownTypeByModuleName (moduleName) {
     dropdownTypes.value = resp;
   });
 }
-
-const shownProjects = new Set();
 
 function resetTracking () {
   shownProjects.clear(); // Clear the set before rendering rows
@@ -365,17 +479,127 @@ function shouldShowIcons (projectName) {
   }
 }
 
+const {
+  search,
+  pagination,
+  activeRowId,
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
+} = useSiteTableState({
+  storageKey: "testPlan-Index",
+  siteId: user?.siteId,
+
+  defaultSearch: {
+    searchText: "",
+    testPlanNumber: "",
+    projectIds: [],
+    planMakerIds: [],
+    planReviewerIds: [],
+    name: ""
+  },
+
+  defaultPagination: {
+    sortBy: "createdOnUtc",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  },
+
+  defaultSorts: {},
+
+  defaultResizableWidth: {},
+
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
+
+const lsSorts = sorts.value || null;
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshTestPlanList();
+  }
+});
+
+// ------------------------------------------------------------------------------------
+// DataTable:- Initialization Of Dialogs, Actions (SOP Change)
+// ------------------------------------------------------------------------------------
+initTestPlanDialogs(activeRowId);
+initProjectDialogs(activeRowId);
+initTestPlanActions(activeRowId);
+
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // DataTable:- Get Test Plan List
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
-const getAllTestPlan = (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+const getAllTestPlan = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;
   loading.value = true;
   search.value.testPlanNumber = search.value.testPlanNumber ? search.value.testPlanNumber : 0;
-  // advanceSearchEnable.value = hasActiveFilters(search.value);
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
-  setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination, activeRowId: activeRowId.value });
+
+  const sorts = {};
+  const multi = multiSort.value;
+  for (let i = 0; i < multi.length; i++) {
+    const s = multi[i];
+    if (s.column && s.direction) {
+      sorts[s.column] = s.direction;
+    }
+  }
+  const payload = { page, pageSize: rowsPerPage, sortBy, descending, sorts, ...search.value };
+  // setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination, activeRowId: activeRowId.value });
+  saveDataTableState({
+    search: search.value,
+    pagination: p,
+    activeRowId: activeRowId.value,
+    sorts
+  });
   testplansService.getAllTestPlan(payload).then((resp) => {
     // rows.value = resp.data;
     rows.value = resp.data.map(testPlan => {
@@ -387,11 +611,14 @@ const getAllTestPlan = (props) => {
         isEditable: role === "admin" || hasFullAccess
       };
     });
-    pagination.value.page = page;
-    pagination.value.rowsPerPage = rowsPerPage;
-    pagination.value.sortBy = sortBy;
-    pagination.value.descending = descending;
-    pagination.value.rowsNumber = resp.total;
+    pagination.value = {
+      ...pagination.value,
+      page,
+      rowsPerPage,
+      sortBy,
+      descending,
+      rowsNumber: resp.total
+    };
   }).finally(() => {
     loading.value = false;
     searchLoader.value = false;
@@ -449,12 +676,6 @@ function onClearFilters (key) {
   refreshTestPlanList();
 }
 
-// Quick Search
-watch(() => search.value.searchText, () => {
-  searchLoader.value = true;
-  refreshTestPlanList();
-});
-
 // ------------------------------------------------------------------------------------
 // Advance Filter :- All Dropdowns
 // ------------------------------------------------------------------------------------
@@ -464,8 +685,31 @@ const {
 
 const { activeEmployeesDropdown } = employeeModule();
 
-onBeforeUnmount(() => {
-  document.removeEventListener("click", handleDocumentClick);
+// onBeforeUnmount(() => {
+//   document.removeEventListener("click", handleDocumentClick);
+// });
+
+// Quick Search
+watch(() => search.value.searchText, () => {
+  searchLoader.value = true;
+  refreshTestPlanList();
+});
+
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
 });
 
 // ------------------------------------------------------------------------------------
@@ -477,10 +721,15 @@ onMounted(() => {
   getDropdownTypeByModuleName("SDLC");
   activeEmployeesDropdown.load();
   projectNameDropdown.load();
-  if (!activeRowId.value && highlightTestPlanId) {
-    activeRowId.value = highlightTestPlanId;
+  if (!activeRowId.value) {
+    activeRowId.value = null;
   }
 
-  document.addEventListener("click", handleDocumentClick);
+  // document.addEventListener("click", handleDocumentClick);
 });
 </script>
+<style scoped>
+.Custom-DataTable {
+  min-width: max-content;
+}
+</style>

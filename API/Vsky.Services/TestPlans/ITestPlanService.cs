@@ -8,7 +8,7 @@ namespace Vsky.Services.TestPlans
     public interface ITestPlanService
     {
         #region GetAllTestPlans
-        Task<IPagedList<TestPlan>> GetAllTestPlans(string SiteId, string LoggedUserId, string SearchText, int testPlanNumber, List<string> projectIds, string name, List<string> planMakerIds, List<string> planReviewerIds, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        Task<IPagedList<TestPlan>> GetAllTestPlans(string SiteId, string LoggedUserId, string SearchText, int testPlanNumber, List<string> projectIds, string name, List<string> planMakerIds, List<string> planReviewerIds, string sortBy, Dictionary<string, string> sorts, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
         IPagedList<TestPlan> GetAllTestPlanForDashboard(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
         #endregion
 

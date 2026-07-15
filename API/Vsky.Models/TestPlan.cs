@@ -30,5 +30,7 @@ public class TestPlan : BaseEntity
     public virtual Employee PlanMaker { get; set; }
     public virtual Employee PlanReviewer { get; set; }
     public virtual Project Project { get; set; }
+    public virtual ApplicationUser CreatedBy { get; set; }
+    public virtual ApplicationUser UpdatedBy { get; set; }
     public virtual ICollection<TestCase> TestCases { get; set; } = new List<TestCase>();
 }

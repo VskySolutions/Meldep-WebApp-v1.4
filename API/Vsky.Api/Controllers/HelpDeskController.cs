@@ -933,35 +933,6 @@ namespace Vsky.Api.Controllers
 
                 #endregion
 
-                #region status logic         
-
-                // Admin OR Support Team → Requester
-                if (isAdmin || isSupportTeam)
-                {
-                    // Status updates
-                    if (helpDesk.StatusText == "New")
-                    {
-                        var statusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "HelpDesk Status", "Open");
-                        if(statusId == null)
-                            return BadRequest("Help desk status not found");
-
-                        _helpDeskService.AddHelpDeskStatusLog(model.HelpDeskId, statusId, LoggedUserId, GetDateTime);
-
-                        await SendHelpDeskStatusUpdateMail(model.HelpDeskId, SiteId, "", GetDateTime);
-                    }
-                }
-                else if (helpDesk.StatusText == "Awaiting Client")
-                {
-                    var statusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "HelpDesk Status", "In Progress");
-                    if (statusId == null)
-                        return BadRequest("Help desk status not found");
-
-                    _helpDeskService.AddHelpDeskStatusLog(model.HelpDeskId, statusId, LoggedUserId, GetDateTime);
-
-                    await SendHelpDeskStatusUpdateMail(model.HelpDeskId, SiteId, "", GetDateTime);
-                }
-                #endregion
-
                 #region Prepare TO Recipients
 
                 // actual system generated TO emails
@@ -1076,6 +1047,35 @@ namespace Vsky.Api.Controllers
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
+                #endregion
+
+                #region status logic         
+
+                // Admin OR Support Team → Requester
+                if (isAdmin || isSupportTeam)
+                {
+                    // Status updates
+                    if (helpDesk.StatusText == "New")
+                    {
+                        var statusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "HelpDesk Status", "Open");
+                        if (statusId == null)
+                            return BadRequest("Help desk status not found");
+
+                        _helpDeskService.AddHelpDeskStatusLog(model.HelpDeskId, statusId, LoggedUserId, GetDateTime);
+
+                        await SendHelpDeskStatusUpdateMail(model.HelpDeskId, SiteId, "", GetDateTime, fromEmployee, externalToEmails, ccEmails);
+                    }
+                }
+                else if (helpDesk.StatusText == "Awaiting Client")
+                {
+                    var statusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "HelpDesk Status", "In Progress");
+                    if (statusId == null)
+                        return BadRequest("Help desk status not found");
+
+                    _helpDeskService.AddHelpDeskStatusLog(model.HelpDeskId, statusId, LoggedUserId, GetDateTime);
+
+                    await SendHelpDeskStatusUpdateMail(model.HelpDeskId, SiteId, "", GetDateTime);
+                }
                 #endregion
 
                 var emailReplyEntity = new EmailReplies();
@@ -1942,7 +1942,7 @@ namespace Vsky.Api.Controllers
             return true;
         }
 
-        private async Task SendHelpDeskStatusUpdateMail(string helpDeskId, string siteId, string assignedToName, DateTime GetDateTime)
+        private async Task SendHelpDeskStatusUpdateMail(string helpDeskId, string siteId, string assignedToName, DateTime GetDateTime, Employee repliedEmployee = null, List<string> externalToEmails = null, List<string> ccEmails = null)
         {
             var helpDesk = await _helpDeskService.GetHelpDeskDetailsById(helpDeskId);
 
@@ -2051,42 +2051,85 @@ namespace Vsky.Api.Controllers
             #region Support Team (ONLY if not assigned)
 
             // Collect email recipients            
-            var supportEmails = new List<string>();
-            Employee primaryEmployee = null;
+            //var supportEmails = new List<string>();
+            //Employee primaryEmployee = null;
 
-            var supportUsers = await _userService.GetUsersByRole(siteId, "support team");
+            //var supportUsers = await _userService.GetUsersByRole(siteId, "support team");
 
-            foreach (var user in supportUsers)
+            //foreach (var user in supportUsers)
+            //{
+            //    // Permission check per support user
+            //    var canSend = await _sitesEmailNotificationsPermissionServices
+            //        .ShouldSendNotification(
+            //            siteId,
+            //            user.Id,
+            //            "HelpDesk.HelpDeskStatusMail"
+            //        );
+
+            //    if (!canSend)
+            //        continue;
+
+            //    //var empId = _commonService.GetEmployeeIdByUserId(siteId, user.Id);
+
+            //    var empId = _commonService.GetEmployeeIdByUserIdAndEmail(siteId, user.Id);
+            //    var employee = await _employeeService.GetEmployeeDetailsById(empId);
+
+            //    if (!string.IsNullOrEmpty(employee?.Person?.PrimaryEmailAddress))
+            //    {
+            //        supportEmails.Add(employee.Person.PrimaryEmailAddress);
+            //        primaryEmployee = employee;
+            //    }
+            //}
+
+            //if (supportEmails.Any())
+            //{
+            //    await _workflowMessageService.SendHelpDeskStatusMail(
+            //        primaryEmployee,
+            //        helpDesk,
+            //        supportEmails.Distinct().ToList(), // comma separated
+            //        helpDesk.TwilioEmailId,
+            //        prefixNo,
+            //        siteDetails.Name,
+            //        null,
+            //        assignedToName,
+            //        GetDateTime
+            //    );
+            //}
+            #endregion
+
+            #region Reply User (ONLY if ticket not assigned)
+
+            var notificationEmails = new List<string>();
+
+            // Logged-in support user who replied
+            if (!string.IsNullOrWhiteSpace(repliedEmployee?.Person?.PrimaryEmailAddress))
             {
-                // Permission check per support user
-                var canSend = await _sitesEmailNotificationsPermissionServices
-                    .ShouldSendNotification(
-                        siteId,
-                        user.Id,
-                        "HelpDesk.HelpDeskStatusMail"
-                    );
-
-                if (!canSend)
-                    continue;
-
-                //var empId = _commonService.GetEmployeeIdByUserId(siteId, user.Id);
-
-                var empId = _commonService.GetEmployeeIdByUserIdAndEmail(siteId, user.Id);
-                var employee = await _employeeService.GetEmployeeDetailsById(empId);
-
-                if (!string.IsNullOrEmpty(employee?.Person?.PrimaryEmailAddress))
-                {
-                    supportEmails.Add(employee.Person.PrimaryEmailAddress);
-                    primaryEmployee = employee;
-                }
+                notificationEmails.Add(repliedEmployee.Person.PrimaryEmailAddress);
             }
 
-            if (supportEmails.Any())
+            // External TO
+            if (externalToEmails != null)
+            {
+                notificationEmails.AddRange(externalToEmails);
+            }
+
+            // CC
+            if (ccEmails != null)
+            {
+                notificationEmails.AddRange(ccEmails);
+            }
+
+            notificationEmails = notificationEmails
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (notificationEmails.Any())
             {
                 await _workflowMessageService.SendHelpDeskStatusMail(
-                    primaryEmployee,
+                    repliedEmployee,
                     helpDesk,
-                    supportEmails.Distinct().ToList(), // comma separated
+                    notificationEmails,
                     helpDesk.TwilioEmailId,
                     prefixNo,
                     siteDetails.Name,
@@ -2095,6 +2138,7 @@ namespace Vsky.Api.Controllers
                     GetDateTime
                 );
             }
+
             #endregion
         }
 
