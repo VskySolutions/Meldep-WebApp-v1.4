@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -197,6 +198,21 @@ namespace Vsky.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+        #endregion
+
+        #region GetReleaseWiseTestCaseHistory
+        [HttpGet("history-by-testCaseIds/{testCaseIds}")]
+        public async Task<IActionResult> GetReleaseWiseTestCaseHistoryByTestCaseIds(string testCaseIds, string versionNumber)
+        {
+            var ids = testCaseIds
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+
+            var result = await _projectReleaseTrackingReqPlanTaskIssueMappingService
+                .GetReleaseWiseTestCaseHistoryByTestCaseIds(ids, versionNumber);
+
+            return Ok(result);
         }
         #endregion
 

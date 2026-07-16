@@ -17,6 +17,12 @@ export default {
     return http.get(`/test-case/history/${id}`).then(response => response.data);
   },
 
+  getReleaseWiseTestCaseHistoryByTestCaseIds(testCaseIds, versionNumber) {
+    return http.get(
+      `/test-case/history-by-testCaseIds/${testCaseIds.join(",")}?versionNumber=${versionNumber}`
+    ).then(r => r.data);
+  },
+
   getStatusChangeLog(mappingId) {
     return http.get(`test-case/change-log?mappingId=${mappingId}`).then(response => response.data);
   },

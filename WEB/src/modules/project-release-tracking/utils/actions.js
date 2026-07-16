@@ -48,6 +48,32 @@ export const onSubmitReleaseTrackingDelete = async (
   );
 };
 
+export const onSubmitRetestingItemDelete = (
+  rowId,
+  name,
+  markDeleted
+) => {
+  activeRowId.value = rowId;
+
+  zwConfirmDelete(
+    { data: name },
+    () => {
+      if (typeof markDeleted === "function") {
+        markDeleted();
+      }
+
+      notifySuccess({
+        message: "Test case marked for deletion."
+      });
+
+      activeRowId.value = null;
+    },
+    () => {
+      activeRowId.value = null;
+    }
+  );
+};
+
 function sendError (message, error) {
   notifyError({ message });
   console.error(message, error);

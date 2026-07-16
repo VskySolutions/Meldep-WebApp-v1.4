@@ -20,6 +20,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
 
         #region GetReleaseWiseTestCaseHistory
         Task<List<ReleaseWiseTestCaseHistoryDto>> GetReleaseWiseTestCaseHistory(string testCaseId);
+        Task<List<ReleaseWiseTestCaseHistoryDto>> GetReleaseWiseTestCaseHistoryByTestCaseIds(List<string> testCaseIds, string versionNumber);
         #endregion
 
         #region InsertProjectReleaseTrackingReqPlanTaskIssueMappingList

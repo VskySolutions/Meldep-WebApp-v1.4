@@ -97,15 +97,18 @@ namespace Vsky.Models
         public string MappingId { get; set; }
         public string TestCaseId { get; set; }
         public string TestCaseName { get; set; }
+        public int TestCaseNumber { get; set; }
         public string ReleaseTrackingId { get; set; }
         public string ReleaseVersion { get; set; }
         public bool IsRemoved { get; set; }
         public string CurrentStatus { get; set; }
+        public string StatusId { get; set; }
         public string TestedBy { get; set; }
         public DateTime? TestedDate { get; set; }
         public string Comment { get; set; }
         public int? IssueNumber { get; set; }
         public string IssueId { get; set; }
+        public bool IsEditable { get; set; }
 
         public List<ReleaseWiseTestCaseHistoryLogDto> Logs { get; set; } = new();
     }
@@ -174,6 +177,7 @@ namespace Vsky.Models
         public string Id { get; set; }
         public string RefId { get; set; }
         public string Type { get; set; }
+        public bool Deleted { get; set; }
     }
     public class SaveProjectReleaseTrackingStatusLog
     {

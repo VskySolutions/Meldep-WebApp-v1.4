@@ -374,6 +374,13 @@ const getAllReleaseTracking = (props) => {
   });
 };
 
+function setActiveRowIdInLocalStorage(id) {
+  activeRowId.value = id;
+
+  saveDataTableState({
+    activeRowId: id
+  });
+}
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------

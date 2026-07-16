@@ -210,6 +210,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
                     m.Deleted,
                     m.CreatedOnUtc,
                     TestCaseName = m.TestCase.Name,
+                    TestCaseNumber = m.TestCase.TestCaseNumber,
 
                     ReleaseVersion = m.ReleaseTracking.VersionNumber,
 
@@ -222,6 +223,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
                             x.CreatedOnUtc,
 
                             Status = x.Status.DropDownValue,
+                            StatusId = x.Status.Id,
 
                             TestedBy = x.CreatedBy == null
                                 ? null
@@ -241,6 +243,10 @@ namespace Vsky.Services.ProjectReleaseTrackings
                 .ToListAsync();
 
             var result = new List<ReleaseWiseTestCaseHistoryDto>();
+            var latestMappingId = mappings
+                .OrderByDescending(x => x.CreatedOnUtc)
+                .Select(x => x.Id)
+                .FirstOrDefault();
 
             foreach (var mapping in mappings)
             {
@@ -249,14 +255,17 @@ namespace Vsky.Services.ProjectReleaseTrackings
                     MappingId = mapping.Id,
                     TestCaseId = mapping.TestCaseId,
                     TestCaseName = mapping.TestCaseName,
+                    TestCaseNumber = mapping.TestCaseNumber,
                     ReleaseVersion = mapping.ReleaseVersion,
-                    IsRemoved = mapping.Deleted
+                    IsRemoved = mapping.Deleted,
+                    IsEditable = mapping.Id == latestMappingId
                 };
 
                 var latest = mapping.Logs.FirstOrDefault();
                 if (latest != null)
                 {
                     dto.CurrentStatus = latest.Status;
+                    dto.StatusId = latest.StatusId;
                     dto.TestedBy = latest.TestedBy;
                     dto.TestedDate = latest.CreatedOnUtc;
                     dto.Comment = latest.Comment;
@@ -287,6 +296,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
                     x.Name,
                     x.TestedDate,
                     x.TestResult,
+                    x.TestCaseNumber,
 
                     Status = x.Status.DropDownValue,
 
@@ -314,6 +324,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
                     MappingId = null,
                     TestCaseId = testCaseId,
                     TestCaseName = testCase.Name,
+                    TestCaseNumber = testCase.TestCaseNumber,
                     ReleaseVersion = "Initial Test Case",
                     CurrentStatus = testCase.Status,
                     TestedBy = testCase.TestedBy,
@@ -324,6 +335,30 @@ namespace Vsky.Services.ProjectReleaseTrackings
                     IsRemoved = false,
                     Logs = new List<ReleaseWiseTestCaseHistoryLogDto>()
                 });
+            }
+
+            return result
+                .OrderByDescending(x => x.TestedDate)
+                .ToList();
+        }
+        
+        public async Task<List<ReleaseWiseTestCaseHistoryDto>> GetReleaseWiseTestCaseHistoryByTestCaseIds(
+            List<string> testCaseIds,
+            string versionNumber)
+        {
+            var result = new List<ReleaseWiseTestCaseHistoryDto>();
+
+            foreach (var testCaseId in testCaseIds.Distinct())
+                result.AddRange(await GetReleaseWiseTestCaseHistory(testCaseId));
+
+            if (!string.IsNullOrWhiteSpace(versionNumber))
+            {
+                result = result
+                    .Where(x => string.Equals(
+                        x.ReleaseVersion,
+                        versionNumber,
+                        StringComparison.OrdinalIgnoreCase))
+                    .ToList();
             }
 
             return result

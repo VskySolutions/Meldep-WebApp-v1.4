@@ -498,22 +498,17 @@ namespace Vsky.Api.Controllers
                             .Where(x => x.TestCaseId != null)
                             .ToList();
 
-                        var incomingIds = incomingTestCases
-                            .Select(x => x.RefId)
-                            .ToHashSet();
-
-                        var existingIds = existingMappings
-                            .Select(x => x.TestCaseId)
-                            .ToHashSet();
-
                         var statusId = await _dropDownService.GetDropDownByTypeNameAndName(
                             SiteId,
                             "Test Case Status",
                             "Not Tested");
 
                         // Add newly selected test cases
-                        foreach (var item in incomingTestCases.Where(x => !existingIds.Contains(x.RefId)))
+                        foreach (var item in incomingTestCases.Where(x => !x.Deleted))
                         {
+                            if (existingMappings.Any(x => x.TestCaseId == item.RefId))
+                                continue;
+
                             var mapping = new ProjectReleaseTrackingReqPlanTaskIssueMapping
                             {
                                 Id = Guid.NewGuid().ToString(),
@@ -540,30 +535,40 @@ namespace Vsky.Api.Controllers
                                 });
                         }
 
-                        // Remove deselected test cases
-                        foreach (var mapping in existingMappings.Where(x => !incomingIds.Contains(x.TestCaseId)))
+                        // Delete only rows marked as deleted
+                        foreach (var item in incomingTestCases.Where(x => x.Deleted))
                         {
-                            var projectReleaseTrackingReqPlanTaskIssueMapping = await _projectReleaseTrackingReqPlanTaskIssueMappingService.GetProjectReleaseTrackingReqPlanTaskIssueMappingById(mapping.Id);
+                            var mapping = existingMappings
+                                .FirstOrDefault(x => x.TestCaseId == item.RefId);
+
+                            if (mapping == null)
+                                continue;
+
+                            var mappingEntity =
+                                await _projectReleaseTrackingReqPlanTaskIssueMappingService
+                                    .GetProjectReleaseTrackingReqPlanTaskIssueMappingById(mapping.Id);
 
                             _projectReleaseTrackingReqPlanTaskIssueMappingService
-                                .DeleteProjectReleaseTrackingReqPlanTaskIssueMapping(projectReleaseTrackingReqPlanTaskIssueMapping);
+                                .DeleteProjectReleaseTrackingReqPlanTaskIssueMapping(mappingEntity);
 
                             var logs = await _testCaseExecutionLogExecutionLogService
                                 .GetTestCaseExecutionLogsByMappingId(mapping.Id);
 
                             foreach (var log in logs)
                             {
-                                _testCaseExecutionLogExecutionLogService.DeleteTestCaseExecutionLog(log);
+                                _testCaseExecutionLogExecutionLogService
+                                    .DeleteTestCaseExecutionLog(log);
                             }
                         }
 
                         // Existing selected test cases
-                        foreach (var mapping in existingMappings.Where(x => incomingIds.Contains(x.TestCaseId)))
+                        foreach (var mapping in existingMappings)
                         {
-                            var logs = await _testCaseExecutionLogExecutionLogService
-                                .GetTestCaseExecutionLogsByMappingId(mapping.Id);
+                            if (incomingTestCases.Any(x => x.RefId == mapping.TestCaseId && x.Deleted))
+                                continue;
 
-                            var latestLog = logs
+                            var latestLog = (await _testCaseExecutionLogExecutionLogService
+                                .GetTestCaseExecutionLogsByMappingId(mapping.Id))
                                 .OrderByDescending(x => x.CreatedOnUtc)
                                 .FirstOrDefault();
 
@@ -573,7 +578,8 @@ namespace Vsky.Api.Controllers
                                 latestLog.UpdatedById = LoggedUserId;
                                 latestLog.UpdatedOnUtc = GetDateTime;
 
-                                _testCaseExecutionLogExecutionLogService.UpdateTestCaseExecutionLog(latestLog);
+                                _testCaseExecutionLogExecutionLogService
+                                    .UpdateTestCaseExecutionLog(latestLog);
                             }
                         }
                     }

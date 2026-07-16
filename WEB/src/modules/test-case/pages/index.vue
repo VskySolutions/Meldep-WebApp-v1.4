@@ -328,7 +328,6 @@ import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
 import { useRoute } from "vue-router";
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
-// import { getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
 
 import testcasesService from "modules/test-case/testCase.service";
 import manageDropdownsService from "modules/dropdown/dropdown.service";
@@ -394,22 +393,6 @@ const { toDate } = useFilters();
 const activeEdit = ref({ rowId: null, field: null });
 
 const currentSiteId = computed(() => user?.siteId || null);
-// local storage values
-// const localStorageKey = "Test Case";
-// const filterLocalStorage = getLocalStorage(localStorageKey);
-// const projectIds = filterLocalStorage ? filterLocalStorage.projectIds : [];
-// const planIds = filterLocalStorage ? filterLocalStorage.planIds : [];
-
-// const search = ref({
-//   searchText: getFilterValue("searchText", ""),
-//   testedBys: getFilterValue("testedBys", []),
-//   testCaseNumber: getFilterValue("testCaseNumber", 0),
-//   statusIds: getFilterValue("statusIds", []),
-//   fromDate: getFilterValue("fromDate", ""),
-//   toDate: getFilterValue("toDate", toDate),
-//   projectIds: route.query.projectId && route.query.projectId !== "" ? (Array.isArray(route.query.projectId) ? route.query.projectId : [route.query.projectId]) : projectIds,
-//   planIds: route.query.planId && route.query.planId !== "" ? (Array.isArray(route.query.planId) ? route.query.planId : [route.query.planId]) : planIds
-// });
 
 // Table variables
 const rows = ref([]);

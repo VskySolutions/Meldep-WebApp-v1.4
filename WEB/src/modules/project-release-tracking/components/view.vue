@@ -1,6 +1,6 @@
 <template>
   <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" full-height persistent position="right" @hide="onDialogHide">
-    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 50vw !important;max-width: 50vw;">
+    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 65vw !important;max-width: 65vw;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader justify-between">
         <div class="text-h2 text-white q-mr-lg">{{ model.name }}</div>
         <q-btn v-close-popup icon="o_close" class="close" color="white" flat round dense />
@@ -10,7 +10,13 @@
         <div class="q-gutter-y-md">
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator inline-label mobile-arrows>
             <q-tab name="1_tab" label="Release Info." class="q-px-lg q-mr-md" />
-            <q-tab name="2_tab" label="Release Tracking Items" class="q-px-lg" :disable="disableTab" />
+            <q-tab name="2_tab" label="Release Tracking Items" class="q-px-lg" />
+            <q-tab name="3_tab" label="Retest Test Cases" class="q-px-lg" />
+            <q-tab
+              name="4_tab"
+              label="Test Case Execution"
+              :disable="disableTab"
+            />
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated>
@@ -92,64 +98,36 @@
               </fieldset>
             </q-tab-panel>
             <q-tab-panel name="2_tab">
-              <div>
-                <div class="q-mb-sm q-gutter-sm flex justify-end">
-                  <q-input
-                    v-model="filterItems" outlined class="bg-white q-mr-sm search-box" debounce="300" placeholder="Search"
-                    dense clearable
-                  >
-                    <template #prepend>
-                      <q-icon name="o_search" />
-                    </template>
-                  </q-input>
-                </div>
-                <q-table
-                  ref="tableRef"
-                  v-model:pagination="pagination"
-                  bordered
-                  class="no-shadow"
-                  virtual-scroll
-                  :loading="loading"
-                  :rows="filteredRows"
-                  :columns="columns"
-                  row-key="id"
-                  separator="cell"
-                  binary-state-sort
-                  :rows-per-page-options="[20, 50, 100, 200, 500]"
-                >
-                  <template #header="props">
-                    <q-tr :props="props" class="bg-primary text-white">
-                      <q-th
-                        v-for="col in props.cols"
-                        :key="col.name"
-                        :props="props"
-                      >
-                        {{ col.label }}
-                      </q-th>
-                    </q-tr>
-                  </template>
-                  <template #body="props">
-                    <q-tr>
-                      <q-td style="width: 12%;">{{ props.row.type }}</q-td>
-                      <q-td class="text-right" style="width: 8%;">#{{ props.row.number }}</q-td>
-                      <q-td class="ellipsis-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 60%;">
-                        <div>
-                          {{ isExpanded(props.row.id) ? props.row.name : truncateText(props.row.name) }}
+              <selectionViewTab
+                title="Deployment Items"
+                :rows="rows.filter(x => x.type?.toLowerCase() !== 'testcase')"
+                :loading="loading"
+                :search="filterItems"
+                @update:search="filterItems = $event"
+                :show-type="true"
+              />
+            </q-tab-panel>
 
-                          <span
-                            v-if="props.row.name?.length > 80"
-                            class="text-primary cursor-pointer q-ml-xs"
-                            @click="toggleExpand(props.row.id)"
-                          >
-                            {{ isExpanded(props.row.id) ? 'less' : '...more' }}
-                          </span>
-                        </div>
-                      </q-td>
-                      <q-td style="width: 10%;">{{ props.row.date }}</q-td>
-                    </q-tr>
-                  </template>
-                </q-table>
-              </div>
+            <q-tab-panel name="3_tab">
+              <selectionViewTab
+                title="Test Cases for Retesting"
+                :rows="rows.filter(x => x.type?.toLowerCase() === 'testcase')"
+                :loading="loading"
+                :search="filterItems"
+                @update:search="filterItems = $event"
+                :show-type="false"
+              />
+            </q-tab-panel>
+            <q-tab-panel name="4_tab">
+              <testCaseReleaseHistoryTable
+                :rows="historyRows"
+                :loading="loading"
+                :show-release-version="false"
+                :search="search"
+                :statusEditable="false"
+                @update:search="search = $event"
+                @refresh="loadHistory"
+              />
             </q-tab-panel>
           </q-tab-panels>
         </div>
@@ -165,6 +143,10 @@ import { ref, onMounted, watch, computed } from "vue";
 import _ from "lodash";
 import useFilters from "composables/useFilters";
 import releaseTrackingService from "modules/project-release-tracking/projectReleaseTracking.service";
+import testCaseService from "src/modules/test-case/testCase.service";
+
+import selectionViewTab from "modules/project-release-tracking/components/_selectionViewTab.vue";
+import testCaseReleaseHistoryTable from "modules/test-case/components/_testCaseReleaseHistoryTable.vue";
 
 // Define emits
 defineEmits([...useDialogPluginComponent.emits]);
@@ -177,6 +159,7 @@ const props = defineProps({ id: { type: String, default: "" } });
 const loading = ref(true);
 const { toDate } = useFilters();
 const filterItems = ref("");
+const search = ref("");
 
 // Define model values
 const model = ref({
@@ -221,30 +204,7 @@ const model = ref({
 
 const releaseTrackingId = props.id;
 const tab = ref("1_tab");
-const expandedRows = ref(new Set());
-
-const toggleExpand = (id) => {
-  if (expandedRows.value.has(id)) {
-    expandedRows.value.delete(id);
-  } else {
-    expandedRows.value.add(id);
-  }
-};
-
-const isExpanded = (id) => {
-  return expandedRows.value.has(id);
-};
 const rows = ref([]);
-const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1 });
-const columns = ref([
-  { name: "type", label: "Type", field: "type", align: "left" },
-  { name: "number", label: "Number", field: "number", align: "left" },
-  { name: "name", label: "Name", field: "name", align: "left" },
-  { name: "date", label: "Date", field: "date", align: "left" }
-]);
-
-const truncateText = (text, length = 80) =>
-  text?.length > length ? text.slice(0, length) + "..." : text || "";
 
 // get release tracking details
 const getReleaseTrackingInDetailsById = () => {
@@ -275,21 +235,42 @@ const loadMappedItems = async () => {
   }
 };
 
-const filteredRows = computed(() => {
-  if (!filterItems.value) return rows.value;
+const testCaseIds = computed(() =>
+  rows.value
+    .filter(x => x.type?.toLowerCase() === "testcase")
+    .map(x => x.id)
+);
 
-  const search = filterItems.value.toLowerCase();
+const historyRows = ref([]);
 
-  return rows.value.filter(row =>
-    row.type?.toLowerCase().includes(search) ||
-    row.name?.toLowerCase().includes(search) ||
-    row.number?.toString().includes(search) ||
-    row.date?.toLowerCase().includes(search)
-  );
-});
+const loadHistory = async () => {
+  if (!testCaseIds.value.length) {
+    historyRows.value = [];
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    historyRows.value =
+      await testCaseService.getReleaseWiseTestCaseHistoryByTestCaseIds(
+        testCaseIds.value,
+        model.value.versionNumber
+      );
+  } finally {
+    loading.value = false;
+  }
+};
 
 watch(() => tab.value, async (newTab) => {
-  if (newTab !== "2_tab") return;
+  if (newTab === "4_tab") {
+    if (releaseTrackingId) {
+      await loadMappedItems();
+    }
+    await loadHistory();
+  }
+
+  if (newTab === "1_tab") return;
 
   if (releaseTrackingId) {
     await loadMappedItems();
