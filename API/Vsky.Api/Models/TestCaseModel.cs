@@ -35,6 +35,7 @@ namespace Vsky.Api.Models
         public virtual Employee Employee { get; set; }
 
         public virtual ApplicationUser CreatedByUser { get; set; }
+        public virtual ApplicationUser UpdatedBy { get; set; }
         public virtual Employee TestedByEmployee { get; set; }
         public virtual Project Project { get; set; }
     }

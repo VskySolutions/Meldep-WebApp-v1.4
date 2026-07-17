@@ -19,6 +19,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
             List<string> testerIds,
             List<string> releaseTypeIds,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,

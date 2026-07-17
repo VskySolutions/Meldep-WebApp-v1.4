@@ -38,6 +38,7 @@ public class TestCase : BaseEntity
     public virtual DropDown Status { get; set; }
     public virtual Employee Employee { get; set; }
     public virtual ApplicationUser CreatedByUser { get; set; }
+    public virtual ApplicationUser UpdatedBy { get; set; }
     public virtual Employee TestedByEmployee { get; set; }
     public virtual Project Project { get; set; }
     public virtual ICollection<ProjectReleaseTrackingReqPlanTaskIssueMapping> ProjectReleaseTrackingReqPlanTaskIssueMappings { get; set; } = new List<ProjectReleaseTrackingReqPlanTaskIssueMapping>();

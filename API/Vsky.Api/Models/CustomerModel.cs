@@ -17,6 +17,8 @@ namespace Vsky.Api.Models
         public string ParentCustomerName { get; set; }
         public string AssignedToId { get; set; }
         public string AssignedToName { get; set; }
+        public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
         public int CustomerNoteCount { get; set; }
         public DateTime? UpdatedOnUtc { get; set; }        
         public DateTime? AssignedDate { get; set; }

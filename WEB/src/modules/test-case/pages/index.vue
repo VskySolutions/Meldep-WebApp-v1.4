@@ -150,177 +150,275 @@
                 </q-card>
               </q-menu>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Create Test Case" no-caps class="text-primary btnRounded" @click="onTestCaseAdd(refreshTestCaseList)" />
-                <q-btn v-if="search.projectIds?.length > 0 && search.planIds?.length > 0" icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.back()" />
-                <q-btn v-if="role === 'admin'" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
+                <q-btn
+                  icon="o_add"
+                  outline
+                  label="Create Test Case"
+                  no-caps
+                  class="text-primary btnRounded"
+                  @click="onTestCaseAdd(refreshTestCaseList)"
+                />
+                <q-btn
+                  v-if="role === 'admin'"
+                  icon="o_playlist_add"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-sm"
+                  @click="showManageDropdownOptions = !showManageDropdownOptions"
+                >
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
+                <q-btn
+                  v-if="search.projectIds?.length > 0 && search.planIds?.length > 0"
+                  icon="o_chevron_left"
+                  outline
+                  label="Back"
+                  no-caps
+                  class="text-primary btnRounded q-ml-sm"
+                  @click="$router.back()"
+                />
               </div>
             </div>
           </div>
         </div>
       </q-card-section>
       <q-separator />
-
-      <q-table
-        ref="tableRef"
-        v-model:pagination="pagination"
-        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-        :loading="loading"
-        :rows="rows"
-        :columns="columns"
-        row-key="id"
-        separator="cell"
-        no-data-label="No data available"
-        binary-state-sort
-        :rows-per-page-options="[20, 50, 100, 200, 500]"
-        @request="getAllTestCase"
-      >
-        <template #loading>
-          <q-inner-loading showing color="primary">
-            <q-spinner-ios size="40px" class="q-mt-xl" />
-          </q-inner-loading>
-        </template>
-        <template #header="props">
-          <q-tr :props="props" class="bg-primary text-white">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-            <q-th auto-width class="text-center">Actions</q-th>
-          </q-tr>
-        </template>
-        <template #body="props">
-          <q-tr
-            :props="props"
-            :class="highlightedId == props.row.id ? 'highlight' : ''"
-            :set="(preProjectName = null, preTestPlanName = null, resetTracking())"
-          >
-            <q-td auto-width class="text-center hidden">
-              <q-icon
-                :name="isExpanded(props.row.id) ? '-' : '+'"
-                class="cursor-pointer custom-plus-minus-icon"
-                @click="toggleExpand(props.row.id)"
+      <div class="table-scroll-container">
+        <q-table
+          ref="tableRef"
+          v-model:pagination="pagination"
+          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+          :loading="loading"
+          :rows="rows"
+          :columns="computedColumns"
+          row-key="id"
+          separator="cell"
+          no-data-label="No data available"
+          binary-state-sort
+          :rows-per-page-options="[20, 50, 100, 200, 500]"
+          @request="getAllTestCase"
+        >
+          <template #loading>
+            <q-inner-loading showing color="primary">
+              <q-spinner-ios size="40px" class="q-mt-xl" />
+            </q-inner-loading>
+          </template>
+          <template #header="props">
+            <q-tr :props="props" class="bg-primary text-white">
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
+                @click="!isResizing && col.sortable"
               >
-                <q-tooltip>{{ isExpanded(props.row.id) ? 'Collapse' : 'Expand' }}</q-tooltip>
-              </q-icon>
-            </q-td>
-            <q-td style="width: 3%;">#{{ props.row.testCaseNumber }}</q-td>
-            <!-- <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;"><span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name">{{ props.row.project.name }}</span></q-td> -->
-            <q-td style="width: 15%; white-space: normal;" class="hoverable-cell">
-              <div class="row no-wrap items-center justify-between">
-                <span style="flex: 1; word-break: break-word; white-space: normal;">
-                  <span
-                    v-if="preProjectName !== props.row.project.name"
-                    :set="preProjectName = props.row.project.name"
-                    @click="onProjectView(props.row.project.id)"
-                  >{{ props.row.project.name }}
-                  </span>
-                </span>
-                <div
-                  v-if="shouldShowIcons(props.row.project.name, index)"
-                  class="row items-center q-gutter-sm q-ml-sm"
-                  style="flex-shrink: 0;"
+                {{ col.label }}
+                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+              </q-th>
+              <q-th auto-width class="text-center">Actions</q-th>
+            </q-tr>
+          </template>
+          <template #body="props">
+            <q-tr
+              :props="props"
+              :class="highlightedId == props.row.id ? 'highlight' : ''"
+              :set="(preProjectName = null, preTestPlanName = null, resetTracking())"
+            >
+              <q-td auto-width class="text-center hidden">
+                <q-icon
+                  :name="isExpanded(props.row.id) ? '-' : '+'"
+                  class="cursor-pointer custom-plus-minus-icon"
+                  @click="toggleExpand(props.row.id)"
                 >
-                  <q-icon
-                    name="o_radio_button_checked" size="xs"
-                    class="cursor-pointer"
-                    @click="setActiveRowIdInLocalStorage(props.row.id);
-                            $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                  <q-tooltip>{{ isExpanded(props.row.id) ? 'Collapse' : 'Expand' }}</q-tooltip>
+                </q-icon>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('testCaseNumber')">
+                #{{ props.row.testCaseNumber }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
+                <div class="row no-wrap items-center justify-between">
+                  <span style="flex: 1; word-break: break-word; white-space: normal;">
+                    <span
+                      v-if="preProjectName !== props.row.project.name"
+                      :set="preProjectName = props.row.project.name"
+                      @click="onProjectView(props.row.project.id)"
+                    >{{ props.row.project.name }}
+                    </span>
+                  </span>
+                  <div
+                    v-if="shouldShowIcons(props.row.project.name, index)"
+                    class="row items-center q-gutter-sm q-ml-sm"
+                    style="flex-shrink: 0;"
                   >
-                    <q-tooltip>Project Center</q-tooltip>
-                  </q-icon>
-                  <q-icon
-                    v-if="props.row.isEditable"
-                    name="o_developer_board" size="xs"
-                    class="cursor-pointer"
-                    @click="setActiveRowIdInLocalStorage(props.row.id);
-                            $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
-                  >
-                    <q-tooltip>Work Board</q-tooltip>
-                  </q-icon>
+                    <q-icon
+                      name="o_radio_button_checked" size="xs"
+                      class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(props.row.id);
+                              $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                    >
+                      <q-tooltip>Project Center</q-tooltip>
+                    </q-icon>
+                    <q-icon
+                      v-if="props.row.isEditable"
+                      name="o_developer_board" size="xs"
+                      class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(props.row.id);
+                              $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
+                    >
+                      <q-tooltip>Work Board</q-tooltip>
+                    </q-icon>
+                  </div>
                 </div>
-              </div>
-            </q-td>
-            <q-td class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">
-              <span
-                v-if="preTestPlanName !== props.row.testPlan.name"
-                :set="preTestPlanName = props.row.testPlan.name"
-                @click="onTestPlanView(props.row.testPlan.id)"
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('testPlan.name')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                <span
+                  v-if="preTestPlanName !== props.row.testPlan.name"
+                  :set="preTestPlanName = props.row.testPlan.name"
+                  @click="onTestPlanView(props.row.testPlan.id)"
+                >
+                  {{ props.row.testPlan.name }}
+                </span>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.name }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('status.dropDownValue')"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : props.row.isEditable }"
+                @click="activeEdit = { rowId: props.row.id, field: 'status' }"
               >
-                {{ props.row.testPlan.name }}
-              </span>
-            </q-td>
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 25%;">
-              {{ props.row.name }}
+                <quickEditSingleSelect
+                  field="status"
+                  :row-id="props.row.id"
+                  :value="props.row.status.id"
+                  :display-value="props.row.status.dropDownValue"
+                  :editable="props.row.isEditable"
+                  :options="testCaseStatusDropdownSingleSelect.list.value"
+                  :active-edit="activeEdit"
+                  :show-history="true"
+                  :loading="updatingRow.status === props.row.id"
+                  @cancel="activeEdit = { rowId: null, field: null }"
+                  @submit="({ rowId, value }) => onSubmitTestCaseStatus(rowId, value, props.row.projectReleaseTrackingReqPlanTaskIssueMappingId, refreshTestCaseList)"
+                  @history="() => onTestCaseStatusChangeLog(null, props.row.id, props.row.projectReleaseTrackingReqPlanTaskIssueMappingId, props.row.name, 'Test Case Status')"
+                />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('testedByEmployee.person.firstName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.testedByEmployee.person.fullName }}
+              </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('createdByUser.person.firstName')"
+              class="common-q-td"
+            >
+              {{ props.row.createdByUser.person.fullName }}
             </q-td>
             <q-td
+              v-if="selectedColumnNames.includes('createdOnUtc')"
               class="common-q-td"
-              :class="{ 'hoverable-cell' : props.row.isEditable }"
-              @click="activeEdit = { rowId: props.row.id, field: 'status' }"
-              style="width: 5%;"
             >
-              <quickEditSingleSelect
-                field="status"
-                :row-id="props.row.id"
-                :value="props.row.status.id"
-                :display-value="props.row.status.dropDownValue"
-                :editable="props.row.isEditable"
-                :options="testCaseStatusDropdownSingleSelect.list.value"
-                :active-edit="activeEdit"
-                :show-history="true"
-                :loading="updatingRow.status === props.row.id"
-                @cancel="activeEdit = { rowId: null, field: null }"
-                @submit="({ rowId, value }) => onSubmitTestCaseStatus(rowId, value, props.row.projectReleaseTrackingReqPlanTaskIssueMappingId, refreshTestCaseList)"
-                @history="() => onTestCaseStatusChangeLog(null, props.row.id, props.row.projectReleaseTrackingReqPlanTaskIssueMappingId, props.row.name, 'Test Case Status')"
-              />
-            </q-td>
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 8%;">
-              {{ props.row.testedByEmployee.person.fullName }}
-            </q-td>
-            <q-td class="text-center" style="width: 5%;">
               {{ props.row.createdOnUtc }}
             </q-td>
-            <q-td style="width: 5%;" class="text-center actions">
-              <q-icon
-                name="o_visibility"
-                class="cursor-pointer q-mr-sm"
-                size="xs"
-                @click="onTestCaseView(props.row.id, props.row.testPlan.id)"
-              >
-                <q-tooltip>View</q-tooltip>
-              </q-icon>
-              <q-icon
-                name="o_manage_history"
-                class="cursor-pointer q-mr-sm"
-                size="xs"
-                @click="onTestCaseReleaseHistory(props.row.id)"
-              >
-                <q-tooltip>History</q-tooltip>
-              </q-icon>
-              <q-icon
-                v-if="props.row.isEditable"
-                name="o_edit"
-                class="cursor-pointer q-mr-sm"
-                size="xs"
-                @click="onTestCaseEdit(props.row.id, refreshTestCaseList)"
-              >
-                <q-tooltip>Edit</q-tooltip>
-              </q-icon>
-              <q-icon
-                v-if="props.row.isEditable"
-                name="o_delete_outline"
-                class="cursor-pointer"
-                color="negative"
-                size="xs"
-                @click="onSubmitTestCaseDelete(props.row.id, props.row.name, refreshTestCaseList)"
-              >
-                <q-tooltip>Delete</q-tooltip>
-              </q-icon>
+            <q-td
+              v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedBy.person.fullName }}
             </q-td>
-          </q-tr>
-          <q-separator />
-        </template>
-      </q-table>
+            <q-td
+              v-if="selectedColumnNames.includes('updatedOnUtc')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedOnUtc }}
+            </q-td>
+              <q-td class="text-center actions">
+                <q-icon
+                  name="o_visibility"
+                  class="cursor-pointer q-mr-sm"
+                  size="xs"
+                  @click="onTestCaseView(props.row.id, props.row.testPlan.id)"
+                >
+                  <q-tooltip>View</q-tooltip>
+                </q-icon>
+                <q-icon
+                  name="o_manage_history"
+                  class="cursor-pointer q-mr-sm"
+                  size="xs"
+                  @click="onTestCaseReleaseHistory(props.row.id)"
+                >
+                  <q-tooltip>History</q-tooltip>
+                </q-icon>
+                <q-icon
+                  v-if="props.row.isEditable"
+                  name="o_edit"
+                  class="cursor-pointer q-mr-sm"
+                  size="xs"
+                  @click="onTestCaseEdit(props.row.id, refreshTestCaseList)"
+                >
+                  <q-tooltip>Edit</q-tooltip>
+                </q-icon>
+                <q-icon
+                  v-if="props.row.isEditable"
+                  name="o_delete_outline"
+                  class="cursor-pointer"
+                  color="negative"
+                  size="xs"
+                  @click="onSubmitTestCaseDelete(props.row.id, props.row.name, refreshTestCaseList)"
+                >
+                  <q-tooltip>Delete</q-tooltip>
+                </q-icon>
+              </q-td>
+            </q-tr>
+            <q-separator />
+          </template>
+        </q-table>
+      </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="columns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 // Import libraries
@@ -335,6 +433,8 @@ import manageDropdownsService from "modules/dropdown/dropdown.service";
 // SOP Change :- Shared DataTable Views
 import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSelect.vue";
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
 
 // SOP Change :- Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
@@ -344,6 +444,12 @@ import projectModule from "src/modules/project/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
 import testPlanModule from "src/modules/test-plan/utils/dropdowns.js";
 import testCaseModule from "src/modules/test-case/utils/dropdowns.js";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 // SOP Change :- Shared Project Dialogs
 import {
@@ -374,9 +480,6 @@ import {
   updatingRow
 } from "src/modules/test-case/utils/actions.js";
 
-// SOP Change :- Shared Scripts DataTable Features
-import useSiteTableState from "composables/datatable/useSiteTableState.js";
-
 // Common variables
 const expandedRows = ref([]);
 const loading = ref(true);
@@ -389,29 +492,31 @@ const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 const dropdownTypes = ref([]);
 const showManageDropdownOptions = ref(false);
+const showSortDialog = ref(false);
 const { toDate } = useFilters();
 const activeEdit = ref({ rowId: null, field: null });
-
 const currentSiteId = computed(() => user?.siteId || null);
 
 // Table variables
 const rows = ref([]);
 const shownProjects = new Set();
 const columns = ref([
-  { name: "testCaseNumber", label: "Id", field: "testCaseNumber", align: "left", sortable: true },
-  { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true },
-  { name: "testPlan.name", label: "Test Plan Name", field: "testPlan.name", align: "left", sortable: true },
-  { name: "name", label: "Test Case Name", field: "name", align: "left", sortable: true },
-  { name: "status.dropDownValue", label: "Test Case Status", field: "status.dropDownValue", align: "left", sortable: true },
-  { name: "testedByEmployee.person.firstName", label: "Tested By", field: "testedByEmployee.person.firstName", align: "left", sortable: true },
-  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "center", sortable: true }
+  { name: "testCaseNumber", label: "Id", field: "testCaseNumber", align: "left", sortable: true, default: true },
+  { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
+  { name: "testPlan.name", label: "Test Plan Name", field: "testPlan.name", align: "left", sortable: true, default: true },
+  { name: "name", label: "Test Case Name", field: "name", align: "left", sortable: true, default: true },
+  { name: "status.dropDownValue", label: "Test Case Status", field: "status.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "testedByEmployee.person.firstName", label: "Tested By", field: "testedByEmployee.person.firstName", align: "left", sortable: true, default: true },
+  { name: "createdByUser.person.firstName", label: "Created By", field: "createdByUser.person.firstName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "center", sortable: true, default: true },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 
-const getAllTestCase = async ({ pagination: pageData }) => {
+const getAllTestCase = async ({ pagination: p }) => {
   try {
     loading.value = true;
-
-    const { page, rowsPerPage, sortBy, descending } = pageData;
+    const { page, rowsPerPage, sortBy, descending } = p;
 
     search.value.fromDate = search.value.fromDate
       ? toDate(search.value.fromDate)
@@ -429,13 +534,29 @@ const getAllTestCase = async ({ pagination: pageData }) => {
 
     search.value.testCaseNumber = number || "0";
 
+    const sorts = {};
+    const multi = multiSort.value;
+    for (let i = 0; i < multi.length; i++) {
+      const s = multi[i];
+      if (s.column && s.direction) {
+        sorts[s.column] = s.direction;
+      }
+    }
+
     const payload = {
       page,
       pageSize: rowsPerPage,
       sortBy,
       descending,
+      sorts,
       ...search.value
     };
+    saveDataTableState({
+      search: search.value,
+      pagination: p,
+      activeRowId: activeRowId.value,
+      sorts
+    });
 
     const resp = await testcasesService.getAllTestCase(payload);
 
@@ -500,13 +621,24 @@ const {
   search,
   pagination,
   activeRowId,
-  saveDataTableState
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
 } = useSiteTableState({
   storageKey: "test-Case-Index",
   siteId: currentSiteId,
 
   defaultSearch,
-  defaultPagination
+  defaultPagination,
+  defaultSorts: {},
+  defaultResizableWidth: {},
+
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
 });
 
 const highlightedId = computed(() => {
@@ -600,6 +732,54 @@ const onAdvanceClear = () => {
   });
   onAdvanceSearch();
 };
+
+const lsSorts = sorts.value || null;
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshTestCaseList();
+  }
+});
 
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions
@@ -702,6 +882,23 @@ watch(() => search.value.projectIds, async (newValue, oldValue) => {
   await testPlansByProjectIdForDropdown.load(search.value.projectIds);
 }, { immediate: true });
 
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
+});
+
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleDocumentClick);
 });
@@ -722,3 +919,8 @@ onMounted(() => {
 });
 
 </script>
+<style scoped>
+.Custom-DataTable {
+  min-width: max-content;
+}
+</style>

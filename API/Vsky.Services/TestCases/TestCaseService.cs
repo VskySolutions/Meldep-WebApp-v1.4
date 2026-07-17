@@ -9,6 +9,7 @@ using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.ApplicationUserRoles;
+using Vsky.Services.Common;
 
 namespace Vsky.Services.TestCases
 {
@@ -20,6 +21,7 @@ namespace Vsky.Services.TestCases
         private readonly IRepository<TestCase> _testCaseRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
@@ -29,7 +31,8 @@ namespace Vsky.Services.TestCases
             IRepository<TestCaseExecutionLog> testCaseExecutionLogRepository,
             IRepository<TestCase> testCaseRepository,
             UserManager<ApplicationUser> userManager,
-            IApplicationUserRoleService applicationUserRoleService
+            IApplicationUserRoleService applicationUserRoleService,
+            ICommonService commonService
         )
         {
             _testPlanRepository = testPlanRepository;
@@ -37,6 +40,7 @@ namespace Vsky.Services.TestCases
             _testCaseRepository = testCaseRepository;
             _userManager = userManager;
             _applicationUserRoleService = applicationUserRoleService;
+            _commonService = commonService;
         }
 
         #endregion
@@ -67,6 +71,7 @@ namespace Vsky.Services.TestCases
             DateTime? fromDate,
             DateTime? toDate,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,
@@ -159,6 +164,12 @@ namespace Vsky.Services.TestCases
                 );
             }
 
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
+
             query = query.Select(x => new TestCase
             {
                 Id = x.Id,
@@ -198,6 +209,22 @@ namespace Vsky.Services.TestCases
                     {
                         Id = x.TestedByEmployee.Person.Id,
                         FullName = x.TestedByEmployee.Person.FirstName + " " + x.TestedByEmployee.Person.LastName,
+                    }
+                },
+                CreatedByUser = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedByUser.PersonId,
+                        FullName = x.CreatedByUser.Person.FirstName + " " + x.CreatedByUser.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
                     }
                 },
                 Project = new Project

@@ -22,6 +22,7 @@ namespace Vsky.Services.TestCases
             DateTime? fromDate,
             DateTime? toDate,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,

@@ -70,7 +70,21 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
 
                 // Fetch the list of customers based on search criteria
-                var list = _companyClientsService.GetAllCustomers(SiteId, searchModel.SearchText, searchModel.CustomerTypeIds, searchModel.CustomerIds, searchModel.EmployeeIds, searchModel.EmailAddress, searchModel.PhoneNumber, searchModel.ParentCustomerIds, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var list = _companyClientsService.GetAllCustomers(
+                    SiteId, 
+                    searchModel.SearchText, 
+                    searchModel.CustomerTypeIds,
+                    searchModel.CustomerIds,
+                    searchModel.EmployeeIds, 
+                    searchModel.EmailAddress,
+                    searchModel.PhoneNumber, 
+                    searchModel.ParentCustomerIds, 
+                    searchModel.SortBy,
+                    searchModel.Sorts,
+                    searchModel.Descending, 
+                    searchModel.Page,
+                    searchModel.PageSize
+                );
 
                 List<CustomerModel> customerList = new List<CustomerModel>();
                 foreach (var item in list)
@@ -86,12 +100,15 @@ namespace Vsky.Api.Controllers
                         PhoneNumber = item.Company?.PhoneNumber ?? item.Person?.PrimaryPhoneNumber ?? string.Empty,
                         CustomerType = item.CustomerType?.DropDownValue ?? string.Empty,
                         CustomerTypeId = item.CustomerType?.Id ?? string.Empty,
+                        CreatedOnUtc = item.CreatedOnUtc,
                         UpdatedOnUtc = item.UpdatedOnUtc,
                         AssignedDate = item.AssignedDate,
                         AssignedToId = item.AssignedToId,
                         AssignedToName = item.AssignedTo?.Person?.FirstName + " " + item.AssignedTo?.Person?.LastName ?? string.Empty,
                         ParentCustomerName = item.ParentCustomerName,
-                        CustomerNoteCount = item.CustomerNoteCount
+                        CustomerNoteCount = item.CustomerNoteCount,
+                        CreatedBy = item.CreatedBy.Person.FirstName + " " + item.CreatedBy.Person.LastName,
+                        UpdatedBy = item.UpdatedBy.Person.FirstName + " " + item.UpdatedBy.Person.LastName
                     };
 
                     customerList.Add(customerModel);

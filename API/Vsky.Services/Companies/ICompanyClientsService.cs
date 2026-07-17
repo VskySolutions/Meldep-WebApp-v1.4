@@ -18,6 +18,7 @@ namespace Vsky.Services.Companies
         //IPagedList<CompanyClients> GetAllCustomers(string SiteId, string SearchText, string customerTypeId, string companyId, string employeeId, string sortBy,
         //    bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
         IPagedList<CompanyClients> GetAllCustomers(string SiteId, string SearchText, List<string> customerTypeIds, List<string> customerIds, List<string> employeeIds, string emailAddress, string phoneNumber, List<string> parentCustomerIds, string sortBy,
+            Dictionary<string, string> sorts,
            bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
 
         Task<IList<CompanyClients>> GetAllCompanyClients(string companyId);

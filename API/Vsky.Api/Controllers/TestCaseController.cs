@@ -92,6 +92,7 @@ namespace Vsky.Api.Controllers
                     searchModel.FromDate,
                     searchModel.ToDate,
                     searchModel.SortBy,
+                    searchModel.Sorts,
                     searchModel.Descending,
                     searchModel.Page,
                     searchModel.PageSize

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
-using System.Linq.Dynamic.Core;
+using Vsky.Services.Common;
 using Vsky.Services.Sites;
 
 namespace Vsky.Services.Companies
@@ -17,10 +18,16 @@ namespace Vsky.Services.Companies
         #region Services Initializations
         private readonly IRepository<CompanyClients> _companyClientsRepository;
         private readonly IRepository<Notes> _notesRepository;
-        public CompanyClientsService(IRepository<CompanyClients> companyClientsRepository, IRepository<Notes> notesRepository)
+        private readonly ICommonService _commonService;
+        public CompanyClientsService(
+            IRepository<CompanyClients> companyClientsRepository, 
+            IRepository<Notes> notesRepository,
+            ICommonService commonService
+        )
         {
             _companyClientsRepository = companyClientsRepository;
             _notesRepository = notesRepository;
+            _commonService = commonService;
         }
 
         #endregion
@@ -252,8 +259,22 @@ namespace Vsky.Services.Companies
         #endregion
 
         #region GetAllCustomers
-        public IPagedList<CompanyClients> GetAllCustomers(string SiteId, string SearchText, List<string> customerTypeIds, List<string> customerIds, List<string> employeeIds, string emailAddress, string phoneNumber, List<string> parentCustomerIds, string sortBy,
-            bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public IPagedList<CompanyClients> GetAllCustomers(
+            string SiteId, 
+            string SearchText,
+            List<string> customerTypeIds,
+            List<string> customerIds,
+            List<string> employeeIds, 
+            string emailAddress,
+            string phoneNumber,
+            List<string> parentCustomerIds,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending, 
+            int page = 1,
+            int pageSize = int.MaxValue, 
+            bool lookup = false
+        )
         {
             //var query = _companyClientsRepository.TableNoTracking.Where(x => !x.Deleted && x.Company.SiteId == SiteId);
 
@@ -264,6 +285,8 @@ namespace Vsky.Services.Companies
                 .Include(x => x.Company)
                 .Include(x => x.Company).ThenInclude(x => x.Employee)
                 .Include(x => x.Company).ThenInclude(x => x.Employee).ThenInclude(x => x.Person)
+                .Include(x => x.CreatedBy).ThenInclude(x => x.Person)
+                .Include(x => x.UpdatedBy).ThenInclude(x => x.Person)
                 .AsQueryable();
             
             // custom filter
@@ -320,6 +343,12 @@ namespace Vsky.Services.Companies
             else
             {
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
             }
 
             //query = query.Select(x => new CompanyClients

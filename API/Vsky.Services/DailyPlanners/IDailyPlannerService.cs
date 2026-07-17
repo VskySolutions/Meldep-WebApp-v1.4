@@ -10,7 +10,22 @@ namespace Vsky.Services.DailyPlanners
     public interface IDailyPlannerService
     {
         #region GetAllDailyPlanner
-        IPagedList<DailyPlanner> GetAllDailyPlanner(string SiteId, string createdBy, string SearchText, string employeeId, string projectId, DateTime? activityDate, DateTime? fromDate, DateTime? toDate, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        IPagedList<DailyPlanner> GetAllDailyPlanner(
+            string SiteId, 
+            string createdBy,
+            string SearchText, 
+            string employeeId,
+            string projectId,
+            DateTime? activityDate,
+            DateTime? fromDate,
+            DateTime? toDate, 
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending, 
+            int page = 1, 
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
         #endregion
 
         #region GetDailyPlannerDetailsById

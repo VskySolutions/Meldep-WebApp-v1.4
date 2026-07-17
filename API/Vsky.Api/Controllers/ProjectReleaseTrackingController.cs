@@ -86,6 +86,7 @@ namespace Vsky.Api.Controllers
                     searchModel.TesterIds,
                     searchModel.ReleaseTypeIds,
                     searchModel.SortBy,
+                    searchModel.Sorts,
                     searchModel.Descending,
                     searchModel.Page,
                     searchModel.PageSize);

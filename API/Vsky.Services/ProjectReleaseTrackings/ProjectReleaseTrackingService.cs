@@ -10,6 +10,7 @@ using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.ApplicationUserRoles;
+using Vsky.Services.Common;
 
 namespace Vsky.Services.ProjectReleaseTrackings
 {
@@ -19,18 +20,21 @@ namespace Vsky.Services.ProjectReleaseTrackings
         private readonly IRepository<ProjectReleaseTracking> _projectReleaseTrackingRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
         public ProjectReleaseTrackingService(
             IRepository<ProjectReleaseTracking> projectReleaseTrackingRepository,
             UserManager<ApplicationUser> userManager,
-            IApplicationUserRoleService applicationUserRoleService
+            IApplicationUserRoleService applicationUserRoleService,
+            ICommonService commonService
         )
         {
             _projectReleaseTrackingRepository = projectReleaseTrackingRepository;
             _userManager = userManager;
             _applicationUserRoleService = applicationUserRoleService;
+            _commonService = commonService;
         }
         #endregion
 
@@ -55,6 +59,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
             List<string> testerIds,
             List<string> releaseTypeIds,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,
@@ -112,7 +117,15 @@ namespace Vsky.Services.ProjectReleaseTrackings
                 }
             }
             else
+            {
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
 
             query = query.Select(x => new ProjectReleaseTracking
             {
@@ -120,6 +133,8 @@ namespace Vsky.Services.ProjectReleaseTrackings
                 VersionNumber = x.VersionNumber,
                 Name = x.Name,
                 PlannedReleaseDate = x.PlannedReleaseDate,
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 Project = new Project
                 {
                     Id = x.Project.Id,
@@ -146,6 +161,22 @@ namespace Vsky.Services.ProjectReleaseTrackings
                     Person = new Person
                     {
                         FullName = x.DeploymentOwner.Person.FirstName + " " + x.DeploymentOwner.Person.LastName
+                    }
+                },
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
                     }
                 },
                 StatusText = x.ProjectReleaseTrackingStatusLog.OrderByDescending(p => p.CreatedOnUtc).Select(p => p.Status.DropDownValue).FirstOrDefault(),

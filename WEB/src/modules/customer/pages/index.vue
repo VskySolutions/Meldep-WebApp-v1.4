@@ -134,155 +134,235 @@
                 >
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs hidden"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
               </div>
             </div>
           </div>
         </div>
       </q-card-section>
       <q-separator />
-      <q-table
-        ref="tableRef"
-        v-model:pagination="pagination"
-        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-        flat
-        :loading="loading"
-        :rows="rows"
-        :columns="columns"
-        row-key="id"
-        separator="cell"
-        no-data-label="No data available"
-        :filter="filter"
-        binary-state-sort
-        :rows-per-page-options="[20, 50, 100, 200, 500]"
-        @request="getCustomers"
-      >
-        <template #loading>
-          <q-inner-loading showing color="primary">
-            <q-spinner-ios size="40px" class="q-mt-xl" />
-          </q-inner-loading>
-        </template>
-        <template #header="props">
-          <q-tr :props="props" class="bg-primary text-white">
-            <q-th auto-width class="text-center hidden" />
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-            <q-th auto-width class="text-center">Actions</q-th>
-          </q-tr>
-        </template>
-        <template #body="props">
-          <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
-            <q-td auto-width class="text-center hidden">
-              <q-icon :name="isExpanded(props.row.id) ? '-' : '+'" class="cursor-pointer custom-plus-minus-icon" @click="toggleExpand(props.row.id)">
-                <q-tooltip>{{ isExpanded(props.row.id) ? 'Collapse' : 'Expand' }}</q-tooltip>
-              </q-icon>
-            </q-td>
-            <q-td style="width: 20%; white-space: normal;" class="hoverable-cell">
-              <div class="row no-wrap items-center justify-between">
-                <span style="flex: 1; word-break: break-word; white-space: normal;" @click="onCustomerView(props.row.id)">
-                  {{ props.row.name }}
-                </span>
-                <q-icon
-                  name="o_radio_button_checked" size="xs"
-                  class="cursor-pointer q-ml-sm"
-                  @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: 'customer/customer-center', state: {customerId: props.row.id, companyId: props.row.companyId } })"
-                >
-                  <q-tooltip>Customer Center</q-tooltip>
+      <div class="table-scroll-container">
+        <q-table
+          ref="tableRef"
+          v-model:pagination="pagination"
+          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+          flat
+          :loading="loading"
+          :rows="rows"
+          :columns="computedColumns"
+          row-key="id"
+          separator="cell"
+          no-data-label="No data available"
+          :filter="filter"
+          binary-state-sort
+          :rows-per-page-options="[20, 50, 100, 200, 500]"
+          @request="getCustomers"
+        >
+          <template #loading>
+            <q-inner-loading showing color="primary">
+              <q-spinner-ios size="40px" class="q-mt-xl" />
+            </q-inner-loading>
+          </template>
+          <template #header="props">
+            <q-tr :props="props" class="bg-primary text-white">
+              <q-th auto-width class="text-center hidden" />
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
+                @click="!isResizing && col.sortable"
+              >
+                {{ col.label }}
+                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+              </q-th>
+              <q-th auto-width class="text-center">Actions</q-th>
+            </q-tr>
+          </template>
+          <template #body="props">
+            <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
+              <q-td auto-width class="text-center hidden">
+                <q-icon :name="isExpanded(props.row.id) ? '-' : '+'" class="cursor-pointer custom-plus-minus-icon" @click="toggleExpand(props.row.id)">
+                  <q-tooltip>{{ isExpanded(props.row.id) ? 'Collapse' : 'Expand' }}</q-tooltip>
                 </q-icon>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('name')" style="white-space: normal;" class="hoverable-cell">
+                <div class="row no-wrap items-center justify-between">
+                  <span style="flex: 1; word-break: break-word; white-space: normal;" @click="onCustomerView(props.row.id)">
+                    {{ props.row.name }}
+                  </span>
+                  <q-icon
+                    name="o_radio_button_checked" size="xs"
+                    class="cursor-pointer q-ml-sm"
+                    @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: 'customer/customer-center', state: {customerId: props.row.id, companyId: props.row.companyId } })"
+                  >
+                    <q-tooltip>Customer Center</q-tooltip>
+                  </q-icon>
+                </div>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('parentCustomerName')">
+                {{ props.row.parentCustomerName }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('emailAddress')">
+                {{ props.row.emailAddress }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('phoneNumber')">
+                {{ props.row.phoneNumber }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('customerType')">
+                {{ props.row.customerType }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('assignedToId')"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : activeEdit.rowId === props.row.id }"
+                @click="activeEdit = { rowId: props.row.id, field: 'assignedToName' }"
+              >
+              <div class="row items-center justify-between">
+                <div class="col">
+                  <quickEditSingleSelect
+                    field="assignedToName"
+                    :row-id="props.row.id"
+                    :value="props.row.assignedToId"
+                    :display-value="getNameFromId(props.row.assignedToId)"
+                    :editable="activeEdit.rowId === props.row.id"
+                    :options="activeEmployeesDropdown.list.value"
+                    :active-edit="activeEdit"
+                    :show-history="false"
+                    @cancel="activeEdit = { rowId: null, field: null }"
+                    @submit="({ rowId, value }) => onSubmitCustomerAdvocate(rowId, value, refreshCustomerList)"
+                  />
+                </div>
+                <div v-if="props.row.assignedToId" class="col-auto">
+                  <q-icon
+                    name="o_history"
+                    class="cursor-pointer q-ml-sm"
+                    size="xs"
+                    @click.stop="onSiteModifiedLog(props.row.id, props.row.name, 'Customer Advocate')"
+                  >
+                    <q-tooltip>Data Change Log</q-tooltip>
+                  </q-icon>
+                </div>
               </div>
-            </q-td>
-            <q-td>
-              {{ props.row.parentCustomerName }}
-            </q-td>
-            <q-td>
-              {{ props.row.emailAddress }}
-            </q-td>
-            <q-td>
-              {{ props.row.phoneNumber }}
-            </q-td>
-            <q-td>
-              {{ props.row.customerType }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('assignedDate')">
+                {{ props.row.assignedDate }}
+              </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('createdBy')"
+              class="common-q-td"
+            >
+              {{ props.row.createdBy }}
             </q-td>
             <q-td
+              v-if="selectedColumnNames.includes('createdOnUtc')"
               class="common-q-td"
-              :class="{ 'hoverable-cell' : activeEdit.rowId === props.row.id }"
-              @click="activeEdit = { rowId: props.row.id, field: 'assignedToName' }"
-              style="width: 5%;"
             >
-            <div class="row items-center justify-between">
-              <div class="col">
-                <quickEditSingleSelect
-                  field="assignedToName"
-                  :row-id="props.row.id"
-                  :value="props.row.assignedToId"
-                  :display-value="getNameFromId(props.row.assignedToId)"
-                  :editable="activeEdit.rowId === props.row.id"
-                  :options="activeEmployeesDropdown.list.value"
-                  :active-edit="activeEdit"
-                  :show-history="false"
-                  @cancel="activeEdit = { rowId: null, field: null }"
-                  @submit="({ rowId, value }) => onSubmitCustomerAdvocate(rowId, value, refreshCustomerList)"
-                />
-              </div>
-              <div v-if="props.row.assignedToId" class="col-auto">
+              {{ props.row.createdOnUtc }}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('updatedBy')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedBy }}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('updatedOnUtc')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedOnUtc }}
+            </q-td>
+              <q-td auto-width class="text-center actions">
                 <q-icon
-                  name="o_history"
-                  class="cursor-pointer q-ml-sm"
-                  size="xs"
-                  @click.stop="onSiteModifiedLog(props.row.id, props.row.name, 'Customer Advocate')"
+                  name="o_visibility"
+                  class="cursor-pointer q-mr-sm"
+                  @click="onCustomerView(props.row.id)"
                 >
-                  <q-tooltip>Data Change Log</q-tooltip>
+                  <q-tooltip>View</q-tooltip>
                 </q-icon>
-              </div>
-            </div>
-            </q-td>
-            <q-td class="" style="width: 5%;">
-              {{ props.row.assignedDate }}
-            </q-td>
-            <q-td auto-width class="text-center actions">
-              <q-icon
-                name="o_visibility"
-                class="cursor-pointer q-mr-sm"
-                @click="onCustomerView(props.row.id)"
-              >
-                <q-tooltip>View</q-tooltip>
-              </q-icon>
-              <q-icon
-                name="o_edit"
-                class="cursor-pointer q-mr-sm"
-                @click="onCustomerEdit(props.row.id, props.row.customerTypeId, props.row.personId, props.row.companyId, refreshCustomerList)"
-              >
-                <q-tooltip>Edit</q-tooltip>
-              </q-icon>
-              <a
-                style="position: relative;"
-                class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
-                @click="onNoteAdd(props.row.id, 'customer', props.row.id, props.row.name, props.row.name, '', refreshCustomerList)"
-              >
-                <q-tooltip anchor="bottom middle" self="top middle">
-                  Note
-                </q-tooltip>
-                <q-icon name="o_assignment" />
-                <q-badge
-                  v-if="props.row.customerNoteCount > 0"
-                  style="position: absolute; right: -16px; top: -15px;"
-                  color="green"
-                  text-color="white"
-                  :label="props.row.customerNoteCount"
-                />
-              </a>
-              <q-icon
-                name="o_delete_outline"
-                class="cursor-pointer"
-                color="negative"
-                @click="onSubmitCustomerDelete(props.row.id, props.row.name, refreshCustomerList)"
-              >
-                <q-tooltip>Delete</q-tooltip>
-              </q-icon>
-            </q-td>
-          </q-tr><q-separator />
-        </template>
-      </q-table>
+                <q-icon
+                  name="o_edit"
+                  class="cursor-pointer q-mr-sm"
+                  @click="onCustomerEdit(props.row.id, props.row.customerTypeId, props.row.personId, props.row.companyId, refreshCustomerList)"
+                >
+                  <q-tooltip>Edit</q-tooltip>
+                </q-icon>
+                <a
+                  style="position: relative;"
+                  class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
+                  @click="onNoteAdd(props.row.id, 'customer', props.row.id, props.row.name, props.row.name, '', refreshCustomerList)"
+                >
+                  <q-tooltip anchor="bottom middle" self="top middle">
+                    Note
+                  </q-tooltip>
+                  <q-icon name="o_assignment" />
+                  <q-badge
+                    v-if="props.row.customerNoteCount > 0"
+                    style="position: absolute; right: -16px; top: -15px;"
+                    color="green"
+                    text-color="white"
+                    :label="props.row.customerNoteCount"
+                  />
+                </a>
+                <q-icon
+                  name="o_delete_outline"
+                  class="cursor-pointer"
+                  color="negative"
+                  @click="onSubmitCustomerDelete(props.row.id, props.row.name, refreshCustomerList)"
+                >
+                  <q-tooltip>Delete</q-tooltip>
+                </q-icon>
+              </q-td>
+            </q-tr>
+            <q-separator />
+          </template>
+        </q-table>
+      </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="columns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 
@@ -295,7 +375,8 @@ import manageDropdownsService from "modules/dropdown/dropdown.service";
 // Shared DataTable Views
 import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSelect.vue";
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
-import useSiteTableState from "composables/dataTable/useSiteTableState.js";
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
 
 // Shared Dropdowns
 import customerModule from "src/modules/customer/utils/dropdowns.js";
@@ -303,6 +384,12 @@ import employeeModule from "src/modules/employee/utils/dropdowns.js";
 
 // Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 // Shared Customer Dialogs
 import {
@@ -345,6 +432,7 @@ const showFilter = ref(false);
 const activeEdit = ref({ rowId: null, field: null });
 const dropdownTypes = ref([]);
 const showManageDropdownOptions = ref(false);
+const showSortDialog = ref(false);
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
@@ -355,13 +443,17 @@ const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 
 const tableRef = ref();
 const columns = ref([
-  { name: "name", label: "Customer Name", field: "name", align: "left", sortable: true },
-  { name: "parentCustomerName", label: "Parent Customer", field: "parentCustomerName", align: "left", sortable: true },
-  { name: "emailAddress", label: "Email", field: "emailAddress", align: "left", sortable: true },
-  { name: "phoneNumber", label: "Phone No", field: "phoneNumber", align: "left", sortable: true },
-  { name: "customerType", label: "Customer Type", field: "CustomerType", align: "left", sortable: true },
-  { name: "assignedToId", label: "Customer Advocate", field: "assignedToId", align: "left", sortable: true },
-  { name: "assignedDate", label: "Advocate Assigned Date", field: "assignedDate", align: "center", sortable: true }
+  { name: "name", label: "Customer Name", field: "name", align: "left", sortable: true, default: true },
+  { name: "parentCustomerName", label: "Parent Customer", field: "parentCustomerName", align: "left", sortable: true, default: true },
+  { name: "emailAddress", label: "Email", field: "emailAddress", align: "left", sortable: true, default: true },
+  { name: "phoneNumber", label: "Phone No", field: "phoneNumber", align: "left", sortable: true, default: true },
+  { name: "customerType", label: "Customer Type", field: "CustomerType", align: "left", sortable: true, default: true },
+  { name: "assignedToId", label: "Customer Advocate", field: "assignedToId", align: "left", sortable: true, default: true },
+  { name: "assignedDate", label: "Advocate Assigned Date", field: "assignedDate", align: "center", sortable: true, default: true },
+  { name: "createdBy", label: "Created By", field: "createdBy", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
+  { name: "updatedBy", label: "Updated By", field: "updatedBy", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -372,33 +464,6 @@ const highlightedId = computed(() => {
   return activeRowId.value;
 });
 const siteId = computed(() => authStore.user?.siteId);
-
-const {
-  search,
-  pagination,
-  activeRowId,
-  saveDataTableState
-} = useSiteTableState({
-  storageKey: "customer-Index",
-  siteId,
-
-  defaultSearch: {
-    searchText: "",
-    customerIds: [],
-    employeeIds: [],
-    customerTypeIds: [],
-    phoneNumber: "",
-    emailAddress: "",
-    parentCustomerIds: []
-  },
-
-  defaultPagination: {
-    sortBy: "createdOnUtc",
-    descending: true,
-    rowsPerPage: 20,
-    page: 1
-  }
-});
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals
@@ -460,27 +525,126 @@ const isExpanded = (rowId) => {
 // DataTable:- Get All Customers
 // ----------------------------------------------------------------------------------------------------------------
 
-const getCustomers = (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+const getCustomers = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;    
+
+  const sorts = {};
+  const multi = multiSort.value;
+  for (let i = 0; i < multi.length; i++) {
+    const s = multi[i];
+    if (s.column && s.direction) {
+      sorts[s.column] = s.direction;
+    }
+  }
   loading.value = true;
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
+  const payload = { page, pageSize: rowsPerPage, sortBy, descending, sorts, ...search.value };
   saveDataTableState({
     search: search.value,
-    pagination: props.pagination,
-    activeRowId: activeRowId.value
+    pagination: p,
+    activeRowId: activeRowId.value,
+    sorts
   });
   customerService.getCustomers(payload).then((resp) => {
-    rows.value = resp.data || [];
-    pagination.value.page = page;
-    pagination.value.rowsPerPage = rowsPerPage;
-    pagination.value.sortBy = sortBy;
-    pagination.value.descending = descending;
-    pagination.value.rowsNumber = resp.total;
+    rows.value = resp.data || [];    
+    pagination.value = {
+      ...pagination.value,
+      page,
+      rowsPerPage,
+      sortBy,
+      descending,
+      rowsNumber: resp.total
+    };
   }).finally(() => {
     loading.value = false;
     searchLoader.value = false;
   });
 };
+
+const {
+  search,
+  pagination,
+  activeRowId,
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
+} = useSiteTableState({
+  storageKey: "customer-Index",
+  siteId: user?.siteId,
+
+  defaultSearch: {
+    searchText: "",
+    customerIds: [],
+    employeeIds: [],
+    customerTypeIds: [],
+    phoneNumber: "",
+    emailAddress: "",
+    parentCustomerIds: []
+  },
+
+  defaultPagination: {
+    sortBy: "createdOnUtc",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  },
+
+  defaultSorts: {},
+  defaultResizableWidth: {},
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
+
+const lsSorts = sorts.value || null;
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshCustomerList();
+  }
+});
 
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
@@ -587,6 +751,23 @@ watch(() => search.value.searchText, () => {
   refreshCustomerList();
 });
 
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
+});
+
 // ----------------------------------------------------------------------------------------------------------------
 // On page load
 // ----------------------------------------------------------------------------------------------------------------
@@ -606,3 +787,8 @@ onMounted(() => {
   document.addEventListener("click", handleDocumentClick);
 });
 </script>
+<style scoped>
+.Custom-DataTable {
+  min-width: max-content;
+}
+</style>

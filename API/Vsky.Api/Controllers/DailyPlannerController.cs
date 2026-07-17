@@ -115,7 +115,21 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
                 var createdBy = searchModel.CreatedBy == "Created By Me" ? LoggedUserId : "";
                 // Fetch a list of daily planner based on search criteria
-                var list = _dailyPlannerService.GetAllDailyPlanner(SiteId, createdBy, searchModel.SearchText, searchModel.EmployeeId, searchModel.ProjectId, searchModel.ActivityDate, searchModel.FromDate, searchModel.ToDate, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var list = _dailyPlannerService.GetAllDailyPlanner(
+                    SiteId,
+                    createdBy, 
+                    searchModel.SearchText, 
+                    searchModel.EmployeeId,
+                    searchModel.ProjectId,
+                    searchModel.ActivityDate,
+                    searchModel.FromDate, 
+                    searchModel.ToDate, 
+                    searchModel.SortBy,
+                    searchModel.Sorts,
+                    searchModel.Descending, 
+                    searchModel.Page,
+                    searchModel.PageSize
+                );
 
                 List<DailyPlanner> dailyPlannerList = new List<DailyPlanner>();
                 foreach (var row in list)

@@ -45,7 +45,22 @@ namespace Vsky.Services.DailyPlanners
         // Title: GetAllDailyPlanner
         // Description: This method retrieves a paginated list of daily planner based on various search criteria such as name, 
         // project name. The method allows for both full and lookup (limited) data retrieval modes.
-        public IPagedList<DailyPlanner> GetAllDailyPlanner(string SiteId, string createdBy, string SearchText, string employeeId, string projectId, DateTime? activityDate, DateTime? fromDate, DateTime? toDate, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public IPagedList<DailyPlanner> GetAllDailyPlanner(
+            string SiteId, 
+            string createdBy,
+            string SearchText,
+            string employeeId,
+            string projectId, 
+            DateTime? activityDate,
+            DateTime? fromDate,
+            DateTime? toDate,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        )
         {
             var query = _dailyPlannerRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
 
@@ -82,6 +97,13 @@ namespace Vsky.Services.DailyPlanners
                     (m.DailyPlannerDate.Value.Date == parsedDate.Date)
                 );
             }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
+
 
             query = query.OrderByDescending(x => x.DailyPlannerDate).Select(x => new DailyPlanner
             {
