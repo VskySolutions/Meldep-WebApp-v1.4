@@ -19,6 +19,7 @@ namespace Vsky.Api.Models
         public string MeetingUId { get; set; }
 
         public string Flag { get; set; }
+        public bool IsApproved { get; set; }
         public bool Deleted { get; set; }
         
         public string TaskId { get; set; }

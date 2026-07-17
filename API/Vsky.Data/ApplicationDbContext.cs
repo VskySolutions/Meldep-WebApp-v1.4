@@ -1673,6 +1673,7 @@ namespace Vsky.Data
 
                 entity.HasOne(e => e.Sites).WithMany().HasForeignKey(e => e.SiteId);
                 entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId);
+                entity.HasOne(e => e.TimesheetStatus).WithMany().HasForeignKey(e => e.TimesheetStatusId);
                 entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.CreatedById);
             });
 

@@ -11,6 +11,9 @@ namespace Vsky.Api.Models
         public string SiteId { get; set; }
 
         public string EmployeeId { get; set; }
+
+        public string TimesheetStatusId { get; set; }
+
         public int[] Projects { get; set; }
 
         public DateTime TimesheetDate { get; set; }
@@ -29,7 +32,14 @@ namespace Vsky.Api.Models
 
         public bool IsActionVisible { get; set; }
 
+        public List<string> TimesheetIds { get; set; }
+
+        public List<string> ProjectNames { get; set; }
+
+        public string ApprovalStatus { get; set; }
+
         public virtual Employee Employee { get; set; }
+        public virtual DropDown TimesheetStatus { get; set; }
         public virtual ApplicationUser User { get; set; }
         public virtual ICollection<TimesheetLinesModel> TimesheetLineModel { get; set; } = new List<TimesheetLinesModel>();
         public virtual ICollection<TimesheetLinesModel> TimesheetLines { get; set; } = new List<TimesheetLinesModel>();
@@ -50,6 +60,8 @@ namespace Vsky.Api.Models
         public string ProjectActivityId { get; set; }
         public List<string> CustomerIds { get; set; }
         public List<string> CompanyContactIds { get; set; }
+        public List<string> TimesheetStatusIds
+        { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? ActivityDate { get; set; }
         public DateTime? FromDate { get; set; }
@@ -92,5 +104,14 @@ namespace Vsky.Api.Models
         public string Day { get; set; }
         public string DateTooltip { get; set; }
         public string DisplayDateRange { get; set; }
+    }
+
+    public class WeeklyTimesheetNotificationModel
+    {
+        public List<string> ProjectNames { get; set; } = new List<string>();
+
+        public DateTime FromDate { get; set; }
+
+        public DateTime ToDate { get; set; }
     }
 }

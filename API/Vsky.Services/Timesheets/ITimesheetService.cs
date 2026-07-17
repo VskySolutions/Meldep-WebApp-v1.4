@@ -65,6 +65,22 @@ namespace Vsky.Services.Timesheets
         );
 
         Task<List<Timesheet>> GetAllTimesheetByWeek(string siteId, string employeeId, DateTime? fromDate, DateTime? toDate);
+
+        Task<IPagedList<object>> GetAllWeeklyTimesheetApprovals(
+            string SearchText,
+            string siteId,
+            string employeeId,
+            List<string> timesheetStatusIds,
+            DateTime? fromDate,
+            DateTime? toDate,
+            string sortBy,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
+
+        Task<List<Timesheet>> GetAllTimesheetsForWeeklyApproval(string siteId, string employeeId, DateTime? fromDate, DateTime? toDate);
         #endregion
 
         #region GetTimesheetById

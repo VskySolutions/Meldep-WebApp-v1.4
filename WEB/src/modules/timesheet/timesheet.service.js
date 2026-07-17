@@ -11,6 +11,11 @@ export default {
   getAllTimesheetByWeek (model) {
     return http.post("/Timesheet/timesheetWeeklyList", model).then(response => response.data);
   },
+
+  getWeeklyTimesheetApprovalList (model) {
+    return http.post("/Timesheet/weekly-timesheet-approval-list", model).then(response => response.data);
+  },
+
   getTimesheetTotalHoursByWeekAndMonth (model) {
     return http.post("/Timesheet/total-hours-week-and-month", model).then(response => response.data);
   },
@@ -30,6 +35,14 @@ export default {
     } else {
       return http.post("/Timesheet", model).then(response => response.data);
     }
+  },
+
+  approveDeclineTimesheet(model) {
+    return http.post("/Timesheet/approve-decline-timesheet", model).then(response => response.data);
+  },
+
+  sendWeeklyTimesheetNotification(model) {
+    return http.post("/Timesheet/send-weekly-timesheet-notification", model).then(response => response.data);
   },
 
   deleteTimesheet (id) {

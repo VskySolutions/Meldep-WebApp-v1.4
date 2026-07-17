@@ -14,6 +14,8 @@ public class Timesheet : BaseEntity
 
     public string EmployeeId { get; set; }
 
+    public string TimesheetStatusId { get; set; }
+
     public DateTime? TimesheetDate { get; set; }
 
     public string CreatedById { get; set; }
@@ -32,6 +34,7 @@ public class Timesheet : BaseEntity
     public virtual Site Sites{ get; set; }
 
     public virtual Employee Employee { get; set; }
+    public virtual DropDown TimesheetStatus { get; set; }
     public virtual ApplicationUser User { get; set; }
     public virtual ICollection<TimesheetLines> TimesheetLines { get; set; } = new List<TimesheetLines>();
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,9 +37,14 @@ public class TimesheetLines : BaseEntity
 
     public DateTime? BillableCreatedOnUtc { get; set; }
 
+    public bool IsApproved { get; set; }
+
     public bool Deleted { get; set; }
 
     //public virtual Employee AssignedTo { get; set; }
+
+    [NotMapped]
+    public DateTime TimesheetDate { get; set; }
 
     public virtual Timesheet Timesheet { get; set; }
 

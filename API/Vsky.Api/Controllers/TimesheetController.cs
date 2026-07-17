@@ -13,12 +13,14 @@ using System.Xml;
 using AngleSharp.Dom;
 using AutoMapper;
 using HtmlAgilityPack;
+using MailKit.Search;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using OfficeOpenXml;
 using Vsky.Api.ApiErrors;
@@ -32,13 +34,16 @@ using Vsky.Services.Common;
 using Vsky.Services.DropDowns;
 using Vsky.Services.DropDownTypes;
 using Vsky.Services.Employees;
+using Vsky.Services.Notifications;
 using Vsky.Services.ProjectActivities;
 using Vsky.Services.Projects;
 using Vsky.Services.ProjectTasks;
 using Vsky.Services.Sites;
 using Vsky.Services.SitesModifiedLog;
 using Vsky.Services.Timesheets;
+using Vsky.Services.Users;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using static Dapper.SqlMapper;
 using static Vsky.Api.Models.TimesheetModel;
 
 namespace Vsky.Api.Controllers
@@ -60,6 +65,10 @@ namespace Vsky.Api.Controllers
         private readonly IDropDownTypeService _dropDownTypeService;
         private readonly IAzureBlobImageServices _azureBlobImageServices;
         private readonly IProjectTaskService _projectTaskService;
+        private readonly IUserService _userService;
+        private readonly IMasterNotificationService _masterNotificationService;
+        private readonly INotificationService _notificationService;
+        private readonly IEmployeeService _employeeService;
         #endregion
 
         #region Services Initializations
@@ -76,7 +85,12 @@ namespace Vsky.Api.Controllers
             IDropDownService dropDownService,
             IDropDownTypeService dropDownTypeService,
             IAzureBlobImageServices azureBlobImageServices,
-            IProjectTaskService projectTaskService
+            IProjectTaskService projectTaskService,
+            IUserService userService,
+            IMasterNotificationService masterNotificationService,
+            INotificationService notificationService,
+            IEmployeeService employeeService
+
         )
         {
             _globalVariable = globalVariable;
@@ -92,6 +106,10 @@ namespace Vsky.Api.Controllers
             _dropDownTypeService = dropDownTypeService;
             _azureBlobImageServices = azureBlobImageServices;
             _projectTaskService = projectTaskService;
+            _userService = userService;
+            _masterNotificationService = masterNotificationService;
+            _notificationService = notificationService;
+            _employeeService = employeeService;
         }
         #endregion
 
@@ -108,23 +126,24 @@ namespace Vsky.Api.Controllers
                 var createdBy = searchModel.CreatedBy == "Created By Me" ? LoggedUserId : "";
                 // Fetch a list of timesheets based on search criteria
                 var list = _timesheetService.GetAllTimesheets(
-                    SiteId, 
-                    createdBy, 
-                    searchModel.SearchText, 
-                    searchModel.EmployeeId, 
-                    searchModel.ProjectId, 
-                    searchModel.ProjectModuleId, 
-                    searchModel.ProjectTaskId, 
-                    searchModel.ProjectActivityId, 
-                    searchModel.ActivityDate, 
-                    searchModel.FromDate, 
+                    SiteId,
+                    createdBy,
+                    searchModel.SearchText,
+                    searchModel.EmployeeId,
+                    searchModel.ProjectId,
+                    searchModel.ProjectModuleId,
+                    searchModel.ProjectTaskId,
+                    searchModel.ProjectActivityId,
+                    searchModel.ActivityDate,
+                    searchModel.FromDate,
                     searchModel.ToDate,
                     searchModel.ThisWeek,
                     searchModel.LastNumberOfWeeks,
                     searchModel.SortBy,
                     searchModel.Sorts,
+                    //searchModel.SortBy,
                     searchModel.Descending,
-                    searchModel.Page, 
+                    searchModel.Page,
                     searchModel.PageSize
                 );
 
@@ -220,18 +239,18 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
                 // Fetch a list of timesheets based on search criteria
                 var list = _timesheetService.GetAllBillingTimesheets(
-                    SiteId, 
-                    searchModel.SearchText, 
-                    searchModel.FromDate, 
-                    searchModel.ToDate, 
-                    searchModel.ProjectId, 
-                    searchModel.ProjectModuleIds, 
-                    searchModel.ProjectTaskIds, 
-                    searchModel.CustomerIds, 
-                    searchModel.CompanyContactIds, 
-                    searchModel.SortBy, 
-                    searchModel.Descending, 
-                    searchModel.Page, 
+                    SiteId,
+                    searchModel.SearchText,
+                    searchModel.FromDate,
+                    searchModel.ToDate,
+                    searchModel.ProjectId,
+                    searchModel.ProjectModuleIds,
+                    searchModel.ProjectTaskIds,
+                    searchModel.CustomerIds,
+                    searchModel.CompanyContactIds,
+                    searchModel.SortBy,
+                    searchModel.Descending,
+                    searchModel.Page,
                     searchModel.PageSize
                 );
 
@@ -321,18 +340,18 @@ namespace Vsky.Api.Controllers
 
                 // Fetch grouped timesheet data
                 var list = _timesheetService.GetGroupedBillingTimesheetsByEmployee(
-                    SiteId, 
-                    searchModel.SearchText, 
-                    searchModel.FromDate, 
-                    searchModel.ToDate, 
-                    searchModel.ProjectId, 
-                    searchModel.ProjectModuleIds, 
-                    searchModel.ProjectTaskIds, 
-                    searchModel.CustomerIds, 
-                    searchModel.CompanyContactIds, 
-                    searchModel.SortBy, 
-                    searchModel.Descending, 
-                    searchModel.Page, 
+                    SiteId,
+                    searchModel.SearchText,
+                    searchModel.FromDate,
+                    searchModel.ToDate,
+                    searchModel.ProjectId,
+                    searchModel.ProjectModuleIds,
+                    searchModel.ProjectTaskIds,
+                    searchModel.CustomerIds,
+                    searchModel.CompanyContactIds,
+                    searchModel.SortBy,
+                    searchModel.Descending,
+                    searchModel.Page,
                     searchModel.PageSize
                 );
 
@@ -370,6 +389,40 @@ namespace Vsky.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("weekly-timesheet-approval-list")]
+        # region GetAllWeeklyTimesheetApprovalList
+        public async Task<IActionResult> GetAllWeeklyTimesheetApprovalList(TimesheetSearchModel searchModel)
+        {
+            try
+            {
+                var SiteId = _globalVariable.SiteId;
+
+                var list = await _timesheetService.GetAllWeeklyTimesheetApprovals(
+                    searchModel.SearchText,
+                    SiteId,
+                    searchModel.EmployeeId,
+                    searchModel.TimesheetStatusIds,
+                    searchModel.FromDate,
+                    searchModel.ToDate,
+                    searchModel.SortBy,
+                    searchModel.Descending,
+                    searchModel.Page,
+                    searchModel.PageSize
+                );
+
+                return Ok(new
+                {
+                    Data = list,
+                    Total = list.TotalCount
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
         #endregion
 
         #region GetTimesheetTotalHoursByWeekAndMonth 
@@ -384,23 +437,25 @@ namespace Vsky.Api.Controllers
             var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
             var list = _timesheetService.GetAllTimesheets(
-                SiteId, 
-                LoggedUserId, 
-                searchModel.SearchText, 
+                SiteId,
+                LoggedUserId,
+                searchModel.SearchText,
                 searchModel.EmployeeId,
-                searchModel.ProjectId, 
-                searchModel.ProjectModuleId, 
+                searchModel.ProjectId,
+                searchModel.ProjectModuleId,
                 searchModel.ProjectTaskId,
-                searchModel.ProjectActivityId, 
-                searchModel.ActivityDate, 
+                searchModel.ProjectActivityId,
+                searchModel.ActivityDate,
                 searchModel.FromDate,
                 searchModel.ToDate,
                 searchModel.ThisWeek,
                 searchModel.LastNumberOfWeeks, 
                 searchModel.SortBy, 
                 searchModel.Sorts,
+                //searchModel.LastNumberOfWeeks,
+                //searchModel.SortBy,
                 searchModel.Descending,
-                searchModel.Page, 
+                searchModel.Page,
                 searchModel.PageSize
             );
 
@@ -762,7 +817,7 @@ namespace Vsky.Api.Controllers
                     var SiteId = _globalVariable.SiteId;
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
-                    
+
                     var projectOpenStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "Open");
                     var projectInProgressStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "In progress");
 
@@ -1522,6 +1577,161 @@ namespace Vsky.Api.Controllers
                 _timesheetLinesService.DeleteTimesheetLines(entity);
 
                 return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        [HttpPost("send-weekly-timesheet-notification")]
+        #region SendWeeklyTimesheetNotification
+        public async Task<IActionResult> SendWeeklyTimesheetNotification(TimesheetModel model)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var SiteData = await _siteService.GetById(SiteId);
+                var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+
+                var fromDate = model.TimesheetDate.AddDays(-6);
+
+                var timesheets = await _timesheetService.GetAllTimesheetsForWeeklyApproval(SiteId, employeeId, fromDate, model.TimesheetDate);
+                foreach (var item in timesheets)
+                {
+                    item.TimesheetStatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Timesheet Status", model.ApprovalStatus);
+                    item.UpdatedById = LoggedUserId;
+                    item.UpdatedOnUtc = GetDateTime;
+                    _timesheetService.UpdateTimesheet(item);
+                }
+
+                var employeeDetails = await _employeeService.GetEmployeeDetailsById(employeeId);
+                var timesheetApprovers = await _userService.GetUsersByRole(SiteId, "timesheet approver");
+                foreach (var timesheetApprover in timesheetApprovers)
+                {
+                    var masterNotificationData = await _masterNotificationService
+                   .GetMasterNotificationByNumber(SiteId, "WeeklyTimesheetSubmitted1", timesheetApprover.Id);
+
+                    if (masterNotificationData != null)
+                    {
+
+                        string message = masterNotificationData.Message
+                               .Replace("[Employee Name]", employeeDetails.Person.FirstName + " " + employeeDetails.Person.LastName)
+                               .Replace("[Project Names]", string.Join(", ", model.ProjectNames))
+                               .Replace("[Week End Date]", $"{model.TimesheetDate:MM/dd/yyyy}")
+                               .Replace("[Status]", model.ApprovalStatus)
+                               .Replace("[Submission Date]", GetDateTime.ToString("MM/dd/yyyy"));
+
+
+                        _notificationService.AddNotification(
+                            SiteId,
+                            masterNotificationData.Title,
+                            message,
+                            masterNotificationData.Type,
+                            LoggedUserId,
+                            null,
+                            "/weekly-timesheet-approval",
+                            timesheetApprover.Id,
+                            LoggedUserId,
+                            GetDateTime
+                        );
+                    }
+                }
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        [HttpPost("approve-decline-timesheet")]
+        #region ApproveDeclineTimesheet
+        public async Task<IActionResult> ApproveDeclineTimesheet([FromBody] TimesheetModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var LoggedUserId = User.GetLoggedInUserId<string>();
+                    var SiteId = _globalVariable.SiteId;
+                    var SiteData = await _siteService.GetById(SiteId);
+                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                    var statusId = await _dropDownService.GetDropDownByTypeNameAndName(
+                        SiteId,
+                        "Timesheet Status",
+                        model.ApprovalStatus);
+
+                    if (model.TimesheetIds.Count > 0)
+                    {
+                        // Update Timesheets
+                        foreach (var id in model.TimesheetIds)
+                        {
+                            var timesheet = await _timesheetService.GetTimesheetById(id);
+
+                            if (timesheet == null)
+                                return BadRequest(new BadRequestError("No timesheet found with the specified id."));
+                            
+                            timesheet.TimesheetStatusId = statusId;
+                            timesheet.UpdatedOnUtc = GetDateTime;
+                            timesheet.UpdatedById = LoggedUserId;
+
+                            _timesheetService.UpdateTimesheet(timesheet);
+                        }
+                    }
+
+
+                    if (model.TimesheetLines.Count > 0)
+                    {
+                        // Update Timesheet Lines
+                        foreach (var line in model.TimesheetLines)
+                        {
+                            var timesheetLine = await _timesheetLinesService.GetTimesheetLinesById(line.Id);
+
+                            if (timesheetLine == null)
+                                return BadRequest(new BadRequestError("No timesheet line found with the specified id."));
+
+                            timesheetLine.IsApproved = line.IsApproved;
+                            timesheetLine.UpdatedOnUtc = GetDateTime;
+                            timesheetLine.UpdatedById = LoggedUserId;
+
+                            _timesheetLinesService.UpdateTimesheetLines(timesheetLine);
+                        }
+                    }
+                    var notificationTemplate = await _masterNotificationService.GetMasterNotificationByNumber(SiteId, "WeeklyTimesheetApprovalStatus1", LoggedUserId);
+
+                    if (notificationTemplate != null)
+                    {
+                        var employeeUserId = _commonService.GetLoggeduserIdByEmployeeId(SiteId, model.EmployeeId);
+
+                        string message = notificationTemplate.Message
+                            .Replace("[Project Names]", string.Join(", ", model.ProjectNames))
+                            .Replace("[Week End Date]", model.TimesheetDate.ToString("MM/dd/yyyy"))
+                            .Replace("[Status]", model.ApprovalStatus);
+
+                        _notificationService.AddNotification(
+                            SiteId,
+                            notificationTemplate.Title,
+                            message,
+                            notificationTemplate.Type,
+                            LoggedUserId,
+                            null,
+                            "/weekly-timesheet",
+                            employeeUserId,
+                            LoggedUserId,
+                            GetDateTime);
+                    }
+
+                    return NoContent();
+                }
+
+                return ModelStateError(ModelState);
             }
             catch (Exception ex)
             {

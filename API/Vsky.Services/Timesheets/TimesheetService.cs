@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using MailKit.Search;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.PowerBI.Api.Models;
 using Org.BouncyCastle.Bcpg.Sig;
@@ -533,6 +534,13 @@ namespace Vsky.Services.Timesheets
             {
                 Id = x.Id,
                 TimesheetDate = x.TimesheetDate,
+                TimesheetStatus = new DropDown
+                {
+                    Id = x.TimesheetStatus.Id,
+                    DropDownValue = x.TimesheetStatus.DropDownValue,
+                    Color = x.TimesheetStatus.Color,
+                    BgColor = x.TimesheetStatus.BgColor,
+                },
                 TimesheetLines = x.TimesheetLines.Where(m => !m.Deleted).Select(mapping => new TimesheetLines
                 {
                     Id = mapping.Id,
@@ -541,6 +549,7 @@ namespace Vsky.Services.Timesheets
                     TimesheetId = mapping.TimesheetId,
                     ProjectTaskId = mapping.ProjectTaskId,
                     ProjectId = mapping.ProjectId,
+                    IsApproved = mapping.IsApproved,
                     Project = new Project
                     {
                         Id = mapping.Project.Id,
@@ -561,11 +570,167 @@ namespace Vsky.Services.Timesheets
                     {
                         Id = mapping.ProjectActivity.Id,
                         Name = mapping.ProjectActivity.Name
-                    }
+                    },
                 }).ToList(),
             });
 
             return query.ToList();
+        }
+
+        public async Task<IPagedList<object>> GetAllWeeklyTimesheetApprovals(
+            string SearchText,
+            string siteId,
+            string employeeId,
+            List<string> timesheetStatusIds,
+            DateTime? fromDate,
+            DateTime? toDate,
+            string sortBy,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        )
+        {
+            var query = _timesheetRepository.TableNoTracking
+                .Where(x => !x.Deleted && x.SiteId == siteId && x.TimesheetStatus != null && (x.TimesheetStatus.DropDownValue == "Submitted" ||
+                     x.TimesheetStatus.DropDownValue == "Resubmitted"));
+
+            if (!string.IsNullOrWhiteSpace(employeeId))
+                query = query.Where(x => x.EmployeeId == employeeId);
+
+            if (fromDate != null)
+                query = query.Where(x => x.TimesheetDate >= fromDate);
+
+            if (toDate != null)
+                query = query.Where(x => x.TimesheetDate <= toDate);
+
+            if (timesheetStatusIds != null && timesheetStatusIds.Any())
+                query = query.Where(x => timesheetStatusIds.Contains(x.TimesheetStatusId));
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+               SearchText = SearchText.Trim();
+               DateTime.TryParse(SearchText, out var parsedDate);
+
+                query = query.Where(x =>
+                    (x.TimesheetDate.HasValue && x.TimesheetDate.Value.Date == parsedDate.Date) ||
+                    (x.Employee.Person.FirstName + " " + x.Employee.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
+                      x.TimesheetLines.Any(t =>
+                        !t.Deleted &&
+                        (
+                            t.Project.Name.ToLower().Contains(SearchText.ToLower())
+                            || t.Task.Name.ToLower().Contains(SearchText.ToLower())
+                            || t.Description.ToLower().Contains(SearchText.ToLower())
+                            || t.Hours.ToString().Contains(SearchText)
+                        ))
+                );
+            }
+
+            // Fetch only required fields
+            var timesheets = await query
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.EmployeeId,
+                        x.TimesheetDate,
+                        EmployeeName = x.Employee.Person.FirstName + " " + x.Employee.Person.LastName,
+
+                        TimesheetStatus = new
+                        {
+                            Id = x.TimesheetStatusId,
+                            DropDownValue = x.TimesheetStatus.DropDownValue,
+                            Color = x.TimesheetStatus.Color,
+                            BgColor = x.TimesheetStatus.BgColor
+                        },
+
+                        TimesheetLines = x.TimesheetLines
+                            .Where(t => !t.Deleted)
+                                .Select(t => new
+                                {
+                                    t.TimesheetId,
+                                    TimesheetLineId = t.Id,
+                                    Date = x.TimesheetDate,
+                                    t.Hours,
+                                    t.Description,
+                                    Project = t.Project.Name,
+                                    Task = t.Task.Name,
+                                    t.IsApproved
+                                })
+                                .ToList()
+                        })
+                        .ToListAsync();
+
+            var groupedResult = timesheets
+                .Select(x =>
+                {
+                    var weekEndDate = x.TimesheetDate.Value.AddDays(
+                        ((int)DayOfWeek.Sunday - (int)x.TimesheetDate.Value.DayOfWeek + 7) % 7);
+
+                    return new
+                    {
+                        x.Id,
+                        x.EmployeeId,
+                        EmployeeName = x.EmployeeName,
+                        WeekEndDate = weekEndDate,
+                        x.TimesheetStatus,
+                        x.TimesheetDate,
+                        x.TimesheetLines
+                    };
+                })
+                .GroupBy(x => new
+                {
+                    x.EmployeeId,
+                    x.EmployeeName,
+                    x.WeekEndDate
+                })
+                .Select(g => new
+                {
+                    Id = g.First().Id,
+
+                    WeekEndDate = g.Key.WeekEndDate,
+
+                    Employee = new
+                    {
+                        Id = g.Key.EmployeeId,
+                        FullName = g.Key.EmployeeName
+                    },
+
+                    TimesheetStatus = new
+                    {
+                        Id = g.First().TimesheetStatus.Id,
+                        DropDownValue = g.First().TimesheetStatus.DropDownValue,
+                        Color = g.First().TimesheetStatus.Color,
+                        BgColor = g.First().TimesheetStatus.BgColor
+                    },
+
+                    TimesheetLines = g
+                        .OrderBy(x => x.TimesheetDate)
+                        .SelectMany(x => x.TimesheetLines)
+                        .OrderBy(x => x.Date)
+                        .ToList()
+                })
+                .OrderByDescending(x => x.WeekEndDate)
+                .ToList();
+
+            if (sortBy == "weekEndDate")
+            {
+                groupedResult = descending
+                    ? groupedResult.OrderByDescending(x => x.WeekEndDate).ToList()
+                    : groupedResult.OrderBy(x => x.WeekEndDate).ToList();
+            }
+
+            return new PagedList<object>(groupedResult.AsQueryable(), page, pageSize);
+        }
+
+        public async Task<List<Timesheet>> GetAllTimesheetsForWeeklyApproval(string siteId, string employeeId, DateTime? fromDate, DateTime? toDate)
+        {
+            return await _timesheetRepository.Table
+                .Where(x => !x.Deleted
+                    && x.SiteId == siteId
+                    && x.EmployeeId == employeeId
+                    && x.TimesheetDate >= fromDate
+                    && x.TimesheetDate <= toDate)
+                .ToListAsync();
         }
         #endregion
 

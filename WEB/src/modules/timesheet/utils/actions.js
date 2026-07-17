@@ -26,7 +26,7 @@ export const onSubmitTimesheetDelete = async (
         notifySuccess({ message: "Timesheet is deleted successfully." });
         refreshTimesheetList();
       } catch (error) {
-        sendError("Error deleting Test Case", error);
+        sendError("Error deleting Timesheet", error);
       } finally {
         activeRowId.value = null;
       }
@@ -35,6 +35,44 @@ export const onSubmitTimesheetDelete = async (
       activeRowId.value = null;
     }
   );
+};
+
+export const onSubmitTimesheetApproval = async (
+ selectedWeek,
+ action,
+  refreshWeeklyTimesheetApprovalList,
+  closeDialog
+) => {
+  try {
+  const model = {
+      timesheetIds: [
+        ...new Set(
+          selectedWeek.timesheetLines.map(line => line.timesheetId)
+        )
+      ],
+      employeeId: selectedWeek.employee.id,
+      timesheetLines: selectedWeek.timesheetLines.map(line => ({
+        id: line.timesheetLineId,
+        isApproved: line.isApproved
+      })),
+      projectNames: [
+        ...new Set(
+          selectedWeek.timesheetLines.map(line => line.project)
+        )
+      ],
+      TimesheetDate: selectedWeek.weekEndDate,
+      approvalStatus: action
+    };
+    await timesheetService.approveDeclineTimesheet(model);
+
+    notifySuccess({
+      message: `Timesheet ${action.toLowerCase()} successfully.`
+    });
+    closeDialog();
+    refreshWeeklyTimesheetApprovalList();
+  } catch (error) {
+    sendError(`Error ${action.toLowerCase()} timesheet.`, error);
+  }
 };
 
 function sendError (message, error) {

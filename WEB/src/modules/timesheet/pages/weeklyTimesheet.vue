@@ -16,23 +16,44 @@
       </q-card-section>
       <q-separator />
       <div class="row items-center justify-between q-pa-sm">
-        <!-- Week Calendar -->
-        <formDate
-          v-model="selectedWeekLabel"
-          label="Select Weekend"
-          mask="MM/DD/YYYY"
-          :dateOptions="isSunday"
-          :required="false"
-          @update:model-value="onWeekSelect"
-          :wrapperClass="'col-xxl-2 col-lg-2 col-md-2 col-sm-2 col-xs-2'"
-        />
-        <!-- Add Row -->
+        <div class="row items-center q-gutter-md">
+          <formDate
+            v-model="selectedWeekLabel"
+            label="Select Weekend"
+            mask="MM/DD/YYYY"
+            :dateOptions="isSunday"
+            :required="false"
+            @update:model-value="onWeekSelect"
+            :wrapperClass="'col-auto'"
+          />
+          <div
+            v-if="entryRows.length && selectedWeekStatus?.dropDownValue"
+            class="col-auto"
+          >
+            <div class="label text-black">
+              Timesheet Status
+            </div>
+            <q-badge
+              rounded
+              class="text-h6 q-px-sm q-py-sm"
+              :style="{
+                color: selectedWeekStatus?.color,
+                background: selectedWeekStatus?.bgColor
+              }"
+            >
+              {{ selectedWeekStatus?.dropDownValue }}
+            </q-badge>
+          </div>
+        </div>
+
+        <!-- Right Side -->
         <q-btn
           v-if="selectedWeekLabel"
           color="primary"
           icon="o_add"
           label="Add"
           no-caps
+          :disable="entryRows.length && isActionDisabled(entryRows[0], 'button')"
           @click="onAdd"
         />
       </div>
@@ -50,6 +71,14 @@
 
           <div class="timesheet-body">
             <div
+              v-if="!entryRows.length"
+              class="row q-pa-sm"
+            >
+              <div class="text-grey-6 text-h6 text-left">
+                No data available.
+              </div>
+            </div>
+            <div
               v-for="(row, index) in entryRows"
               :key="row.id"
               class="row items-center q-mb-xs q-mt-xs entry-row"
@@ -64,6 +93,7 @@
                     v-model="row.taskId"
                     :options="projectTasksWithProjectForDropdown.list.value"
                     :filter="projectTasksWithProjectForDropdown.filter"
+                    :disable="isActionDisabled(row, 'task')"
                     @update:model-value="(val) => onTaskSelect(val, row)"
                   />
                </div>
@@ -78,12 +108,13 @@
                   dense
                   v-model="row.hours[i]"
                   input-class="text-right"
+                  :readonly="isActionDisabled(row, 'hours', i)"
                   @blur="() => onHoursChange(row, i)"
                   @focus="() => storePreviousHours(row, i)"
                 >
                   <!-- + icon -->
                   <q-icon
-                    v-if="row.hours[i] && Number(row.hours[i]) > 0"
+                    v-if="row.hours[i] && Number(row.hours[i]) > 0 && !isActionDisabled(row, 'description', i)"
                     name="o_add_circle"
                     size="xs"
                     class="cursor-pointer q-mr-xs"
@@ -138,9 +169,12 @@
                 <q-icon
                   name="o_delete_outline"
                   size="xs"
-                  class="cursor-pointer q-mr-xs"
+                  :class="{
+                    'cursor-pointer': !isActionDisabled(row, 'delete'),
+                    'disabled': isActionDisabled(row, 'delete')
+                  }"
                   color="negative"
-                  @click="onDeleteWeekTimesheet(row, index)"
+                  @click="!isActionDisabled(row, 'delete') && onDeleteWeekTimesheet(row, index)"
                 >
                   <q-tooltip>Delete Weekly Timesheet</q-tooltip>
                 </q-icon>
@@ -165,9 +199,21 @@
           </div>
         </div>
       </div>
+      <div class="flex justify-center">
+      <q-btn
+        v-if="entryRows.length > 0"
+        label="Submit For Approval"
+        no-caps
+        color="primary"
+        class="actionBtn"
+        :loading="processing"
+        :disable="processing || isActionDisabled(entryRows[0], 'button')"
+        @click="submitForApproval"
+      />
+    </div>
 
       <!-- Time entry details -->
-      <div v-if="selectedWeekLabel && previewList.length > 0" class="q-pa-sm time-entry-section">
+      <div v-if="selectedWeekLabel && previewList.length > 0" class="q-pa-sm time-entry-section" >
         <h3 class="text-weight-bold q-pa-xs">Time Entry Details</h3>
         <div class="row q-pa-xs bg-primary text-white table-row sticky-header">
           <div class="" style="width: 10%;">Date</div>
@@ -177,7 +223,12 @@
           <div class="" style="width: 40%;">Description</div>
         </div>
         <div class="scroll-area">
-          <div v-for="item in previewList" :key="item.id" class="row border-bottom table-row">
+          <div v-for="item in previewList" :key="item.id" class="row border-bottom table-row" :class="{'bg-light-red': item.timesheetStatus?.dropDownValue === 'Declined' && item.isApproved === false }">
+            <q-tooltip
+              v-if="item.timesheetStatus?.dropDownValue === 'Declined' && item.isApproved === false"
+            >
+              This entry was declined. Please correct it and resubmit for approval.
+            </q-tooltip>
             <div class="text-left" style="width: 10%;">{{ item.date }}</div>
             <div class="text-left" style="width: 20%;">{{ item.project }}</div>
             <div class="text-left" style="width: 25%;">{{ item.task }}</div>
@@ -193,9 +244,9 @@
 </template>
 <script setup>
 // Import libraries
-import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed, watch } from "vue";
 import { uid, useQuasar } from "quasar";
-import { setLocalStorage, getLocalStorage, notifySuccess, notifyError, zwConfirmDelete, notifyWarning } from "assets/utils";
+import { setLocalStorage, getLocalStorage, notifySuccess, notifyError, zwConfirmDelete, notifyWarning, zwConfirm } from "assets/utils";
 import { debounce } from "lodash";
 
 import timesheetService from "modules/timesheet/timesheet.service";
@@ -218,8 +269,9 @@ const selectedWeekLabel = ref("");
 const weekDates = ref([]);
 const entryRows = ref([]);
 const $q = useQuasar();
+const processing = ref(false);
 const { fonts, toolbar } = getEditorConfig($q);
-
+const selectedWeekStatus = ref(null);
 // ----------------------------------------------------------------------------------------------------------------
 // Local Storage:- DataTable and Advance Filter Values
 // ----------------------------------------------------------------------------------------------------------------
@@ -245,13 +297,14 @@ function mapTimesheetToEntryRows (data) {
         projectId: item.projectId,
         projectName: item.project?.name,
         projectModuleId: item.projectModule?.id,
+        timesheetStatus: item.timesheetStatus ?? null,
         hours: weekDates.value.map(() => 0), // initialize week
         lineIds: weekDates.value.map(() => null),
         description: weekDates.value.map(() => ""),
-        timesheetIds: weekDates.value.map(() => null)
+        timesheetIds: weekDates.value.map(() => null),
+        isApproved: weekDates.value.map(() => false)
       };
     }
-
     const itemDate = formatDate(item.timesheetDate);
     // find correct day index
     const index = weekDates.value.findIndex(
@@ -263,9 +316,9 @@ function mapTimesheetToEntryRows (data) {
       grouped[key].lineIds[index] = item.id; // store per day id
       grouped[key].description[index] = item.description; // store per day description
       grouped[key].timesheetIds[index] = item.timesheetId; // store per day id
+      grouped[key].isApproved[index] = item.isApproved;
     }
   });
-
   entryRows.value = Object.values(grouped);
 }
 
@@ -277,13 +330,14 @@ const getTimesheet = async () => {
   };
 
   const resp = await timesheetService.getAllTimesheetByWeek(payload);
-
+  selectedWeekStatus.value = resp.length > 0 ? resp[0].timesheetStatus : null;
   const lines = resp.flatMap(x => {
   return (x.timesheetLines || []).map(line => {
     return {
       ...line,
       timesheetDate: x.timesheetDate,
-      timesheetId: x.id
+      timesheetStatus: x.timesheetStatus,
+      timesheetId: x.id,
     };
   });
 });
@@ -369,6 +423,22 @@ const isSunday = (dateStr) => {
   );
 };
 
+const validateTimesheetHours = () => {
+  // Validate only Monday to Friday (indexes 0-4)
+  for (let i = 0; i < 5; i++) {
+    const totalHours = getColumnTotal(i);
+
+    if (Number(totalHours) <= 0) {
+      notifyError({
+        message: 'Please enter hours for all timesheet dates from Monday to Friday before submitting for approval.'
+      });
+      return false;
+    }
+  }
+
+  return true;
+};
+
 function getCurrentWeekEndSunday () {
   const today = new Date();
 
@@ -441,6 +511,44 @@ const getGrandTotal = computed(() => {
   return roundToTwo(total);
 });
 
+const isActionDisabled = (row, action, dayIndex = null) => {
+  const status = selectedWeekStatus.value?.dropDownValue ?? selectedWeekStatus.value;
+
+  // Lock everything for these statuses
+  const isLocked =
+    ["Approved", "Submitted", "Resubmitted"].includes(status);
+
+  // Add & Submit buttons
+  if (action === "button") {
+    return isLocked;
+  }
+
+  // Task dropdown & Delete icon
+  if (["task", "delete"].includes(action)) {
+    return (
+      isLocked ||
+      row.isApproved?.some(
+        (approved, index) => approved && Number(row.hours?.[index]) > 0
+      )
+    );
+  }
+
+  // Hours input & Description icon
+  if (["hours", "description"].includes(action)) {
+    if (isLocked) {
+      return true;
+    }
+
+    // Lock only the current approved line
+    return (
+      row.isApproved?.[dayIndex] === true &&
+      Number(row.hours?.[dayIndex]) > 0
+    );
+  }
+
+  return false;
+};
+
 // after getting all timesheet data from api then map to preview list
 function mapToPreviewList (lines) {
   previewList.value = lines.map(line => ({
@@ -449,7 +557,9 @@ function mapToPreviewList (lines) {
     project: line.project?.name,
     task: line.task?.name,
     hours: line.hours,
-    description: line.description
+    description: line.description,
+    timesheetStatus: line.timesheetStatus,
+    isApproved: line.isApproved
   }));
 }
 
@@ -525,7 +635,9 @@ function rebuildPreview () {
           project: row.projectName,
           task: row.taskName,
           hours: h,
-          description: row.description[i]
+          description: row.description[i],
+          timesheetStatus: row.timesheetStatus,
+          isApproved: row.isApproved?.[i] ?? false
         });
       }
     });
@@ -649,6 +761,61 @@ async function saveTimesheet (row, dayIndex, description) {
     }, 1500);
   }
 }
+
+const submitForApproval = async () => {
+  if (!validateTimesheetHours()) {
+    return;
+  }
+
+  zwConfirm(
+  {
+    title: "Confirmation",
+    message: "Are you sure you want to submit this weekly timesheet for approval?",
+    okLabel: "OK",
+    cancelLabel: "Cancel",
+    cancel: true
+  },
+  async () => {
+    processing.value = true;
+    try {
+      const payload = {
+        projectNames: [...new Set(entryRows.value.map(row => row.projectName))],
+        timesheetDate: selectedWeekLabel.value,
+        approvalStatus: selectedWeekStatus.value?.dropDownValue === "Declined" ? "Resubmitted" : "Submitted"
+      };
+
+      await timesheetService.sendWeeklyTimesheetNotification(payload);
+
+      notifySuccess({
+        message: "Timesheet has been successfully sent to the approver for approval."
+      });
+      await getTimesheet();
+    } finally {
+      setTimeout(() => {
+        processing.value = false;
+      }, 1500);
+    }
+  }
+);
+};
+
+// const checkWeekCompleted = async () => {
+//   const isWeekCompleted =
+//     weekDates.value.length === 7 &&
+//     weekDates.value.every((_, index) => getColumnTotal(index) > 0);
+
+//   if (!isWeekCompleted) {
+//     return;
+//   }
+
+//   const payload = {
+//     projectNames: [...new Set(entryRows.value.map(row => row.projectName))],
+//     fromDate: formatDate(weekDates.value[0].date),
+//     toDate: formatDate(weekDates.value[6].date)
+//   };
+
+//   await timesheetService.sendWeeklyTimesheetNotification(payload);
+// };
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Initialization Of All DropDowns
 // ----------------------------------------------------------------------------------------------------------------
@@ -760,5 +927,8 @@ onMounted(() => {
 .timesheet-body::-webkit-scrollbar-thumb {
   background-color: #bdbdbd;
   border-radius: 10px;
+}
+.bg-light-red {
+  background-color: #ed9e9e !important;
 }
 </style>
