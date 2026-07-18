@@ -37,6 +37,10 @@ namespace Vsky.Services.Requirements
         IPagedList<Requirement> GetAllRequirementsForDashboard(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
         #endregion
 
+        #region GetAllRequirementListForDropdown
+        Task<List<CommonDropDown>> GetAllRequirementListForDropdown(string siteId, string projectModuleId = null);
+        #endregion
+
         List<VWProjectRequirementStatusSummary> GetRequirementStatusSummaryByProjectIds(List<string> projectIds);
 
         #region GetRequirementById

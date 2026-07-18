@@ -85,6 +85,8 @@ namespace Vsky.Api.Controllers
                     searchModel.SearchText,
                     searchModel.TestCaseNumber,
                     searchModel.ProjectIds,
+                    searchModel.ProjectModuleIds,
+                    searchModel.RequirementIds,
                     searchModel.PlanIds,
                     searchModel.TestedBys,
                     searchModel.StatusIds,
@@ -203,15 +205,12 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region GetReleaseWiseTestCaseHistory
-        [HttpGet("history-by-testCaseIds/{testCaseIds}")]
-        public async Task<IActionResult> GetReleaseWiseTestCaseHistoryByTestCaseIds(string testCaseIds, string versionNumber)
+        [HttpPost("history-by-testCaseIds")]
+        public async Task<IActionResult> GetReleaseWiseTestCaseHistoryByTestCaseIds([FromBody] ReleaseHistoryRequest request)
         {
-            var ids = testCaseIds
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .ToList();
-
             var result = await _projectReleaseTrackingReqPlanTaskIssueMappingService
-                .GetReleaseWiseTestCaseHistoryByTestCaseIds(ids, versionNumber);
+                .GetReleaseWiseTestCaseHistoryByTestCaseIds(request.TestCaseIds,
+            request.VersionNumber);
 
             return Ok(result);
         }
@@ -241,6 +240,10 @@ namespace Vsky.Api.Controllers
                     var SiteId = _globalVariable.SiteId;
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                    var testCaseExists = await _testCaseService.GetTestCaseByName(SiteId, model.ProjectId, model.PlanId, model.ProjectModuleId, model.Name);
+                    if (testCaseExists != null)
+                        return BadRequest(new BadRequestError("The test case already exists"));
 
                     string TestCaseId = null;
                     var entity = _mapper.Map<TestCase>(model);
@@ -372,7 +375,13 @@ namespace Vsky.Api.Controllers
                     if (entity == null)
                         return BadRequest(new BadRequestError("No test case found with the specified id."));
 
+                    var testCaseExists = await _testCaseService.GetTestCaseByName(SiteId, model.ProjectId, model.PlanId, model.ProjectModuleId, model.Name, id);
+                    if (testCaseExists != null)
+                        return BadRequest(new BadRequestError("The test case already exists"));
+
                     entity.ProjectId = model.ProjectId;
+                    entity.ProjectModuleId = model.ProjectModuleId;
+                    entity.RequirementId = model.RequirementId;
                     entity.PlanId = model.PlanId;
                     entity.Name = model.Name;
                     entity.StatusId = model.StatusId;

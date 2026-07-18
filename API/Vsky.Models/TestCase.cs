@@ -12,6 +12,8 @@ public class TestCase : BaseEntity
     public string StatusId { get; set; }
     public string EmployeeId { get; set; }
     public string ProjectId { get; set; }
+    public string ProjectModuleId { get; set; }
+    public string RequirementId { get; set; }
     public string AreaId { get; set; }
     public string WorkspaceId { get; set; }
     public string TestedBy { get; set; }
@@ -41,5 +43,7 @@ public class TestCase : BaseEntity
     public virtual ApplicationUser UpdatedBy { get; set; }
     public virtual Employee TestedByEmployee { get; set; }
     public virtual Project Project { get; set; }
+    public virtual ProjectModule ProjectModule { get; set; }
+    public virtual Requirement Requirement { get; set; }
     public virtual ICollection<ProjectReleaseTrackingReqPlanTaskIssueMapping> ProjectReleaseTrackingReqPlanTaskIssueMappings { get; set; } = new List<ProjectReleaseTrackingReqPlanTaskIssueMapping>();
 }

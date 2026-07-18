@@ -19,20 +19,6 @@
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Project Name</div>
-                <div class="text-black">
-                  {{ model.project.name }}
-                </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Project Module</div>
-                <div class="text-black">
-                  {{ model.projectModule.name ? model.projectModule.name : "-" }}
-                </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12">
                 <div class="q-mb-xs">Issue Name</div>
                 <div class="text-black">
@@ -42,20 +28,40 @@
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Area</div>
+                <div class="q-mb-xs">Project Name</div>
                 <div class="text-black">
-                  {{ model.area.dropDownValue ? model.area.dropDownValue : "-" }}
+                  {{ model.project?.name || "-" }}
                 </div>
               </div>
               <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Workspace</div>
+                <div class="q-mb-xs">Project Module</div>
                 <div class="text-black">
-                  {{ model.workspace.dropDownValue ? model.workspace.dropDownValue : "-" }}
+                  {{ model.projectModule?.name || "-" }}
                 </div>
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12">
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Requirement</div>
+                <div class="text-black">
+                  {{ model.requirement?.title || "-" }}
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Area</div>
+                <div class="text-black">
+                  {{ model.area?.dropDownValue || "-" }}
+                </div>
+              </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Workspace</div>
+                <div class="text-black">
+                  {{ model.workspace?.dropDownValue || "-" }}
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Task</div>
                 <div class="text-black">
                   <span v-if="model.projectTaskRelatedMappings?.length">
@@ -69,29 +75,32 @@
                       <span v-if="index < model.projectTaskRelatedMappings.length - 1">, </span>
                     </template>
                   </span>
+                  <span v-else>-</span>
                 </div>
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-3">
+              <div class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Assign To</div>
                 <div class="text-black">
-                  {{ model.employee.person.fullName }}
+                  {{ model.employee?.person?.fullName || "-" }}
                 </div>
               </div>
-              <div class="col-12 col-sm-6 col-md-3">
+              <div class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Issue Priority</div>
                 <div class="text-black">
-                  {{ model.priority.dropDownValue }}
+                  {{ model.priority?.dropDownValue || "-" }}
                 </div>
               </div>
-              <div class="col-12 col-sm-6 col-md-3">
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Reported By</div>
                 <div class="text-black">
-                  {{ model.reportedBy.person.fullName }}
+                  {{ model.reportedBy?.person?.fullName || "-" }}
                 </div>
               </div>
-              <div class="col-12 col-sm-6 col-md-3">
+              <div class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Created Date</div>
                 <div class="text-black">
                   {{ model.createdOnUtc }}
@@ -120,10 +129,8 @@ import { ref, onMounted } from "vue";
 import _ from "lodash";
 import issueService from "../issue.service";
 import viewProjectTask from "modules/project-tasks/components/view.vue";
-// import useFilters from "composables/useFilters";
 
 // Common variables
-// const { toDate } = useFilters();
 const loading = ref(true);
 const $q = useQuasar();
 
@@ -155,6 +162,9 @@ const model = ref({
   projectModule: {
     name: ""
   },
+  requirement: {
+    title: ""
+  },
   employee: {
     person: {
       fullName: ""
@@ -177,6 +187,7 @@ const getIssueDetails = () => {
     loading.value = false;
   });
 };
+
 // View popup
 const onViewTask = (id) => {
   $q.dialog({

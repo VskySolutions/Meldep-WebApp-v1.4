@@ -971,7 +971,12 @@ namespace Vsky.Api.Controllers
                             );
                     }
 
-                    entity.TypeId = (!string.IsNullOrWhiteSpace(model.TypeId) && model.TypeId != "undefined") ? model.TypeId : null;
+                    entity.TypeId =
+                        !string.IsNullOrWhiteSpace(model.TypeId) &&
+                        model.TypeId != "undefined" &&
+                        model.TypeId != "null"
+                            ? model.TypeId
+                            : null;
                     entity.CreatedById = LoggedUserId;
                     entity.UpdatedById = LoggedUserId;
                     entity.CreatedOnUtc = GetDateTime;
@@ -1272,7 +1277,12 @@ namespace Vsky.Api.Controllers
                     entity.StatusId = model.StatusId;
                     entity.PriorityId = model.PriorityId;
                     entity.AssignedToId = model.AssignedToId;
-                    entity.TypeId = (!string.IsNullOrWhiteSpace(model.TypeId) && model.TypeId != "undefined") ? model.TypeId : null;
+                    entity.TypeId =
+                        !string.IsNullOrWhiteSpace(model.TypeId) &&
+                        model.TypeId != "undefined" &&
+                        model.TypeId != "null"
+                            ? model.TypeId
+                            : null;
                     entity.SortOrder = model.SortOrder;
 
                     entity.Name = model.Name;

@@ -143,6 +143,11 @@ namespace Vsky.Models
         public string Name { get; set; }
         public DateTime? Date { get; set; }
     }
+    public class ReleaseHistoryRequest
+    {
+        public List<string> TestCaseIds { get; set; } = new();
+        public string VersionNumber { get; set; }
+    }
     public class ProjectReleaseTrackingStatusLog : BaseEntity
     {
         public string ReleaseTrackingId { get; set; }

@@ -25,53 +25,63 @@
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">
                     <div class="q-mb-xs">Test Case Name</div>
-                    <div class="text-black q-mb-sm">{{ model.name }}</div>
+                    <div class="text-black q-mb-sm">{{ model.name || "-" }}</div>
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Project Name</div>
-                    <div class="text-black q-mb-sm">{{ model.project?.name }}</div>
+                    <div class="text-black q-mb-sm">{{ model.project?.name || "-" }}</div>
                   </div>
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Test Plan Name</div>
-                    <div class="text-black q-mb-sm">{{ model.testPlan?.name }}</div>
+                    <div class="text-black q-mb-sm">{{ model.testPlan?.name || "-" }}</div>
+                  </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Project Module Name</div>
+                    <div class="text-black q-mb-sm">{{ model.projectModule?.name || "-" }}</div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Requirement Title</div>
+                    <div class="text-black q-mb-sm">{{ model.requirement?.title || "-" }}</div>
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Area</div>
-                    <div class="text-black q-mb-sm">{{ model.area?.dropDownValue }}</div>
+                    <div class="text-black q-mb-sm">{{ model.area?.dropDownValue || "-" }}</div>
                   </div>
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Workspace</div>
-                    <div class="text-black q-mb-sm">{{ model.workspace?.dropDownValue }}</div>
+                    <div class="text-black q-mb-sm">{{ model.workspace?.dropDownValue || "-" }}</div>
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Tested By</div>
-                    <div class="text-black q-mb-sm">{{ model.testedByEmployee?.person?.fullName }}</div>
+                    <div class="text-black q-mb-sm">{{ model.testedByEmployee?.person?.fullName || "-" }}</div>
                   </div>
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Tested Date</div>
-                    <div class="text-black q-mb-sm">{{ model.testedDate }}</div>
+                    <div class="text-black q-mb-sm">{{ model.testedDate || "-" }}</div>
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Created By</div>
-                    <div class="text-black q-mb-sm"> {{ model.createdByUser?.person?.fullName }}</div>
+                    <div class="text-black q-mb-sm"> {{ model.createdByUser?.person?.fullName || "-" }}</div>
                   </div>
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Created Date</div>
-                    <div class="text-black q-mb-sm">{{ model.createdOnUtc }}</div>
+                    <div class="text-black q-mb-sm">{{ model.createdOnUtc || "-" }}</div>
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Status</div>
-                    <div class="text-black q-mb-sm">{{ model.status?.dropDownValue }}</div>
+                    <div class="text-black q-mb-sm">{{ model.status?.dropDownValue || "-" }}</div>
                   </div>
                   <div v-if="model.status?.dropDownValue === 'Fail'" class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Assign To</div>
@@ -135,13 +145,13 @@
                   <div class="col-12 col-md-6">
                     <div class="q-mb-xs">Project Name</div>
                     <div class="text-black q-mb-cs">
-                      {{ testPlanModel.project?.name }}
+                      {{ testPlanModel.project?.name || "-" }}
                     </div>
                   </div>
                   <div class="col">
                     <div class="col-12 col-md-6">Test Plan Name</div>
                     <div class="text-black">
-                      {{ testPlanModel.name }}
+                      {{ testPlanModel.name || "-" }}
                     </div>
                   </div>
                 </div>
@@ -149,13 +159,13 @@
                   <div class="col-12 col-md-6">
                     <div class="q-mb-xs">Area</div>
                     <div class="text-black q-mb-cs">
-                      {{ testPlanModel.area?.dropDownValue }}
+                      {{ testPlanModel.area?.dropDownValue || "-" }}
                     </div>
                   </div>
                   <div class="col">
                     <div class="col-12 col-md-6">Workspace</div>
                     <div class="text-black">
-                      {{ testPlanModel.workspace?.dropDownValue }}
+                      {{ testPlanModel.workspace?.dropDownValue || "-" }}
                     </div>
                   </div>
                 </div>
@@ -163,13 +173,13 @@
                   <div class="col-12 col-md-6">
                     <div class="q-mb-xs">Plan Maker</div>
                     <div class="text-black">
-                      {{ testPlanModel.planMaker?.person?.fullName }}
+                      {{ testPlanModel.planMaker?.person?.fullName || "-" }}
                     </div>
                   </div>
                   <div class="col-12 col-md-6">
                     <div class="q-mb-xs">Plan Reviewer</div>
                     <div class="text-black">
-                      {{ testPlanModel.planReviewer?.person?.fullName }}
+                      {{ testPlanModel.planReviewer?.person?.fullName || "-" }}
                     </div>
                   </div>
                 </div>
@@ -203,7 +213,6 @@ import testplansService from "modules/test-plan/testPlan.service";
 const props = defineProps({ id: { type: String, default: "" }, testPlanId : { type: String, default: "" } });
 
 // Common variables
-// const { toDate } = useFilters();
 const loading = ref(true);
 const tab = ref("1_tab");
 

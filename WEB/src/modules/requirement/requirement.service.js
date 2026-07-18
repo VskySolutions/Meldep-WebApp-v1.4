@@ -16,6 +16,11 @@ export default {
   getRequirementDescriptionById (id) {
     return http.get(`/requirement/description/${id}`).then(response => response.data);
   },
+
+  getAllRequirementListForDropdown (projectModuleId) {
+    return http.get(`/requirement/dropdown/list?projectModuleId=${projectModuleId}`).then(response => response.data);
+  },
+
   getAllRequirementTagListForDropdown () {
     return http.get("/requirement/requirementTags/dropdown/list").then(response => response.data);
   },

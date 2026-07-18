@@ -15,6 +15,7 @@ namespace Vsky.Services.Issues
             int issueNumber,
             List<string> projectIds, 
             List<string> projectModuleIds,
+            List<string> requirementIds,
             string name, 
             List<string> priorityIds,
             List<string> statusIds,

@@ -204,7 +204,7 @@
                 {{ props.row.name }}
               </q-td>
               <q-td
-                v-if="selectedColumnNames.includes('statusId')" 
+                v-if="selectedColumnNames.includes('statusId')"
                 class="common-q-td"
                 :class="{ 'hoverable-cell' : props.row.isEditable }"
                 @click="activeEdit = { rowId: props.row.id, field: 'status' }"
@@ -218,6 +218,7 @@
                   :options="filteredStatusList"
                   :active-edit="activeEdit"
                   :show-history="true"
+                  :loading="updatingRow.status === props.row.id"
                   @popup-show="handlePopupShow"
                   @cancel="activeEdit = { rowId: null, field: null }"
                   @submit="({ rowId, value }) => onSubmitReleaseTrackingStatus(rowId, value, refreshReleaseTrackingList)"
@@ -339,6 +340,7 @@ import {
 // SOP Change :- Shared Project Actions
 import {
   initReleaseTrackingActions,
+  updatingRow,
   onSubmitReleaseTrackingStatus,
   onSubmitReleaseTrackingDelete
 } from "src/modules/project-release-tracking/utils/actions.js";

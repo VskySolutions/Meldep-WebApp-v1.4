@@ -35,6 +35,18 @@
                 </div>
                 <div class="col-12 col-sm-4 col-md-4">
                   <formSingleSelectDropdown
+                    v-model="model.requirementId"
+                    label="Requirement"
+                    :required="false"
+                    :disable="!model.projectModuleId"
+                    :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
+                    :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                  />
+                </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
+                <div class="col-12 col-sm-4 col-md-4">
+                  <formSingleSelectDropdown
                     v-model="model.areaId"
                     label="Area"
                     :required="false"
@@ -42,8 +54,6 @@
                     :filter="areaForDropdownSingleSelect.filter"
                   />
                 </div>
-              </div>
-              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-4 col-md-4">
                   <formSingleSelectDropdown
                     v-model="model.workspaceId"
@@ -68,6 +78,8 @@
                     />
                   </div>
                 </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-4 col-md-4">
                   <formSingleSelectDropdown
                     v-model="model.priorityId"
@@ -78,8 +90,6 @@
                     :error-message="v$.priorityId.$errors[0]?.$message"
                   />
                 </div>
-              </div>
-              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-4 col-md-4">
                   <formSingleSelectDropdown
                     v-model="model.statusId"
@@ -100,6 +110,8 @@
                     :error-message="v$.typeId.$errors[0]?.$message"
                   />
                 </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-sm">
                 <div class="col-12 col-sm-4 col-md-4">
                   <formSingleSelectDropdown
                     v-model="model.reportedById"
@@ -109,8 +121,6 @@
                     :filter="activeEmployeesDropdownSingleSelect.filter"
                   />
                 </div>
-              </div>
-              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-4 col-md-4">
                   <formSingleSelectDropdown
                     v-model="model.employeeId"
@@ -163,7 +173,7 @@
 import { useDialogPluginComponent, useQuasar } from "quasar";
 import { useAuthStore } from "stores/auth";
 import { required, helpers, minLength, maxLength } from "@vuelidate/validators";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { notifySuccess, notifyError, getLocalStorage } from "assets/utils";
 import { isDate } from "validators/zw_validators.js";
 import _ from "lodash";
@@ -176,7 +186,11 @@ import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 import projectTaskModule from "src/modules/project-tasks/utils/dropdowns.js";
 import issueModule from "src/modules/issue/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
+
+// SOP Change :- Shared Scripts DataTable Features
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 // Shared Inputs
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
@@ -212,22 +226,46 @@ const { fonts, toolbar } = getEditorConfig($q);
 // Local Storage
 // ----------------------------------------------------------------------------------------------------------------
 
-const localStorageKey = "Issue";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const projectIds = filterLocalStorage ? filterLocalStorage.projectIds[0] : [];
-const projectModuleIds = filterLocalStorage ? filterLocalStorage.projectModuleIds[0] : [];
+// const localStorageKey = "Issue";
+// const filterLocalStorage = getLocalStorage(localStorageKey);
+// const projectIds = filterLocalStorage ? filterLocalStorage.projectIds[0] : [];
+// const projectModuleIds = filterLocalStorage ? filterLocalStorage.projectModuleIds[0] : [];
+
+
+const currentSiteId = computed(() => user?.siteId || null);
+// ----------------------------------------------------------------------------------------------------------------
+// Local Storage:- DataTable and Advance Filter Values
+// ----------------------------------------------------------------------------------------------------------------
+
+const { getTableState } = useSiteTableState({
+  storageKey: "issue-Index",
+  siteId: currentSiteId
+});
+
+const searchStorage = getTableState();
+
+let selectedProjectId = null;
+let selectedProjectModuleId = null;
+let selectedRequirementId = null;
 
 // ----------------------------------------------------------------------------------------------------------------
 // Define model
 // ----------------------------------------------------------------------------------------------------------------
 
 const model = ref({
-  projectId: props.projectIdAttr !== "" ? props.projectIdAttr : (props.taskProjectId && props.taskProjectId !== null ? props.taskProjectId : (projectIds !== "" ? projectIds : null)),
+  projectId:
+    props.projectIdAttr ||
+    props.taskProjectId ||
+    selectedProjectId,
   name: props.taskName !== "" ? props.taskName : "",
   priorityId: "",
   statusId: "",
   typeId: "",
-  projectModuleId: props.moduleIdAttr !== "" ? props.moduleIdAttr : (props.taskModuleId && props.taskModuleId !== null ? props.taskModuleId : (projectModuleIds !== "" ? projectModuleIds : null)),
+  projectModuleId:
+    props.moduleIdAttr ||
+    props.taskModuleId ||
+    selectedProjectModuleId,
+  requirementId: selectedRequirementId,
   reportedById: user?.employeeId ? user.employeeId : "",
   employeeId: "",
   dueDateStr: "",
@@ -276,6 +314,7 @@ const getIssue = () => {
 const { projectNameDropdownSingleSelect } = projectModule();
 const { projectModulesByProjectIdForDropdownSingleSelect } = projectModuleOfProjectModule();
 const { activeEmployeesDropdownSingleSelect } = employeeModule();
+const { requirementByProjectModuleIdForDropdownSingleSelect } = requirementModule();
 
 const {
   areaForDropdownSingleSelect,
@@ -323,9 +362,18 @@ watch(() => model.value.projectId, (newValue, oldValue) => {
   }
 }, { immediate: true });
 
+watch(
+  () => model.value.projectModuleId,
+  (moduleIds) => {
+    if (moduleIds == null) return;
+
+    requirementByProjectModuleIdForDropdownSingleSelect.load(moduleIds);
+  },
+  { immediate: true }
+);
+
 // On page rendering
 onMounted(async () => {
-  projectNameDropdownSingleSelect.load();
   areaForDropdownSingleSelect.load("Area");
   workspaceForDropdownSingleSelect.load("Workspace");
   activeEmployeesDropdownSingleSelect.load();
@@ -351,6 +399,38 @@ onMounted(async () => {
   if (bugType && props.id === "") {
     model.value.typeId = bugType;
   }
+
+  // selected values
+  await projectNameDropdownSingleSelect.load();
+
+  const projectIds = searchStorage?.search?.projectIds || [];
+  const moduleIds = searchStorage?.search?.projectModuleIds || [];
+
+  if (projectIds.length) {
+    selectedProjectId =
+      projectIds.find(id =>
+        projectNameDropdownSingleSelect.list.value.some(x => x.value === id)
+      ) || null;
+
+    model.value.projectId = selectedProjectId;
+
+    if (selectedProjectId && moduleIds.length) {
+      await projectModulesByProjectIdForDropdownSingleSelect.load(
+        false,
+        false,
+        selectedProjectId
+      );
+
+      selectedProjectModuleId =
+        moduleIds.find(id =>
+          projectModulesByProjectIdForDropdownSingleSelect.list.value.some(
+            x => x.value === id
+          )
+        ) || null;
+
+      model.value.projectModuleId = selectedProjectModuleId;
+    }
+  }
 });
 
 </script>
@@ -366,5 +446,4 @@ onMounted(async () => {
   height: auto;
   display: block;
 }
-
 </style>

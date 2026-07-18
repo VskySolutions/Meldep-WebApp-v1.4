@@ -38,6 +38,29 @@
                 </div>
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
+                <div class="col-12 col-sm-6 col-md-6">
+                  <formSingleSelectDropdown
+                    v-model="model.projectModuleId"
+                    label="Project Module"
+                    :disable="!model.projectId"
+                    :options="projectModulesByProjectIdForDropdownSingleSelect.list.value"
+                    :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
+                    :error="v$.projectModuleId.$error"
+                    :error-message="v$.projectModuleId.$errors[0]?.$message"
+                  />
+                </div>
+                <div class="col-12 col-sm-6 col-md-6">
+                  <formSingleSelectDropdown
+                    v-model="model.requirementId"
+                    label="Requirement"
+                    :required="false"
+                    :disable="!model.projectModuleId"
+                    :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
+                    :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                  />
+                </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-12 col-md-12">
                   <label class="label q-mb-xs text-black">Test Case Name<span class="required">*</span></label>
                   <q-input
@@ -176,9 +199,9 @@
 // Import libraries
 import { useDialogPluginComponent, useQuasar } from "quasar";
 import { required, helpers, minLength, maxLength } from "@vuelidate/validators";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useAuthStore } from "stores/auth";
-import { notifySuccess, notifyError, getLocalStorage } from "assets/utils";
+import { notifySuccess, notifyError } from "assets/utils";
 import { isDate } from "validators/zw_validators.js";
 import useVuelidate from "@vuelidate/core";
 import _ from "lodash";
@@ -191,6 +214,8 @@ import testPlanModule from "src/modules/test-plan/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
 import testCaseModule from "src/modules/test-case/utils/dropdowns.js";
 import projectTaskModule from "src/modules/project-tasks/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
+import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 
 // Shared Inputs
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
@@ -198,11 +223,20 @@ import formDate from "src/components/form-inputs/_formDate.vue";
 
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
+// Shared DataTable Features
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 // ----------------------------------------------------------------------------------------------------------------
 // Props values i.e. come from query string
 // ----------------------------------------------------------------------------------------------------------------
 
-const props = defineProps({ id: { type: String, default: "" }, projectIdAttr: { type: String, default: "" }, projectIdValue: { type: String, default: "" }, testPlanIdAttr: { type: String, default: "" }, testPlanIdValue: { type: String, default: "" } });
+const props = defineProps({
+  id: { type: String, default: "" },
+  projectIdAttr: { type: String, default: "" },
+  projectIdValue: { type: String, default: "" },
+  testPlanIdAttr: { type: String, default: "" },
+  testPlanIdValue: { type: String, default: "" }
+});
+
 const readonlyProject = props.projectIdAttr ? "readonly" : "";
 const readonlyTestPlan = props.testPlanIdAttr ? "readonly" : "";
 
@@ -224,23 +258,37 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const { fonts, toolbar } = getEditorConfig($q);
 
+const currentSiteId = computed(() => user?.siteId || null);
 // ----------------------------------------------------------------------------------------------------------------
 // Local Storage:- DataTable and Advance Filter Values
 // ----------------------------------------------------------------------------------------------------------------
 
-const localStorageKey = "Test Case";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const projectIds = filterLocalStorage ? filterLocalStorage.projectIds[0] : [];
-const planIds = filterLocalStorage ? filterLocalStorage.planIds[0] : [];
+const { getTableState } = useSiteTableState({
+  storageKey: "test-Case-Index",
+  siteId: currentSiteId
+});
+
+const searchStorage = getTableState();
+
+let selectedProjectId = null;
+let selectedPlanId = null;
 
 // ----------------------------------------------------------------------------------------------------------------
 // Define model
 // ----------------------------------------------------------------------------------------------------------------
 
 const model = ref({
-  projectId: props.projectIdAttr !== "" ? props.projectIdAttr : (props.projectIdValue !== "" ? props.projectIdValue : (projectIds !== "" ? projectIds : null)),
+   projectId:
+    props.projectIdAttr ||
+    props.projectIdValue ||
+    selectedProjectId ||
+    null,
   name: "",
-  planId: props.testPlanIdAttr !== "" ? props.testPlanIdAttr : (planIds !== "" ? planIds : null),
+  planId:
+    props.testPlanIdAttr ||
+    selectedPlanId ||
+    null,
+  name: "",
   planMakerId: "",
   planReviewerId: "",
   employeeId: "",
@@ -258,6 +306,7 @@ const model = ref({
 
 const rules = {
   projectId: { required: helpers.withMessage("Project name is required", required) },
+  projectModuleId: { required: helpers.withMessage("Project module is required", required) },
   planId: { required: helpers.withMessage("Test plan is required", required) },
   name: { required: helpers.withMessage("Name is required", required), minLength: minLength(1), maxLength: maxLength(200) },
   testedDateStr: {
@@ -291,6 +340,8 @@ const { projectNameDropdownSingleSelect } = projectModule();
 const { testPlansByProjectIdForDropdownSingleSelect } = testPlanModule();
 const { testCaseStatusForDropdownSingleSelect } = testCaseModule();
 const { activeEmployeesDropdownSingleSelect } = employeeModule();
+const { projectModulesByProjectIdForDropdownSingleSelect } = projectModuleOfProjectModule();
+const { requirementByProjectModuleIdForDropdownSingleSelect } = requirementModule();
 
 const {
   areaForDropdownSingleSelect,
@@ -373,24 +424,61 @@ watch(() => props.id, (newValue, oldValue) => {
 watch(() => model.value.projectId, (newValue, oldValue) => {
   if (newValue) {
     testPlansByProjectIdForDropdownSingleSelect.load(model.value.projectId);
+    projectModulesByProjectIdForDropdownSingleSelect.load(false, false, model.value.projectId);
   }
 }, { immediate: true });
 
+watch(
+  () => model.value.projectModuleId,
+  (moduleIds) => {
+    if (moduleIds == null) return;
+
+    requirementByProjectModuleIdForDropdownSingleSelect.load(moduleIds);
+  },
+  { immediate: true }
+);
 // ----------------------------------------------------------------------------------------------------------------
 // On page load
 // ----------------------------------------------------------------------------------------------------------------
 
 onMounted(async () => {
-  projectNameDropdownSingleSelect.load();
   activeEmployeesDropdownSingleSelect.load();
   areaForDropdownSingleSelect.load("Area");
   workspaceForDropdownSingleSelect.load("Workspace");
   await testCaseStatusForDropdownSingleSelect.load("Test Case Status");
 
-  // Set "New" status as the default if it exists  
+  // Set "New" status as the default if it exists
   const newStatus = await testCaseStatusForDropdownSingleSelect.getValueByLabel("New");
   if (newStatus && props.id === "") {
     model.value.statusId = newStatus;
+  }
+
+  // selected values
+  await projectNameDropdownSingleSelect.load();
+
+  const projectIds = searchStorage?.search?.projectIds || [];
+  const planIds = searchStorage?.search?.planIds || [];
+
+  if (projectIds.length) {
+    selectedProjectId =
+      projectIds.find(id =>
+        projectNameDropdownSingleSelect.list.value.some(x => x.value === id)
+      ) || null;
+
+    model.value.projectId = selectedProjectId;
+
+    if (selectedProjectId && planIds.length) {
+      await testPlansByProjectIdForDropdownSingleSelect.load(selectedProjectId);
+
+      selectedPlanId =
+        planIds.find(id =>
+          testPlansByProjectIdForDropdownSingleSelect.list.value.some(
+            x => x.value === id
+          )
+        ) || null;
+
+      model.value.planId = selectedPlanId;
+    }
   }
 });
 

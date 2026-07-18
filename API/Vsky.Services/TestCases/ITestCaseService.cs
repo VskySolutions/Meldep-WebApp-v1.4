@@ -14,7 +14,9 @@ namespace Vsky.Services.TestCases
             string LoggedUserId, 
             string SearchText, 
             int testCaseNumber, 
-            List<string> projectIds, 
+            List<string> projectIds,
+            List<string> projectModuleIds,
+            List<string> requirementIds,
             List<string> planIds, 
             List<string> testedBys, 
             List<string> statusIds,
@@ -53,6 +55,10 @@ namespace Vsky.Services.TestCases
 
         #region GetTestCaseDetailsById
         Task<TestCase> GetTestCaseDetailsById(string id);
+        #endregion
+
+        #region GetTestCaseByName
+        Task<TestCase> GetTestCaseByName(string siteId, string projectId, string testPlanId, string projectModuleId, string name, string id = null);
         #endregion
 
         #region InsertTestCase

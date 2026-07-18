@@ -17,10 +17,16 @@ export default {
     return http.get(`/test-case/history/${id}`).then(response => response.data);
   },
 
+  // getReleaseWiseTestCaseHistoryByTestCaseIds(testCaseIds, versionNumber) {
+  //   return http.get(
+  //     `/test-case/history-by-testCaseIds/${testCaseIds.join(",")}?versionNumber=${versionNumber}`
+  //   ).then(r => r.data);
+  // },
   getReleaseWiseTestCaseHistoryByTestCaseIds(testCaseIds, versionNumber) {
-    return http.get(
-      `/test-case/history-by-testCaseIds/${testCaseIds.join(",")}?versionNumber=${versionNumber}`
-    ).then(r => r.data);
+    return http.post("/test-case/history-by-testCaseIds", {
+      testCaseIds,
+      versionNumber
+    }).then(r => r.data);
   },
 
   getStatusChangeLog(mappingId) {

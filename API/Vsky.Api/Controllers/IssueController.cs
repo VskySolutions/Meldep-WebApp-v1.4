@@ -74,6 +74,7 @@ namespace Vsky.Api.Controllers
                     searchModel.IssueNumber,
                     searchModel.ProjectIds,
                     searchModel.ProjectModuleIds,
+                    searchModel.RequirementIds,
                     searchModel.Name,
                     searchModel.PriorityIds,
                     searchModel.StatusIds,
@@ -257,6 +258,7 @@ namespace Vsky.Api.Controllers
 
                     entity.ProjectId = model.ProjectId;
                     entity.ProjectModuleId = model.ProjectModuleId;
+                    entity.RequirementId = model.RequirementId;
                     entity.AreaId = model.AreaId;
                     entity.WorkspaceId = model.WorkspaceId;
                     entity.Name = model.Name;

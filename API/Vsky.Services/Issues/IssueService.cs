@@ -67,6 +67,7 @@ namespace Vsky.Services.Issues
             int issueNumber,
             List<string> projectIds,
             List<string> projectModuleIds,
+            List<string> requirementIds,
             string name,
             List<string> priorityIds,
             List<string> statusIds,
@@ -93,6 +94,9 @@ namespace Vsky.Services.Issues
 
             if (projectModuleIds != null && projectModuleIds.Any())
                 query = query.Where(x => projectModuleIds.Contains(x.ProjectModuleId));
+
+            if (requirementIds != null && requirementIds.Any())
+                query = query.Where(x => requirementIds.Contains(x.RequirementId));
 
             if (priorityIds != null && priorityIds.Any())
                 query = query.Where(x => priorityIds.Contains(x.PriorityId));
@@ -132,6 +136,7 @@ namespace Vsky.Services.Issues
                     m.IssueNumber.ToString().Contains(SearchText.ToLower()) ||
                     m.Project.Name.ToLower().Contains(SearchText.ToLower()) ||
                     m.ProjectModule.Name.ToLower().Contains(SearchText.ToLower()) ||
+                    m.Requirement.Title.ToLower().Contains(SearchText.ToLower()) ||
                     m.Name.ToLower().Contains(SearchText.ToLower()) ||
                     m.Priority.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
                     m.Type.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
@@ -434,6 +439,11 @@ namespace Vsky.Services.Issues
                 AreaId = x.AreaId,
                 WorkspaceId = x.WorkspaceId,
                 CreatedOnUtc = x.CreatedOnUtc,
+                Requirement = new Requirement
+                {
+                    Id = x.Requirement.Id,
+                    Title = x.Requirement.Title
+                },
                 Area = new DropDown
                 {
                     Id = x.Area.Id,

@@ -13,6 +13,7 @@ public class Issue : BaseEntity
     public string SiteId { get; set; }
     public string ProjectId { get; set; }
     public string ProjectModuleId { get; set; }
+    public string RequirementId { get; set; }
     public string AreaId { get; set; }
     public string WorkspaceId { get; set; }
     public string PriorityId { get; set; }
@@ -52,6 +53,7 @@ public class Issue : BaseEntity
     public virtual Employee ReportedBy { get; set; }
     public virtual TestCase TestCase { get; set; }
     public virtual ProjectModule ProjectModule { get; set; }
+    public virtual Requirement Requirement { get; set; }
     public virtual ApplicationUser CreatedBy { get; set; }
     public virtual ApplicationUser UpdatedBy { get; set; }
     public virtual ICollection<IssueStatusChangedLog> IssueStatusChangedLog { get; set; } = new List<IssueStatusChangedLog>();

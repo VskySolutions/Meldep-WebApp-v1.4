@@ -64,6 +64,8 @@ namespace Vsky.Services.TestCases
             string SearchText,
             int testCaseNumber,
             List<string> projectIds,
+            List<string> projectModuleIds,
+            List<string> requirementIds,
             List<string> planIds,
             List<string> testedBys,
             List<string> statusIds,
@@ -89,6 +91,12 @@ namespace Vsky.Services.TestCases
 
             if (projectIds != null && projectIds.Any())
                 query = query.Where(x => projectIds.Contains(x.ProjectId));
+
+            if (projectModuleIds != null && projectModuleIds.Any())
+                query = query.Where(x => projectModuleIds.Contains(x.ProjectModuleId));
+
+            if (requirementIds != null && requirementIds.Any())
+                query = query.Where(x => requirementIds.Contains(x.RequirementId));
 
             if (planIds != null && planIds.Any())
                 query = query.Where(x => planIds.Contains(x.PlanId));
@@ -142,6 +150,8 @@ namespace Vsky.Services.TestCases
                 query = query.Where(m =>
                     m.TestCaseNumber.ToString().Contains(SearchText) ||
                     m.Project.Name.ToLower().Contains(SearchText) ||
+                    m.ProjectModule.Name.ToLower().Contains(SearchText.ToLower()) ||
+                    m.Requirement.Title.ToLower().Contains(SearchText.ToLower()) ||
                     m.TestPlan.Name.ToLower().Contains(SearchText) ||
                     m.Name.ToLower().Contains(SearchText) ||
                     (
@@ -443,6 +453,16 @@ namespace Vsky.Services.TestCases
                     Id = x.Project.Id,
                     Name = x.Project.Name
                 },
+                ProjectModule = new ProjectModule
+                {
+                    Id = x.ProjectModule.Id,
+                    Name = x.ProjectModule.Name
+                },
+                Requirement = new Requirement
+                {
+                    Id = x.Requirement.Id,
+                    Title = x.Requirement.Title
+                },
                 Status = new DropDown
                 {
                     Id = x.Status.Id,
@@ -462,6 +482,28 @@ namespace Vsky.Services.TestCases
                     }
                 },
             });
+            var item = await query.FirstOrDefaultAsync();
+            return item;
+        }
+        #endregion
+
+        #region GetTestCaseByName
+        // Title: GetTestCaseByName
+        // Description: This method retrieves a Test Case based on its name and Id. It allows an optional exclusion of a Test Case by its ID, which can be useful for scenarios like checking for duplicates. while excluding a specific Test Case. The method returns the first matching Test Case or null if no match is found.
+        public async Task<TestCase> GetTestCaseByName(string siteId, string projectId, string testPlanId, string projectModuleId, string name, string id = null)
+        {
+            var query = _testCaseRepository.TableNoTracking.Where(x => 
+                !x.Deleted && 
+                x.SiteId == siteId && 
+                x.Name.ToLower() == name.ToLower() && 
+                x.ProjectId == projectId && 
+                x.PlanId == testPlanId &&
+                x.ProjectModuleId == projectModuleId
+            );
+
+            if (!string.IsNullOrEmpty(id))
+                query = query.Where(x => x.Id != id);
+
             var item = await query.FirstOrDefaultAsync();
             return item;
         }

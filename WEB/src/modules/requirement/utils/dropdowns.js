@@ -8,6 +8,16 @@ export default function requirementModule () {
     valueKey: "id"
   });
 
+  const requirementsByProjectModuleIdForDropdown = useMultiSelectDropdown(requirementService.getAllRequirementListForDropdown, {
+    labelKey: "text",
+    valueKey: "value"
+  });
+
+  const requirementByProjectModuleIdForDropdownSingleSelect = useSingleSelectDropdown(requirementService.getAllRequirementListForDropdown, {
+    labelKey: "text",
+    valueKey: "value"
+  });
+
   // single select
   const requirementStatusDropdownSingleSelect = useSingleSelectDropdown(commonService.getDropDown, {
     labelKey: "dropdownValue",
@@ -52,6 +62,8 @@ export default function requirementModule () {
 
   return {
     requirementStatusForDropdown,
+    requirementsByProjectModuleIdForDropdown,
+    requirementByProjectModuleIdForDropdownSingleSelect,
     requirementStatusDropdownSingleSelect,
     requirementPriorityDropdownSingleSelect,
     requirementTagsDropdown,

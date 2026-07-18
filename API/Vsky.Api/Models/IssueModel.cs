@@ -11,6 +11,7 @@ namespace Vsky.Api.Models
         public string SiteId { get; set; }
         public string ProjectId { get; set; }
         public string ProjectModuleId { get; set; }
+        public string RequirementId { get; set; }
         public string AreaId { get; set; }
         public string WorkspaceId { get; set; }
         public string PriorityId { get; set; }
@@ -50,6 +51,7 @@ namespace Vsky.Api.Models
         public virtual Employee ReportedBy { get; set; }
         public virtual TestCase TestCase { get; set; }
         public virtual ProjectModule ProjectModule { get; set; }
+        public virtual Requirement Requirement { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }
         public virtual ICollection<IssueStatusChangedLog> IssueStatusChangedLog { get; set; } = new List<IssueStatusChangedLog>();
@@ -64,6 +66,7 @@ namespace Vsky.Api.Models
         public List<string> ProjectIds { get; set; }
         public string ProjectId { get; set; }
         public List<string> ProjectModuleIds { get; set; }
+        public List<string> RequirementIds { get; set; }
         public List<string> IssueTypeIds { get; set; }
         public List<string> PriorityIds { get; set; }
         public List<string> StatusIds { get; set; }

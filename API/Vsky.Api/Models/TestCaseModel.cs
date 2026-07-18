@@ -12,6 +12,8 @@ namespace Vsky.Api.Models
         public string StatusId { get; set; }
         public string EmployeeId { get; set; }
         public string ProjectId { get; set; }
+        public string ProjectModuleId { get; set; }
+        public string RequirementId { get; set; }
         public string AreaId { get; set; }
         public string WorkspaceId { get; set; }
         public string TestedBy { get; set; }
@@ -38,12 +40,16 @@ namespace Vsky.Api.Models
         public virtual ApplicationUser UpdatedBy { get; set; }
         public virtual Employee TestedByEmployee { get; set; }
         public virtual Project Project { get; set; }
+        public virtual ProjectModule ProjectModule { get; set; }
+        public virtual Requirement Requirement { get; set; }
     }
 
     public record TestCaseSearchModel : BaseSearchModel
     {
         public int TestCaseNumber { get; set; }
         public List<string> ProjectIds { get; set; }
+        public List<string> ProjectModuleIds { get; set; }
+        public List<string> RequirementIds { get; set; }
         public string ProjectId { get; set; }
         public List<string> PlanIds { get; set; }
         public List<string> TestedBys { get; set; }

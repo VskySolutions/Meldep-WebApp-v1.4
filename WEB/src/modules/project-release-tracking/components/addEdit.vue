@@ -778,7 +778,7 @@ const onSubmit = async (type, isClose = 0, isDraft = null) => {
       tab3Saved.value = true;
 
       await loadMappedItems();
-      await loadHistory();
+      // await loadHistory();
 
       tab.value = "4_tab";
     }

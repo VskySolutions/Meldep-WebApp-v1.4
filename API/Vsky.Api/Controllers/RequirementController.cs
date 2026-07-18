@@ -163,6 +163,27 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GetAllRequirementListForDropdown
+        // Title: GetAllRequirementListForDropdown
+        // Description: This endpoint retrieves the list of Requirements. 
+        [HttpGet("dropdown/list")]
+        public async Task<IActionResult> GetAllRequirementListForDropdown(string ProjectModuleId = null)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var list = await _requirementService.GetAllRequirementListForDropdown(SiteId, ProjectModuleId);
+                var model = _mapper.Map<List<CommonDropDown>>(list);
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region GetRequirementDetailsById
         // Title: GetRequirementDetailsById
         // Description: This endpoint retrieves the details of a specific Requirement based on its unique identifier (ID). 

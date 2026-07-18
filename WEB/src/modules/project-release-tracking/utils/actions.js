@@ -1,4 +1,5 @@
 import { notifySuccess, notifyError, zwConfirmDelete } from "assets/utils";
+import { ref, nextTick } from "vue";
 import releaseTrackingService from "modules/project-release-tracking/projectReleaseTracking.service";
 
 let activeRowId;
@@ -7,17 +8,26 @@ export function initReleaseTrackingActions (rowRef) {
   activeRowId = rowRef;
 }
 
-// Update ReleaseTracking Status
-export const onSubmitReleaseTrackingStatus = async (id, statusId, refreshReleaseTrackingList) => {
-  try {
-    await releaseTrackingService.updateReleaseTrackingStatus(id, statusId);
+export const updatingRow = ref({
+  status: null
+});
 
-    notifySuccess({ message: "Release tracking status is saved successfully." });
-    refreshReleaseTrackingList();
+export const onSubmitReleaseTrackingStatus = async (
+  id,
+  statusId,
+  refreshReleaseTrackingList
+) => {
+  try {
+    await withRowLoader(
+      "status",
+      id,
+      () => releaseTrackingService.updateReleaseTrackingStatus(id, statusId),
+      "Release tracking status is saved successfully.",
+      "Failed to update release tracking status.",
+      refreshReleaseTrackingList
+    );
   } catch (error) {
     sendError("Error updating release tracking status", error);
-  } finally {
-    activeRowId.value = id;
   }
 };
 
@@ -72,6 +82,34 @@ export const onSubmitRetestingItemDelete = (
       activeRowId.value = null;
     }
   );
+};
+
+const withRowLoader = async (
+  field,
+  rowId,
+  apiCall,
+  successMessage = "Updated successfully.",
+  errorMessage = "Update failed.",
+  afterSuccess = null
+) => {
+  updatingRow.value[field] = rowId;
+
+  await nextTick();
+  document.activeElement?.blur();
+
+  try {
+    await apiCall();
+
+    if (afterSuccess) {
+      await afterSuccess();
+    }
+
+    notifySuccess({ message: successMessage });
+  } catch (error) {
+    notifyError({ message: errorMessage });
+  } finally {
+    updatingRow.value[field] = null;
+  }
 };
 
 function sendError (message, error) {

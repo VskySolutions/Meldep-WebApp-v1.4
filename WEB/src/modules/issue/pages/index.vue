@@ -55,6 +55,12 @@
                         :options="projectModulesByProjectIdForDropdown.list.value"
                         :filter="projectModulesByProjectIdForDropdown.filter"
                       />
+                      <multiSelectDropdown
+                        v-model="search.requirementIds"
+                        label="Requirement"
+                        :options="requirementsByProjectModuleIdForDropdown.list.value"
+                        :filter="requirementsByProjectModuleIdForDropdown.filter"
+                      />
                       <div class="row items-center q-mb-sm">
                         <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
                           <label class="Cutomlabel q-mt-sm fs-13">Issue Name</label>
@@ -162,7 +168,7 @@
                   icon="o_refresh"
                   outline
                   no-caps
-                  class="text-primary btnRounded q-ml-xs"
+                  class="text-primary btnRounded q-ml-sm"
                   @click="resetColumnsWidth()"
                 >
                   <q-tooltip>Reset Columns Width</q-tooltip>
@@ -179,7 +185,7 @@
                 <q-btn
                   color="primary"
                   icon="o_sort"
-                  class="btnRounded q-ml-xs"
+                  class="btnRounded q-ml-sm"
                   @click="showSortDialog = true"
                 >
                   <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
@@ -225,7 +231,7 @@
           <template #header="props">
             <q-tr :props="props" class="bg-primary text-white">
               <q-th auto-width class="text-center" />
-              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->               
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
               <q-th
                 v-for="col in props.cols"
                 :key="col.name"
@@ -526,6 +532,7 @@ import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 import issueModule from "src/modules/issue/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 
 // SOP Change :- Shared Scripts DataTable Features
 import { useColumnManager } from "composables/dataTable/useColumnManager.js";
@@ -681,6 +688,7 @@ const onAdvanceClear = () => {
   search.value.issueNumber = undefined;
   search.value.projectIds = [];
   search.value.projectModuleIds = [];
+  search.value.requirementIds = [];
   search.value.name = "";
   search.value.priorityIds = [];
   search.value.statusIds = [];
@@ -716,6 +724,7 @@ const {
           : [route.query.projectId])
       : [],
     projectModuleIds: [],
+    requirementIds: [],
     issueTypeIds: [],
     priorityIds: [],
     statusIds: [],
@@ -1118,6 +1127,7 @@ const {
   issueTypeForDropdown,
   issueStatusDropdownSingleSelect
 } = issueModule();
+const { requirementsByProjectModuleIdForDropdown } = requirementModule();
 
 // ----------------------------
 // Applied Filter Labels.
@@ -1138,6 +1148,7 @@ const mapFilterToLabel = (ids, list, label) => {
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
+  ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
   ...mapFilterToLabel(search.value.priorityIds, issuePriorityForDropdown.list, "Issue Priority"),
   ...mapFilterToLabel(search.value.statusIds, issueStatusForDropdown.list, "Status"),
   ...mapFilterToLabel(search.value.issueTypeIds, issueTypeForDropdown.list, "Issue Type"),
@@ -1150,6 +1161,7 @@ function getFilterCount (key) {
   switch (key) {
   case "Project Name": return search.value.projectIds?.length || 0;
   case "Project Module": return search.value.projectModuleIds?.length || 0;
+  case "Requirement": return search.value.requirementIds?.length || 0;
   case "Issue Priority": return search.value.priorityIds?.length || 0;
   case "Status": return search.value.statusIds?.length || 0;
   case "Issue Type": return search.value.issueTypeIds?.length || 0;
@@ -1163,6 +1175,8 @@ function onClearFilters (key) {
     search.value.projectIds = [];
   } else if (key === "Project Module") {
     search.value.projectModuleIds = [];
+  } else if (key === "Requirement") {
+    search.value.requirementIds = [];
   } else if (key === "Issue Priority") {
     search.value.priorityIds = [];
   } else if (key === "Status") {
@@ -1240,6 +1254,15 @@ watch(activeRowId, (val) => {
   });
 });
 
+watch(
+  () => search.value.projectModuleIds,
+  (moduleIds) => {
+    if (moduleIds == null) return;
+    requirementsByProjectModuleIdForDropdown.load(moduleIds);
+  },
+  { immediate: true }
+);
+
 // onBeforeUnmount(() => {
 //   document.removeEventListener("click", handleDocumentClick);
 // });
@@ -1262,6 +1285,7 @@ onMounted(() => {
   if (!activeRowId.value) {
     activeRowId.value = null;
   }
+  if (search.value.projectModuleIds.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
 
   // document.addEventListener("click", handleDocumentClick);
 });

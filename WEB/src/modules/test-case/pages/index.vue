@@ -50,6 +50,18 @@
                         :filter="projectNameDropdown.filter"
                       />
                       <multiSelectDropdown
+                        v-model="search.projectModuleIds"
+                        label="Project Module"
+                        :options="projectModulesByProjectIdForDropdown.list.value"
+                        :filter="projectModulesByProjectIdForDropdown.filter"
+                      />
+                      <multiSelectDropdown
+                        v-model="search.requirementIds"
+                        label="Requirement"
+                        :options="requirementsByProjectModuleIdForDropdown.list.value"
+                        :filter="requirementsByProjectModuleIdForDropdown.filter"
+                      />
+                      <multiSelectDropdown
                         v-model="search.planIds"
                         label="Test Plan Name"
                         :options="testPlansByProjectIdForDropdown.list.value"
@@ -173,7 +185,7 @@
                   icon="o_refresh"
                   outline
                   no-caps
-                  class="text-primary btnRounded q-ml-xs"
+                  class="text-primary btnRounded q-ml-sm"
                   @click="resetColumnsWidth()"
                 >
                   <q-tooltip>Reset Columns Width</q-tooltip>
@@ -190,7 +202,7 @@
                 <q-btn
                   color="primary"
                   icon="o_sort"
-                  class="btnRounded q-ml-xs"
+                  class="btnRounded q-ml-sm"
                   @click="showSortDialog = true"
                 >
                   <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
@@ -423,7 +435,6 @@
 <script setup>
 // Import libraries
 import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
-import { useRoute } from "vue-router";
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
 
@@ -444,6 +455,8 @@ import projectModule from "src/modules/project/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
 import testPlanModule from "src/modules/test-plan/utils/dropdowns.js";
 import testCaseModule from "src/modules/test-case/utils/dropdowns.js";
+import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 
 // SOP Change :- Shared Scripts DataTable Features
 import { useColumnManager } from "composables/dataTable/useColumnManager.js";
@@ -483,7 +496,6 @@ import {
 // Common variables
 const expandedRows = ref([]);
 const loading = ref(true);
-const route = useRoute();
 const showFilter = ref(false);
 const searchLoader = ref(false);
 const authStore = useAuthStore();
@@ -597,17 +609,10 @@ const defaultSearch = {
   statusIds: [],
   fromDate: "",
   toDate: "",
-  projectIds: route.query.projectId && route.query.projectId !== ""
-    ? (Array.isArray(route.query.projectId)
-        ? route.query.projectId
-        : [route.query.projectId])
-    : [],
-
-  planIds: route.query.planId && route.query.planId !== ""
-    ? (Array.isArray(route.query.planId)
-        ? route.query.planId
-        : [route.query.planId])
-    : []
+  projectIds: [],
+  projectModuleIds: [],
+  requirementIds: [],
+  planIds: []
 };
 
 const defaultPagination = {
@@ -640,6 +645,18 @@ const {
     .filter(col => col.default === true)
     .map(col => col.name)
 });
+
+if (history.state?.projectId) {
+  search.value.projectIds = Array.isArray(history.state.projectId)
+    ? history.state.projectId
+    : [history.state.projectId];
+}
+
+if (history.state?.planId) {
+  search.value.planIds = Array.isArray(history.state.planId)
+    ? history.state.planId
+    : [history.state.planId];
+}
 
 const highlightedId = computed(() => {
   return activeRowId.value;
@@ -719,6 +736,8 @@ const onAdvanceSearch = () => {
 const onAdvanceClear = () => {
   search.value.testCaseNumber = undefined;
   search.value.projectIds = [];
+  search.value.projectModuleIds = [];
+  search.value.requirementIds = [];
   search.value.planIds = [];
   search.value.testedBys = [];
   search.value.statusIds = [];
@@ -807,6 +826,8 @@ const mapFilterToLabel = (ids, list, label) => {
 
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
+  ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
+  ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
   ...mapFilterToLabel(search.value.planIds, testPlansByProjectIdForDropdown.list, "Test Plan Name"),
   ...mapFilterToLabel(search.value.testedBys, activeEmployeesDropdown.list, "Tested By"),
   ...mapFilterToLabel(search.value.statusIds, testCaseStatusForDropdown.list, "Test Case Status"),
@@ -819,6 +840,8 @@ const appliedFilters = computed(() => ({
 function getFilterCount (key) {
   switch (key) {
   case "Project Name": return search.value.projectIds?.length || 0;
+  case "Project Module": return search.value.projectModuleIds?.length || 0;
+  case "Requirement": return search.value.requirementIds?.length || 0;
   case "Test Plan Name": return search.value.planIds?.length || 0;
   case "Tested By": return search.value.testedBys?.length || 0;
   case "Test Case Status": return search.value.statusIds?.length || 0;
@@ -831,6 +854,10 @@ function onClearFilters (key) {
     search.value.testCaseNumber = "";
   } else if (key === "Project Name") {
     search.value.projectIds = [];
+  } else if (key === "Project Module") {
+    search.value.projectModuleIds = [];
+  } else if (key === "Requirement") {
+    search.value.requirementIds = [];
   } else if (key === "Test Plan Name") {
     search.value.planIds = [];
   } else if (key === "Tested By") {
@@ -844,7 +871,6 @@ function onClearFilters (key) {
   } else if (key === "Created To Date") {
     search.value.toDate = "";
   }
-  // delete appliedFilters.value[key];
 
   saveDataTableState({
     search: search.value,
@@ -868,6 +894,8 @@ const {
   testCaseStatusForDropdown,
   testCaseStatusDropdownSingleSelect
 } = testCaseModule();
+const { projectModulesByProjectIdForDropdown } = projectModuleOfProjectModule();
+const { requirementsByProjectModuleIdForDropdown } = requirementModule();
 
 // Quick Search
 watch(() => search.value.searchText, () => {
@@ -879,8 +907,18 @@ watch(() => search.value.projectIds, async (newValue, oldValue) => {
   if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
 
   search.value.projectModuleIds = [];
+  projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
   await testPlansByProjectIdForDropdown.load(search.value.projectIds);
 }, { immediate: true });
+
+watch(
+  () => search.value.projectModuleIds,
+  (moduleIds) => {
+    if (moduleIds == null) return;
+    requirementsByProjectModuleIdForDropdown.load(moduleIds);
+  },
+  { immediate: true }
+);
 
 watch(activeRowId, (val) => {
   const formattedSorts = {};
@@ -914,6 +952,8 @@ onMounted(() => {
   testCaseStatusForDropdown.load("Test Case Status");
   testCaseStatusDropdownSingleSelect.load("Test Case Status");
   if (search.value.projectIds?.length > 0) testPlansByProjectIdForDropdown.load(search.value.projectIds);
+  if (search.value.projectIds.length > 0) projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
+  if (search.value.projectModuleIds.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
   getDropdownTypeByModuleName("SDLC");
   document.addEventListener("click", handleDocumentClick);
 });

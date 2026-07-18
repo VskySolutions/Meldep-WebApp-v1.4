@@ -154,17 +154,17 @@
       <q-separator />
       <div class="table-scroll-container">
         <q-table
-          ref="tableRef" 
-          v-model:pagination="pagination" 
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'" 
-          :loading="loading" 
-          :rows="rows" 
-          :columns="computedColumns" 
-          row-key="id" 
+          ref="tableRef"
+          v-model:pagination="pagination"
+          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+          :loading="loading"
+          :rows="rows"
+          :columns="computedColumns"
+          row-key="id"
           separator="cell"
-          no-data-label="No data available" 
-          binary-state-sort 
-          :rows-per-page-options="[20, 50, 100, 200, 500]" 
+          no-data-label="No data available"
+          binary-state-sort
+          :rows-per-page-options="[20, 50, 100, 200, 500]"
           @request="getAllTestPlan"
         >
           <template #loading>
@@ -272,37 +272,37 @@
               {{ props.row.updatedOnUtc }}
             </q-td>
               <q-td class="text-center actions">
-                <q-icon 
-                  name="o_visibility" 
-                  class="cursor-pointer q-mr-sm" 
-                  size="xs" 
+                <q-icon
+                  name="o_visibility"
+                  class="cursor-pointer q-mr-sm"
+                  size="xs"
                   @click="onTestPlanView(props.row.id)"
                 >
                   <q-tooltip>View</q-tooltip>
                 </q-icon>
-                <q-icon 
+                <q-icon
                   v-if="props.row.isEditable"
-                  name="o_edit" 
-                  class="cursor-pointer q-mr-sm" 
-                  size="xs" 
+                  name="o_edit"
+                  class="cursor-pointer q-mr-sm"
+                  size="xs"
                   @click="onTestPlanEdit(props.row.id, refreshTestPlanList)"
                 >
                   <q-tooltip>Edit</q-tooltip>
                 </q-icon>
-                <q-icon 
-                  name="o_checklist" 
-                  class="cursor-pointer q-mr-sm" 
-                  size="xs" 
-                  @click="$router.push('/test-case?planId='+props.row.id+'&&projectId='+props.row.projectId)"
+                <q-icon
+                  name="o_checklist"
+                  class="cursor-pointer q-mr-sm"
+                  size="xs"
+                  @click="$router.push({ path: '/test-case', state: { planId: props.row.id, projectId: props.row.projectId }})"
                 >
                   <q-tooltip>Test Case</q-tooltip>
                 </q-icon>
-                <q-icon 
-                  v-if="props.row.isEditable" 
-                  name="o_delete_outline" 
-                  class="cursor-pointer" 
-                  color="negative" 
-                  size="xs" 
+                <q-icon
+                  v-if="props.row.isEditable"
+                  name="o_delete_outline"
+                  class="cursor-pointer"
+                  color="negative"
+                  size="xs"
                   @click="onSubmitTestPlanDelete(props.row.id, props.row.name, refreshTestPlanList)"
                 >
                   <q-tooltip>Delete</q-tooltip>
