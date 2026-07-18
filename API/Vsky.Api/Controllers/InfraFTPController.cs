@@ -63,6 +63,7 @@ namespace Vsky.Api.Controllers
                     searchModel.Name,
                     searchModel.SearchText,
                     searchModel.SortBy,
+                    searchModel.Sorts,
                     searchModel.Descending,
                     searchModel.Page,
                     searchModel.PageSize);

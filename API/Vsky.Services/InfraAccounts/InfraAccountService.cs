@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
+using Vsky.Services.Common;
 
 namespace Vsky.Services.InfraAccounts
 {
@@ -15,12 +16,17 @@ namespace Vsky.Services.InfraAccounts
     {
         #region Define Services
         private readonly IRepository<InfraAccount> _infraAccountRepository;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
-        public InfraAccountService(IRepository<InfraAccount> infraAccountRepository)
+        public InfraAccountService(
+            IRepository<InfraAccount> infraAccountRepository,
+            ICommonService commonService
+        )
         {
             _infraAccountRepository = infraAccountRepository;
+            _commonService = commonService;
         }
         #endregion
 
@@ -41,6 +47,7 @@ namespace Vsky.Services.InfraAccounts
             List<string> infraAccountIds,
             string CCLast4Digits,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,
@@ -88,7 +95,15 @@ namespace Vsky.Services.InfraAccounts
                 }
             }
             else
+            {
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
 
             query = query.Select(x => new InfraAccount
             {
@@ -98,6 +113,8 @@ namespace Vsky.Services.InfraAccounts
                 CCLast4Digits = x.CCLast4Digits,
                 WalletNumber = x.WalletNumber,
                 CustomerId = x.CustomerId,
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 WalletType = new DropDown
                 {
                     Id = x.WalletType.Id,
@@ -107,6 +124,22 @@ namespace Vsky.Services.InfraAccounts
                 {
                     Id = x.Provider.Id,
                     DropDownValue = x.Provider.DropDownValue
+                },
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
+                    }
                 },
                 TotalServicesCost = x.InfraAccountServices.Where(s => !s.Deleted).SelectMany(s => s.InfraAccountServicesPriceHistory).Sum(ph => (decimal?)ph.Price) ?? 0
             });

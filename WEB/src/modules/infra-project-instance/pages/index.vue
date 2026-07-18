@@ -85,6 +85,36 @@
                   <q-tooltip>Save Instance</q-tooltip>
                 </q-btn>
               </div>
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
             </div>
           </div>
         </div>
@@ -97,7 +127,7 @@
           :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable'"
           :loading="loading"
           :rows="rows"
-          :columns="columns"
+          :columns="computedColumns"
           row-key="id"
           separator="cell"
           no-data-label="No data available"
@@ -112,20 +142,39 @@
           </template>
           <template #header="props">
             <q-tr :props="props" class="bg-primary text-white">
-              <q-th v-for="col in props.cols" :key="col.name" :props="props">
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">
                 {{ col.label }}
                 <span
                   v-if="['infraProjectId', 'instanceTypeId', 'platformId', 'url'].includes(col.name)"
                   class="required"
                 >*
                 </span>
+              </q-th> -->
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
+                @click="!isResizing && col.sortable"
+              >
+                {{ col.label }}
+                <span
+                  v-if="['infraProjectId', 'instanceTypeId', 'platformId', 'url'].includes(col.name)"
+                  class="required"
+                >*
+                </span>
+                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
               </q-th>
               <q-th auto-width class="text-center">Actions</q-th>
             </q-tr>
           </template>
           <template #body="props">
             <q-tr v-if="!props.row.deleted" :class="activeRowId == props.row.id ? 'highlight' : ''">
-              <q-td class="wrap-text" style="width: 22%;">
+              <q-td v-if="selectedColumnNames.includes('infraProjectId')" class="wrap-text">
                 <div v-if="!props.row.isNew && editingRowId !== props.row.id">
                   {{ props.row.infraProject?.name }}
                 </div>
@@ -139,7 +188,7 @@
                   @update:model-value="getRowValidation(props.row)?.infraProjectId?.$touch()"
                 />
               </q-td>
-              <q-td class="wrap-text" style="width: 22%;">
+              <q-td v-if="selectedColumnNames.includes('instanceTypeId')" class="wrap-text">
                 <div v-if="!props.row.isNew && editingRowId !== props.row.id">
                   {{ props.row.instanceType?.dropDownValue || "-" }}
                 </div>
@@ -153,7 +202,7 @@
                   @update:model-value="getRowValidation(props.row)?.instanceTypeId?.$touch()"
                 />
               </q-td>
-              <q-td class="wrap-text" style="width: 21%;">
+              <q-td v-if="selectedColumnNames.includes('platformId')" class="wrap-text">
                 <div v-if="!props.row.isNew && editingRowId !== props.row.id">
                   {{ props.row.platform?.dropDownValue || "-" }}
                 </div>
@@ -167,7 +216,7 @@
                   @update:model-value="getRowValidation(props.row)?.platformId?.$touch()"
                 />
               </q-td>
-              <q-td style="width: 30%;">
+              <q-td v-if="selectedColumnNames.includes('url')">
                 <div class="row items-center justify-between">
                   <div class="col">
                     <div v-if="!props.row.isNew && editingRowId !== props.row.id">
@@ -186,7 +235,31 @@
                   </div>
                 </div>
               </q-td>
-              <q-td auto-width class="text-center actions" style="width: 5%;">
+              <q-td
+                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.createdBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('createdOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.createdOnUtc }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedOnUtc }}
+              </q-td>
+              <q-td auto-width class="text-center actions">
                 <template v-if="editingRowId === props.row.id">
                   <q-icon
                     name="o_cancel"
@@ -197,7 +270,6 @@
                   >
                     <q-tooltip>Cancel</q-tooltip>
                   </q-icon>
-
                   <q-icon
                     :loading="processing"
                     name="o_save"
@@ -286,6 +358,15 @@
       </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="columns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 import { uid, useQuasar } from "quasar";
@@ -301,10 +382,20 @@ import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
 
+// SOP Change :- Shared DataTable Views
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
+
 // SOP Change :- Shared Dropdowns
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import infraProjectInstanceModule from "src/modules/infra-project-instance/utils/dropdowns.js";
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 import {
   initInfraProjectInstanceDialogs,
@@ -327,45 +418,130 @@ const processing = ref(false);
 const rowValidations = ref([]);
 const showFilter = ref(false);
 const searchLoader = ref(false);
-const activeRowId = ref(null);
 const editingRowId = ref(null);
 const editingRow = ref(null);
+const showSortDialog = ref(false);
+const tableRef = ref();
+const rows = ref([]);
 
-// local storage
-const localStorageKey = "Infra Project Instance";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const searchText = ref(filterLocalStorage?.searchText || "");
-const infraProjectIds = filterLocalStorage ? filterLocalStorage.infraProjectIds : [];
-const platformIds = filterLocalStorage ? filterLocalStorage.platformIds : [];
-const instanceTypeIds = filterLocalStorage ? filterLocalStorage.instanceTypeIds : [];
+const columns = ref([
+  { name: "infraProjectId", label: "Infra Project", field: "infraProjectId", align: "left", sortable: true, default: true },
+  { name: "instanceTypeId", label: "Instance Type", field: "instanceTypeId", align: "left", sortable: true, default: true },
+  { name: "platformId", label: "Platform", field: "platformId", align: "left", sortable: true, default: true },
+  { name: "url", label: "URL", field: "url", align: "left", sortable: true, default: true },
+  { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
+]);
 
-// search
-const search = ref({
-  searchText,
-  infraProjectIds,
-  platformIds,
-  instanceTypeIds
+const {
+  search,
+  pagination,
+  activeRowId,
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
+} = useSiteTableState({
+  storageKey: "infra-Project-Instance-Index",
+
+  defaultSearch: {
+    searchText: "",
+    infraProjectIds: [],
+    platformIds: [],
+    instanceTypeIds: []
+  },
+
+  defaultPagination: {
+    sortBy: "createdOnUtc",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  },
+
+  defaultSorts: {},
+
+  defaultResizableWidth: {},
+
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
+
+const lsSorts = sorts.value || null;
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshInfraProjectInstancesList();
+  }
 });
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // ProjectInstance List
 // --------------------------------------------------------------------------------------------------------------------------------------------------
-const tableRef = ref();
-const rows = ref([]);
-const pagination = ref({ sortBy: "CreatedOnUtc", descending: true, rowsPerPage: 15, page: 1 });
-const columns = ref([
-  { name: "infraProjectId", label: "Infra Project", field: "infraProjectId", align: "left", sortable: true },
-  { name: "instanceTypeId", label: "Instance Type", field: "instanceTypeId", align: "left", sortable: true },
-  { name: "platformId", label: "Platform", field: "platformId", align: "left", sortable: true },
-  { name: "url", label: "URL", field: "url", align: "left", sortable: true }
-]);
-
 // get Infra Project Instance and map list
-const getAllInfraProjectInstanceForList = async (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+const getAllInfraProjectInstanceForList = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;
   loading.value = true;
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
-  setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination });
+  const sorts = {};
+  const multi = multiSort.value;
+  for (let i = 0; i < multi.length; i++) {
+    const s = multi[i];
+    if (s.column && s.direction) {
+      sorts[s.column] = s.direction;
+    }
+  }
+  const payload = { page, pageSize: rowsPerPage, sortBy, descending, sorts, ...search.value };
+  saveDataTableState({
+    search: search.value,
+    pagination: p,
+    activeRowId: activeRowId.value,
+    sorts
+  });
 
   const resp = await infraProjectInstanceService.getAllInfraProjectInstanceForList(payload);
   // map async calls and wait for all of them
@@ -381,11 +557,14 @@ const getAllInfraProjectInstanceForList = async (props) => {
   rowValidations.value = rows.value.map(row =>
     useVuelidate(editingRowRules, row)
   );
-  pagination.value.page = page;
-  pagination.value.rowsPerPage = rowsPerPage;
-  pagination.value.sortBy = sortBy;
-  pagination.value.descending = descending;
-  pagination.value.rowsNumber = resp.total;
+  pagination.value = {
+    ...pagination.value,
+    page,
+    rowsPerPage,
+    sortBy,
+    descending,
+    rowsNumber: resp.total
+  };
   loading.value = false;
   searchLoader.value = false;
 };
@@ -631,7 +810,9 @@ const onClear = () => {
   search.value.infraProjectIds = [];
   search.value.platformIds = [];
   search.value.instanceTypeIds = [];
-  clearLocalStorage(localStorageKey);
+  saveDataTableState({
+    search: search.value
+  });
   onSearch();
 };
 
@@ -681,9 +862,27 @@ function getFilterCount (key) {
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Search: When user types in search
 // --------------------------------------------------------------------------------------------------------------------------------------------------
-watch(() => searchText.value, () => {
-  if (searchText.value) searchLoader.value = true;
-  refreshInfraProjectInstancesList();
+
+watch(() => search.value.searchText, () => {
+  searchLoader.value = true;
+  refreshRequirementList();
+});
+
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
 });
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------

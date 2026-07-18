@@ -69,7 +69,8 @@ namespace Vsky.Api.Controllers
                     searchModel.ProviderIds,
                     searchModel.InfraAccountIds,
                     searchModel.CCLast4Digits,
-                    searchModel.SortBy, 
+                    searchModel.SortBy,
+                    searchModel.Sorts,
                     searchModel.Descending, 
                     searchModel.Page, 
                     searchModel.PageSize);

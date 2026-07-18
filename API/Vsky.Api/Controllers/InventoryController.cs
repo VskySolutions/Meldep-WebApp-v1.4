@@ -105,6 +105,7 @@ namespace Vsky.Api.Controllers
                     searchModel.EmployeeIds,
                     searchModel.OfficeLocationIds,
                     searchModel.SortBy,
+                    searchModel.Sorts,
                     searchModel.Descending,
                     searchModel.Page,
                     searchModel.PageSize

@@ -93,6 +93,36 @@
                   <q-tooltip>Save FTP</q-tooltip>
                 </q-btn>
               </div>
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
             </div>
           </div>
         </div>
@@ -105,7 +135,7 @@
           :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable'"
           :loading="loading"
           :rows="rows"
-          :columns="columns"
+          :columns="computedColumns"
           row-key="id"
           separator="cell"
           no-data-label="No data available"
@@ -120,18 +150,36 @@
           </template>
           <template #header="props">
             <q-tr :props="props" class="bg-primary text-white">
-              <q-th v-for="col in props.cols" :key="col.name" :props="props">
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">
                 {{ col.label }}<span
                   v-if="['protocolTypeId', 'encryptionTypeId', 'name', 'host', 'port'].includes(col.name)"
                   class="required"
                 >*</span>
+              </q-th> -->              
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
+                @click="!isResizing && col.sortable"
+              >
+                {{ col.label }}
+                <span
+                  v-if="['protocolTypeId', 'encryptionTypeId', 'name', 'host', 'port'].includes(col.name)"
+                  class="required"
+                >*</span>
+                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
               </q-th>
               <q-th auto-width class="text-center">Actions</q-th>
             </q-tr>
           </template>
           <template #body="props">
             <q-tr v-if="!props.row.deleted" :class="activeRowId == props.row.id ? 'highlight' : ''">
-              <q-td class="wrap-text" style="width: 15%;">
+              <q-td v-if="selectedColumnNames.includes('infraServiceId')" class="wrap-text">
                 <div v-if="!props.row.isNew && editingRowId !== props.row.id">
                   {{ props.row.infraService?.name }}
                 </div>
@@ -143,7 +191,7 @@
                   :required="false"
                 />
               </q-td>
-              <q-td class="wrap-text" style="width: 14%;">
+              <q-td v-if="selectedColumnNames.includes('protocolTypeId')" class="wrap-text">
                 <div v-if="!props.row.isNew && editingRowId !== props.row.id">
                   {{ props.row.protocolType?.dropDownValue || "-" }}
                 </div>
@@ -157,7 +205,7 @@
                   @update:model-value="getRowValidation(props.row)?.protocolTypeId?.$touch()"
                 />
               </q-td>
-              <q-td class="wrap-text" style="width: 15%;">
+              <q-td v-if="selectedColumnNames.includes('encryptionTypeId')" class="wrap-text">
                 <div v-if="!props.row.isNew && editingRowId !== props.row.id">
                   {{ props.row.encryptionType?.dropDownValue || "-" }}
                 </div>
@@ -171,7 +219,7 @@
                   @update:model-value="getRowValidation(props.row)?.encryptionTypeId?.$touch()"
                 />
               </q-td>
-              <q-td style="width: 25%;">
+              <q-td v-if="selectedColumnNames.includes('name')">
                 <div class="row items-center">
                   <div class="col">
                     <div v-if="!props.row.isNew && editingRowId !== props.row.id">
@@ -190,7 +238,7 @@
                   </div>
                 </div>
               </q-td>
-              <q-td style="width: 8%;">
+              <q-td v-if="selectedColumnNames.includes('host')">
                 <div class="row items-center">
                   <div class="col">
                     <div v-if="!props.row.isNew && editingRowId !== props.row.id">
@@ -209,7 +257,7 @@
                   </div>
                 </div>
               </q-td>
-              <q-td style="width: 8%;">
+              <q-td v-if="selectedColumnNames.includes('port')">
                 <div class="row items-center">
                   <div class="col">
                     <div v-if="!props.row.isNew && editingRowId !== props.row.id">
@@ -228,7 +276,7 @@
                   </div>
                 </div>
               </q-td>
-              <q-td style="width: 10%;">
+              <q-td v-if="selectedColumnNames.includes('infraFTPsProjectInstanceMapping')">
                 <div class="row items-center q-gutter-xs">
                   <q-chip
                     v-for="(item, index) in (props.row.infraFTPsProjectInstanceMapping || []).slice(0, 2)"
@@ -249,7 +297,31 @@
                   </q-chip>
                 </div>
               </q-td>
-              <q-td auto-width class="text-center actions" style="width: 5%;">
+            <q-td
+              v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+              class="common-q-td"
+            >
+              {{ props.row.createdBy.person.fullName }}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('createdOnUtc')"
+              class="common-q-td"
+            >
+              {{ props.row.createdOnUtc }}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedBy.person.fullName }}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('updatedOnUtc')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedOnUtc }}
+            </q-td>
+              <q-td auto-width class="text-center actions">
                 <template v-if="editingRowId === props.row.id && !props.row.isNew">
                   <q-icon
                     name="o_cancel"
@@ -260,7 +332,6 @@
                   >
                     <q-tooltip>Cancel</q-tooltip>
                   </q-icon>
-
                   <q-icon
                     :loading="processing"
                     name="o_save"
@@ -374,12 +445,21 @@
       </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="sortableColumns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 import { uid, useQuasar } from "quasar";
 import { required, numeric, helpers } from "@vuelidate/validators";
 import { ref, onMounted, reactive, computed, watch } from "vue";
-import { clearLocalStorage, getLocalStorage, setLocalStorage, notifyError, notifySuccess, zwConfirm } from "assets/utils";
+import { notifyError, notifySuccess, zwConfirm } from "assets/utils";
 import useVuelidate from "@vuelidate/core";
 
 import infraFTPService from "../infraFTP.service";
@@ -392,9 +472,19 @@ import infraAccountServiceModule from "src/modules/infra-account-services/utils/
 import infraFTPModule from "src/modules/infra-ftp/utils/dropdowns.js";
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
+// SOP Change :- Shared DataTable Views
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
+
 // SOP Change :- Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 import {
   initFTPDialogs,
@@ -417,50 +507,136 @@ const processing = ref(false);
 const rowValidations = ref([]);
 const showFilter = ref(false);
 const searchLoader = ref(false);
-const activeRowId = ref(null);
 const editingRowId = ref(null);
 const editingRow = ref(null);
-
-// local storage
-const localStorageKey = "Infra FTP";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const searchText = ref(filterLocalStorage?.searchText || "");
-const infraServiceIds = filterLocalStorage ? filterLocalStorage.infraServiceIds : [];
-const protocolTypeIds = filterLocalStorage ? filterLocalStorage.protocolTypeIds : [];
-const encryptionTypeIds = filterLocalStorage ? filterLocalStorage.encryptionTypeIds : [];
-const name = filterLocalStorage ? filterLocalStorage.name : "";
-
-// search
-const search = ref({
-  searchText,
-  infraServiceIds,
-  protocolTypeIds,
-  encryptionTypeIds,
-  name
-});
+const showSortDialog = ref(false);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // FTP List
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 const tableRef = ref();
 const rows = ref([]);
-const pagination = ref({ sortBy: "CreatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 const columns = ref([
-  { name: "infraServiceId", label: "Infra Account Service", field: "infraServiceId", align: "left", sortable: true },
-  { name: "protocolTypeId", label: "Protocol Type", field: "protocolTypeId", align: "left", sortable: true },
-  { name: "encryptionTypeId", label: "Encryption Type", field: "encryptionTypeId", align: "left", sortable: true },
-  { name: "name", label: "Name", field: "name", align: "left", sortable: true },
-  { name: "host", label: "Host", field: "host", align: "left", sortable: true },
-  { name: "port", label: "Port", field: "port", align: "left", sortable: true },
-  { name: "infraFTPsProjectInstanceMapping", label: "Project Instance", field: "infraFTPsProjectInstanceMapping", align: "left", sortable: false }
+  { name: "infraServiceId", label: "Infra Account Service", field: "infraServiceId", align: "left", sortable: true, default: true },
+  { name: "protocolTypeId", label: "Protocol Type", field: "protocolTypeId", align: "left", sortable: true, default: true },
+  { name: "encryptionTypeId", label: "Encryption Type", field: "encryptionTypeId", align: "left", sortable: true, default: true },
+  { name: "name", label: "Name", field: "name", align: "left", sortable: true, default: true },
+  { name: "host", label: "Host", field: "host", align: "left", sortable: true, default: true },
+  { name: "port", label: "Port", field: "port", align: "left", sortable: true, default: true },
+  { name: "infraFTPsProjectInstanceMapping", label: "Project Instance", field: "infraFTPsProjectInstanceMapping", align: "left", sortable: false, default: true },
+  { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 
+const {
+  search,
+  pagination,
+  activeRowId,
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
+} = useSiteTableState({
+  storageKey: "infra-FTP-Index",
+
+  defaultSearch: {
+    searchText: "",
+    infraServiceIds: [],
+    protocolTypeIds: [],
+    encryptionTypeIds: [],
+    name: ""
+  },
+
+  defaultPagination: {
+    sortBy: "createdOnUtc",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  },
+
+  defaultSorts: {},
+
+  defaultResizableWidth: {},
+
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
+
+const lsSorts = sorts.value || null;
+const sortableColumns = computed(() =>
+  columns.value.filter(col => col.sortable)
+);
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshFTPList();
+  }
+});
+
 // get name Logs and map list
-const getAllInfraFTPForList = async (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+const getAllInfraFTPForList = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;
+  const sorts = {};
+  const multi = multiSort.value;
+  for (let i = 0; i < multi.length; i++) {
+    const s = multi[i];
+    if (s.column && s.direction) {
+      sorts[s.column] = s.direction;
+    }
+  }
   loading.value = true;
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
-  setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination });
+  const payload = { page, pageSize: rowsPerPage, sortBy, descending, sorts, ...search.value };
+  saveDataTableState({
+    search: search.value,
+    pagination: p,
+    activeRowId: activeRowId.value,
+    sorts
+  });
 
   const resp = await infraFTPService.getAllInfraFTPForList(payload);
   // map async calls and wait for all of them
@@ -477,11 +653,14 @@ const getAllInfraFTPForList = async (props) => {
   rowValidations.value = rows.value.map(row =>
     useVuelidate(editingRowRules, row)
   );
-  pagination.value.page = page;
-  pagination.value.rowsPerPage = rowsPerPage;
-  pagination.value.sortBy = sortBy;
-  pagination.value.descending = descending;
-  pagination.value.rowsNumber = resp.total;
+  pagination.value = {
+    ...pagination.value,
+    page,
+    rowsPerPage,
+    sortBy,
+    descending,
+    rowsNumber: resp.total
+  };
   loading.value = false;
   searchLoader.value = false;
 };
@@ -746,7 +925,9 @@ const onClear = () => {
   search.value.protocolTypeIds = [];
   search.value.encryptionTypeIds = [];
   search.value.name = "";
-  clearLocalStorage(localStorageKey);
+  saveDataTableState({
+    search: search.value
+  });
   onSearch();
 };
 
@@ -817,9 +998,26 @@ const {
 // Search: When user types in search
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
-watch(() => searchText.value, () => {
-  if (searchText.value) searchLoader.value = true;
+watch(() => search.value.searchText, () => {
+  searchLoader.value = true;
   refreshFTPList();
+});
+
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
 });
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------

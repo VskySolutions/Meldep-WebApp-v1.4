@@ -15,6 +15,7 @@ namespace Vsky.Services.InfraAccounts
             List<string> infraAccountIds,
             string CCLast4Digits,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,

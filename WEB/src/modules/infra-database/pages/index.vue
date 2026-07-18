@@ -43,8 +43,8 @@
                     />
                     <!-- Search and Clear Buttons -->
                     <div class="row justify-end q-gutter-sm q-mb-sm">
-                      <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showFilter = false; onSearch(); }" />
-                      <q-btn style="width: 20%;" outline color="grey-4" label="Clear" class="text-grey-9 btnRounded" no-caps @click="onClear" />
+                      <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showFilter = false; onAdvanceSearch(); }" />
+                      <q-btn style="width: 20%;" outline color="grey-4" label="Clear" class="text-grey-9 btnRounded" no-caps @click="onAdvanceClear" />
                       <q-btn style="width: 20%;" outline color="negative" label="Close" class="btnRounded" no-caps @click="() => { showFilter = false; }" />
                     </div>
                   </q-card>
@@ -73,6 +73,36 @@
                   <q-tooltip>Save Database</q-tooltip>
                 </q-btn>
               </div>
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
             </div>
           </div>
         </div>
@@ -85,7 +115,7 @@
           :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable'"
           :loading="loading"
           :rows="rows"
-          :columns="columns"
+          :columns="computedColumns"
           row-key="id"
           separator="cell"
           no-data-label="No data available"
@@ -100,19 +130,39 @@
           </template>
           <template #header="props">
             <q-tr :props="props" class="bg-primary text-white">
-              <q-th v-for="col in props.cols" :key="col.name" :props="props">
-                {{ col.label }}<span
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                {{ col.label }}
+                <span
                   v-if="['name', 'serverName', 'isReadOrWrite'].includes(col.name)"
                   class="required"
                 >*
                 </span>
+              </q-th> -->
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
+                @click="!isResizing && col.sortable"
+              >
+                {{ col.label }}
+                <span
+                  v-if="['name', 'serverName', 'isReadOrWrite'].includes(col.name)"
+                  class="required"
+                >*
+                </span>
+                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
               </q-th>
               <q-th auto-width class="text-center">Actions</q-th>
             </q-tr>
           </template>
           <template #body="props">
             <q-tr v-if="!props.row.deleted" :class="activeRowId == props.row.id ? 'highlight' : ''">
-              <q-td class="wrap-text" style="width: 17%;">
+              <q-td v-if="selectedColumnNames.includes('infraServiceId')" class="wrap-text">
                 <div v-if="!props.row.isNew && editingRowId !== props.row.id">
                   {{ props.row.infraService?.name }}
                 </div>
@@ -124,7 +174,7 @@
                   :required="false"
                 />
               </q-td>
-              <q-td style="width: 28%;">
+              <q-td v-if="selectedColumnNames.includes('name')">
                 <div class="row items-center justify-between">
                   <div class="col">
                     <div v-if="!props.row.isNew && editingRowId !== props.row.id">
@@ -143,7 +193,7 @@
                   </div>
                 </div>
               </q-td>
-              <q-td style="width: 28%;">
+              <q-td v-if="selectedColumnNames.includes('serverName')">
                 <div class="row items-center justify-between">
                   <div class="col">
                     <div v-if="!props.row.isNew && editingRowId !== props.row.id">
@@ -162,7 +212,7 @@
                   </div>
                 </div>
               </q-td>
-              <q-td style="width: 12%;">
+              <q-td v-if="selectedColumnNames.includes('isReadOrWrite')">
                 <div v-if="!props.row.isNew && editingRowId !== props.row.id">
                   {{ props.row.isReadOrWrite ? 'Read' : 'Write' }}
                 </div>
@@ -187,7 +237,7 @@
                   </div>
                 </div>
               </q-td>
-              <q-td style="width: 10%;">
+              <q-td v-if="selectedColumnNames.includes('infraDatabaseProjectInstanceMapping')">
                 <div class="row items-center q-gutter-xs">
                   <q-chip
                     v-for="(item, index) in (props.row.infraDatabaseProjectInstanceMapping || []).slice(0, 2)"
@@ -208,7 +258,31 @@
                   </q-chip>
                 </div>
               </q-td>
-              <q-td auto-width class="text-center actions" style="width: 5%;">
+              <q-td
+                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.createdBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('createdOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.createdOnUtc }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedOnUtc }}
+              </q-td>
+              <q-td auto-width class="text-center actions">
                 <template v-if="editingRowId === props.row.id && !props.row.isNew">
                   <q-icon
                     name="o_cancel"
@@ -314,12 +388,21 @@
       </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="sortableColumns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 import { uid, useQuasar } from "quasar";
 import { required, helpers } from "@vuelidate/validators";
 import { ref, onMounted, reactive, computed, watch } from "vue";
-import { clearLocalStorage, getLocalStorage, setLocalStorage, notifyError, notifySuccess, zwConfirm } from "assets/utils";
+import { notifyError, notifySuccess, zwConfirm } from "assets/utils";
 import useVuelidate from "@vuelidate/core";
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
 
@@ -332,9 +415,19 @@ import infraAccountModule from "src/modules/infra-account/utils/dropdowns.js";
 import infraAccountServiceModule from "src/modules/infra-account-services/utils/dropdowns.js";
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
+// SOP Change :- Shared DataTable Views
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
+
 // SOP Change :- Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 import {
   initDatabaseDialogs,
@@ -357,42 +450,132 @@ const processing = ref(false);
 const rowValidations = ref([]);
 const showFilter = ref(false);
 const searchLoader = ref(false);
-const activeRowId = ref(null);
 const editingRowId = ref(null);
 const editingRow = ref(null);
-
-// local storage
-const localStorageKey = "Infra Database";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const searchText = ref(filterLocalStorage?.searchText || "");
-const infraServiceIds = filterLocalStorage ? filterLocalStorage.infraServiceIds : [];
-
-// search
-const search = ref({
-  searchText,
-  infraServiceIds
-});
+const showSortDialog = ref(false);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Database List
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 const tableRef = ref();
 const rows = ref([]);
-const pagination = ref({ sortBy: "CreatedOnUtc", descending: true, rowsPerPage: 15, page: 1 });
 const columns = ref([
-  { name: "infraServiceId", label: "Infra Account Service", field: "infraServiceId", align: "left", sortable: true },
-  { name: "name", label: "Name", field: "name", align: "left", sortable: true },
-  { name: "serverName", label: "Server Name", field: "serverName", align: "left", sortable: true },
-  { name: "isReadOrWrite", label: "Access Type", field: "isReadOrWrite", align: "left", sortable: true },
-  { name: "infraDatabaseProjectInstanceMapping", label: "Project Instance", field: "infraDatabaseProjectInstanceMapping", align: "left", sortable: false }
+  { name: "infraServiceId", label: "Infra Account Service", field: "infraServiceId", align: "left", sortable: true, default: true },
+  { name: "name", label: "Name", field: "name", align: "left", sortable: true, default: true },
+  { name: "serverName", label: "Server Name", field: "serverName", align: "left", sortable: true, default: true },
+  { name: "isReadOrWrite", label: "Access Type", field: "isReadOrWrite", align: "left", sortable: true, default: true },
+  { name: "infraDatabaseProjectInstanceMapping", label: "Project Instance", field: "infraDatabaseProjectInstanceMapping", align: "left", sortable: false, default: true },
+  { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 
+const {
+  search,
+  pagination,
+  activeRowId,
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
+} = useSiteTableState({
+  storageKey: "infra-Database-Index",
+
+  defaultSearch: {
+    searchText: "",
+    infraServiceIds: []
+  },
+
+  defaultPagination: {
+    sortBy: "createdOnUtc",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  },
+
+  defaultSorts: {},
+
+  defaultResizableWidth: {},
+
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
+
+const lsSorts = sorts.value || null;
+const sortableColumns = computed(() =>
+  columns.value.filter(col => col.sortable)
+);
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshDatabaseList();
+  }
+});
+
 // get name Logs and map list
-const getAllInfraDatabaseForList = async (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+const getAllInfraDatabaseForList = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;
   loading.value = true;
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
-  setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination });
+  const sorts = {};
+  const multi = multiSort.value;
+  for (let i = 0; i < multi.length; i++) {
+    const s = multi[i];
+    if (s.column && s.direction) {
+      sorts[s.column] = s.direction;
+    }
+  }
+  const payload = { page, pageSize: rowsPerPage, sortBy, descending, sorts, ...search.value };
+  saveDataTableState({
+    search: search.value,
+    pagination: p,
+    activeRowId: activeRowId.value,
+    sorts
+  });
 
   const resp = await infraDatabaseService.getAllInfraDatabaseForList(payload);
   // map async calls and wait for all of them
@@ -405,11 +588,14 @@ const getAllInfraDatabaseForList = async (props) => {
   rowValidations.value = rows.value.map(row =>
     useVuelidate(editingRowRules, row)
   );
-  pagination.value.page = page;
-  pagination.value.rowsPerPage = rowsPerPage;
-  pagination.value.sortBy = sortBy;
-  pagination.value.descending = descending;
-  pagination.value.rowsNumber = resp.total;
+  pagination.value = {
+    ...pagination.value,
+    page,
+    rowsPerPage,
+    sortBy,
+    descending,
+    rowsNumber: resp.total
+  };
   loading.value = false;
   searchLoader.value = false;
 };
@@ -666,15 +852,17 @@ async function onSubmitNewRows () {
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
 // --------------------------------------------------------------------------------------------------------------------------------------------------
-const onSearch = () => {
+const onAdvanceSearch = () => {
   refreshDatabaseList();
 };
 
-const onClear = () => {
+const onAdvanceClear = () => {
   search.value.searchText = "";
   search.value.infraServiceIds = [];
-  clearLocalStorage(localStorageKey);
-  onSearch();
+  saveDataTableState({
+    search: search.value
+  });
+  onAdvanceSearch();
 };
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -716,9 +904,27 @@ function getFilterCount (key) {
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Search: When user types in search
 // --------------------------------------------------------------------------------------------------------------------------------------------------
-watch(() => searchText.value, () => {
-  if (searchText.value) searchLoader.value = true;
-  refreshDatabaseList();
+
+watch(() => search.value.searchText, () => {
+  searchLoader.value = true;
+  refreshRequirementList();
+});
+
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
 });
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------

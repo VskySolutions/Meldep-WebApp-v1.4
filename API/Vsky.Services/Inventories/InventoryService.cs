@@ -7,6 +7,7 @@ using Microsoft.PowerBI.Api.Models;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
+using Vsky.Services.Common;
 using Vsky.Services.Sites;
 
 namespace Vsky.Services.Inventories
@@ -16,16 +17,20 @@ namespace Vsky.Services.Inventories
         #region Define Services
         private readonly IRepository<Inventory> _inventoryRepository;
         private readonly IRepository<Notes> _notesRepository;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
-
-        public InventoryService(IRepository<Inventory> inventoryRepository, IRepository<Notes> notesRepository)
+        public InventoryService(
+            IRepository<Inventory> inventoryRepository,
+            IRepository<Notes> notesRepository,
+            ICommonService commonService
+        )
         {
             _inventoryRepository = inventoryRepository;
             _notesRepository = notesRepository;
+            _commonService = commonService;
         }
-
         #endregion
 
         #region Private Methods
@@ -41,7 +46,21 @@ namespace Vsky.Services.Inventories
         // Title: GetAllInventory
         // Description: This method retrieves a paginated list of Inventory based on various search criteria such as name, 
         // It also supports sorting and includes related data .The method allows for both full and lookup (limited) data retrieval modes.
-        public IPagedList<Inventory> GetAllInventory(string SiteId, string SearchText, List<string> itemTypeIds, string code, List<string> inventoryStatusIds, List<string> employeeIds, List<string> officeLocationIds, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public IPagedList<Inventory> GetAllInventory(
+            string SiteId, 
+            string SearchText, 
+            List<string> itemTypeIds,
+            string code,
+            List<string> inventoryStatusIds,
+            List<string> employeeIds, 
+            List<string> officeLocationIds, 
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending, 
+            int page = 1, 
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        )
         {
             var query = _inventoryRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
 
@@ -83,7 +102,14 @@ namespace Vsky.Services.Inventories
                     m.OfficeLocation.DropDownValue.ToLower().Contains(SearchText.ToLower()))
                     );
             }
-             query = query.Select(x => new Inventory
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
+
+            query = query.Select(x => new Inventory
             {
                 Id = x.Id,
                 Inventorycode = x.Inventorycode,
@@ -95,6 +121,8 @@ namespace Vsky.Services.Inventories
                 ModelNameORNumber = x.ModelNameORNumber,
                 WarrantyExpiryDate = x.WarrantyExpiryDate,
                 OfficeLocationId = x.OfficeLocationId,
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 ItemType = new InventoryItemType
                 {
                     Id = x.ItemType.Id,
@@ -128,7 +156,23 @@ namespace Vsky.Services.Inventories
                      Id = x.OfficeLocation.Id,
                      DropDownValue = x.OfficeLocation.DropDownValue
                  },
-                 InventoryAssignmentList = x.InventoryAssignmentList.Where(m => !m.Deleted).OrderBy(m => m.Employee.Person.FirstName).Select(m => new InventoryAssignment
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
+                    }
+                },
+                InventoryAssignmentList = x.InventoryAssignmentList.Where(m => !m.Deleted).OrderBy(m => m.Employee.Person.FirstName).Select(m => new InventoryAssignment
                 {
                     Id = m.Id,
                     EmployeeId = m.EmployeeId,

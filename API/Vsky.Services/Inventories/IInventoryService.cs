@@ -8,7 +8,21 @@ namespace Vsky.Services.Inventories
     public interface IInventoryService
     {
         #region GetAllInventory
-        IPagedList<Inventory> GetAllInventory(string SiteId, string SearchText, List<string> itemTypeIds, string code, List<string> inventoryStatusIds,List<string> employeeIds, List<string> officeLocationIds, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        IPagedList<Inventory> GetAllInventory(
+            string SiteId, 
+            string SearchText,
+            List<string> itemTypeIds,
+            string code,
+            List<string> inventoryStatusIds,
+            List<string> employeeIds,
+            List<string> officeLocationIds,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1, 
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
         #endregion
 
         #region GetInventoryById

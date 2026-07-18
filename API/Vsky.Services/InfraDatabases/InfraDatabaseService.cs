@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
+using Vsky.Services.Common;
 
 namespace Vsky.Services.InfraDatabases
 {
@@ -13,12 +14,17 @@ namespace Vsky.Services.InfraDatabases
     {
         #region Define Services
         private readonly IRepository<InfraDatabase> _infraDatabaseRepository;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
-        public InfraDatabaseService(IRepository<InfraDatabase> InfraDatabaseRepository)
+        public InfraDatabaseService(
+            IRepository<InfraDatabase> InfraDatabaseRepository,
+            ICommonService commonService
+        )
         {
             _infraDatabaseRepository = InfraDatabaseRepository;
+            _commonService = commonService;
         }
         #endregion
 
@@ -37,6 +43,7 @@ namespace Vsky.Services.InfraDatabases
             List<string> infraServiceIds,
             string searchText,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,
@@ -63,7 +70,15 @@ namespace Vsky.Services.InfraDatabases
                 query = query.OrderBy(orderBy);
             }
             else
+            {
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
 
             query = query.Select(x => new InfraDatabase
             {
@@ -75,6 +90,8 @@ namespace Vsky.Services.InfraDatabases
                 WalletTypeId = x.WalletTypeId,
                 WalletNumber = x.WalletNumber,
                 Instructions = x.Instructions,
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 WalletType = new DropDown
                 {
                     Id = x.WalletType.Id,
@@ -84,6 +101,22 @@ namespace Vsky.Services.InfraDatabases
                 {
                     Id = x.InfraService.Id,
                     Name = x.InfraService.Name
+                },
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
+                    }
                 },
                 InfraDatabaseProjectInstanceMapping = x.InfraDatabaseProjectInstanceMapping.Where(m => !m.Deleted).Select(x => new InfraDatabaseProjectInstanceMapping
                 {

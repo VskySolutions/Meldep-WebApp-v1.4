@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
+using Vsky.Services.Common;
 
 namespace Vsky.Services.InfraFTPs
 {
@@ -13,12 +14,17 @@ namespace Vsky.Services.InfraFTPs
     {
         #region Define Services
         private readonly IRepository<InfraFTP> _infraFTPRepository;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
-        public InfraFTPService(IRepository<InfraFTP> infraFTPRepository)
+        public InfraFTPService(
+            IRepository<InfraFTP> infraFTPRepository,
+            ICommonService commonService
+        )
         {
             _infraFTPRepository = infraFTPRepository;
+            _commonService = commonService;
         }
         #endregion
 
@@ -40,6 +46,7 @@ namespace Vsky.Services.InfraFTPs
             string Name,
             string searchText,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,
@@ -73,7 +80,15 @@ namespace Vsky.Services.InfraFTPs
                 query = query.OrderBy(orderBy);
             }
             else
+            {
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
 
             query = query.Select(x => new InfraFTP
             {
@@ -83,6 +98,8 @@ namespace Vsky.Services.InfraFTPs
                 Host = x.Host,
                 Port = x.Port,
                 Instructions = x.Instructions,
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 WalletType = new DropDown
                 {
                     Id = x.WalletType.Id,
@@ -102,6 +119,22 @@ namespace Vsky.Services.InfraFTPs
                 {
                     Id = x.InfraService.Id,
                     Name = x.InfraService.Name
+                },
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
+                    }
                 },
                 InfraFTPsProjectInstanceMapping = x.InfraFTPsProjectInstanceMapping.Where(m => !m.Deleted).Select(x => new InfraFTPsProjectInstanceMapping
                 {

@@ -67,6 +67,7 @@
                 :selected-field="selectedField"
               />
               <div>
+                <q-btn icon="o_add" outline label="Add Infra Account" no-caps class="text-primary q-ml-sm btnRounded" @click="onInfraAccountAdd(refreshInfraAccountList)" />
                 <q-btn
                   v-if="role === 'admin'"
                   icon="o_playlist_add"
@@ -77,79 +78,162 @@
                 >
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
-                <q-btn icon="o_add" outline label="Add Infra Account" no-caps class="text-primary q-ml-sm btnRounded" @click="onInfraAccountAdd(refreshInfraAccountList)" />
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
               </div>
             </div>
           </div>
         </div>
       </q-card-section>
       <q-separator />
-      <q-table
-        ref="tableRef"
-        v-model:pagination="pagination"
-        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-        :loading="loading"
-        :rows="rows"
-        :columns="columns"
-        row-key="id"
-        separator="cell"
-        no-data-label="No data available"
-        binary-state-sort
-        :rows-per-page-options="[20, 50, 100, 200, 500]"
-        @request="getAllInfraAccount"
-      >
-        <template #loading>
-          <q-inner-loading showing color="primary">
-            <q-spinner-ios size="40px" class="q-mt-xl" />
-          </q-inner-loading>
-        </template>
-        <template #header="props">
-          <q-tr :props="props" class="bg-primary text-white">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-            <q-th auto-width class="text-center">Actions</q-th>
-          </q-tr>
-        </template>
-        <template #body="props">
-          <q-tr
-            :props="props"
-            :class="highlightedId == props.row.id ? 'highlight' : ''"
-          >
-            <q-td style="width: 11%;">{{ props.row.provider.dropDownValue }}</q-td>
-            <q-td style="width: 31%;">{{ props.row.name }}</q-td>
-            <q-td style="width: 11%;">{{ props.row.customerId }}</q-td>
-            <q-td style="width: 32%;">{{ props.row.url }}</q-td>
-            <q-td class="text-right" style="width: 5%;">${{ props.row.totalServicesCost }}</q-td>
-            <q-td style="width: 5%;" align="right">{{ props.row.ccLast4Digits }}</q-td>
-            <q-td style="width: 5%;" class="text-center actions">
-              <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountView(props.row.id)">
-                <q-tooltip>View</q-tooltip>
-              </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountEdit(props.row.id, refreshInfraAccountList)">
-                <q-tooltip>Edit</q-tooltip>
-              </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
-                <q-tooltip>Delete</q-tooltip>
-              </q-icon>
-            </q-td>
-          </q-tr>
-          <q-separator />
-        </template>
-        <template #bottom-row>
-          <q-tr v-if="rows.length" class="bg-grey-2 text-black">
-            <q-td colspan="4" class="text-right text-weight-bold">
-              Total Price:
-            </q-td>
-            <q-td class="text-right text-weight-bold">
-              ${{ totalPrice.toFixed(2) }}
-            </q-td>
-            <q-td />
-            <q-td />
-          </q-tr>
-        <q-separator></q-separator>
-        </template>
-      </q-table>
+      <div class="table-scroll-container">
+        <q-table
+          ref="tableRef"
+          v-model:pagination="pagination"
+          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+          :loading="loading"
+          :rows="rows"
+          :columns="computedColumns"
+          row-key="id"
+          separator="cell"
+          no-data-label="No data available"
+          binary-state-sort
+          :rows-per-page-options="[20, 50, 100, 200, 500]"
+          @request="getAllInfraAccount"
+        >
+          <template #loading>
+            <q-inner-loading showing color="primary">
+              <q-spinner-ios size="40px" class="q-mt-xl" />
+            </q-inner-loading>
+          </template>
+          <template #header="props">
+            <q-tr :props="props" class="bg-primary text-white">
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
+                @click="!isResizing && col.sortable"
+              >
+                {{ col.label }}
+                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+              </q-th>
+              <q-th auto-width class="text-center">Actions</q-th>
+            </q-tr>
+          </template>
+          <template #body="props">
+            <q-tr
+              :props="props"
+              :class="highlightedId == props.row.id ? 'highlight' : ''"
+            >
+              <q-td v-if="selectedColumnNames.includes('provider.dropDownValue')">{{ props.row.provider.dropDownValue }}</q-td>
+              <q-td v-if="selectedColumnNames.includes('name')">{{ props.row.name }}</q-td>
+              <q-td v-if="selectedColumnNames.includes('customerId')">{{ props.row.customerId }}</q-td>
+              <q-td v-if="selectedColumnNames.includes('url')">{{ props.row.url }}</q-td>
+              <q-td v-if="selectedColumnNames.includes('totalServicesCost')" class="text-right">${{ props.row.totalServicesCost }}</q-td>
+              <q-td v-if="selectedColumnNames.includes('ccLast4Digits')" align="right">{{ props.row.ccLast4Digits }}</q-td>              
+              <q-td
+                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.createdBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('createdOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.createdOnUtc }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedOnUtc }}
+              </q-td>
+              <q-td class="text-center actions">
+                <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountView(props.row.id)">
+                  <q-tooltip>View</q-tooltip>
+                </q-icon>
+                <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountEdit(props.row.id, refreshInfraAccountList)">
+                  <q-tooltip>Edit</q-tooltip>
+                </q-icon>
+                <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
+                  <q-tooltip>Delete</q-tooltip>
+                </q-icon>
+              </q-td>
+            </q-tr>
+            <q-separator />
+          </template>
+          <template #bottom-row>
+            <q-tr v-if="rows.length" class="bg-grey-2 text-black">
+              <q-td :colspan="totalColumnIndex" class="text-right text-weight-bold">
+                Total Price:
+              </q-td>
+              <q-td class="text-right text-weight-bold">
+                ${{ totalPrice.toFixed(2) }}
+              </q-td>
+              <!-- Remaining visible columns -->
+              <q-td
+                v-for="n in trailingColumns"
+                :key="n"
+              />
+              <q-td />
+            </q-tr>
+          <q-separator>            
+          </q-separator>
+          </template>
+        </q-table>
+      </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="columns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 // Import libraries
@@ -165,15 +249,23 @@ import manageDropdownOptions from "src/components/dataTable/_manageDropdownOptio
 import infraAccountsService from "modules/infra-account/infraAccount.service";
 import manageDropdownsService from "modules/dropdown/dropdown.service";
 import infraAccountModule from "src/modules/infra-account/utils/dropdowns.js";
+
+// SOP Change :- Shared Scripts DataTable Features
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
+
 import {
   initInfraAccountDialogs,
   onInfraAccountView,
   onInfraAccountAdd,
   onInfraAccountEdit
 } from "src/modules/infra-account/utils/dialogs.js";
-
-// SOP Change :- Shared Scripts DataTable Features
-import useSiteTableState from "composables/datatable/useSiteTableState.js";
 
 // -----------------------------------------------------------------------------
 // User Role
@@ -194,6 +286,7 @@ const showFilter = ref(false);
 const searchLoader = ref(false);
 const showManageDropdownOptions = ref(false);
 const manageDropDownTypes = ref([]);
+const showSortDialog = ref(false);
 
 const highlightedId = computed(() => activeRowId.value);
 
@@ -201,12 +294,16 @@ const highlightedId = computed(() => activeRowId.value);
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
-  { name: "provider.dropDownValue", label: "Provider Name", field: "provider.dropDownValue", align: "left", sortable: true },
-  { name: "name", label: "Name", field: "name", align: "left", sortable: true },
-  { name: "customerId", label: "Customer Id", field: "customerId", align: "left", sortable: true },
-  { name: "url", label: "URL", field: "url", align: "left", sortable: true },
-  { name: "totalServicesCost", label: "Total Services Cost", field: "totalServicesCost", align: "right", sortable: true },
-  { name: "ccLast4Digits", label: "CC Last 4 Digits", field: "ccLast4Digits", align: "right", sortable: true }
+  { name: "provider.dropDownValue", label: "Provider Name", field: "provider.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "name", label: "Name", field: "name", align: "left", sortable: true, default: true },
+  { name: "customerId", label: "Customer Id", field: "customerId", align: "left", sortable: true, default: true },
+  { name: "url", label: "URL", field: "url", align: "left", sortable: true, default: true },
+  { name: "totalServicesCost", label: "Total Services Cost", field: "totalServicesCost", align: "right", sortable: true, default: true },
+  { name: "ccLast4Digits", label: "CC Last 4 Digits", field: "ccLast4Digits", align: "right", sortable: true, default: true },
+  { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 
 const defaultSearch = {
@@ -227,13 +324,80 @@ const {
   search,
   pagination,
   activeRowId,
-  saveDataTableState
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
 } = useSiteTableState({
   storageKey: "infra-Accounts-Index",
   siteId,
 
   defaultSearch,
-  defaultPagination
+  defaultPagination,
+  defaultResizableWidth: {},
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
+
+const lsSorts = sorts.value || null;
+
+const totalColumnIndex = computed(() => {
+  return computedColumns.value.findIndex(
+    c => c.name === "totalServicesCost"
+  );
+});
+
+const trailingColumns = computed(() => {
+  return computedColumns.value.length - totalColumnIndex.value - 1;
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshInfraAccountList();
+  }
 });
 
 const handleDocumentClick = (event) => {
@@ -248,19 +412,34 @@ const handleDocumentClick = (event) => {
 };
 
 // Get/Map Infra Account list to table
-const getAllInfraAccount = async ({ pagination: pageData }) => {
+const getAllInfraAccount = async ({ pagination: p }) => {
   try {
     loading.value = true;
 
-    const { page, rowsPerPage, sortBy, descending } = pageData;
+    const { page, rowsPerPage, sortBy, descending } = p;
+    const sorts = {};
+    const multi = multiSort.value;
+    for (let i = 0; i < multi.length; i++) {
+      const s = multi[i];
+      if (s.column && s.direction) {
+        sorts[s.column] = s.direction;
+      }
+    }
 
     const payload = {
       page,
       pageSize: rowsPerPage,
       sortBy,
       descending,
+      sorts,
       ...search.value
     };
+    saveDataTableState({
+      search: search.value,
+      pagination: p,
+      activeRowId: activeRowId.value,
+      sorts
+    });
 
     const resp = await infraAccountsService.getAllInfraAccount(payload);
 
@@ -426,6 +605,27 @@ watch(
   }
 );
 
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleDocumentClick);
+});
+
 onMounted(() => {
   providerTypesForDropdown.load("Account Provider Type");
   infraAccountsForDropdown.load();
@@ -436,9 +636,9 @@ onMounted(() => {
 
   refreshInfraAccountList();
 });
-
-onBeforeUnmount(() => {
-  document.removeEventListener("click", handleDocumentClick);
-});
-
 </script>
+<style scoped>
+.Custom-DataTable {
+  min-width: max-content;
+}
+</style>

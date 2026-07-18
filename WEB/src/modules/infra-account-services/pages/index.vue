@@ -77,447 +77,526 @@
                 <q-btn icon="o_add" outline label="Add Bulk" no-caps class="text-primary btnRounded" @click="onInfraAccountServicesAddBulk(refreshInfraAccountServicesList)">
                   <q-tooltip>Add Infra Account Services</q-tooltip>
                 </q-btn>
+                 <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-xs"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
               </div>
             </div>
           </div>
         </div>
       </q-card-section>
       <q-separator />
-      <q-table
-        ref="tableRef"
-        v-model:pagination="pagination"
-        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-        :loading="loading"
-        :rows="rows"
-        :columns="columns"
-        row-key="id"
-        separator="cell"
-        no-data-label="No data available"
-        binary-state-sort
-        :rows-per-page-options="[20, 50, 100, 200, 500]"
-        @request="getAllInfraAccountServicesForList"
-      >
-        <template #loading>
-          <q-inner-loading showing color="primary">
-            <q-spinner-ios size="40px" class="q-mt-xl" />
-          </q-inner-loading>
-        </template>
-        <template #header="props">
-          <q-tr :props="props" class="bg-primary text-white">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-            <q-th auto-width class="text-center">Actions</q-th>
-          </q-tr>
-        </template>
-        <template #body="props">
-          <q-tr
-            :props="props"
-            :class="highlightedId == props.row.id ? 'highlight' : ''"
-          >
-            <q-td style="width:5%;">
-              <div v-if="editingRowId !== props.row.id">
-                <span
-                  class="hoverable-cell"
-                  @click="onInfraAccountView(props.row.infraAccount.id)"
-                >
-                  {{ props.row.infraAccount.customerId + "(" + props.row.infraAccount.provider.dropDownValue + ")" }}
-                </span>
-              </div>
-              <formSingleSelectDropdown
-                v-else
-                v-model="props.row.infraAccountId"
-                :options="infraAccountDropdownSingleSelect.list.value"
-                :filter="infraAccountDropdownSingleSelect.filter"
-                :error="v$.infraAccountId.$error"
-                :error-message="v$.infraAccountId.$errors[0]?.$message"
-                @update:model-value="getInfraAccountServicesByInfraAccountId"
-              />
-            </q-td>
-            <q-td style="width:5%;">
-              <div v-if="editingRowId !== props.row.id">
-                {{ props.row.itemType.dropDownValue }}
-              </div>
-              <formSingleSelectDropdown
-                v-else
-                v-model="props.row.itemTypeId"
-                :options="itemTypeDropdownSingleSelect.list.value"
-                :filter="itemTypeDropdownSingleSelect.filter"
-                :error="v$.itemTypeId.$error"
-                :error-message="v$.itemTypeId.$errors[0]?.$message"
-              />
-            </q-td>
-            <q-td style="width: 5%;">
-              <div v-if="editingRowId !== props.row.id">
-                {{ props.row.ownerShipType.dropDownValue }}
-              </div>
-              <formSingleSelectDropdown
-                v-else
-                v-model="props.row.ownerShipTypeId"
-                :options="ownershipTypeDropdownSingleSelect.list.value"
-                :filter="ownershipTypeDropdownSingleSelect.filter"
-                :error="v$.ownerShipTypeId.$error"
-                :error-message="v$.ownerShipTypeId.$errors[0]?.$message"
-              />
-            </q-td>
-            <q-td style="width:20%;">
-              <div v-if="editingRowId !== props.row.id">
-                {{ props.row.name }}
-              </div>
-              <q-input
-                v-else
-                v-model="props.row.name"
-                outlined
-                stack-label
-                hide-bottom-space
-                :error="v$.name.$error"
-                :error-message="v$.name.$errors[0]?.$message"
-                @blur="v$.name.$touch"
-                style="min-width:250px"
-              />
-            </q-td>
-            <q-td style="width: 20%;">
-              <div v-if="editingRowId !== props.row.id" class="ellipsis-cell">
-                {{ props.row.url }}
-              </div>
-              <q-input
-                v-else
-                v-model="props.row.url"
-                outlined
-                stack-label
-                hide-bottom-space
-                style="min-width:250px"
-              />
-            </q-td>
-            <q-td style="width: 8%;min-width:150px">
-              <div v-if="editingRowId !== props.row.id">
-                {{ props.row.startDate }}
-              </div>
-              <formDate
-                v-else
-                v-model="props.row.startDateStr"
-                :error="v$.startDateStr.$error"
-                :error-message="v$.startDateStr.$errors[0]?.$message"
-                :onBlur="() => v$.startDateStr.$touch()"
-              />
-            </q-td>
-            <q-td style="width: 5%;">
-              <div v-if="editingRowId !== props.row.id">
-                {{ props.row.paymentTerm.dropDownValue }}
-              </div>
-              <formSingleSelectDropdown
-                v-else
-                v-model="props.row.paymentTermId"
-                :options="paymentTermDropdownSingleSelect.list.value"
-                :filter="paymentTermDropdownSingleSelect.filter"
-                :error="v$.paymentTermId.$error"
-                :error-message="v$.paymentTermId.$errors[0]?.$message"
-              />
-            </q-td>
-            <q-td style="width: 6%;" align="right">
-              <div>
-                ${{ props.row.price }}
-              </div>
-              <q-popup-edit
-                v-if="!props.row.priceEndDate"
-                v-model="props.row.price"
-                v-slot="scope"
-                class="small-popup-title common-q-td"
-                style="width: 300px;"
-                @show="
-                  props.row.oldPrice = props.row.price;
-                  props.row.oldPriceStartDate = props.row.priceStartDate;
-                "
+      <div class="table-scroll-container">
+        <q-table
+          ref="tableRef"
+          v-model:pagination="pagination"
+          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+          :loading="loading"
+          :rows="rows"
+          :columns="computedColumns"
+          row-key="id"
+          separator="cell"
+          no-data-label="No data available"
+          binary-state-sort
+          :rows-per-page-options="[20, 50, 100, 200, 500]"
+          @request="getAllInfraAccountServicesForList"
+        >
+          <template #loading>
+            <q-inner-loading showing color="primary">
+              <q-spinner-ios size="40px" class="q-mt-xl" />
+            </q-inner-loading>
+          </template>
+          <template #header="props">
+            <q-tr :props="props" class="bg-primary text-white">
+              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
+                @click="!isResizing && col.sortable"
               >
-                <div class="row items-center justify-between no-wrap q-mb-sm">
-                  <div class="text-subtitle2">
-                    Update Price :
-                    <span class="text-primary">{{ props.row.name }}</span>
-                  </div>
-                  <q-btn
-                    icon="o_close"
-                    size="sm"
-                    color="black"
-                    flat
-                    round
-                    dense
-                    @click="onPricePopupHide(props.row); scope.cancel()"
-                  />
+                {{ col.label }}
+                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+              </q-th>
+              <q-th auto-width class="text-center">Actions</q-th>
+            </q-tr>
+          </template>
+          <template #body="props">
+            <q-tr
+              :props="props"
+              :class="highlightedId == props.row.id ? 'highlight' : ''"
+            >
+              <q-td v-if="selectedColumnNames.includes('infraAccount.name')">
+                <div v-if="editingRowId !== props.row.id">
+                  <span
+                    class="hoverable-cell"
+                    @click="onInfraAccountView(props.row.infraAccount.id)"
+                  >
+                    {{ props.row.infraAccount.customerId + "(" + props.row.infraAccount.provider.dropDownValue + ")" }}
+                  </span>
                 </div>
-                <div class="q-mb-xs">
-                  <label class="label q-mb-xs text-black">Price<span class="required">*</span></label>
+                <formSingleSelectDropdown
+                  v-else
+                  v-model="props.row.infraAccountId"
+                  :options="infraAccountDropdownSingleSelect.list.value"
+                  :filter="infraAccountDropdownSingleSelect.filter"
+                  :error="v$.infraAccountId.$error"
+                  :error-message="v$.infraAccountId.$errors[0]?.$message"
+                  @update:model-value="getInfraAccountServicesByInfraAccountId"
+                />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('itemType.dropDownValue')">
+                <div v-if="editingRowId !== props.row.id">
+                  {{ props.row.itemType.dropDownValue }}
+                </div>
+                <formSingleSelectDropdown
+                  v-else
+                  v-model="props.row.itemTypeId"
+                  :options="itemTypeDropdownSingleSelect.list.value"
+                  :filter="itemTypeDropdownSingleSelect.filter"
+                  :error="v$.itemTypeId.$error"
+                  :error-message="v$.itemTypeId.$errors[0]?.$message"
+                />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('ownerShipType.dropDownValue')">
+                <div v-if="editingRowId !== props.row.id">
+                  {{ props.row.ownerShipType.dropDownValue }}
+                </div>
+                <formSingleSelectDropdown
+                  v-else
+                  v-model="props.row.ownerShipTypeId"
+                  :options="ownershipTypeDropdownSingleSelect.list.value"
+                  :filter="ownershipTypeDropdownSingleSelect.filter"
+                  :error="v$.ownerShipTypeId.$error"
+                  :error-message="v$.ownerShipTypeId.$errors[0]?.$message"
+                />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('name')">
+                <div v-if="editingRowId !== props.row.id">
+                  {{ props.row.name }}
                 </div>
                 <q-input
-                  v-model="props.row.price"
+                  v-else
+                  v-model="props.row.name"
                   outlined
+                  stack-label
                   hide-bottom-space
-                  prefix="$"
-                  inputmode="decimal"
-                  :error="!!props.row.priceError"
-                  :error-message="props.row.priceError"
-                  @update:model-value="props.row.priceError = ''"
+                  :error="v$.name.$error"
+                  :error-message="v$.name.$errors[0]?.$message"
+                  @blur="v$.name.$touch"
+                  style="min-width:250px"
                 />
-                <div class="q-mt-md">
-                  <formDate
-                    v-model="props.row.priceStartDate"
-                    label="Price Start Date"
-                    :wrapperClass="'col-12'"
-                    :dateOptions="date => disableFutureDates(date, props.row.priceEndDate)"
-                    :error="!!props.row.priceStartDateError"
-                    :error-message="props.row.priceStartDateError"
-                    :disable="!isPriceChanged(props.row)"
-                    @update:model-value="props.row.priceStartDateError = ''"
-                  />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('url')">
+                <div v-if="editingRowId !== props.row.id" class="ellipsis-cell">
+                  {{ props.row.url }}
                 </div>
-                <div class="row justify-end q-gutter-sm q-mt-md">
-                  <q-btn
-                    flat
-                    dense
-                    label="Cancel"
-                    color="primary"
-                    @click="onPricePopupHide(props.row), scope.cancel()"
-                  />
-                  <q-btn
-                    unelevated
-                    dense
-                    label="Save"
-                    color="primary"
-                    :disable="!isPriceChanged(props.row)"
-                    @click="onSubmitInfraAccountServicePrice(props.row, scope, 'price')"
-                  />
+                <q-input
+                  v-else
+                  v-model="props.row.url"
+                  outlined
+                  stack-label
+                  hide-bottom-space
+                  style="min-width:250px"
+                />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('startDate')">
+                <div v-if="editingRowId !== props.row.id">
+                  {{ props.row.startDate }}
                 </div>
-              </q-popup-edit>
-              <!-- <q-input
-                v-else
-                v-model="props.row.price"
-                outlined
-                stack-label
-                hide-bottom-space
-                prefix="$"
-                input-class="text-right"
-                inputmode="decimal"
-                class="break-error"
-                :error="v$.price.$error"
-                :error-message="v$.price.$errors[0]?.$message"
-                @blur="v$.price.$touch()"
-                @focus="props.row._originalPrice = props.row.price"
-                @change="onPriceChange(props.row)"
-              />
-               -->
-            </q-td>
-             <q-td style="width: 5%;" align="right">
-              <div>
-                ${{ props.row.ytd }}
-              </div>
-            </q-td>
-            <q-td style="width: 10%;">
-              <div class="row items-center q-gutter-xs">
-                <q-chip
-                  v-for="(item, index) in (props.row.infraProjectServices || []).slice(0, 2)"
-                  :key="index"
-                  dense
-                  class="bg-primary text-white"
-                >
-                  {{ item.project.name }}
-                </q-chip>
-                <q-chip
-                  v-if="props.row.infraProjectServices?.length > 2"
-                  dense
-                  clickable
-                  class="bg-grey-4 text-black"
-                  @click="onInfraAccountServicesView(props.row.id, true, refreshInfraAccountServicesList)"
-                >
-                  +{{ props.row.infraProjectServices.length - 2 }} more...
-                </q-chip>
-              </div>
-            </q-td>
-            <q-td style="width: 6%;">
-              <div v-if="editingRowId !== props.row.id">
-                {{ props.row.infraAccountService.name }}
-              </div>
-              <formSingleSelectDropdown
-                v-else
-                v-model="props.row.infraAccountServiceId"
-                :required="false"
-                :disable="!props.row.infraAccountId"
-                :options="infraAccountServiceForDropdownSingleSelect.list.value"
-                :filter="infraAccountServiceForDropdownSingleSelect.filter"
-              />
-            </q-td>
-            <q-td style="width: 5%;" class="text-center actions">
-              <template v-if="editingRowId === props.row.id">
-                <q-icon
-                  name="o_cancel"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  color="negative"
-                  @click="onCancel(props.row)"
-                >
-                  <q-tooltip>Cancel</q-tooltip>
-                </q-icon>
-                <q-icon
-                  :loading="processing"
-                  name="o_save"
-                  class="cursor-pointer q-mr-sm hover-white"
-                  size="xs"
-                  color="primary"
-                  @click="onSave(props.row)"
-                >
-                  <q-tooltip>Save</q-tooltip>
-                </q-icon>
-              </template>
-              <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountServicesView(props.row.id)">
-                <q-tooltip>View</q-tooltip>
-              </q-icon>
-              <q-icon
-                name="o_add_task"
-                class="cursor-pointer q-mr-sm"
-                :class="props.row.priceEndDate ? 'text-grey cursor-not-allowed q-mr-sm' : 'cursor-pointer q-mr-sm'"
-                size="xs"
-                @click="!props.row.priceEndDate && onInfraAccountServicesView(props.row.id, true, refreshInfraAccountServicesList)"
-              >
-                <q-tooltip>Assign Project</q-tooltip>
-              </q-icon>
-              <q-icon
-                v-if="editingRowId !== props.row.id"
-                name="o_edit"
-                class="cursor-pointer q-mr-sm"
-                :class="props.row.priceEndDate ? 'text-grey cursor-not-allowed q-mr-sm' : 'cursor-pointer q-mr-sm'"
-                size="xs"
-                @click="!props.row.priceEndDate && onEdit(props.row)"
-              >
-                <q-tooltip>Edit</q-tooltip>
-              </q-icon>
-              <q-icon
-                name="o_note_alt"
-                size="xs"
-                class="cursor-pointer q-mr-sm"
-                @click="() => {
-                  activeRowId = props.row.id;
-                  activeActionType = 'instruction';
-                }"
-              >
-                <q-tooltip>Add Instructions</q-tooltip>
+                <formDate
+                  v-else
+                  v-model="props.row.startDateStr"
+                  :error="v$.startDateStr.$error"
+                  :error-message="v$.startDateStr.$errors[0]?.$message"
+                  :onBlur="() => v$.startDateStr.$touch()"
+                />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('paymentTerm.dropDownValue')">
+                <div v-if="editingRowId !== props.row.id">
+                  {{ props.row.paymentTerm.dropDownValue }}
+                </div>
+                <formSingleSelectDropdown
+                  v-else
+                  v-model="props.row.paymentTermId"
+                  :options="paymentTermDropdownSingleSelect.list.value"
+                  :filter="paymentTermDropdownSingleSelect.filter"
+                  :error="v$.paymentTermId.$error"
+                  :error-message="v$.paymentTermId.$errors[0]?.$message"
+                />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('price')" align="right">
+                <div>
+                  ${{ props.row.price }}
+                </div>
                 <q-popup-edit
-                  v-model="props.row.instructions"
-                  anchor="top middle"
-                  self="bottom middle"
-                  buttons
-                  persistent
-                  label-set="Save"
-                  label-cancel="Cancel"
-                  class="instruction-popup"
-                  @save="val => onSaveInstructions(props.row.id, val)"
-                >
-                  <template #default="scope">
-                    <div class="popup-container q-pa-sm">
-                      <q-btn
-                        icon="o_close"
-                        flat
-                        round
-                        dense
-                        size="sm"
-                        class="absolute-top-right"
-                        @click="scope.cancel"
-                      />
-                      <div class="text-subtitle2 q-mb-xs">Instructions</div>
-                      <div class="editor-wrapper">
-                        <q-editor
-                          v-model="scope.value"
-                          :dense="$q.screen.lt.md"
-                          :toolbar="toolbar"
-                          :fonts="fonts"
-                          class="fixed-editor"
-                        />
-                      </div>
-                    </div>
-                  </template>
-                </q-popup-edit>
-              </q-icon>
-              <WalletPopup
-                :row="props.row"
-                :wallet-options="infraWalletTypeDropdownSingleSelect.list.value"
-                :on-save-api="saveWalletDetails"
-              />
-              <q-icon
-                name="o_delete_outline"
-                class="cursor-pointer"
-                color="negative"
-                size="xs"
-                @click="onSubmitInfraAccountServiceDelete(props.row, refreshInfraAccountServicesList)"
-              >
-                <q-tooltip>Delete</q-tooltip>
-              </q-icon>
-                <q-icon
-                name="o_stop_circle"
-                class="cursor-pointer q-ml-sm"
-                size="xs"
-                color="red"
-              >
-                <q-tooltip>Stop</q-tooltip>
-                <q-popup-edit
-                  v-model="props.row.priceEndDate"
+                  v-if="!props.row.priceEndDate"
+                  v-model="props.row.price"
                   v-slot="scope"
-                  class="small-popup-title"
+                  class="small-popup-title common-q-td"
                   style="width: 300px;"
-                  @show="props.row.priceEndDateError = ''"
+                  @show="
+                    props.row.oldPrice = props.row.price;
+                    props.row.oldPriceStartDate = props.row.priceStartDate;
+                  "
                 >
                   <div class="row items-center justify-between no-wrap q-mb-sm">
                     <div class="text-subtitle2">
-                      Stop Account Service :
-                    <span class="text-primary">{{ props.row.name }}</span>
+                      Update Price :
+                      <span class="text-primary">{{ props.row.name }}</span>
+                    </div>
+                    <q-btn
+                      icon="o_close"
+                      size="sm"
+                      color="black"
+                      flat
+                      round
+                      dense
+                      @click="onPricePopupHide(props.row); scope.cancel()"
+                    />
                   </div>
-                    <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                  <div class="q-mb-xs">
+                    <label class="label q-mb-xs text-black">Price<span class="required">*</span></label>
                   </div>
-                  <formDate
-                    v-model="scope.value"
-                    label="Price End Date"
-                    :wrapperClass="'col-12'"
-                    :dateOptions="date => disableBeforePriceStartDate(date, props.row.priceStartDate)"
-                    :error="!!props.row?.priceEndDateError"
-                    :error-message="props.row?.priceEndDateError || ''"
-                    @update:model-value="props.row.priceEndDateError = ''"
+                  <q-input
+                    v-model="props.row.price"
+                    outlined
+                    hide-bottom-space
+                    prefix="$"
+                    inputmode="decimal"
+                    :error="!!props.row.priceError"
+                    :error-message="props.row.priceError"
+                    @update:model-value="props.row.priceError = ''"
                   />
-                  <div class="row justify-end q-gutter-sm q-mt-sm">
-                    <q-btn v-close-popup label="Cancel" color="grey" flat dense />
-                    <q-btn label="Save" color="primary" dense @click="onSubmitInfraAccountServicePrice(props.row, scope, 'endDate')" />
+                  <div class="q-mt-md">
+                    <formDate
+                      v-model="props.row.priceStartDate"
+                      label="Price Start Date"
+                      :wrapperClass="'col-12'"
+                      :dateOptions="date => disableFutureDates(date, props.row.priceEndDate)"
+                      :error="!!props.row.priceStartDateError"
+                      :error-message="props.row.priceStartDateError"
+                      :disable="!isPriceChanged(props.row)"
+                      @update:model-value="props.row.priceStartDateError = ''"
+                    />
+                  </div>
+                  <div class="row justify-end q-gutter-sm q-mt-md">
+                    <q-btn
+                      flat
+                      dense
+                      label="Cancel"
+                      color="primary"
+                      @click="onPricePopupHide(props.row), scope.cancel()"
+                    />
+                    <q-btn
+                      unelevated
+                      dense
+                      label="Save"
+                      color="primary"
+                      :disable="!isPriceChanged(props.row)"
+                      @click="onSubmitInfraAccountServicePrice(props.row, scope, 'price')"
+                    />
                   </div>
                 </q-popup-edit>
-              </q-icon>
+                <!-- <q-input
+                  v-else
+                  v-model="props.row.price"
+                  outlined
+                  stack-label
+                  hide-bottom-space
+                  prefix="$"
+                  input-class="text-right"
+                  inputmode="decimal"
+                  class="break-error"
+                  :error="v$.price.$error"
+                  :error-message="v$.price.$errors[0]?.$message"
+                  @blur="v$.price.$touch()"
+                  @focus="props.row._originalPrice = props.row.price"
+                  @change="onPriceChange(props.row)"
+                />
+                -->
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('ytd')" align="right">
+                <div>
+                  ${{ props.row.ytd }}
+                </div>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('infraProjectServices')">
+                <div class="row items-center q-gutter-xs">
+                  <q-chip
+                    v-for="(item, index) in (props.row.infraProjectServices || []).slice(0, 2)"
+                    :key="index"
+                    dense
+                    class="bg-primary text-white"
+                  >
+                    {{ item.project.name }}
+                  </q-chip>
+                  <q-chip
+                    v-if="props.row.infraProjectServices?.length > 2"
+                    dense
+                    clickable
+                    class="bg-grey-4 text-black"
+                    @click="onInfraAccountServicesView(props.row.id, true, refreshInfraAccountServicesList)"
+                  >
+                    +{{ props.row.infraProjectServices.length - 2 }} more...
+                  </q-chip>
+                </div>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('infraAccountServiceId')">
+                <div v-if="editingRowId !== props.row.id">
+                  {{ props.row.infraAccountService.name }}
+                </div>
+                <formSingleSelectDropdown
+                  v-else
+                  v-model="props.row.infraAccountServiceId"
+                  :required="false"
+                  :disable="!props.row.infraAccountId"
+                  :options="infraAccountServiceForDropdownSingleSelect.list.value"
+                  :filter="infraAccountServiceForDropdownSingleSelect.filter"
+                />
+              </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+              class="common-q-td"
+            >
+              {{ props.row.createdBy.person.fullName }}
             </q-td>
-          </q-tr>
-          <q-separator />
-        </template>
-        <template #bottom-row>
-          <q-tr v-if="rows.length" class="bg-grey-2 text-black">
-            <q-td colspan="7" class="text-right text-weight-bold">
-              Total Price:
+            <q-td
+              v-if="selectedColumnNames.includes('createdOnUtc')"
+              class="common-q-td"
+            >
+              {{ props.row.createdOnUtc }}
             </q-td>
-            <q-td class="text-right text-weight-bold">
-              ${{ totalPrice.toFixed(2) }}
+            <q-td
+              v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedBy.person.fullName }}
             </q-td>
-            <q-td class="text-right text-weight-bold">
-              ${{ totalYtd.toFixed(2) }}
+            <q-td
+              v-if="selectedColumnNames.includes('updatedOnUtc')"
+              class="common-q-td"
+            >
+              {{ props.row.updatedOnUtc }}
             </q-td>
-            <q-td />
-            <q-td />
-            <q-td />
-            <q-td />
-          </q-tr>
-          <q-separator />
-        </template>
-      </q-table>
+              <q-td class="text-center actions">
+                <template v-if="editingRowId === props.row.id">
+                  <q-icon
+                    name="o_cancel"
+                    class="cursor-pointer q-mr-sm"
+                    size="xs"
+                    color="negative"
+                    @click="onCancel(props.row)"
+                  >
+                    <q-tooltip>Cancel</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    :loading="processing"
+                    name="o_save"
+                    class="cursor-pointer q-mr-sm hover-white"
+                    size="xs"
+                    color="primary"
+                    @click="onSave(props.row)"
+                  >
+                    <q-tooltip>Save</q-tooltip>
+                  </q-icon>
+                </template>
+                <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountServicesView(props.row.id)">
+                  <q-tooltip>View</q-tooltip>
+                </q-icon>
+                <q-icon
+                  name="o_add_task"
+                  class="cursor-pointer q-mr-sm"
+                  :class="props.row.priceEndDate ? 'text-grey cursor-not-allowed q-mr-sm' : 'cursor-pointer q-mr-sm'"
+                  size="xs"
+                  @click="!props.row.priceEndDate && onInfraAccountServicesView(props.row.id, true, refreshInfraAccountServicesList)"
+                >
+                  <q-tooltip>Assign Project</q-tooltip>
+                </q-icon>
+                <q-icon
+                  v-if="editingRowId !== props.row.id"
+                  name="o_edit"
+                  class="cursor-pointer q-mr-sm"
+                  :class="props.row.priceEndDate ? 'text-grey cursor-not-allowed q-mr-sm' : 'cursor-pointer q-mr-sm'"
+                  size="xs"
+                  @click="!props.row.priceEndDate && onEdit(props.row)"
+                >
+                  <q-tooltip>Edit</q-tooltip>
+                </q-icon>
+                <q-icon
+                  name="o_note_alt"
+                  size="xs"
+                  class="cursor-pointer q-mr-sm"
+                  @click="() => {
+                    activeRowId = props.row.id;
+                    activeActionType = 'instruction';
+                  }"
+                >
+                  <q-tooltip>Add Instructions</q-tooltip>
+                  <q-popup-edit
+                    v-model="props.row.instructions"
+                    anchor="top middle"
+                    self="bottom middle"
+                    buttons
+                    persistent
+                    label-set="Save"
+                    label-cancel="Cancel"
+                    class="instruction-popup"
+                    @save="val => onSaveInstructions(props.row.id, val)"
+                  >
+                    <template #default="scope">
+                      <div class="popup-container q-pa-sm">
+                        <q-btn
+                          icon="o_close"
+                          flat
+                          round
+                          dense
+                          size="sm"
+                          class="absolute-top-right"
+                          @click="scope.cancel"
+                        />
+                        <div class="text-subtitle2 q-mb-xs">Instructions</div>
+                        <div class="editor-wrapper">
+                          <q-editor
+                            v-model="scope.value"
+                            :dense="$q.screen.lt.md"
+                            :toolbar="toolbar"
+                            :fonts="fonts"
+                            class="fixed-editor"
+                          />
+                        </div>
+                      </div>
+                    </template>
+                  </q-popup-edit>
+                </q-icon>
+                <WalletPopup
+                  :row="props.row"
+                  :wallet-options="infraWalletTypeDropdownSingleSelect.list.value"
+                  :on-save-api="saveWalletDetails"
+                />
+                <q-icon
+                  name="o_delete_outline"
+                  class="cursor-pointer"
+                  color="negative"
+                  size="xs"
+                  @click="onSubmitInfraAccountServiceDelete(props.row, refreshInfraAccountServicesList)"
+                >
+                  <q-tooltip>Delete</q-tooltip>
+                </q-icon>
+                  <q-icon
+                  name="o_stop_circle"
+                  class="cursor-pointer q-ml-sm"
+                  size="xs"
+                  color="red"
+                >
+                  <q-tooltip>Stop</q-tooltip>
+                  <q-popup-edit
+                    v-model="props.row.priceEndDate"
+                    v-slot="scope"
+                    class="small-popup-title"
+                    style="width: 300px;"
+                    @show="props.row.priceEndDateError = ''"
+                  >
+                    <div class="row items-center justify-between no-wrap q-mb-sm">
+                      <div class="text-subtitle2">
+                        Stop Account Service :
+                      <span class="text-primary">{{ props.row.name }}</span>
+                    </div>
+                      <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                    </div>
+                    <formDate
+                      v-model="scope.value"
+                      label="Price End Date"
+                      :wrapperClass="'col-12'"
+                      :dateOptions="date => disableBeforePriceStartDate(date, props.row.priceStartDate)"
+                      :error="!!props.row?.priceEndDateError"
+                      :error-message="props.row?.priceEndDateError || ''"
+                      @update:model-value="props.row.priceEndDateError = ''"
+                    />
+                    <div class="row justify-end q-gutter-sm q-mt-sm">
+                      <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                      <q-btn label="Save" color="primary" dense @click="onSubmitInfraAccountServicePrice(props.row, scope, 'endDate')" />
+                    </div>
+                  </q-popup-edit>
+                </q-icon>
+              </q-td>
+            </q-tr>
+            <q-separator />
+          </template>
+          <template #bottom-row>
+            <q-tr v-if="rows.length" class="bg-grey-2 text-black">
+              <q-td colspan="7" class="text-right text-weight-bold">
+                Total Price:
+              </q-td>
+              <q-td class="text-right text-weight-bold">
+                ${{ totalPrice.toFixed(2) }}
+              </q-td>
+              <q-td class="text-right text-weight-bold">
+                ${{ totalYtd.toFixed(2) }}
+              </q-td>
+              <q-td />
+              <q-td />
+              <q-td />
+              <q-td />
+            </q-tr>
+            <q-separator />
+          </template>
+        </q-table>
+      </div>
     </q-card>
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="sortableColumns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 // Import libraries
-import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useQuasar, Dialog } from "quasar";
 import useVuelidate from "@vuelidate/core";
 import { required, helpers } from "@vuelidate/validators";
 import { isDate } from "validators/zw_validators.js";
-import { zwConfirm, zwConfirmDelete, notifySuccess, getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
+import { zwConfirm, notifySuccess } from "assets/utils";
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
-import Confirmation from "src/dialogs/confirmation.vue";
+// import Confirmation from "src/dialogs/confirmation.vue";
 
 import infraAccountsServicesService from "modules/infra-account-services/infraAccountServices.service";
 import WalletPopup from "modules/infra-account/components/_walletPopup.vue";
@@ -532,6 +611,16 @@ import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.j
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
 import formDate from "src/components/form-inputs/_formDate.vue";
+
+// SOP Change :- Shared DataTable Views
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 import {
   initInfraAccountServicesDialogs,
@@ -561,67 +650,50 @@ const editingRowId = ref(null);
 const editingRow = ref(null);
 const processing = ref(false);
 const activeActionType = ref(null);
+const showSortDialog = ref(false);
 
-// local storage values
-const localStorageKey = "Infra Account Services";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const searchText = ref(filterLocalStorage?.searchText || "");
-const itemTypeIds = filterLocalStorage ? filterLocalStorage.itemTypeIds : [];
-const projectIds = filterLocalStorage ? filterLocalStorage.projectIds : [];
-const infraAccountIds = filterLocalStorage ? filterLocalStorage.infraAccountIds : [];
-const ownerShipTypeIds = filterLocalStorage ? filterLocalStorage.ownerShipTypeIds : [];
-const paymentTermIds = filterLocalStorage ? filterLocalStorage.paymentTermIds : [];
-const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
-
-const highlightProjectId = filterLocalStorage?.activeRowId || null;
-const activeRowId = ref(highlightProjectId);
-const highlightedId = computed(() => {
-  return activeRowId.value;
-});
-
-// Search variables
-const search = ref({
-  searchText,
-  itemTypeIds,
-  projectIds,
-  infraAccountIds,
-  ownerShipTypeIds,
-  paymentTermIds
-});
+const highlightedId = computed(() => { return activeRowId.value; });
 
 // Table variables
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
-  { name: "infraAccount.name", label: "Account", field: "infraAccount.name", align: "left", sortable: true },
-  { name: "itemType.dropDownValue", label: "Item Type", field: "itemType.dropDownValue", align: "left", sortable: true },
-  { name: "ownerShipType.dropDownValue", label: "Ownership Type", field: "ownerShipType.dropDownValue", align: "left", sortable: true },
-  { name: "name", label: "Name", field: "name", align: "left", sortable: true },
-  { name: "url", label: "URL", field: "url", align: "left", sortable: true },
-  { name: "startDate", label: "Service Start Date", field: "startDate", align: "left", sortable: true },
-  { name: "paymentTerm.dropDownValue", label: "Payment Term", field: "paymentTerm.dropDownValue", align: "left", sortable: true },
-  { name: "price", label: "Price (Dollar)", field: "price", align: "right", sortable: false },
-  { name: "ytd", label: "Year To Date", field: "ytd", align: "right", sortable: false },
-  { name: "infraProjectServices", label: "Projects", field: "infraProjectServices", align: "left", sortable: false },
-  { name: "infraAccountServiceId", label: "Infra Account Service", field: "infraAccountServiceId", align: "left", sortable: true }
+  { name: "infraAccount.name", label: "Account", field: "infraAccount.name", align: "left", sortable: true, default: true },
+  { name: "itemType.dropDownValue", label: "Item Type", field: "itemType.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "ownerShipType.dropDownValue", label: "Ownership Type", field: "ownerShipType.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "name", label: "Name", field: "name", align: "left", sortable: true, default: true },
+  { name: "url", label: "URL", field: "url", align: "left", sortable: true, default: true },
+  { name: "startDate", label: "Service Start Date", field: "startDate", align: "left", sortable: true, default: true },
+  { name: "paymentTerm.dropDownValue", label: "Payment Term", field: "paymentTerm.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "price", label: "Price (Dollar)", field: "price", align: "right", sortable: false, default: true },
+  { name: "ytd", label: "Year To Date", field: "ytd", align: "right", sortable: false, default: true },
+  { name: "infraProjectServices", label: "Projects", field: "infraProjectServices", align: "left", sortable: false, default: true },
+  { name: "infraAccountServiceId", label: "Infra Account Service", field: "infraAccountServiceId", align: "left", sortable: true, default: true },
+  { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 
-const handleDocumentClick = (event) => {
-  const highlightElement = document.querySelector(".highlight");
-  // Check if clicked inside the highlighted row or icons
-  if (highlightElement && !highlightElement.contains(event.target)) {
-    activeRowId.value = null;
-    const storedData = getLocalStorage(localStorageKey) || {};
-    setLocalStorage(localStorageKey, { ...storedData, activeRowId: null });
-  }
-};
-
 // Get/Map Infra Account list to table
-const getAllInfraAccountServicesForList = (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+const getAllInfraAccountServicesForList = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;
   loading.value = true;
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
-  setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination, activeRowId: activeRowId.value });
+  const sorts = {};
+  const multi = multiSort.value;
+  for (let i = 0; i < multi.length; i++) {
+    const s = multi[i];
+    if (s.column && s.direction) {
+      sorts[s.column] = s.direction;
+    }
+  }
+  const payload = { page, pageSize: rowsPerPage, sortBy, descending, sorts, ...search.value };
+  saveDataTableState({
+    search: search.value,
+    pagination: p,
+    activeRowId: activeRowId.value,
+    sorts
+  });
   infraAccountsServicesService.getAllInfraAccountServicesForList(payload).then((resp) => {
     rows.value = resp?.infraAccountServicesList?.map(service => ({
       ...service,
@@ -636,11 +708,15 @@ const getAllInfraAccountServicesForList = (props) => {
       walletTypeId: service.walletType.id,
       isEditing: false
     })) ?? [];
-    pagination.value.page = page;
-    pagination.value.rowsPerPage = rowsPerPage;
-    pagination.value.sortBy = sortBy;
-    pagination.value.descending = descending;
-    pagination.value.rowsNumber = resp.total;
+    
+    pagination.value = {
+      ...pagination.value,
+      page,
+      rowsPerPage,
+      sortBy,
+      descending,
+      rowsNumber: resp.total
+    };
   }).finally(() => {
     loading.value = false;
     searchLoader.value = false;
@@ -650,6 +726,97 @@ const getAllInfraAccountServicesForList = (props) => {
 function refreshInfraAccountServicesList () {
   getAllInfraAccountServicesForList({ pagination: pagination.value });
 }
+
+const {
+  search,
+  pagination,
+  activeRowId,
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
+} = useSiteTableState({
+  storageKey: "infra-Accounts-Service-Index",
+
+  defaultSearch: {
+    searchText: "",
+    itemTypeIds: [],
+    projectIds: [],
+    infraAccountIds: [],
+    ownerShipTypeIds: [],
+    paymentTermIds: []
+  },
+
+  defaultPagination: {
+    sortBy: "createdOnUtc",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  },
+
+  defaultSorts: {},
+
+  defaultResizableWidth: {},
+
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
+
+const lsSorts = sorts.value || null;
+const sortableColumns = computed(() =>
+  columns.value.filter(col => col.sortable)
+);
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshInfraAccountServicesList();
+  }
+});
+
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
@@ -679,7 +846,9 @@ const onClear = () => {
   search.value.infraAccountIds = [];
   search.value.ownerShipTypeIds = [];
   search.value.paymentTermIds = [];
-  clearLocalStorage(localStorageKey);
+  saveDataTableState({
+    search: search.value
+  });
   onSearch();
 };
 
@@ -717,28 +886,28 @@ function onCancel(row) {
   editingRow.value = null;
 }
 
-const onPriceChange = (row) => {
-  const oldValue = Number(row._originalPrice);
-  const newValue = Number(row.price);
+// const onPriceChange = (row) => {
+//   const oldValue = Number(row._originalPrice);
+//   const newValue = Number(row.price);
 
-  if (row.price == null || row.price === "" || newValue === oldValue) {
-    return;
-  }
-  Dialog.create({
-    component: Confirmation,
-    componentProps: {
-      title: "Confirmation",
-      message: "Are you sure you want to change the price?",
-      cancel: true
-    }
-  })
-    .onOk(() => {
-      row._originalPrice = newValue;
-    })
-    .onCancel(() => {
-      row.price = oldValue;
-    });
-}
+//   if (row.price == null || row.price === "" || newValue === oldValue) {
+//     return;
+//   }
+//   Dialog.create({
+//     component: Confirmation,
+//     componentProps: {
+//       title: "Confirmation",
+//       message: "Are you sure you want to change the price?",
+//       cancel: true
+//     }
+//   })
+//     .onOk(() => {
+//       row._originalPrice = newValue;
+//     })
+//     .onCancel(() => {
+//       row.price = oldValue;
+//     });
+// }
 
 function disableBeforePriceStartDate(date, startDate) {
   return new Date(date) >= new Date(startDate);
@@ -1023,13 +1192,27 @@ const onSubmitInfraAccountServicePrice = async (row, scope, type) => {
 // ----------------------------
 // Save static search into localstorage.
 // ----------------------------
-watch(() => searchText.value, () => {
-  if (searchText.value) searchLoader.value = true;
-  getAllInfraAccountServicesForList({ pagination: pagination.value });
+
+watch(() => search.value.searchText, () => {
+  searchLoader.value = true;
+  refreshInfraAccountServicesList();
 });
 
-onBeforeUnmount(() => {
-  document.removeEventListener("click", handleDocumentClick);
+watch(activeRowId, (val) => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  saveDataTableState({
+    search: search.value,
+    pagination: pagination.value,
+    activeRowId: val,
+    sorts: formattedSorts
+  });
 });
 
 onMounted(() => {
@@ -1045,11 +1228,9 @@ onMounted(() => {
     tableRef.value.requestServerInteraction();
   }
 
-  if (!activeRowId.value && highlightProjectId) {
-    activeRowId.value = highlightProjectId;
+  if (!activeRowId.value) {
+    activeRowId.value = null;
   }
-
-  document.addEventListener("click", handleDocumentClick);
 });
 
 </script>
@@ -1062,5 +1243,8 @@ onMounted(() => {
 }
 .hover-white:hover {
   color: #fff !important;
+}
+.Custom-DataTable {
+  min-width: max-content;
 }
 </style>

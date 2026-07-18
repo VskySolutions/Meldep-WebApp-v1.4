@@ -13,6 +13,7 @@ namespace Vsky.Services.InfraDatabases
             List<string> infraServiceIds,
             string searchText,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,

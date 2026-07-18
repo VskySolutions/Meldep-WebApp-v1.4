@@ -15,6 +15,7 @@ namespace Vsky.Services.InfraProjectInstances
             List<string> instanceTypeIds,
             string searchText,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,

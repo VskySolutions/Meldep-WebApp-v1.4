@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
+using Vsky.Services.Common;
 
 namespace Vsky.Services.InfraAccounts
 {
@@ -15,16 +16,19 @@ namespace Vsky.Services.InfraAccounts
         #region Define Services
         private readonly IRepository<InfraAccountServices> _infraAccountServicesRepository;
         private readonly IInfraAccountServiceCalculationService _calculationService;
+        private readonly ICommonService _commonService;
         #endregion
 
         #region Services Initializations
         public InfraAccountServicesService(
             IRepository<InfraAccountServices>infraAccountServicesRepository,
-            IInfraAccountServiceCalculationService calculationService
+            IInfraAccountServiceCalculationService calculationService,
+            ICommonService commonService
         )
         {
             _infraAccountServicesRepository = infraAccountServicesRepository;
             _calculationService = calculationService;
+            _commonService = commonService;
         }
         # endregion
 
@@ -47,6 +51,7 @@ namespace Vsky.Services.InfraAccounts
             List<string> paymentTermIds,
             string searchText,
             string sortBy,
+            Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue,
@@ -85,7 +90,15 @@ namespace Vsky.Services.InfraAccounts
                 query = query.OrderBy(orderBy);
             }
             else
+            {
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
 
             query = query.Select(m => new InfraAccountServices
             {
@@ -96,6 +109,8 @@ namespace Vsky.Services.InfraAccounts
                 PriceInDollar = m.PriceInDollar,
                 WalletNumber = m.WalletNumber,
                 Instructions = m.Instructions,
+                CreatedOnUtc = m.CreatedOnUtc,
+                UpdatedOnUtc = m.UpdatedOnUtc,
                 InfraAccountServicesPriceHistory = m.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).ToList(),
                 InfraAccount = new InfraAccount
                 {
@@ -131,6 +146,22 @@ namespace Vsky.Services.InfraAccounts
                 {
                     Id = m.WalletType.Id,
                     DropDownValue = m.WalletType.DropDownValue
+                },
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = m.CreatedBy.PersonId,
+                        FullName = m.CreatedBy.Person.FirstName + " " + m.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = m.UpdatedBy.PersonId,
+                        FullName = m.UpdatedBy.Person.FirstName + " " + m.UpdatedBy.Person.LastName,
+                    }
                 },
                 Price = m.InfraAccountServicesPriceHistory.OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.Price).FirstOrDefault(),
                 PriceEndDate = (DateTime)m.InfraAccountServicesPriceHistory.OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.EndDate).FirstOrDefault(),

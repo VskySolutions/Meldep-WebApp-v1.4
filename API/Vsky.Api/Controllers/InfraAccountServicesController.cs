@@ -75,6 +75,7 @@ namespace Vsky.Api.Controllers
                     searchModel.PaymentTermIds,
                     searchModel.SearchText,
                     searchModel.SortBy,
+                    searchModel.Sorts,
                     searchModel.Descending,
                     searchModel.Page,
                     searchModel.PageSize);
