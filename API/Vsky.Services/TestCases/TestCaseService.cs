@@ -249,6 +249,16 @@ namespace Vsky.Services.TestCases
                         Notes = mapping.Notes
                     }).Take(1).ToList(),
                 },
+                ProjectModule = new ProjectModule
+                {
+                    Id = x.ProjectModule.Id,
+                    Name = x.ProjectModule.Name
+                },
+                Requirement = new Requirement
+                {
+                    Id = x.Requirement.Id,
+                    Title = x.Requirement.Title
+                },
                 Status = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
                 .Where(m => !m.Deleted)
                 .OrderByDescending(m => m.ReleaseTracking.CreatedOnUtc)

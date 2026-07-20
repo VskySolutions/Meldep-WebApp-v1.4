@@ -672,7 +672,7 @@ const formLoading = ref({
 const statusRows = ref([]);
 const filesRows = ref([]);
 const tab = ref("1_tab");
-const statusPagination = ref({ sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
+const statusPagination = ref({ sortBy: "", descending: true, rowsPerPage: 20, page: 1 });
 const statusColumns = ref([
   { name: "status.dropDownValue", label: "Status", field: "status.dropDownValue", align: "left", sortable: false },
   { name: "statusDurationText", label: "Duration", field: "statusDurationText", align: "left", sortable: false },

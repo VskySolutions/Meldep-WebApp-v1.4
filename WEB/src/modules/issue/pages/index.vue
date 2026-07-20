@@ -337,6 +337,9 @@
               <q-td v-if="selectedColumnNames.includes('projectModule.name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                 {{ props.row.projectModule.name }}
               </q-td>
+              <q-td v-if="selectedColumnNames.includes('requirement.title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.requirement.title }}
+              </q-td>
               <q-td v-if="selectedColumnNames.includes('projectTaskRelatedMappings')">
                 <span v-if="props.row.projectTaskRelatedMappings?.length">
                   <template v-for="(item, index) in props.row.projectTaskRelatedMappings" :key="index">
@@ -626,6 +629,7 @@ const columns = ref([
   { name: "issueNumber", label: "Id", field: "issueNumber", align: "left", sortable: true, default: true},
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true, default: true },
+  { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: false },
   { name: "projectTaskRelatedMappings", label: "Task", field: "projectTaskRelatedMappings", align: "left", sortable: false, default: true },
   { name: "name", label: "Issue Name", field: "name", align: "left", sortable: true, default: true },
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true, default: true },

@@ -318,6 +318,12 @@
                   </div>
                 </div>
               </q-td>
+              <q-td v-if="selectedColumnNames.includes('projectModule.name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.projectModule.name }}
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('requirement.title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                {{ props.row.requirement.title }}
+              </q-td>
               <q-td v-if="selectedColumnNames.includes('testPlan.name')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                 <span
                   v-if="preTestPlanName !== props.row.testPlan.name"
@@ -515,6 +521,8 @@ const shownProjects = new Set();
 const columns = ref([
   { name: "testCaseNumber", label: "Id", field: "testCaseNumber", align: "left", sortable: true, default: true },
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
+  { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true, default: false },
+  { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: false },
   { name: "testPlan.name", label: "Test Plan Name", field: "testPlan.name", align: "left", sortable: true, default: true },
   { name: "name", label: "Test Case Name", field: "name", align: "left", sortable: true, default: true },
   { name: "status.dropDownValue", label: "Test Case Status", field: "status.dropDownValue", align: "left", sortable: true, default: true },

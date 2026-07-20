@@ -236,6 +236,11 @@ namespace Vsky.Services.Issues
                     Id = x.ProjectModule.Id,
                     Name = x.ProjectModule.Name
                 },
+                Requirement = new Requirement
+                {
+                    Id = x.Requirement.Id,
+                    Title = x.Requirement.Title
+                },
                 TestCase = new TestCase
                 {
                     Id = x.TestCase.Id,
