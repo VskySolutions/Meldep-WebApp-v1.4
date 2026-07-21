@@ -567,9 +567,29 @@ const onDelete = (item) => {
   });
 };
 
+const isNoteEmpty = (html) => {
+  if (!html) return true;
+
+  const div = document.createElement("div");
+  div.innerHTML = html;
+
+  // Convert HTML to plain text and replace non-breaking spaces
+  const text = div.textContent
+    .replace(/\u00A0/g, " ")
+    .trim();
+
+  return text.length === 0;
+};
+
+
 const onSubmit = async () => {
   // processing.value = true;
   try {
+    if (isNoteEmpty(model.value.notes)) {
+      notifyError({ message: "Please enter a note." });
+      return;
+    }
+
     const isValid = await v$.value.$validate();
     if (!isValid) return;
     processing.value = true;

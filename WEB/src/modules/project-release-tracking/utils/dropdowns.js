@@ -5,7 +5,9 @@ export default function releaseTrackingModule () {
   // Status (Single Select)
   const releaseTrackingStatusDropdownSingleSelect = useSingleSelectDropdown(commonService.getDropDown, {
     labelKey: "dropdownValue",
-    valueKey: "id"
+    valueKey: "id",
+    colorKey: "color",
+    bgColorKey: "bgColor"
   });
 
   const releaseTrackingTypeDropdownSingleSelect = useSingleSelectDropdown(commonService.getDropDown, {

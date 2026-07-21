@@ -15,7 +15,9 @@ export default function sOPProcessModule () {
 
   const sopProcessStatusDropdownSingleSelect = useSingleSelectDropdown(commonService.getDropDown, {
     labelKey: "dropdownValue",
-    valueKey: "id"
+    valueKey: "id",
+    colorKey: "color",
+    bgColorKey: "bgColor"
   });
 
   // Status (Multi Select)
