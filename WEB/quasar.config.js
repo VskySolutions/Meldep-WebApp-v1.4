@@ -28,7 +28,8 @@ export default defineConfig((ctx) => {
       "auth",
       "title",
       "components",
-      "i18n"
+      "i18n",
+      "apexcharts"
     ],
 
     css: [

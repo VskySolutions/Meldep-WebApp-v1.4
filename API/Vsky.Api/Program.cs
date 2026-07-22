@@ -75,6 +75,7 @@ using Vsky.Services.GlobalVariables;
 using Vsky.Services.HelpDesks;
 using Vsky.Services.ImageMigration;
 using Vsky.Services.InfraAccounts;
+using Vsky.Services.InfraDashboard;
 using Vsky.Services.InfraDatabases;
 using Vsky.Services.InfraFTPs;
 using Vsky.Services.InfraProjectInstances;
@@ -421,6 +422,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<IInfraAccountServiceCalculationService, InfraAccountServiceCalculationService>();
             builder.Services.AddScoped<IInfraAccountServicesService, InfraAccountServicesService>();
             builder.Services.AddScoped<IInfraProjectServicesService, InfraProjectServicesService>();
+            builder.Services.AddScoped<IInfraDashboardAggregationService, InfraDashboardAggregationService>();
             builder.Services.AddScoped<IInfraFTPService, InfraFTPService>();
             builder.Services.AddScoped<IInfraFTPsProjectInstanceMappingService, InfraFTPsProjectInstanceMappingService>();
             builder.Services.AddScoped<IInfraDatabaseService, InfraDatabaseService>();

@@ -12,7 +12,7 @@
               <q-breadcrumbs-el label="Accounts" />
             </q-breadcrumbs>
           </div>
-          <div class="col-12 col-sm-5">
+          <div class="col-12 col-sm-4">
             <div class="row items-center">
               <span v-if="Object.keys(appliedFilters).length > 0" class="text-grey-10 text-caption" style="font-weight: 600;">Filters On :</span>
               <q-chip v-for="(value, key) in appliedFilters" :key="key" class="bg-grey-3 text-grey-10 text-caption q-mr-xs filter-chip">
@@ -21,7 +21,7 @@
               </q-chip>
             </div>
           </div>
-          <div class="col-12 col-sm-5">
+          <div class="col-12 col-sm-6">
             <div class="row items-center justify-end no-wrap">
               <div class="search-container position-relative">
                 <searchFilterBar
@@ -67,6 +67,17 @@
                 :selected-field="selectedField"
               />
               <div>
+                <q-btn
+                  v-if="role === 'admin'"
+                  icon="o_insights"
+                  outline
+                  label="Dashboard"
+                  no-caps
+                  class="text-primary q-ml-sm btnRounded"
+                  @click="$router.push('/infra-dashboard')"
+                >
+                  <q-tooltip>Open Infrastructure Dashboard &amp; Financial Insights</q-tooltip>
+                </q-btn>
                 <q-btn icon="o_add" outline label="Add Infra Account" no-caps class="text-primary q-ml-sm btnRounded" @click="onInfraAccountAdd(refreshInfraAccountList)" />
                 <q-btn
                   v-if="role === 'admin'"
@@ -164,7 +175,7 @@
               <q-td v-if="selectedColumnNames.includes('customerId')">{{ props.row.customerId }}</q-td>
               <q-td v-if="selectedColumnNames.includes('url')">{{ props.row.url }}</q-td>
               <q-td v-if="selectedColumnNames.includes('totalServicesCost')" class="text-right">${{ props.row.totalServicesCost }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('ccLast4Digits')" align="right">{{ props.row.ccLast4Digits }}</q-td>              
+              <q-td v-if="selectedColumnNames.includes('ccLast4Digits')" align="right">{{ props.row.ccLast4Digits }}</q-td>
               <q-td
                 v-if="selectedColumnNames.includes('createdBy.person.firstName')"
                 class="common-q-td"
@@ -218,7 +229,7 @@
               />
               <q-td />
             </q-tr>
-          <q-separator>            
+          <q-separator>
           </q-separator>
           </template>
         </q-table>
