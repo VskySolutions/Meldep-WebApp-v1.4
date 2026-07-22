@@ -610,7 +610,7 @@
                             >
                               Cancel
                             </q-btn>
-                            <q-btn v-if="activeExpected.rowId" icon-right="o_check" color="primary" size="sm" :loading="processing" @click="saveExpectedPlan(line)">
+                            <q-btn v-if="activeExpected.rowId" icon-right="o_check" color="primary" size="sm" :loading="processing" @click="saveExpectedPlan(line, planDate.weekDate)">
                               Save
                             </q-btn>
                           </div>
@@ -1420,13 +1420,14 @@ const addWeeklyPlanDateLines = async (planDates) => {
   }
 };
 
-const saveExpectedPlan = async (line) => {
+const saveExpectedPlan = async (line, weekDate) => {
   processing.value = true;
   try {
     if (line?.expectedDescription.length === 0 || line?.expectedDescription === "<br>") {
       notifyError({ message: "Please Enter Plan" });
     } else {
       line.isEditExpectedDescription = true;
+      line.weekDate = weekDate;
       const resp = await projectService.saveProjectWeeklyPlanDatesLine(line);
       Object.assign(line, null);
       Object.assign(line, resp);

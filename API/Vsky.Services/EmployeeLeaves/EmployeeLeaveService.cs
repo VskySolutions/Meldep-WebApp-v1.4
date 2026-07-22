@@ -804,6 +804,45 @@ namespace Vsky.Services.EmployeeLeaves
         }
         #endregion
 
+        #region GetEmployeeApprovedLeaveDates
+        public async Task<List<DateTime>> GetEmployeeApprovedLeaveDates(
+            string employeeId,
+            DateTime weekStartDate,
+            DateTime weekEndDate
+        )
+        {
+            var leaves = await _employeeLeaveRepository.TableNoTracking
+                .Where(x =>
+                    !x.Deleted &&
+                    x.EmployeeId == employeeId &&
+                    x.LeaveStatuses != null &&
+                    x.LeaveStatuses.DropDownValue == "Approved" &&
+                    x.FromDate <= weekEndDate &&
+                    x.ToDate >= weekStartDate)
+                .ToListAsync();
+
+            var leaveDates = new List<DateTime>();
+
+            foreach (var leave in leaves)
+            {
+                var startDate = leave.FromDate.Date > weekStartDate
+                    ? leave.FromDate.Date
+                    : weekStartDate;
+
+                var endDate = leave.ToDate.Date < weekEndDate
+                    ? leave.ToDate.Date
+                    : weekEndDate;
+
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                {
+                    leaveDates.Add(date);
+                }
+            }
+
+            return leaveDates.Distinct().ToList();
+        }
+        #endregion
+
         #region
         //public async Task<bool> CheckPreviousHoliday(string siteId, string employeeId, DateTime startDate)
         //{

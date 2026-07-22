@@ -557,9 +557,13 @@ namespace Vsky.Services.Projects
                         URL = m.InfraAccountServices.URL,
                         StartDate = m.InfraAccountServices.StartDate,
                         EndDate = m.InfraAccountServices.EndDate,
-                        PriceInDollar = m.InfraAccountServices.PriceInDollar,
+                        Price = m.InfraAccountServices.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.StartDate).Select(ph => ph.Price).FirstOrDefault(),
                         ActualPriceInDollar = Math.Round(
-                            (decimal)m.InfraAccountServices.PriceInDollar /
+                               (decimal) m.InfraAccountServices.InfraAccountServicesPriceHistory
+                                .Where(ph => !ph.Deleted)
+                                .OrderByDescending(ph => ph.StartDate)
+                                .Select(ph => ph.Price)
+                                .FirstOrDefault() /
                             serviceCounts
                                 .Where(c => c.InfraServiceId == m.InfraServiceId)
                                 .Select(c => c.ProjectCount)

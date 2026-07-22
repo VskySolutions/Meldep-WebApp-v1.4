@@ -300,7 +300,7 @@ namespace Vsky.Api.Controllers
             var totalUsedSickLeaves = _employeeLeaveService.GetUsedLeaveByEmployeeIdAndLeaveCategoryId(employeeId, currentYear, SickLeaveId.Id);
             var remainingSickLeaves = sickLeaves - totalUsedSickLeaves;
 
-            var leaveEvents = await _leaveScheduleService.GetAllLeaveEvents(SiteId);
+            var leaveEvents = await _leaveScheduleService.GetAllLeaveEvents(SiteId, null, null);
             var officeLeaveDates = leaveEvents.Select(x => x.Date.Value.ToString("yyyy/MM/dd")).ToList();
 
             var employeeLeavesDates = await _employeeLeaveService.GetAllEmployeeLeaves(employeeId);

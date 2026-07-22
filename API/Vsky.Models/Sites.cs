@@ -23,6 +23,8 @@ public class Site : BaseEntity
     public bool Active { get; set; }
     public bool Deleted { get; set; }
     public string TimeZone { get; set; }
+    public int NumberOfWorkingDays { get; set; }
+    public bool CheckLeavesForTimesheetReminder { get; set; }
     public bool IsDropdownGenerated { get; set; }
     public virtual Person Person { get; set; }
     public virtual Address Address { get; set; }

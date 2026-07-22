@@ -96,7 +96,9 @@ namespace Vsky.Models
         public bool IsEditExpectedDescription { get; set; }
         [NotMapped]
         public bool IsEditActualDescription { get; set; }
-        
+        [NotMapped]
+        public DateTime? WeekDate { get; set; }
+
         public string? DeletedById { get; set; }
         public DateTime? DeletedOnUtc { get; set; }
         public bool Deleted { get; set; }

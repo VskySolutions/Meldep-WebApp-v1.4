@@ -50,7 +50,7 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var list = await _leaveScheduleService.GetAllLeaveEvents(SiteId);
+                var list = await _leaveScheduleService.GetAllLeaveEvents(SiteId, null, null);
                 var model = _mapper.Map<IList<LeaveScheduleModels>>(list);
 
                 return Ok(model);

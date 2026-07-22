@@ -123,7 +123,42 @@
             <!-- Ref to first column and it's value - Added Date Manually -->
             <q-td width="10%">{{ props.row.createdOnUtc }}</q-td>
             <q-td width="30%" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">{{ props.row.title }}</q-td>
-            <q-td width="40%" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">{{ props.row.message }}</q-td>
+            <!-- <q-td width="40%" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">{{ props.row.message }}</q-td> -->
+            <q-td
+              width="40%"
+              style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
+            >
+              <div>
+                <span>
+                  {{
+                    isExpanded(props.row.id)
+                      ? props.row.message
+                      : props.row.message.substring(0, 250)
+                  }}
+                </span>
+
+                <span
+                  v-if="!isExpanded(props.row.id) && props.row.message.length > 250"
+                  class="text-primary cursor-pointer text-h1"
+                  @click="toggleMessage(props.row.id)"
+                >
+                  ...
+                  <q-tooltip>
+                    View More
+                  </q-tooltip>
+                </span>
+
+                <span
+                  v-if="isExpanded(props.row.id) && props.row.message.length > 250"
+                  class="text-primary cursor-pointer text-h1"
+                  @click="toggleMessage(props.row.id)"
+                > -
+                  <q-tooltip>
+                    View Less
+                  </q-tooltip>
+                </span>
+              </div>
+            </q-td>
             <q-td width="5%" class="text-center actions">
               <q-icon name="o_double_arrow" class="cursor-pointer q-mr-sm" @click="handleClick(props.row.redirectURL, props.row.id, props.row.recordId)">
                 <q-tooltip>Redirect</q-tooltip>
@@ -150,6 +185,7 @@ const loading = ref(true);
 const showFilter = ref(false);
 const searchLoader = ref(false);
 const storedUser = getLocalStorage("user");
+const expandedRows = ref([]);
 
 // local storage values
 const localStorageKey = "Notifications";
@@ -210,6 +246,17 @@ const getNotifications = (props) => {
     searchLoader.value = false;
   });
 };
+
+const toggleMessage = (id) => {
+debugger;
+  if (expandedRows.value.includes(id)) {
+    expandedRows.value = expandedRows.value.filter(x => x !== id);
+  } else {
+    expandedRows.value.push(id);
+  }
+};
+
+const isExpanded = (id) => expandedRows.value.includes(id);
 
 const disableBeforeStartDate = (startDate) => {
   if (!search.value.startDate) {

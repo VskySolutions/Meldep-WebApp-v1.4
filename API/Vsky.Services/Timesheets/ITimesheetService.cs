@@ -91,6 +91,14 @@ namespace Vsky.Services.Timesheets
         Task<List<Timesheet>> GetAllTimesheetListForDropdown(string SiteId);
         #endregion
 
+        #region HasTimesheetForDate
+        Task<bool> HasTimesheetForDate(
+            string siteId,
+            string employeeId,
+            DateTime timesheetDate
+        );
+        #endregion
+
         #region GetTimesheetDetailsById
         Task<Timesheet> GetTimesheetDetailsById(string id);
         #endregion

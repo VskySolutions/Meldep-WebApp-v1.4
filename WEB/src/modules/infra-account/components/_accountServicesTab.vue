@@ -39,19 +39,19 @@
           <q-td v-if="isShowFlag" align="right" style="width: 10%">
             ${{ props.row.actualPriceInDollar }}
             <q-icon
-              v-if="Number(props.row.actualPriceInDollar) !== Number(props.row.priceInDollar)"
+              v-if="Number(props.row.actualPriceInDollar) !== Number(props.row.price)"
               name="o_info"
               size="16px"
               color="grey-7"
               class="q-ml-xs cursor-pointer"
             >
               <q-tooltip>
-                Actual Price: ${{ props.row.priceInDollar }}
+                Actual Price: ${{ props.row.price }}
               </q-tooltip>
             </q-icon>
           </q-td>
           <q-td v-else align="right" style="width: 10%">
-            ${{ props.row.priceInDollar }}
+            ${{ props.row.price }}
           </q-td>
           <q-td style="width: 8%">{{ props.row.walletType.dropDownValue }}</q-td>
           <q-td style="width: 8%">{{ props.row.walletNumber }}</q-td>
@@ -102,7 +102,7 @@ const servicesColumns = ref([
   { name: "startDateStr", label: "Start Date", field: "startDateStr", align: "left", sortable: true },
   { name: "endDate", label: "End Date", field: "endDate", align: "left", sortable: true },
   { name: "paymentTermId", label: "Payment Term", field: "paymentTermId", align: "left", sortable: true },
-  { name: "priceInDollar", label: "Price", field: "priceInDollar", align: "right", sortable: true },
+  { name: "priceInDollar", label: "Price", field: "price", align: "right", sortable: true },
   { name: "walletTypeId", label: "Wallet Type", field: "walletTypeId", align: "left", sortable: true },
   { name: "walletNumber", label: "Wallet Number", field: "walletNumber", align: "left", sortable: true },
   { name: "instructions", label: "Instructions", field: "instructions", align: "left", sortable: true }
@@ -115,7 +115,7 @@ const totalPrice = computed(() => {
     if (isShowFlag.value) {
       price = parseFloat(row.actualPriceInDollar) || 0;
     } else {
-      price = parseFloat(row.priceInDollar) || 0;
+      price = parseFloat(row.price) || 0;
     }
     return sum + price;
   }, 0);

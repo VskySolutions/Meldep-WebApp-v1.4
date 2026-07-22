@@ -215,14 +215,34 @@
             <q-separator />
           </template>
           <template #bottom-row>
-            <q-tr v-if="rows.length" class="bg-grey-2 text-black">
+            <!-- <q-tr v-if="rows.length || !selectedColumnNames.includes('totalServicesCost')" class="bg-grey-2 text-black">
               <q-td :colspan="totalColumnIndex" class="text-right text-weight-bold">
                 Total Price:
               </q-td>
               <q-td class="text-right text-weight-bold">
                 ${{ totalPrice.toFixed(2) }}
               </q-td>
-              <!-- Remaining visible columns -->
+              <q-td
+                v-for="n in trailingColumns"
+                :key="n"
+              />
+              <q-td />
+            </q-tr> -->
+            <q-tr
+              v-if="rows.length && totalColumnIndex !== -1"
+              class="bg-grey-2 text-black"
+            >
+              <q-td
+                :colspan="totalColumnIndex"
+                class="text-right text-weight-bold"
+              >
+                Total Price:
+              </q-td>
+
+              <q-td class="text-right text-weight-bold">
+                ${{ totalPrice.toFixed(2) }}
+              </q-td>
+
               <q-td
                 v-for="n in trailingColumns"
                 :key="n"
@@ -240,6 +260,7 @@
   <multiColumnSortingDialog
     v-model="showSortDialog"
     :columns="columns"
+    :exclude-columns="['Total Services Cost','CC Last 4 Digits']"
     :multi-sort="multiSort"
     @add="addSortLevel"
     @remove="removeSortLevel"
@@ -355,14 +376,34 @@ const {
 
 const lsSorts = sorts.value || null;
 
+// const totalColumnIndex = computed(() => {
+//   return computedColumns.value.findIndex(
+//     c => c.name === "totalServicesCost"
+//   );
+// });
+
+// const trailingColumns = computed(() => {
+//   return computedColumns.value.length - totalColumnIndex.value - 1;
+// });
+
+const visibleColumns = computed(() => {
+  return columns.value.filter(col =>
+    selectedColumnNames.value.includes(col.name)
+  );
+});
+
 const totalColumnIndex = computed(() => {
-  return computedColumns.value.findIndex(
+  return visibleColumns.value.findIndex(
     c => c.name === "totalServicesCost"
   );
 });
 
 const trailingColumns = computed(() => {
-  return computedColumns.value.length - totalColumnIndex.value - 1;
+  const index = totalColumnIndex.value;
+
+  if (index === -1) return 0;
+
+  return visibleColumns.value.length - index - 1;
 });
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Column resize functionality (SOP Change)

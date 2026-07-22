@@ -26,9 +26,16 @@ namespace Vsky.Services.LeaveSchedule
         #endregion
 
         #region public methods
-        public async Task<IList<LeaveSchedules>> GetAllLeaveEvents(string SiteId)
+        public async Task<IList<LeaveSchedules>> GetAllLeaveEvents(string SiteId, DateTime? weekStartDate, DateTime? weekEndDate)
         {
             var query = _leaveSchedulesRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
+
+            if (weekStartDate.HasValue)
+                query = query.Where(x => x.Date >= weekStartDate.Value);
+
+            if (weekEndDate.HasValue)
+                query = query.Where(x => x.Date <= weekEndDate.Value);
+
             query = query.OrderBy(x => x.Date);
 
             query = query.Select(x => new LeaveSchedules

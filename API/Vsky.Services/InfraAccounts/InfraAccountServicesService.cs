@@ -84,7 +84,21 @@ namespace Vsky.Services.InfraAccounts
                     m.WalletType.DropDownValue.ToLower().Contains(searchText));
             }
 
-            if (!string.IsNullOrWhiteSpace(sortBy))
+            if (sortBy == "price")
+            {
+                query = descending
+                    ? query.OrderByDescending(x => x.InfraAccountServicesPriceHistory
+                        .Where(ph => !ph.Deleted)
+                        .OrderByDescending(ph => ph.CreatedOnUtc)
+                        .Select(ph => ph.Price)
+                        .FirstOrDefault())
+                    : query.OrderBy(x => x.InfraAccountServicesPriceHistory
+                        .Where(ph => !ph.Deleted)
+                        .OrderByDescending(ph => ph.CreatedOnUtc)
+                        .Select(ph => ph.Price)
+                        .FirstOrDefault());
+            }
+            else if (!string.IsNullOrWhiteSpace(sortBy) && !sortBy.Equals("ytd", StringComparison.OrdinalIgnoreCase))
             {
                 var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
                 query = query.OrderBy(orderBy);
@@ -177,11 +191,25 @@ namespace Vsky.Services.InfraAccounts
                 }).ToList()
             });
 
-            var list = new PagedList<InfraAccountServices>(query, page, pageSize);
-            foreach (var item in list)
+            var data = query.ToList();
+
+            foreach (var item in data)
             {
                 item.YTD = _calculationService.CalculateYTD(item.InfraAccountServicesPriceHistory);
             }
+
+            if (sortBy.Equals("ytd", StringComparison.OrdinalIgnoreCase))
+            {
+                data = descending
+                    ? data.OrderByDescending(x => x.YTD).ToList()
+                    : data.OrderBy(x => x.YTD).ToList();
+            }
+
+            var list = new PagedList<InfraAccountServices>(
+                data.AsQueryable(),
+                page,
+                pageSize);
+
             return list;
         }
         #endregion
@@ -246,7 +274,11 @@ namespace Vsky.Services.InfraAccounts
                     StartDate = m.StartDate,
                     EndDate = m.EndDate,
                     ActualPriceInDollar = Math.Round(
-                        (decimal)m.PriceInDollar /
+                        (decimal) m.InfraAccountServicesPriceHistory
+                                .Where(ph => !ph.Deleted)
+                                .OrderByDescending(ph => ph.StartDate)
+                                .Select(ph => ph.Price)
+                                .FirstOrDefault() /
                         Math.Max(
                             m.InfraProjectServices.Count(x => !x.Deleted),
                             1

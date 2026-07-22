@@ -81,12 +81,16 @@ namespace Vsky.Services.InfraAccounts
                 if (sortBy == "totalServicesCost")
                 {
                     query = descending
-                        ? query.OrderByDescending(x => x.InfraAccountServices
-                            .Where(s => !s.Deleted)
-                            .Sum(s => (decimal?)s.PriceInDollar) ?? 0)
-                        : query.OrderBy(x => x.InfraAccountServices
-                            .Where(s => !s.Deleted)
-                            .Sum(s => (decimal?)s.PriceInDollar) ?? 0);
+                        ? query.OrderByDescending(x =>
+                            x.InfraAccountServices
+                                .Where(s => !s.Deleted)
+                                .SelectMany(s => s.InfraAccountServicesPriceHistory)
+                                .Sum(ph => (decimal?)ph.Price) ?? 0)
+                        : query.OrderBy(x =>
+                            x.InfraAccountServices
+                                .Where(s => !s.Deleted)
+                                .SelectMany(s => s.InfraAccountServicesPriceHistory)
+                                .Sum(ph => (decimal?)ph.Price) ?? 0);
                 }
                 else
                 {

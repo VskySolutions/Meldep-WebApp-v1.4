@@ -85,6 +85,11 @@ namespace Vsky.Services.ProjectWeeklyPlan
                         LastName = n.ActualDescriptionUpdatedBy.Person.LastName
                     }
                 },
+                ProjectWeeklyPlanDates = new ProjectWeeklyPlanDates
+                {
+                    Id = n.ProjectWeeklyPlanDates.Id,
+                    WeekDate = n.ProjectWeeklyPlanDates.WeekDate,
+                },
                 ProjectWeeklyPlanDatesLinesAssignedTo = n.ProjectWeeklyPlanDatesLinesAssignedTo.Where(m => !m.Deleted).OrderByDescending(m => m.CreatedOnUtc).Select(x => new ProjectWeeklyPlanDatesLinesAssignedTo
                 {
                     Id = x.Id,

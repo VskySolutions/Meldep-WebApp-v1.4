@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -11,10 +12,13 @@ using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
 using Vsky.Services.Common;
 using Vsky.Services.EmailReply;
+using Vsky.Services.EmployeeLeaves;
+using Vsky.Services.EmailReply;
 using Vsky.Services.Employees;
 using Vsky.Services.HelpDesks;
 using Vsky.Services.ImageMigration;
 using Vsky.Services.Issues;
+using Vsky.Services.LeaveSchedule;
 using Vsky.Services.Messages;
 using Vsky.Services.Note;
 using Vsky.Services.Notifications;
@@ -22,6 +26,7 @@ using Vsky.Services.ProjectTasks;
 using Vsky.Services.Requirements;
 using Vsky.Services.Sites;
 using Vsky.Services.TestCases;
+using Vsky.Services.Timesheets;
 using Vsky.Services.Users;
 using static Org.BouncyCastle.Math.EC.ECCurve;
 
@@ -49,6 +54,9 @@ namespace Vsky.Api.Controllers
         private readonly IHelpDeskEmailRepliesMappingService _helpDeskEmailRepliesMappingService;
         private readonly IMasterNotificationService _masterNotificationService;
         private readonly INotificationService _notificationService;
+        private readonly ITimesheetService _timesheetService;
+        private readonly ILeaveScheduleService _leaveScheduleService;
+        private readonly IEmployeeLeaveService _employeeLeaveService;
         #endregion
 
         #region Services Initializations 
@@ -69,7 +77,11 @@ namespace Vsky.Api.Controllers
              IHelpDeskReminderLogService helpDeskReminderLogService,
              IHelpDeskEmailRepliesMappingService helpDeskEmailRepliesMappingService,
              IMasterNotificationService masterNotificationService,
-             INotificationService notificationService
+             INotificationService notificationService,
+             ITimesheetService timesheetService,
+             ILeaveScheduleService leaveScheduleService,
+             IEmployeeLeaveService employeeLeaveService
+
         )
         {
             _employeeService = employeeService;
@@ -89,6 +101,9 @@ namespace Vsky.Api.Controllers
             _helpDeskEmailRepliesMappingService = helpDeskEmailRepliesMappingService;
             _masterNotificationService = masterNotificationService;
             _notificationService = notificationService;
+            _timesheetService = timesheetService;
+            _leaveScheduleService = leaveScheduleService;
+            _employeeLeaveService = employeeLeaveService;
         }
         #endregion
 
@@ -521,5 +536,125 @@ namespace Vsky.Api.Controllers
             return await _siteService.GetSiteTicketNoPrefixById(siteId);
         }
         #endregion
+
+        [AllowAnonymous]
+        [HttpGet("send-pending-weekly-timesheet-notification")]
+        public async Task SendPendingWeeklyTimesheetNotification()
+        {
+
+            var today = DateTime.UtcNow.Date;
+
+            // Find Monday of the current week
+            int daysFromMonday = today.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)today.DayOfWeek - (int)DayOfWeek.Monday;
+
+            var currentWeekMonday = today.AddDays(-daysFromMonday);
+
+            // Previous week's Monday
+            var weekStartDate = currentWeekMonday.AddDays(-7);
+
+            var sites = await _siteService.GetAllSitesList();
+            foreach (var site in sites)
+            {
+                if (site.NumberOfWorkingDays <= 0)
+                    continue;
+
+                var GetDateTime = _siteService.GetDateTime(site.TimeZone);
+                var weekEndDate = weekStartDate.AddDays(site.NumberOfWorkingDays - 1);
+                var systemUserId = await _userService.GetUserIdByRole(site.Id, "Site Super Admin");
+
+                // Generate working dates based on site's working days
+                var siteWorkingDates = Enumerable.Range(0, site.NumberOfWorkingDays)
+                    .Select(i => weekStartDate.AddDays(i).Date)
+                    .ToList();
+
+                var activeEmployees = await _employeeService.GetAllActiveEmployeeListForDropdown(site.Id);
+
+                var siteLeaveSchedules = site.CheckLeavesForTimesheetReminder
+                    ? await _leaveScheduleService.GetAllLeaveEvents(site.Id, weekStartDate, weekEndDate)
+                    : new List<LeaveSchedules>();
+
+                var pendingTimesheetEmployees = new List<Employee>();
+
+                foreach (var employee in activeEmployees)
+                {
+                    // Dates for which employee is expected to submit a timesheet
+                    var requiredTimesheetDates = new List<DateTime>(siteWorkingDates);
+
+                    if (site.CheckLeavesForTimesheetReminder)
+                    {
+                        // Remove site holidays
+                        requiredTimesheetDates.RemoveAll(date => siteLeaveSchedules.Any(x => x.Date.HasValue && x.Date.Value.Date == date));
+
+                        // Get approved leave dates
+                        var employeeApprovedLeaveDates = await _employeeLeaveService.GetEmployeeApprovedLeaveDates(employee.Id, weekStartDate, weekEndDate);
+
+                        // Remove employee leave dates
+                        requiredTimesheetDates.RemoveAll(date => employeeApprovedLeaveDates.Any(x => x.Date.Date == date));
+                    }
+
+                    // No working dates remain
+                    if (!requiredTimesheetDates.Any())
+                        continue;
+
+                    bool hasPendingTimesheet = false;
+
+                    foreach (var requiredDate in requiredTimesheetDates)
+                    {
+                        bool hasTimesheet = await _timesheetService.HasTimesheetForDate(
+                            site.Id,
+                            employee.Id,
+                            requiredDate
+                        );
+
+                        if (!hasTimesheet)
+                        {
+                            hasPendingTimesheet = true;
+                            break;
+                        }
+                    }
+
+                    if (hasPendingTimesheet)
+                    {
+                        pendingTimesheetEmployees.Add(employee);
+                    }
+                }
+
+                if (!pendingTimesheetEmployees.Any())
+                    continue;
+
+                var timesheetApprovers = await _userService.GetUsersByRole(site.Id, "timesheet approver");
+
+                foreach (var timesheetApprover in timesheetApprovers)
+                {
+                    var masterNotificationData =
+                        await _masterNotificationService.GetMasterNotificationByNumber(
+                            site.Id,
+                            "PendingWeeklyTimesheets1",
+                            timesheetApprover.Id
+                        );
+
+                    if (masterNotificationData == null)
+                        continue;
+
+                    string message = masterNotificationData.Message
+                        .Replace("[Week End Date]", weekEndDate.ToString("MM/dd/yyyy"))
+                        .Replace("[Employee Names]", string.Join(", ", pendingTimesheetEmployees.Select(x => x.Person.FullName)));
+
+                    _notificationService.AddNotification(
+                        site.Id,
+                        masterNotificationData.Title,
+                        message,
+                        masterNotificationData.Type,
+                        systemUserId,
+                        null,
+                        "/timesheet",
+                        timesheetApprover.Id,
+                        systemUserId,
+                        GetDateTime
+                    );
+                }
+            }
+
+        }
     }
 }

@@ -13,7 +13,7 @@
               <q-breadcrumbs-el label="Services" />
             </q-breadcrumbs>
           </div>
-          <div class="col-12 col-md-5">
+          <div class="col-12 col-md-4">
             <div class="row items-center">
               <span v-if="Object.keys(appliedFilters).length > 0" class="text-grey-10 text-caption" style="font-weight: 600;">Filters On :</span>
               <q-chip v-for="(value, key) in appliedFilters" :key="key" class="bg-grey-3 text-grey-10 text-caption q-mr-xs filter-chip">
@@ -22,7 +22,7 @@
               </q-chip>
             </div>
           </div>
-          <div class="col-12 col-md-4">
+          <div class="col-12 col-md-5">
             <div class="row items-center justify-end no-wrap">
                 <div class="search-container position-relative">
                   <searchFilterBar
@@ -555,7 +555,7 @@
             </q-tr>
             <q-separator />
           </template>
-          <template #bottom-row>
+          <!-- <template #bottom-row>
             <q-tr v-if="rows.length" class="bg-grey-2 text-black">
               <q-td colspan="7" class="text-right text-weight-bold">
                 Total Price:
@@ -572,7 +572,43 @@
               <q-td />
             </q-tr>
             <q-separator />
-          </template>
+          </template> -->
+          <template #bottom-row>
+  <q-tr
+    v-if="rows.length && totalPriceColumnIndex !== -1"
+    class="bg-grey-2 text-black"
+  >
+    <!-- Columns before Total Services Cost -->
+    <q-td
+      :colspan="totalPriceColumnIndex"
+      class="text-right text-weight-bold"
+    >
+      Total Price:
+    </q-td>
+
+    <!-- Total Services Cost -->
+    <q-td class="text-right text-weight-bold">
+      ${{ totalPrice.toFixed(2) }}
+    </q-td>
+
+    <!-- Year To Date -->
+    <q-td
+      v-if="totalYtdColumnIndex !== -1"
+      class="text-right text-weight-bold"
+    >
+      ${{ totalYtd.toFixed(2) }}
+    </q-td>
+
+    <!-- Remaining visible columns -->
+    <q-td
+      v-for="n in trailingColumns"
+      :key="n"
+    />
+
+    <!-- Action column -->
+    <q-td />
+  </q-tr>
+</template>
         </q-table>
       </div>
     </q-card>
@@ -581,6 +617,7 @@
   <multiColumnSortingDialog
     v-model="showSortDialog"
     :columns="sortableColumns"
+    :exclude-columns="['Price (Dollar)','Year To Date']"
     :multi-sort="multiSort"
     @add="addSortLevel"
     @remove="removeSortLevel"
@@ -665,8 +702,8 @@ const columns = ref([
   { name: "url", label: "URL", field: "url", align: "left", sortable: true, default: true },
   { name: "startDate", label: "Service Start Date", field: "startDate", align: "left", sortable: true, default: true },
   { name: "paymentTerm.dropDownValue", label: "Payment Term", field: "paymentTerm.dropDownValue", align: "left", sortable: true, default: true },
-  { name: "price", label: "Price (Dollar)", field: "price", align: "right", sortable: false, default: true },
-  { name: "ytd", label: "Year To Date", field: "ytd", align: "right", sortable: false, default: true },
+  { name: "price", label: "Price (Dollar)", field: "price", align: "right", sortable: true, default: true },
+  { name: "ytd", label: "Year To Date", field: "ytd", align: "right", sortable: true, default: true },
   { name: "infraProjectServices", label: "Projects", field: "infraProjectServices", align: "left", sortable: false, default: true },
   { name: "infraAccountServiceId", label: "Infra Account Service", field: "infraAccountServiceId", align: "left", sortable: true, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
@@ -708,7 +745,7 @@ const getAllInfraAccountServicesForList = async ({ pagination: p }) => {
       walletTypeId: service.walletType.id,
       isEditing: false
     })) ?? [];
-    
+
     pagination.value = {
       ...pagination.value,
       page,
@@ -820,6 +857,26 @@ const {
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
+const visibleColumns = computed(() =>
+  columns.value.filter(col =>
+    selectedColumnNames.value.includes(col.name)
+  )
+);
+
+const totalPriceColumnIndex = computed(() =>
+  visibleColumns.value.findIndex(c => c.name === "price")
+);
+
+const totalYtdColumnIndex = computed(() =>
+  visibleColumns.value.findIndex(c => c.name === "ytd")
+);
+
+const trailingColumns = computed(() => {
+  if (totalYtdColumnIndex.value === -1) return 0;
+
+  return visibleColumns.value.length - totalYtdColumnIndex.value - 1;
+});
+
 const totalPrice = computed(() => {
   return rows.value.reduce((sum, row) => {
     const price = parseFloat(row.price) || 0;

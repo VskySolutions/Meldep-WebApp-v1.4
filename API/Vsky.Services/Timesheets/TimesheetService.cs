@@ -781,6 +781,26 @@ namespace Vsky.Services.Timesheets
         }
         #endregion
 
+
+        #region HasTimesheetForDate
+        public async Task<bool> HasTimesheetForDate(
+            string siteId,
+            string employeeId,
+            DateTime timesheetDate
+        )
+        {
+            return await _timesheetRepository.TableNoTracking
+                .AnyAsync(t =>
+                    !t.Deleted &&
+                    t.SiteId == siteId &&
+                    t.EmployeeId == employeeId &&
+                    t.TimesheetDate.Value.Date == timesheetDate.Date &&
+                    t.TimesheetLines.Any(l =>
+                        !l.Deleted &&
+                        l.Hours > 0));
+        }
+        #endregion
+
         #region GetTimesheetDetailsById
         // Title: GetTimesheetDetailsById
         // Description: The method selects relevant fields from the timesheet entity, including related entities such as project module and project task, and returns a `Timesheet` object with these details. 

@@ -84,6 +84,11 @@ namespace Vsky.Services.EmployeeLeaves
         //Task<HashSet<DateTime>> GetAllOfficeLeaves(string siteId, DateTime startDate, DateTime endDate);
         Task<List<EmployeeLeave>> GetAllEmployeeLeaves(string employeeId);
         Task<List<EmployeeLeave>> GetEmployeeLeavesThatIncludeDates(string employeeId, List<DateTime> targetDates, string id = null);
+        Task<List<DateTime>> GetEmployeeApprovedLeaveDates(
+            string employeeId,
+            DateTime weekStartDate,
+            DateTime weekEndDate
+        );
         #endregion
 
         #region IsSandwichLeave
