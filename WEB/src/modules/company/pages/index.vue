@@ -167,7 +167,6 @@
                 <q-tooltip>View</q-tooltip>
               </q-icon>
               <q-icon
-                v-if="props.row.status.dropDownValue !== 'Converted'"
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
                 @click="onCompanyEdit(props.row.id, refreshCompanyList)"

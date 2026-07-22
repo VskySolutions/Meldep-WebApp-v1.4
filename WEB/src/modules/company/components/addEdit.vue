@@ -677,11 +677,14 @@ let rules = {
       value => !value || /^https:\/\/[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+$/.test(value)
     )
   },
+  // profileLink: {
+  //   validUrl: helpers.withMessage(
+  //     "Invalid URL",
+  //     value => !value || /^https:\/\/[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+$/.test(value)
+  //   )
+  // },
   profileLink: {
-    validUrl: helpers.withMessage(
-      "Invalid URL",
-      value => !value || /^https:\/\/[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+$/.test(value)
-    )
+    url: helpers.withMessage("Invalid URL", url)
   },
   businessTypeId: { required: helpers.withMessage("Business type is required", required) },
   phoneNumber: { required: helpers.withMessage("Phone number is required", required), minLength: minLength(maxLengthCountry), maxLength: maxLength(maxLengthCountry) },

@@ -62,6 +62,8 @@ namespace Vsky.Api.Models
         public DateTime? CreatedOnUtc { get; set; }
         public string Flag { get; set; }
         public string LeaveMonthStr { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
         public int Years { get; set; }
         public string SearchText { get; set; }
         //public string PrimaryEmailAddress { get; set; }

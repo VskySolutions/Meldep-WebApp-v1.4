@@ -493,6 +493,9 @@ namespace Vsky.Services.Requirements
         public async Task<Requirement> GetRequirementDetailsById(string id)
         {
             var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.Id == id);
+
+            var notesQuery = _notesRepository.TableNoTracking.Where(n => !n.Deleted && n.Type == "Requirement");
+
             query = query.Select(x => new Requirement
             {
                 Id = x.Id,
@@ -672,6 +675,7 @@ namespace Vsky.Services.Requirements
                         Status = new DropDown { Id = m.ProjectTask.Status.Id, DropDownValue = m.ProjectTask.Status.DropDownValue }
                     }
                 }).ToList(),
+                LastNote = notesQuery.Where(n => n.SubModuleId == x.Id).OrderByDescending(n => n.CreatedOnUtc).Select(n => n.Note).FirstOrDefault()
             });
             var item = await query.FirstOrDefaultAsync();
             return item;

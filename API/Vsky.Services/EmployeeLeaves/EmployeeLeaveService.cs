@@ -12,6 +12,7 @@ using Vsky.Models;
 using Vsky.Services.ApplicationUserRoles;
 using Vsky.Services.Employees;
 using Vsky.Services.Sites;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Vsky.Services.EmployeeLeaves
@@ -61,7 +62,26 @@ namespace Vsky.Services.EmployeeLeaves
         // Title: GetAllEmployeeLeave
         // Description: This method retrieves a paginated list of EmployeeLeave based on various search criteria such as employee name, 
         // It also supports sorting and includes related data .The method allows for both full and lookup (limited) data retrieval modes.
-        public IPagedList<EmployeeLeave> GetAllEmployeeLeave(string SiteId, string logginuser, string createdBy, string SearchText, string Flag, List<string> employeeIds, List<string> statusIds, List<string> leaveCategoryId, DateTime? createdOnUtc, string leaveMonthStr, int years, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public IPagedList<EmployeeLeave> GetAllEmployeeLeave(
+            string SiteId,
+            string logginuser, 
+            string createdBy,
+            string SearchText,
+            string Flag,
+            List<string> employeeIds,
+            List<string> statusIds,
+            List<string> leaveCategoryId,
+            DateTime? createdOnUtc,
+            DateTime? fromDate,
+            DateTime? ToDate,
+            string leaveMonthStr,
+            int years,
+            string sortBy,
+            bool descending, 
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        )
         {
 
             var query = _employeeLeaveRepository.TableNoTracking.Where(x => !x.Deleted && x.Employee.SiteId == SiteId);
@@ -112,6 +132,14 @@ namespace Vsky.Services.EmployeeLeaves
 
             if (years != 0)
                 query = query.Where(x => x.FromDate.Year == years);
+
+            //Search by FromDate and Todate
+            if (fromDate != null)
+                query = query.Where(x => x.FromDate >= fromDate);
+
+            if (ToDate != null)
+                query = query.Where(a => a.ToDate <= ToDate);
+
             if (!string.IsNullOrWhiteSpace(leaveMonthStr))
             {
                 // Combine month + year

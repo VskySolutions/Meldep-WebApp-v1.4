@@ -179,6 +179,14 @@
                 <div class="q-mb-xs">Notes :</div>
                 <div class="text-black"><p v-html="model.notes ? model.notes : '-'" /></div>
               </div>
+            </div>            
+            <div v-if="model.lastNote" class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-sm-12 col-md-12">
+                <div class="q-mb-xs">Last Note :</div>
+                <div class="text-black">
+                  <span v-html="model.lastNote" />
+                </div>
+              </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-sm-6 col-md-6">
@@ -320,6 +328,7 @@ const model = ref({
   approvalStatus: "",
   description: "",
   createdOnUtc: "",
+  lastNote: "",
   project: {
     name: ""
   },

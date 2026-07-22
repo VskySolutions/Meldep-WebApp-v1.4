@@ -9,7 +9,26 @@ namespace Vsky.Services.EmployeeLeaves
     public interface IEmployeeLeaveService
     {
         #region GetAllEmployeeLeave
-        IPagedList<EmployeeLeave> GetAllEmployeeLeave(string SiteId, string logginuser, string createdBy, string SearchText, string Flag, List<string> employeeIds, List<string> statusIds, List<string> leaveCategoryId, DateTime? createdOnUtc, string leaveMonthStr, int years, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        IPagedList<EmployeeLeave> GetAllEmployeeLeave(
+            string SiteId, 
+            string logginuser,
+            string createdBy,
+            string SearchText,
+            string Flag, 
+            List<string> employeeIds,
+            List<string> statusIds,
+            List<string> leaveCategoryId,
+            DateTime? createdOnUtc,
+            DateTime? fromDate,
+            DateTime? ToDate,
+            string leaveMonthStr, 
+            int years,
+            string sortBy, 
+            bool descending,
+            int page = 1, 
+            int pageSize = int.MaxValue, 
+            bool lookup = false
+        );
         #endregion
 
         #region GetFiveEmployeeLeaveForApprove

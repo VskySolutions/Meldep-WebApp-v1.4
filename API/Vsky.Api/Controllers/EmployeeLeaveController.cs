@@ -112,7 +112,25 @@ namespace Vsky.Api.Controllers
                 var createdBy = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 //var createdBy = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
-                var list = _employeeLeaveService.GetAllEmployeeLeave(SiteId, LoggedUserId, createdBy, searchModel.SearchText, searchModel.Flag, searchModel.EmployeeIds, searchModel.StatusIds, searchModel.LeaveCategoryId, searchModel.CreatedOnUtc, searchModel.LeaveMonthStr, searchModel.Years, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var list = _employeeLeaveService.GetAllEmployeeLeave(
+                    SiteId, 
+                    LoggedUserId, 
+                    createdBy,
+                    searchModel.SearchText,
+                    searchModel.Flag,
+                    searchModel.EmployeeIds,
+                    searchModel.StatusIds, 
+                    searchModel.LeaveCategoryId,
+                    searchModel.CreatedOnUtc,
+                    searchModel.FromDate,
+                    searchModel.ToDate,
+                    searchModel.LeaveMonthStr,
+                    searchModel.Years,
+                    searchModel.SortBy, 
+                    searchModel.Descending,
+                    searchModel.Page, 
+                    searchModel.PageSize
+                );
 
                 // Map the fetched list to a model suitable for the response
                 var model = new EmployeeLeaveListModel
@@ -420,6 +438,13 @@ namespace Vsky.Api.Controllers
                     var SickLeaveId = await _dropDownService.GetByName(SiteId, "Sick");
                     var (totalLeaves, casualLeaves, sickLeaves) = await _leaveCreditService.GetAllLeaveCreditsByEmployeeId(employeeId, currentYear);
 
+                    var (paidCasual, paidSick, unpaidCasual, unpaidSick) =  await _leaveCreditService.GetLeaveCreditsByType(SiteId, employeeId, currentYear);
+
+                    // Calculate actual leave deduction
+                    decimal leaveToDeduct = model.TotalDeduction > 0
+                        ? model.TotalDeduction
+                        : model.NoofLeaves;
+
                     // check total leave credit balance
                     var employeeLeaveCreditExist = _leaveCreditService.GetLeaveCreditsByEmployeeId(employeeId, currentYear);
                     if (employeeLeaveCreditExist == 0)
@@ -429,9 +454,19 @@ namespace Vsky.Api.Controllers
                     if (model.LeaveCategoryId == CasualLeaveId.Id)
                     {
                         var totalUsedCasualLeaves = _employeeLeaveService.GetUsedLeaveByEmployeeIdAndLeaveCategoryId(employeeId, currentYear, CasualLeaveId.Id);
-                        var remainingCasualLeavs = casualLeaves - totalUsedCasualLeaves;
-                        if (model.NoofLeaves > remainingCasualLeavs || remainingCasualLeavs == 0 || model.TotalDeduction > remainingCasualLeavs)
+                        var remainingCasualLeaves = casualLeaves - totalUsedCasualLeaves;
+                        if (model.NoofLeaves > remainingCasualLeaves || remainingCasualLeaves == 0 || model.TotalDeduction > remainingCasualLeaves)
                             return BadRequest(new BadRequestError("You have an insufficient casual leave balance."));
+
+                        //var remainingCasualLeaves = paidCasual - totalUsedCasualLeaves;
+                        //var remainingPaidCasual = Math.Max(0, paidCasual - totalUsedCasualLeaves);
+                        //var remainingTotalCasual = Math.Max(0, (paidCasual + unpaidCasual) - totalUsedCasualLeaves);
+
+                        //if (leaveToDeduct > remainingTotalCasual)
+                        //    return BadRequest(new BadRequestError("You have an insufficient casual leave balance."));
+
+                        // Decide Paid / Unpaid
+                        //entity.IsPaidLeave = remainingPaidCasual >= leaveToDeduct;
                     }
                     else
                     {
@@ -440,6 +475,17 @@ namespace Vsky.Api.Controllers
                         var remainingSickLeaves = sickLeaves - totalUsedSickLeaves;
                         if (model.NoofLeaves > remainingSickLeaves || remainingSickLeaves == 0 || model.TotalDeduction > remainingSickLeaves)
                             return BadRequest(new BadRequestError("You have an insufficient sick leave balance."));
+
+                        //var remainingSickLeaves = paidSick - totalUsedSickLeaves;
+                        //var remainingPaidSick = Math.Max(0, paidSick - totalUsedSickLeaves);
+                        //var remainingTotalSick = Math.Max(0, (paidSick + unpaidSick) - totalUsedSickLeaves);
+
+                        //// Check total balance (Paid + Unpaid)
+                        //if (leaveToDeduct > remainingTotalSick)
+                        //    return BadRequest(new BadRequestError("You have an insufficient sick leave balance."));
+
+                        //// Decide Paid / Unpaid
+                        //entity.IsPaidLeave = remainingPaidSick >= leaveToDeduct;
                     }
 
                     var (paid, unpaid) = _leaveCreditService.GetLeaveCreditsByEmployeeIdandType(SiteId, employeeId, currentYear);

@@ -75,6 +75,50 @@
                       </div>
                       <div class="row items-center q-mb-sm">
                         <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel q-mt-sm fs-13">From Date</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <div class="input-group q-mx-sm w-100 h-auto">
+                            <q-input v-model="search.fromDate" fill-input dense>
+                              <template #append>
+                                <q-icon name="o_calendar_month" class="cursor-pointer">
+                                  <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
+                                    <q-date
+                                      v-model="search.fromDate"
+                                      mask="MM/DD/YYYY"
+                                      @update:model-value="() => $refs.qDateProxy.hide()"
+                                    />
+                                  </q-popup-proxy>
+                                </q-icon>
+                              </template>
+                            </q-input>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row items-center q-mb-sm">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel q-mt-sm fs-13">To Date</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <div class="input-group q-mx-sm w-100 h-auto">
+                            <q-input v-model="search.ToDate" fill-input dense>
+                              <template #append>
+                                <q-icon name="o_calendar_month" class="cursor-pointer">
+                                  <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
+                                    <q-date
+                                      v-model="search.ToDate"
+                                      mask="MM/DD/YYYY"
+                                      @update:model-value="() => $refs.qDateProxy.hide()"
+                                    />
+                                  </q-popup-proxy>
+                                </q-icon>
+                              </template>
+                            </q-input>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row items-center q-mb-sm">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
                           <label class="Cutomlabel q-mt-sm fs-13">Month</label>
                         </div>
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
@@ -292,6 +336,8 @@ const { truncate, stripHTML, toDate } = useFilters();
 const localStorageKey = "Employee Leave";
 const filterLocalStorage = getLocalStorage(localStorageKey);
 const createdOnUtc = filterLocalStorage ? filterLocalStorage.createdOnUtc : "";
+const fromDate = filterLocalStorage ? filterLocalStorage.fromDate : "";
+const ToDate= filterLocalStorage ? filterLocalStorage.toDate : "";
 const leaveMonthStr = filterLocalStorage ? filterLocalStorage.leaveMonthStr : "";
 const years = filterLocalStorage ? filterLocalStorage.years : getCurrentMonthYear();
 const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
@@ -348,9 +394,17 @@ if (role === "admin") {
 const getEmployeeLeaves = (props) => {
   const { page, rowsPerPage, sortBy, descending } = props.pagination;
   loading.value = true;
-  search.value.createdOnUtc = search.value.createdOnUtc === "" ? null : toDate(search.value.createdOnUtc);
+  search.value.createdOnUtc = search.value.createdOnUtc === "" ? null : toDate(search.value.createdOnUtc);  
+  search.value.fromDate = search.value.fromDate === "" ? null : toDate(search.value.fromDate);
+  search.value.ToDate = search.value.ToDate === "" ? null : toDate(search.value.ToDate);
   if (search.value.createdOnUtc === "") {
     search.value.createdOnUtc = null;
+  }
+  if (search.value.fromDate === "") {
+    search.value.fromDate = null;
+  }
+  if (search.value.ToDate === "") {
+    search.value.ToDate = null;
   }
   // // Validate month
   // search.value.leaveMonthStr = (m => Array.from({ length: 12 }, (_, i) => new Date(0, i).toLocaleString("default", { month: "long" }))
@@ -389,6 +443,8 @@ const search = ref({
   statusIds: getFilterValue("statusIds", []),
   leaveCategoryId: getFilterValue("leaveCategoryId", []),
   createdOnUtc,
+  ToDate,
+  fromDate,
   leaveMonthStr: leaveMonthStr,
   years
 });
@@ -403,6 +459,8 @@ const onAdvanceClear = () => {
   search.value.statusIds = [];
   search.value.leaveCategoryId = [];
   search.value.createdOnUtc = "";
+  search.value.ToDate = "";
+  search.value.fromDate = "";
   search.value.leaveMonthStr = "";
   search.value.years = getCurrentMonthYear();
   clearLocalStorage(localStorageKey);
@@ -471,7 +529,9 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.leaveCategoryId, leaveCategoryDropdown.list, "Leave Type"),
   ...(search.value.createdOnUtc ? { "Applied Date": search.value.createdOnUtc } : {}),
   ...(search.value.leaveMonthStr ? { Month: search.value.leaveMonthStr } : {}),
-  ...(search.value.years ? { Year: search.value.years } : {})
+  ...(search.value.years ? { Year: search.value.years } : {}),
+  ...(search.value.fromDate ? { "From Date": search.value.fromDate } : {}),
+  ...(search.value.ToDate ? { "To Date": search.value.ToDate } : {})
 }));
 
 function getFilterCount (key) {
@@ -492,6 +552,10 @@ function onClearFilters (key) {
     search.value.leaveCategoryId = [];
   } else if (key === "Month") {
     search.value.leaveMonthStr = "";
+  } else if (key === "From Date") {
+    search.value.fromDate = "";
+  } else if (key === "To Date") {
+    search.value.ToDate = "";
   }
   delete appliedFilters.value[key];
   refreshEmployeeLeaveList();

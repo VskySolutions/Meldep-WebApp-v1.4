@@ -231,9 +231,9 @@
                   <q-tooltip>Forward To Timesheet</q-tooltip>
                 </q-icon>
                 <q-icon 
+                  :class="storedUser.username === props.row.user.userName ? '' : 'hidden'" 
                   name="o_edit" 
                   class="cursor-pointer q-mr-sm" 
-                  :class="storedUser.username === props.row.user.userName ? '' : 'hidden'" 
                   @click="onDailyPlannerEdit(props.row.id, 'isEdit', refreshDailyPlannerList)"
                 >
                   <q-tooltip>Edit</q-tooltip>
