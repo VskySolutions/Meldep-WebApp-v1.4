@@ -153,6 +153,31 @@ namespace Vsky.Services.LeaveCredits
             return (totalLeaveCredits, casualLeaveCredits, sickLeaveCredits);
         }
 
+        public async Task<(decimal PaidCasual, decimal PaidSick, decimal UnpaidCasual, decimal UnpaidSick)>GetLeaveCreditsByType(string SiteId, string employeeId, int year)
+        {
+            var paidLeaveTypeId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Leave Type", "Paid");
+            var unpaidLeaveTypeId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Leave Type", "Unpaid");
+
+            var paid = _leaveCreditRepository.Table.FirstOrDefault(x =>
+                !x.Deleted &&
+                x.EmployeeId == employeeId &&
+                x.LeaveCreditsforYear == year &&
+                x.LeaveTypeId == paidLeaveTypeId);
+
+            var unpaid = _leaveCreditRepository.Table.FirstOrDefault(x =>
+                !x.Deleted &&
+                x.EmployeeId == employeeId &&
+                x.LeaveCreditsforYear == year &&
+                x.LeaveTypeId == unpaidLeaveTypeId);
+
+            return (
+                paid?.CasualLeaves ?? 0,
+                paid?.SickLeaves ?? 0,
+                unpaid?.CasualLeaves ?? 0,
+                unpaid?.SickLeaves ?? 0
+            );
+        }
+
         #endregion
 
         #region Find PaidLeaveCredits and UnpaidLeaveCredits By employee id

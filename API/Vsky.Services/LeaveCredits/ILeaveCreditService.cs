@@ -33,7 +33,7 @@ namespace Vsky.Services.LeaveCredits
 
         #region GetLeaveCreditByEmployeeId
         Task<(decimal TotalLeaves, decimal CasualLeaves, decimal SickLeaves)> GetAllLeaveCreditsByEmployeeId(string employeeId, int year);
-
+        Task<(decimal PaidCasual, decimal PaidSick, decimal UnpaidCasual, decimal UnpaidSick)> GetLeaveCreditsByType(string SiteId, string employeeId, int year);
         Task<LeaveCredit> GetLeaveCreditsOfYearByEmployeeId(string employeeId, int year);
 
         #endregion
