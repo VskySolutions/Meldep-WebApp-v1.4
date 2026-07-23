@@ -145,10 +145,44 @@ namespace Vsky.Services.InfraAccounts
                         FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
                     }
                 },
-                TotalServicesCost = x.InfraAccountServices.Where(s => !s.Deleted).SelectMany(s => s.InfraAccountServicesPriceHistory).Sum(ph => (decimal?)ph.Price) ?? 0
+               
             });
 
             var list = new PagedList<InfraAccount>(query, page, pageSize);
+            var accountIds = list.Select(x => x.Id).ToList();
+            var totals = _infraAccountRepository.TableNoTracking
+                 .Where(a => accountIds.Contains(a.Id))
+                 .Select(a => new
+                 {
+                     a.Id,
+                     Total = a.InfraAccountServices
+                         .Where(s => !s.Deleted)
+                         .Select(s => s.InfraAccountServicesPriceHistory
+                             .OrderByDescending(ph => ph.CreatedOnUtc)
+                             .Select(ph => (decimal?)ph.Price)
+                             .FirstOrDefault())
+                         .ToList()
+                 })
+                 .ToList();
+            foreach (var account in list)
+            {
+                account.TotalServicesCost = totals
+                    .Where(t => t.Id == account.Id)
+                    .SelectMany(t => t.Total)
+                    .Sum() ?? 0;
+            }
+            if (sortBy == "totalServicesCost")
+            {
+                var sorted = descending
+                    ? list.OrderByDescending(x => x.TotalServicesCost).ToList()
+                    : list.OrderBy(x => x.TotalServicesCost).ToList();
+
+                list = new PagedList<InfraAccount>(
+                    sorted.AsQueryable(),
+                    1,
+                    sorted.Count);
+            }
+
             return list;
         }
         #endregion

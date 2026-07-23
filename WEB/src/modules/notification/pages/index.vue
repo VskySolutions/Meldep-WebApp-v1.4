@@ -248,7 +248,6 @@ const getNotifications = (props) => {
 };
 
 const toggleMessage = (id) => {
-debugger;
   if (expandedRows.value.includes(id)) {
     expandedRows.value = expandedRows.value.filter(x => x !== id);
   } else {
