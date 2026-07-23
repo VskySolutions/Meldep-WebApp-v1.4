@@ -130,14 +130,14 @@ const truncateText = (text, length = 80) =>
   text?.length > length ? `${text.substring(0, length)}...` : text;
 
 const filteredRows = computed(() => {
-  const keyword = props.search.trim().toLowerCase();
+  const keyword = (props.search || "").trim().toLowerCase();
 
   if (!keyword) {
     return props.rows;
   }
 
-  return props.rows.filter((row) =>
-    Object.values(row).some((value) =>
+  return props.rows.filter(row =>
+    Object.values(row).some(value =>
       String(value ?? "").toLowerCase().includes(keyword)
     )
   );
@@ -151,7 +151,8 @@ const columns = computed(() => {
       name: "type",
       label: "Type",
       field: "type",
-      align: "left"
+      align: "left",
+      sortable: true
     });
   }
 
@@ -160,19 +161,22 @@ const columns = computed(() => {
       name: "number",
       label: "Number",
       field: "number",
-      align: "right"
+      align: "right",
+      sortable: true
     },
     {
       name: "name",
       label: "Name",
       field: "name",
-      align: "left"
+      align: "left",
+      sortable: true
     },
     {
       name: "date",
       label: "Date",
       field: "date",
-      align: "left"
+      align: "left",
+      sortable: true
     }
   );
 

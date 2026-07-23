@@ -145,9 +145,15 @@ const activeRowId = ref(null);
 
 const emit = defineEmits([
   "update:search",
+  "update:pagination",
   "remove",
   "mark-deleted"
 ]);
+
+const paginationModel = computed({
+  get: () => props.pagination,
+  set: value => emit("update:pagination", value)
+});
 
 const confirmDelete = (row) => {
   onSubmitRetestingItemDelete(
@@ -166,11 +172,6 @@ const isCheckboxDisabled = (row) => {
 };
 
 const expandedRows = ref(new Set());
-
-const paginationModel = computed({
-  get: () => props.pagination,
-  set: () => {}
-});
 
 const toggleExpand = (id) => {
   expandedRows.value.has(id)

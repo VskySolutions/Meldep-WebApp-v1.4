@@ -184,7 +184,7 @@
                     :rows="filteredDeploymentRows"
                     :columns="columns"
                     :loading="loading"
-                    :pagination="pagination"
+                    v-model:pagination="pagination"
                     :checkbox-disabled="isReadOnlyMode"
                     :show-type="true"
                     :show-remove-icon="false"
@@ -231,7 +231,7 @@
                     :rows="filteredTestCaseRows"
                     :columns="testCaseColumns"
                     :loading="loading"
-                    :pagination="pagination"
+                    v-model:pagination="testCasePagination"
                     :checkbox-disabled="isTestCaseSubmitted"
                     :show-type="false"
                     :show-remove-icon="true"
@@ -345,20 +345,21 @@ const isAdmin = computed(() =>
 
 const search = ref("");
 const rows = ref([]);
-const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1 });
+const pagination = ref({ sortBy: "type", descending: false, rowsPerPage: 20, page: 1 });
 const columns = ref([
   { name: "selection", label: "Selection", field: "checkboxStatus", align: "center", sortable: true },
   { name: "type", label: "Type", field: "type", align: "left", sortable: true },
-  { name: "number", label: "Number", field: "number", align: "left" },
-  { name: "name", label: "Name", field: "name", align: "left" },
-  { name: "date", label: "Date", field: "date", align: "left" }
+  { name: "number", label: "Number", field: "number", align: "left", sortable: true },
+  { name: "name", label: "Name", field: "name", align: "left", sortable: true },
+  { name: "date", label: "Date", field: "date", align: "left", sortable: true }
 ]);
 
+const testCasePagination = ref({ sortBy: "date", descending: false, rowsPerPage: 20, page: 1 });
 const testCaseColumns = ref([
   { name: "selection", label: "Selection", field: "checkboxStatus", align: "center", sortable: true },
-  { name: "number", label: "Number", field: "number", align: "left" },
-  { name: "name", label: "Name", field: "name", align: "left" },
-  { name: "date", label: "Date", field: "date", align: "left" }
+  { name: "number", label: "Number", field: "number", align: "left", sortable: true },
+  { name: "name", label: "Name", field: "name", align: "left", sortable: true },
+  { name: "date", label: "Date", field: "date", align: "left", sortable: true }
 ]);
 
 // Define model values

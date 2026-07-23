@@ -102,8 +102,8 @@
                 title="Deployment Items"
                 :rows="rows.filter(x => x.type?.toLowerCase() !== 'testcase')"
                 :loading="loading"
-                :search="filterItems"
-                @update:search="filterItems = $event"
+                :search="filterDeploymentItems"
+                @update:search="filterDeploymentItems = $event"
                 :show-type="true"
               />
             </q-tab-panel>
@@ -113,8 +113,8 @@
                 title="Test Cases for Retesting"
                 :rows="rows.filter(x => x.type?.toLowerCase() === 'testcase')"
                 :loading="loading"
-                :search="filterItems"
-                @update:search="filterItems = $event"
+                :search="filterTestCases"
+                @update:search="filterTestCases = $event"
                 :show-type="false"
               />
             </q-tab-panel>
@@ -158,7 +158,9 @@ const props = defineProps({ id: { type: String, default: "" } });
 // Common variables
 const loading = ref(true);
 const { toDate } = useFilters();
-const filterItems = ref("");
+// const filterItems = ref("");
+const filterDeploymentItems = ref("");
+const filterTestCases = ref("");
 const search = ref("");
 
 // Define model values
