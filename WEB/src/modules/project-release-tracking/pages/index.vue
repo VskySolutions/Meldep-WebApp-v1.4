@@ -109,167 +109,169 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getAllReleaseTracking"
-        >
-          <template #loading>
-            <q-inner-loading showing color="primary">
-              <q-spinner-ios size="40px" class="q-mt-xl" />
-            </q-inner-loading>
-          </template>
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
-              <q-th
-                v-for="col in props.cols"
-                :key="col.name"
+      <div class="table-project-release-tracking">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getAllReleaseTracking"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary">
+                <q-spinner-ios size="40px" class="q-mt-xl" />
+              </q-inner-loading>
+            </template>
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
+                >
+                  {{ col.label }}
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+                <q-th auto-width class="text-center">Actions</q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr
                 :props="props"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
+                :class="[
+                  highlightedId == props.row.id ? 'highlight' : '',
+                  props.row.statusText.toLowerCase() !== 'draft' ? 'bg-cyan-1' : ''
+                ]"
+                :set="(preProjectName = null, resetTracking())"
               >
-                {{ col.label }}
-                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-              <q-th auto-width class="text-center">Actions</q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr
-              :props="props"
-              :class="[
-                highlightedId == props.row.id ? 'highlight' : '',
-                props.row.statusText.toLowerCase() !== 'draft' ? 'bg-cyan-1' : ''
-              ]"
-              :set="(preProjectName = null, resetTracking())"
-            >
-              <q-td v-if="selectedColumnNames.includes('versionNumber')" class="text-right">
-                {{ props.row.versionNumber }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" :class="(props.row.isEditable || props.row.isView) ? 'hoverable-cell' : ''">
-                <div class="row no-wrap items-center justify-between">
-                  <span style="flex: 1; word-break: break-word; white-space: normal;">
-                    <span
-                      v-if="preProjectName !== props.row.project.name"
-                      :set="preProjectName = props.row.project.name"
-                      @click="(props.row.isEditable || props.row.isView) && onProjectView(props.row.project.id)"
-                    >{{ props.row.project.name }}
+                <q-td v-if="selectedColumnNames.includes('versionNumber')" class="text-right">
+                  {{ props.row.versionNumber }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" :class="(props.row.isEditable || props.row.isView) ? 'hoverable-cell' : ''">
+                  <div class="row no-wrap items-center justify-between">
+                    <span style="flex: 1; word-break: break-word; white-space: normal;">
+                      <span
+                        v-if="preProjectName !== props.row.project.name"
+                        :set="preProjectName = props.row.project.name"
+                        @click="(props.row.isEditable || props.row.isView) && onProjectView(props.row.project.id)"
+                      >{{ props.row.project.name }}
+                      </span>
                     </span>
-                  </span>
-                  <div
-                    v-if="shouldShowIcons(props.row.project.name, index)"
-                    class="row items-center q-gutter-sm q-ml-sm"
-                    style="flex-shrink: 0;"
-                  >
-                    <q-icon
-                      v-if="props.row.isEditable || props.row.isView"
-                      name="o_radio_button_checked" size="xs"
-                      class="cursor-pointer"
-                      @click="setActiveRowIdInLocalStorage(props.row.id);
-                              $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                    <div
+                      v-if="shouldShowIcons(props.row.project.name, index)"
+                      class="row items-center q-gutter-sm q-ml-sm"
+                      style="flex-shrink: 0;"
                     >
-                      <q-tooltip>Project Center</q-tooltip>
-                    </q-icon>
-                    <q-icon
-                      v-if="props.row.isEditable"
-                      name="o_developer_board" size="xs"
-                      class="cursor-pointer"
-                      @click="setActiveRowIdInLocalStorage(props.row.id);
-                              $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
-                    >
-                      <q-tooltip>Work Board</q-tooltip>
-                    </q-icon>
+                      <q-icon
+                        v-if="props.row.isEditable || props.row.isView"
+                        name="o_radio_button_checked" size="xs"
+                        class="cursor-pointer"
+                        @click="setActiveRowIdInLocalStorage(props.row.id);
+                                $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                      >
+                        <q-tooltip>Project Center</q-tooltip>
+                      </q-icon>
+                      <q-icon
+                        v-if="props.row.isEditable"
+                        name="o_developer_board" size="xs"
+                        class="cursor-pointer"
+                        @click="setActiveRowIdInLocalStorage(props.row.id);
+                                $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
+                      >
+                        <q-tooltip>Work Board</q-tooltip>
+                      </q-icon>
+                    </div>
                   </div>
-                </div>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('infraInstance.instanceType.dropDownValue')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.infraInstance.instanceType.dropDownValue + " (" + props.row.infraInstance.url + ")" }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.name }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('infraInstance.instanceType.dropDownValue')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.infraInstance.instanceType.dropDownValue + " (" + props.row.infraInstance.url + ")" }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.name }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('statusId')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.isEditable }"
+                  @click="activeEdit = { rowId: props.row.id, field: 'status' }"
+                >
+                  <quickEditSingleSelect
+                    field="status"
+                    :row-id="props.row.id"
+                    :value="props.row.statusId"
+                    :display-value="props.row.statusText"
+                    :editable="props.row.isEditable"
+                    :options="filteredStatusList"
+                    :active-edit="activeEdit"
+                    :show-history="true"
+                    :loading="updatingRow.status === props.row.id"
+                    @popup-show="handlePopupShow"
+                    @cancel="activeEdit = { rowId: null, field: null }"
+                    @submit="({ rowId, value }) => onSubmitReleaseTrackingStatus(rowId, value, refreshReleaseTrackingList)"
+                    @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Release Tracking Status')"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('deploymentOwner.person.firstName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.deploymentOwner.person.fullName }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('plannedReleaseDate')" class="text-center">
+                  {{ toDate(props.row.plannedReleaseDate) }}
+                </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.createdBy.person.fullName }}
               </q-td>
               <q-td
-                v-if="selectedColumnNames.includes('statusId')"
+                v-if="selectedColumnNames.includes('createdOnUtc')"
                 class="common-q-td"
-                :class="{ 'hoverable-cell' : props.row.isEditable }"
-                @click="activeEdit = { rowId: props.row.id, field: 'status' }"
               >
-                <quickEditSingleSelect
-                  field="status"
-                  :row-id="props.row.id"
-                  :value="props.row.statusId"
-                  :display-value="props.row.statusText"
-                  :editable="props.row.isEditable"
-                  :options="filteredStatusList"
-                  :active-edit="activeEdit"
-                  :show-history="true"
-                  :loading="updatingRow.status === props.row.id"
-                  @popup-show="handlePopupShow"
-                  @cancel="activeEdit = { rowId: null, field: null }"
-                  @submit="({ rowId, value }) => onSubmitReleaseTrackingStatus(rowId, value, refreshReleaseTrackingList)"
-                  @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Release Tracking Status')"
-                />
+                {{ props.row.createdOnUtc }}
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('deploymentOwner.person.firstName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.deploymentOwner.person.fullName }}
+              <q-td
+                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedBy.person.fullName }}
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('plannedReleaseDate')" class="text-center">
-                {{ toDate(props.row.plannedReleaseDate) }}
+              <q-td
+                v-if="selectedColumnNames.includes('updatedOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedOnUtc }}
               </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('createdBy.person.firstName')"
-              class="common-q-td"
-            >
-              {{ props.row.createdBy.person.fullName }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('createdOnUtc')"
-              class="common-q-td"
-            >
-              {{ props.row.createdOnUtc }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
-              class="common-q-td"
-            >
-              {{ props.row.updatedBy.person.fullName }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('updatedOnUtc')"
-              class="common-q-td"
-            >
-              {{ props.row.updatedOnUtc }}
-            </q-td>
-              <q-td class="text-center actions">
-                <q-icon v-if="props.row.isEditable || props.row.isView" name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onReleaseTrackingView(props.row.id)">
-                  <q-tooltip>View</q-tooltip>
-                </q-icon>
-                <q-icon v-if="props.row.isEditable" name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onReleaseTrackingEdit(props.row.id, refreshReleaseTrackingList)">
-                  <q-tooltip>Edit</q-tooltip>
-                </q-icon>
-                <q-icon v-if="props.row.isEditable" name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitReleaseTrackingDelete(props.row.id, props.row.name, refreshReleaseTrackingList)">
-                  <q-tooltip>Delete</q-tooltip>
-                </q-icon>
-              </q-td>
-            </q-tr>
-            <q-separator />
-          </template>
-        </q-table>
+                <q-td class="text-center actions">
+                  <q-icon v-if="props.row.isEditable || props.row.isView" name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onReleaseTrackingView(props.row.id)">
+                    <q-tooltip>View</q-tooltip>
+                  </q-icon>
+                  <q-icon v-if="props.row.isEditable" name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onReleaseTrackingEdit(props.row.id, refreshReleaseTrackingList)">
+                    <q-tooltip>Edit</q-tooltip>
+                  </q-icon>
+                  <q-icon v-if="props.row.isEditable" name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitReleaseTrackingDelete(props.row.id, props.row.name, refreshReleaseTrackingList)">
+                    <q-tooltip>Delete</q-tooltip>
+                  </q-icon>
+                </q-td>
+              </q-tr>
+              <q-separator />
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -699,7 +701,7 @@ onMounted(async () => {
 
 </script>
 <style scoped>
-.Custom-DataTable {
+.table-project-release-tracking .Custom-DataTable {
   min-width: max-content;
 }
 </style>

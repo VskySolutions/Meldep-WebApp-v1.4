@@ -128,320 +128,322 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getAllInfraFTPForList"
-        >
-          <template #loading>
-            <q-inner-loading showing color="primary">
-              <q-spinner-ios size="40px" class="q-mt-xl" />
-            </q-inner-loading>
-          </template>
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">
-                {{ col.label }}<span
-                  v-if="['protocolTypeId', 'encryptionTypeId', 'name', 'host', 'port'].includes(col.name)"
-                  class="required"
-                >*</span>
-              </q-th> -->              
-              <q-th
-                v-for="col in props.cols"
-                :key="col.name"
-                :props="props"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
+      <div class="table-ftp">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getAllInfraFTPForList"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary">
+                <q-spinner-ios size="40px" class="q-mt-xl" />
+              </q-inner-loading>
+            </template>
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                  {{ col.label }}<span
+                    v-if="['protocolTypeId', 'encryptionTypeId', 'name', 'host', 'port'].includes(col.name)"
+                    class="required"
+                  >*</span>
+                </q-th> -->
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
+                >
+                  {{ col.label }}
+                  <span
+                    v-if="['protocolTypeId', 'encryptionTypeId', 'name', 'host', 'port'].includes(col.name)"
+                    class="required"
+                  >*</span>
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+                <q-th auto-width class="text-center">Actions</q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr v-if="!props.row.deleted" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                <q-td v-if="selectedColumnNames.includes('infraServiceId')" class="wrap-text">
+                  <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                    {{ props.row.infraService?.name }}
+                  </div>
+                  <formSingleSelectDropdown
+                    v-else
+                    v-model="props.row.infraServiceId"
+                    :options="infraAccountServiceForDropdownSingleSelect.list.value"
+                    :filter="infraAccountServiceForDropdownSingleSelect.filter"
+                    :required="false"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('protocolTypeId')" class="wrap-text">
+                  <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                    {{ props.row.protocolType?.dropDownValue || "-" }}
+                  </div>
+                  <formSingleSelectDropdown
+                    v-else
+                    v-model="props.row.protocolTypeId"
+                    :options="protocolTypeForDropdownSingleSelect.list.value"
+                    :filter="protocolTypeForDropdownSingleSelect.filter"
+                    :error="getRowValidation(props.row)?.protocolTypeId?.$error"
+                    :error-message="getRowValidation(props.row)?.protocolTypeId?.$errors[0]?.$message"
+                    @update:model-value="getRowValidation(props.row)?.protocolTypeId?.$touch()"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('encryptionTypeId')" class="wrap-text">
+                  <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                    {{ props.row.encryptionType?.dropDownValue || "-" }}
+                  </div>
+                  <formSingleSelectDropdown
+                    v-else
+                    v-model="props.row.encryptionTypeId"
+                    :options="encryptionTypeForDropdownSingleSelect.list.value"
+                    :filter="encryptionTypeForDropdownSingleSelect.filter"
+                    :error="getRowValidation(props.row)?.encryptionTypeId?.$error"
+                    :error-message="getRowValidation(props.row)?.encryptionTypeId?.$errors[0]?.$message"
+                    @update:model-value="getRowValidation(props.row)?.encryptionTypeId?.$touch()"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('name')">
+                  <div class="row items-center">
+                    <div class="col">
+                      <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                        {{ props.row.name }}
+                      </div>
+                      <q-input
+                        v-else
+                        v-model="props.row.name"
+                        outlined
+                        stack-label
+                        hide-bottom-space
+                        :error="getRowValidation(props.row)?.name?.$error"
+                        :error-message="getRowValidation(props.row)?.name?.$errors[0]?.$message"
+                        @blur="getRowValidation(props.row)?.name?.$touch()"
+                      />
+                    </div>
+                  </div>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('host')">
+                  <div class="row items-center">
+                    <div class="col">
+                      <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                        {{ props.row.host }}
+                      </div>
+                      <q-input
+                        v-else
+                        v-model="props.row.host"
+                        outlined
+                        stack-label
+                        hide-bottom-space
+                        :error="getRowValidation(props.row)?.host?.$error"
+                        :error-message="getRowValidation(props.row)?.host?.$errors[0]?.$message"
+                        @blur="getRowValidation(props.row)?.host?.$touch()"
+                      />
+                    </div>
+                  </div>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('port')">
+                  <div class="row items-center">
+                    <div class="col">
+                      <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                        {{ props.row.port }}
+                      </div>
+                      <q-input
+                        v-else
+                        v-model="props.row.port"
+                        outlined
+                        stack-label
+                        hide-bottom-space
+                        :error="getRowValidation(props.row)?.port?.$error"
+                        :error-message="getRowValidation(props.row)?.port?.$errors[0]?.$message"
+                        @blur="getRowValidation(props.row)?.port?.$touch()"
+                      />
+                    </div>
+                  </div>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('infraFTPsProjectInstanceMapping')">
+                  <div class="row items-center q-gutter-xs">
+                    <q-chip
+                      v-for="(item, index) in (props.row.infraFTPsProjectInstanceMapping || []).slice(0, 2)"
+                      :key="index"
+                      dense
+                      class="bg-primary text-white"
+                    >
+                      {{ item.infraProjectInstance.platform.dropDownValue }} - {{ item.infraProjectInstance.url }}
+                    </q-chip>
+                    <q-chip
+                      v-if="props.row.infraFTPsProjectInstanceMapping?.length > 2"
+                      dense
+                      clickable
+                      class="bg-grey-4 text-black"
+                      @click="onFTPView(props.row.id, true, refreshFTPList)"
+                    >
+                      +{{ props.row.infraFTPsProjectInstanceMapping.length - 2 }} more...
+                    </q-chip>
+                  </div>
+                </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                class="common-q-td"
               >
-                {{ col.label }}
-                <span
-                  v-if="['protocolTypeId', 'encryptionTypeId', 'name', 'host', 'port'].includes(col.name)"
-                  class="required"
-                >*</span>
-                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-              <q-th auto-width class="text-center">Actions</q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr v-if="!props.row.deleted" :class="activeRowId == props.row.id ? 'highlight' : ''">
-              <q-td v-if="selectedColumnNames.includes('infraServiceId')" class="wrap-text">
-                <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                  {{ props.row.infraService?.name }}
-                </div>
-                <formSingleSelectDropdown
-                  v-else
-                  v-model="props.row.infraServiceId"
-                  :options="infraAccountServiceForDropdownSingleSelect.list.value"
-                  :filter="infraAccountServiceForDropdownSingleSelect.filter"
-                  :required="false"
-                />
+                {{ props.row.createdBy.person.fullName }}
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('protocolTypeId')" class="wrap-text">
-                <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                  {{ props.row.protocolType?.dropDownValue || "-" }}
-                </div>
-                <formSingleSelectDropdown
-                  v-else
-                  v-model="props.row.protocolTypeId"
-                  :options="protocolTypeForDropdownSingleSelect.list.value"
-                  :filter="protocolTypeForDropdownSingleSelect.filter"
-                  :error="getRowValidation(props.row)?.protocolTypeId?.$error"
-                  :error-message="getRowValidation(props.row)?.protocolTypeId?.$errors[0]?.$message"
-                  @update:model-value="getRowValidation(props.row)?.protocolTypeId?.$touch()"
-                />
+              <q-td
+                v-if="selectedColumnNames.includes('createdOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.createdOnUtc }}
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('encryptionTypeId')" class="wrap-text">
-                <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                  {{ props.row.encryptionType?.dropDownValue || "-" }}
-                </div>
-                <formSingleSelectDropdown
-                  v-else
-                  v-model="props.row.encryptionTypeId"
-                  :options="encryptionTypeForDropdownSingleSelect.list.value"
-                  :filter="encryptionTypeForDropdownSingleSelect.filter"
-                  :error="getRowValidation(props.row)?.encryptionTypeId?.$error"
-                  :error-message="getRowValidation(props.row)?.encryptionTypeId?.$errors[0]?.$message"
-                  @update:model-value="getRowValidation(props.row)?.encryptionTypeId?.$touch()"
-                />
+              <q-td
+                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedBy.person.fullName }}
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('name')">
-                <div class="row items-center">
-                  <div class="col">
-                    <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                      {{ props.row.name }}
-                    </div>
-                    <q-input
-                      v-else
-                      v-model="props.row.name"
-                      outlined
-                      stack-label
-                      hide-bottom-space
-                      :error="getRowValidation(props.row)?.name?.$error"
-                      :error-message="getRowValidation(props.row)?.name?.$errors[0]?.$message"
-                      @blur="getRowValidation(props.row)?.name?.$touch()"
-                    />
-                  </div>
-                </div>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedOnUtc }}
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('host')">
-                <div class="row items-center">
-                  <div class="col">
-                    <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                      {{ props.row.host }}
-                    </div>
-                    <q-input
-                      v-else
-                      v-model="props.row.host"
-                      outlined
-                      stack-label
-                      hide-bottom-space
-                      :error="getRowValidation(props.row)?.host?.$error"
-                      :error-message="getRowValidation(props.row)?.host?.$errors[0]?.$message"
-                      @blur="getRowValidation(props.row)?.host?.$touch()"
-                    />
-                  </div>
-                </div>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('port')">
-                <div class="row items-center">
-                  <div class="col">
-                    <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                      {{ props.row.port }}
-                    </div>
-                    <q-input
-                      v-else
-                      v-model="props.row.port"
-                      outlined
-                      stack-label
-                      hide-bottom-space
-                      :error="getRowValidation(props.row)?.port?.$error"
-                      :error-message="getRowValidation(props.row)?.port?.$errors[0]?.$message"
-                      @blur="getRowValidation(props.row)?.port?.$touch()"
-                    />
-                  </div>
-                </div>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('infraFTPsProjectInstanceMapping')">
-                <div class="row items-center q-gutter-xs">
-                  <q-chip
-                    v-for="(item, index) in (props.row.infraFTPsProjectInstanceMapping || []).slice(0, 2)"
-                    :key="index"
-                    dense
-                    class="bg-primary text-white"
-                  >
-                    {{ item.infraProjectInstance.platform.dropDownValue }} - {{ item.infraProjectInstance.url }}
-                  </q-chip>
-                  <q-chip
-                    v-if="props.row.infraFTPsProjectInstanceMapping?.length > 2"
-                    dense
-                    clickable
-                    class="bg-grey-4 text-black"
-                    @click="onFTPView(props.row.id, true, refreshFTPList)"
-                  >
-                    +{{ props.row.infraFTPsProjectInstanceMapping.length - 2 }} more...
-                  </q-chip>
-                </div>
-              </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('createdBy.person.firstName')"
-              class="common-q-td"
-            >
-              {{ props.row.createdBy.person.fullName }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('createdOnUtc')"
-              class="common-q-td"
-            >
-              {{ props.row.createdOnUtc }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
-              class="common-q-td"
-            >
-              {{ props.row.updatedBy.person.fullName }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('updatedOnUtc')"
-              class="common-q-td"
-            >
-              {{ props.row.updatedOnUtc }}
-            </q-td>
-              <q-td auto-width class="text-center actions">
-                <template v-if="editingRowId === props.row.id && !props.row.isNew">
-                  <q-icon
-                    name="o_cancel"
+                <q-td auto-width class="text-center actions">
+                  <template v-if="editingRowId === props.row.id && !props.row.isNew">
+                    <q-icon
+                      name="o_cancel"
+                      class="cursor-pointer q-mr-sm"
+                      size="xs"
+                      color="negative"
+                      @click="onCancel(props.row)"
+                    >
+                      <q-tooltip>Cancel</q-tooltip>
+                    </q-icon>
+                    <q-icon
+                      :loading="processing"
+                      name="o_save"
+                      class="cursor-pointer q-mr-sm hover-white"
+                      size="xs"
+                      color="primary"
+                      @click="onFTPSubmit(props.row)"
+                    >
+                      <q-tooltip>Save</q-tooltip>
+                    </q-icon>
+                  </template>
+                  <q-icon v-if="!props.row.isNew" name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onFTPView(props.row.id)">
+                    <q-tooltip>View</q-tooltip>
+                  </q-icon>
+                  <q-icon v-if="!props.row.isNew" name="o_add_task" class="cursor-pointer q-mr-sm" size="xs" @click="onFTPView(props.row.id, true, refreshFTPList)">
+                    <q-tooltip>Assign Project Instance</q-tooltip>
+                  </q-icon>
+                  <!-- <q-icon
+                    v-if="!props.row.isNew && editingRowId !== props.row.id"
+                    name="o_edit"
                     class="cursor-pointer q-mr-sm"
                     size="xs"
-                    color="negative"
-                    @click="onCancel(props.row)"
+                    @click="onEdit(props.row)"
                   >
-                    <q-tooltip>Cancel</q-tooltip>
+                    <q-tooltip>Edit</q-tooltip>
                   </q-icon>
                   <q-icon
+                    v-else-if="!props.row.isNew"
                     :loading="processing"
                     name="o_save"
-                    class="cursor-pointer q-mr-sm hover-white"
+                    class="cursor-pointer q-mr-sm"
                     size="xs"
-                    color="primary"
-                    @click="onFTPSubmit(props.row)"
+                    @click="onRowSubmit(props.row)"
                   >
                     <q-tooltip>Save</q-tooltip>
-                  </q-icon>
-                </template>
-                <q-icon v-if="!props.row.isNew" name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onFTPView(props.row.id)">
-                  <q-tooltip>View</q-tooltip>
-                </q-icon>
-                <q-icon v-if="!props.row.isNew" name="o_add_task" class="cursor-pointer q-mr-sm" size="xs" @click="onFTPView(props.row.id, true, refreshFTPList)">
-                  <q-tooltip>Assign Project Instance</q-tooltip>
-                </q-icon>
-                <!-- <q-icon
-                  v-if="!props.row.isNew && editingRowId !== props.row.id"
-                  name="o_edit"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="onEdit(props.row)"
-                >
-                  <q-tooltip>Edit</q-tooltip>
-                </q-icon>
-                <q-icon
-                  v-else-if="!props.row.isNew"
-                  :loading="processing"
-                  name="o_save"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="onRowSubmit(props.row)"
-                >
-                  <q-tooltip>Save</q-tooltip>
-                </q-icon> -->
-                <q-icon
-                  v-if="!props.row.isNew && editingRowId !== props.row.id"
-                  name="o_edit"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="onEdit(props.row)"
-                >
-                  <q-tooltip>Edit</q-tooltip>
-                </q-icon>
-                <q-icon
-                  name="o_note_alt"
-                  size="xs"
-                  class="cursor-pointer q-mr-xs"
-                  @click="activeRowId = props.row.id"
-                >
-                  <q-tooltip>Add Instructions</q-tooltip>
-                  <q-popup-edit
-                    v-model="props.row.instructions"
-                    anchor="center middle"
-                    self="center middle"
-                    buttons
-                    persistent
-                    label-set="Save"
-                    label-cancel="Cancel"
-                    class="instruction-popup"
-                    @save="val => { handleInstructionSave(props.row, val); activeRowId = null }"
-                    @hide="activeRowId = null"
+                  </q-icon> -->
+                  <q-icon
+                    v-if="!props.row.isNew && editingRowId !== props.row.id"
+                    name="o_edit"
+                    class="cursor-pointer q-mr-sm"
+                    size="xs"
+                    @click="onEdit(props.row)"
                   >
-                    <template #default="scope">
-                      <div class="popup-container q-pa-sm">
-                        <q-btn
-                          icon="o_close"
-                          flat
-                          round
-                          dense
-                          size="sm"
-                          class="absolute-top-right"
-                          @click="scope.cancel"
-                        />
-
-                        <div class="text-subtitle2 q-mb-xs">Instructions</div>
-                        <div class="editor-wrapper">
-                          <q-editor
-                            v-model="scope.value"
-                            :dense="$q.screen.lt.md"
-                            :toolbar="toolbar"
-                            :fonts="fonts"
-                            class="fixed-editor"
+                    <q-tooltip>Edit</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    name="o_note_alt"
+                    size="xs"
+                    class="cursor-pointer q-mr-xs"
+                    @click="activeRowId = props.row.id"
+                  >
+                    <q-tooltip>Add Instructions</q-tooltip>
+                    <q-popup-edit
+                      v-model="props.row.instructions"
+                      anchor="center middle"
+                      self="center middle"
+                      buttons
+                      persistent
+                      label-set="Save"
+                      label-cancel="Cancel"
+                      class="instruction-popup"
+                      @save="val => { handleInstructionSave(props.row, val); activeRowId = null }"
+                      @hide="activeRowId = null"
+                    >
+                      <template #default="scope">
+                        <div class="popup-container q-pa-sm">
+                          <q-btn
+                            icon="o_close"
+                            flat
+                            round
+                            dense
+                            size="sm"
+                            class="absolute-top-right"
+                            @click="scope.cancel"
                           />
+
+                          <div class="text-subtitle2 q-mb-xs">Instructions</div>
+                          <div class="editor-wrapper">
+                            <q-editor
+                              v-model="scope.value"
+                              :dense="$q.screen.lt.md"
+                              :toolbar="toolbar"
+                              :fonts="fonts"
+                              class="fixed-editor"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </template>
-                  </q-popup-edit>
-                </q-icon>
-                <WalletPopup
-                  :row="props.row"
-                  :wallet-options="infraWalletTypeDropdownSingleSelect.list.value"
-                  :on-save-api="handleWalletDetailSave"
-                  @success="refreshFTPList"
-                />
-                <q-icon
-                  name="o_delete_outline"
-                  size="xs"
-                  class="cursor-pointer"
-                  color="negative"
-                  @click="handleDelete(props.row, props.rowIndex)"
-                >
-                  <q-tooltip>Delete</q-tooltip>
-                </q-icon>
-              </q-td>
-            </q-tr>
-            <q-separator />
-          </template>
-        </q-table>
+                      </template>
+                    </q-popup-edit>
+                  </q-icon>
+                  <WalletPopup
+                    :row="props.row"
+                    :wallet-options="infraWalletTypeDropdownSingleSelect.list.value"
+                    :on-save-api="handleWalletDetailSave"
+                    @success="refreshFTPList"
+                  />
+                  <q-icon
+                    name="o_delete_outline"
+                    size="xs"
+                    class="cursor-pointer"
+                    color="negative"
+                    @click="handleDelete(props.row, props.rowIndex)"
+                  >
+                    <q-tooltip>Delete</q-tooltip>
+                  </q-icon>
+                </q-td>
+              </q-tr>
+              <q-separator />
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -1042,7 +1044,7 @@ onMounted(async () => {
   width: 100%;
   max-width: 100%;
 }
-.Custom-DataTable {
+.table-ftp .Custom-DataTable {
   min-width: max-content;
 }
 .cursor-pointer {

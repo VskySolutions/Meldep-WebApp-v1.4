@@ -237,549 +237,551 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getAllProjectTaskList"
-        >
-          <template #loading>
-            <q-inner-loading showing color="primary">
-              <q-spinner-ios size="40px" class="q-mt-xl" />
-            </q-inner-loading>
-          </template>
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <q-th auto-width class="text-center" />
-              <q-th
-                v-for="col in props.cols"
-                :key="col.name"
-                :props="props"
-                :class="col.headerClasses"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
+      <div class="table-project-task">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getAllProjectTaskList"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary">
+                <q-spinner-ios size="40px" class="q-mt-xl" />
+              </q-inner-loading>
+            </template>
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <q-th auto-width class="text-center" />
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :class="col.headerClasses"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
+                >
+                  <template v-if="col.name === 'estimateTime'">
+                    <div>
+                      <span>{{ col.label }}</span>
+                      <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                      <q-icon v-if="col.tooltip" name="o_info" size="xs" class="q-mx-xs">
+                        <q-tooltip class="text-caption">{{ col.tooltip }}</q-tooltip>
+                      </q-icon>
+                    </div>
+                  </template>
+                  <template v-else>
+                    {{ col.label }}
+                  </template>
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+                <q-th auto-width class="text-center">Actions</q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr
+                :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''"
+                :set="(preProjectName = null, preProjectModuleName = null)"
               >
-                <template v-if="col.name === 'estimateTime'">
-                  <div>
-                    <span>{{ col.label }}</span>
-                    <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-                    <q-icon v-if="col.tooltip" name="o_info" size="xs" class="q-mx-xs">
-                      <q-tooltip class="text-caption">{{ col.tooltip }}</q-tooltip>
+                <q-td class="text-center">
+                  <q-checkbox
+                    v-model="props.row.checkboxStatus"
+                    @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.project.projectStatus.dropDownValue, props.row.id, props.row.name,$event)"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;">
+                  <div class="row no-wrap items-center justify-between">
+                    <span style="flex: 1; word-break: break-word; white-space: normal;">
+                      <span
+                        v-if="preProjectName !== props.row.project.name"
+                        :set="preProjectName = props.row.project.name"
+                        class="hoverable-cell"
+                        @click="onProjectView(props.row.project.id)"
+                      >
+                        {{ props.row.project.name }}
+                      </span>
+                    </span>
+                  </div>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('projectModule.name')"
+                  class="common-q-td hoverable-cell"
+                  @click="onProjectModuleView(props.row.projectModule.id)"
+                >
+                  <span
+                    v-if="preProjectModuleName !== props.row.projectModule.name"
+                    :set="preProjectModuleName = props.row.projectModule.name"
+                  >
+                    {{ props.row.projectModule.name }}
+                  </span>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('name')"
+                  style="white-space: normal;"
+                  class="hoverable-cell"
+                >
+                  <div class="row no-wrap items-center justify-between">
+                    <span
+                      style="flex: 1; word-break: break-word; white-space: normal;"
+                      @click="onProjectTaskView(props.row.id)"
+                    >
+                      {{ props.row.name }}
+                    </span>
+                    <!-- Change log icon -->
+                    <q-icon
+                      name="o_history"
+                      class="cursor-pointer q-ml-sm"
+                      size="xs"
+                      clickable
+                      @click="onSiteModifiedLog(props.row.id, props.row.name, 'Task Name', refreshProjectTaskList)"
+                    >
+                      <q-tooltip>Data Change Log</q-tooltip>
                     </q-icon>
                   </div>
-                </template>
-                <template v-else>
-                  {{ col.label }}
-                </template>
-                <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-              <q-th auto-width class="text-center">Actions</q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr
-              :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''"
-              :set="(preProjectName = null, preProjectModuleName = null)"
-            >
-              <q-td class="text-center">
-                <q-checkbox
-                  v-model="props.row.checkboxStatus"
-                  @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.project.projectStatus.dropDownValue, props.row.id, props.row.name,$event)"
-                />
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;">
-                <div class="row no-wrap items-center justify-between">
-                  <span style="flex: 1; word-break: break-word; white-space: normal;">
-                    <span
-                      v-if="preProjectName !== props.row.project.name"
-                      :set="preProjectName = props.row.project.name"
-                      class="hoverable-cell"
-                      @click="onProjectView(props.row.project.id)"
-                    >
-                      {{ props.row.project.name }}
-                    </span>
-                  </span>
-                </div>
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('projectModule.name')"
-                class="common-q-td hoverable-cell"
-                @click="onProjectModuleView(props.row.projectModule.id)"
-              >
-                <span
-                  v-if="preProjectModuleName !== props.row.projectModule.name"
-                  :set="preProjectModuleName = props.row.projectModule.name"
+                </q-td>
+                <td
+                  v-if="selectedColumnNames.includes('area.dropDownValue')"
+                  class="common-q-td"
                 >
-                  {{ props.row.projectModule.name }}
-                </span>
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('name')"
-                style="white-space: normal;"
-                class="hoverable-cell"
-              >
-                <div class="row no-wrap items-center justify-between">
-                  <span
-                    style="flex: 1; word-break: break-word; white-space: normal;"
-                    @click="onProjectTaskView(props.row.id)"
-                  >
-                    {{ props.row.name }}
-                  </span>
-                  <!-- Change log icon -->
-                  <q-icon
-                    name="o_history"
-                    class="cursor-pointer q-ml-sm"
-                    size="xs"
-                    clickable
-                    @click="onSiteModifiedLog(props.row.id, props.row.name, 'Task Name', refreshProjectTaskList)"
-                  >
-                    <q-tooltip>Data Change Log</q-tooltip>
-                  </q-icon>
-                </div>
-              </q-td>
-              <td
-                v-if="selectedColumnNames.includes('area.dropDownValue')"
-                class="common-q-td"
-              >
-                {{ props.row.area.dropDownValue }}
-              </td>
-              <td
-                v-if="selectedColumnNames.includes('workspace.dropDownValue')"
-                class="common-q-td"
-              >
-                {{ props.row.workspace.dropDownValue }}
-              </td>
-              <td
-                v-if="selectedColumnNames.includes('action.dropDownValue')"
-                class="common-q-td"
-              >
-                {{ props.row.action.dropDownValue }}
-              </td>
-              <q-td
-                v-if="selectedColumnNames.includes('projectTaskNumber')"
-                class="text-right"
-              >
-                #{{ props.row.projectTaskNumber }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('startDate')"
-                class="text-center"
-              >
-                {{ toDate(props.row.startDate) }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('endDate')"
-                class="common-q-td"
-                :class="{ 'hoverable-cell' : props.row.isEditable }"
-                @click="activeEdit = { rowId: props.row.id, field: 'endDate' }"
-              >
-                <quickEditDate
-                  :row-id="props.row.id"
-                  :model-value="props.row.endDateStr"
-                  :editable="props.row.isEditable"
-                  :date-options="disableBeforeStartDate(props.row.startDateStr)"
-                  :show-history="true"
-                  @submit="({ rowId, value }) => onSubmitProjectTaskEndDate(rowId, value, refreshProjectTaskList)"
-                  @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Due Date')"
-                />
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('status.dropDownValue')"
-                class="common-q-td"
-                :class="{ 'hoverable-cell' : props.row.isEditable }"
-                @click="activeEdit = { rowId: props.row.id, field: 'status' }"
-              >
-                <quickEditSingleSelect
-                  field="status"
-                  :row-id="props.row.id"
-                  :value="props.row.status.id"
-                  :display-value="props.row.status.dropDownValue"
-                  :editable="props.row.isEditable"
-                  :disable="projectTaskStatusListRaw?.find(item => item.value === props.row.status.id)?.text === 'Close'"
-                  :options="projectTaskStatusListRaw"
-                  :active-edit="activeEdit"
-                  :show-history="true"
-                  @popup-show=" handlePopupShow(props.row.status.dropDownValue, props.row.project.projectStatus.dropDownValue)"
-                  @cancel="activeEdit = { rowId: null, field: null }"
-                  @submit="({ rowId, value }) => onSubmitProjectTaskStatus(projectTaskStatusListWithDisables, rowId, value, refreshProjectTaskList)"
-                  @history="() => onSiteModifiedLog(props.row.id, props.row.status.dropDownValue, 'Task Status')"
-                />
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('priority.dropDownValue')"
-                class="common-q-td"
-                :class="{ 'hoverable-cell' : props.row.isEditable }"
-                @click="activeEdit = { rowId: props.row.id, field: 'priority' }"
-              >
-                <quickEditSingleSelect
-                  field="priority"
-                  :row-id="props.row.id"
-                  :value="props.row.priority.id"
-                  :display-value="props.row.priority.dropDownValue"
-                  :editable="props.row.isEditable"
-                  :options="projectTaskPrioritiesForDropdown.list.value"
-                  :active-edit="activeEdit"
-                  :show-history="true"
-                  @filter="projectTaskPrioritiesForDropdown.filter"
-                  @cancel="activeEdit = { rowId: null, field: null }"
-                  @submit="({ rowId, value }) => onSubmitProjectTaskPriority(rowId, value, refreshProjectTaskList)"
-                  @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Task Priority')"
-                />
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('assignedTo')"
-                class="common-q-td"
-                :class="{ 'hoverable-cell' : props.row.isEditable }"
-              >
-                <div
-                  class="flex item-center justify-end"
-                  :class="props.row.assignedTo?.person?.firstName ? 'TaskActivity' : ''"
+                  {{ props.row.area.dropDownValue }}
+                </td>
+                <td
+                  v-if="selectedColumnNames.includes('workspace.dropDownValue')"
+                  class="common-q-td"
                 >
-                  <div v-if="props.row.assignedTo?.person?.fullName !== '' && props.row.assignedTo?.person?.fullName !== ' '">
-                    <span
-                      class="Person"
-                      :style="{ background: props.row.assignedTo.person.bgColor, color: props.row.assignedTo.person.color }"
-                    >
-                      {{ (props.row.assignedTo?.person?.firstName?.[0] || '') + (props.row.assignedTo?.person?.lastName?.[0] || '') }}
-                    </span>
-                    <q-tooltip v-if="props.row.assignedTo?.person">
-                      <div>
-                        <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
-                        <span>
-                          {{ props.row.assignedTo?.person?.firstName }} {{ props.row.assignedTo?.person?.lastName }}
-                        </span>
-                      </div>
-                    </q-tooltip>
-                  </div>
-                  <q-icon
-                    v-if="props.row.assignedTo?.person?.firstName"
-                    name="o_history"
-                    class="cursor-pointer q-ml-sm"
-                    size="xs"
-                    clickable
-                    @click.stop="onSiteModifiedLog(props.row.id, props.row.name, 'Task Owner', refreshProjectTaskList)"
-                  >
-                    <q-tooltip>Data Change Log</q-tooltip>
-                  </q-icon>
-                </div>
-
-                <q-popup-edit
-                  v-if="props.row.isEditable"
-                  v-slot="scope"
-                  v-model="props.row.assignedToId"
-                  class="small-popup-title"
-                  style="width: 270px;"
-                  @save="val => { props.row.assignedToId = val; onSubmitProjectTaskOwner(props.row.id, val, refreshProjectTaskList); }"
+                  {{ props.row.workspace.dropDownValue }}
+                </td>
+                <td
+                  v-if="selectedColumnNames.includes('action.dropDownValue')"
+                  class="common-q-td"
                 >
-                  <div class="row justify-between items-center">
-                    <div class="text-subtitle2 q-mb-sm">Update Task Owner</div>
-                    <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
-                  </div>
-                  <q-select
-                    v-model="scope.value"
-                    :options="activeEmployeesDropdown.list.value"
-                    use-input
-                    style="width: 100%;"
-                    use-chips
-                    clearable
-                    outlined
-                    dense
-                    emit-value
-                    map-options
-                    option-value="value"
-                    option-label="text"
-                    dropdown-icon="o_arrow_drop_down"
-                    @filter="activeEmployeesDropdown.filter"
+                  {{ props.row.action.dropDownValue }}
+                </td>
+                <q-td
+                  v-if="selectedColumnNames.includes('projectTaskNumber')"
+                  class="text-right"
+                >
+                  #{{ props.row.projectTaskNumber }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('startDate')"
+                  class="text-center"
+                >
+                  {{ toDate(props.row.startDate) }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('endDate')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.isEditable }"
+                  @click="activeEdit = { rowId: props.row.id, field: 'endDate' }"
+                >
+                  <quickEditDate
+                    :row-id="props.row.id"
+                    :model-value="props.row.endDateStr"
+                    :editable="props.row.isEditable"
+                    :date-options="disableBeforeStartDate(props.row.startDateStr)"
+                    :show-history="true"
+                    @submit="({ rowId, value }) => onSubmitProjectTaskEndDate(rowId, value, refreshProjectTaskList)"
+                    @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Due Date')"
                   />
-                  <div class="row justify-end q-gutter-sm q-mt-sm">
-                    <q-btn v-close-popup label="Cancel" color="grey" flat dense />
-                    <q-btn label="Set" color="primary" dense @click="scope.set()" />
-                  </div>
-                </q-popup-edit>
-                <q-tooltip v-if="props.row.isEditable">Click to edit</q-tooltip>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('assignedTo.id')">
-                <div
-                  class="flex justify-end TaskActivity"
-                  :class="{ TaskActivity: getGroupedActivities(props.row.projectActivities).length > 0 }"
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('status.dropDownValue')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.isEditable }"
+                  @click="activeEdit = { rowId: props.row.id, field: 'status' }"
                 >
-                  <div v-for="person in visiblePersons(props.row)" :key="person.fullName">
-                    <div v-if="person.fullName?.length > 1">
+                  <quickEditSingleSelect
+                    field="status"
+                    :row-id="props.row.id"
+                    :value="props.row.status.id"
+                    :display-value="props.row.status.dropDownValue"
+                    :editable="props.row.isEditable"
+                    :disable="projectTaskStatusListRaw?.find(item => item.value === props.row.status.id)?.text === 'Close'"
+                    :options="projectTaskStatusListRaw"
+                    :active-edit="activeEdit"
+                    :show-history="true"
+                    @popup-show=" handlePopupShow(props.row.status.dropDownValue, props.row.project.projectStatus.dropDownValue)"
+                    @cancel="activeEdit = { rowId: null, field: null }"
+                    @submit="({ rowId, value }) => onSubmitProjectTaskStatus(projectTaskStatusListWithDisables, rowId, value, refreshProjectTaskList)"
+                    @history="() => onSiteModifiedLog(props.row.id, props.row.status.dropDownValue, 'Task Status')"
+                  />
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('priority.dropDownValue')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.isEditable }"
+                  @click="activeEdit = { rowId: props.row.id, field: 'priority' }"
+                >
+                  <quickEditSingleSelect
+                    field="priority"
+                    :row-id="props.row.id"
+                    :value="props.row.priority.id"
+                    :display-value="props.row.priority.dropDownValue"
+                    :editable="props.row.isEditable"
+                    :options="projectTaskPrioritiesForDropdown.list.value"
+                    :active-edit="activeEdit"
+                    :show-history="true"
+                    @filter="projectTaskPrioritiesForDropdown.filter"
+                    @cancel="activeEdit = { rowId: null, field: null }"
+                    @submit="({ rowId, value }) => onSubmitProjectTaskPriority(rowId, value, refreshProjectTaskList)"
+                    @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Task Priority')"
+                  />
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('assignedTo')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.isEditable }"
+                >
+                  <div
+                    class="flex item-center justify-end"
+                    :class="props.row.assignedTo?.person?.firstName ? 'TaskActivity' : ''"
+                  >
+                    <div v-if="props.row.assignedTo?.person?.fullName !== '' && props.row.assignedTo?.person?.fullName !== ' '">
                       <span
                         class="Person"
-                        :style="{ background: person.bgColor, color: person.color }"
+                        :style="{ background: props.row.assignedTo.person.bgColor, color: props.row.assignedTo.person.color }"
                       >
-                        {{ person.initials }}
+                        {{ (props.row.assignedTo?.person?.firstName?.[0] || '') + (props.row.assignedTo?.person?.lastName?.[0] || '') }}
                       </span>
-                      <q-tooltip>
+                      <q-tooltip v-if="props.row.assignedTo?.person">
                         <div>
                           <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
-                          <span>{{ person.firstName }} {{ person.lastName }}</span>
-                        </div>
-                        <div v-for="(act, i) in person.activities" :key="i">
-                          <q-icon name="o_task" color="white" size="xs" class="q-mr-xs" />
-                          <span>{{ act.name }} ({{ act.estimateHours }})</span>
+                          <span>
+                            {{ props.row.assignedTo?.person?.firstName }} {{ props.row.assignedTo?.person?.lastName }}
+                          </span>
                         </div>
                       </q-tooltip>
                     </div>
-                  </div>
-                  <!-- Show three dots if more than 3 persons and not expanded -->
-                  <span
-                    v-if="getGroupedActivities(props.row.projectActivities).length > 3"
-                    class="cursor-pointer text-primary"
-                    @click="toggleRow(props.row)"
-                  >
-                    {{ isExpandedPersons(props.row) ? '−' : '...' }}
-                  </span>
-                  <q-icon
-                    v-if="props.row.isEditable"
-                    name="o_add"
-                    class="cursor-pointer"
-                    size="xs" clickable
-                    @click="onProjectTaskAssignment(props.row.id, props.row.project.id, props.row.projectModule.id, props.row.name, props.row.project.name, props.row.projectModule.name, 'Task Assignment', refreshProjectTaskList)"
-                  >
-                    <q-tooltip>Assign Task</q-tooltip>
-                  </q-icon>
-                </div>
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('estimateTime')"
-                class="text-right"
-                :class="props.row.totalActivityHours > props.row.estimateTime ? 'text-red' : ''"
-              >
-                {{ props.row.totalActivityHours }} / {{ props.row.estimateTime }} /
-                <span
-                  class="cursor-pointer hoverable-cell"
-                  @click="onHandleProjectTaskLevelTimeSheetView(props.row.id)"
-                >
-                  {{ props.row.totalTimesheetEstHours }}
-                  <q-tooltip v-if="!search.isTemplate">Timesheet Details</q-tooltip>
-                </span>
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('type.dropDownValue')"
-              >
-                {{ props.row.type.dropDownValue }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('taskTags')"
-                class="common-q-td"
-                :class="{ 'hoverable-cell' : props.row.isEditable }"
-              >
-                <div v-if="props.row.taskTags?.length">
-                  <div class="row items-center q-gutter-xs">
-                    <q-chip
-                      v-for="(tag, i) in showAllTagsRowId === props.row.id ? props.row.taskTags : props.row.taskTags.slice(0, 5)"
-                      :key="i"
-                      dense
-                      removable
-                      :style="{
-                        backgroundColor: tag.bgColor,
-                        color: tag.color,
-                        padding: '4px 8px',
-                        maxWidth: '100%',
-                        wordBreak: 'break-word'
-                      }"
-                      @remove="onDeleteProjectTaskTag(props.row, tag)"
+                    <q-icon
+                      v-if="props.row.assignedTo?.person?.firstName"
+                      name="o_history"
+                      class="cursor-pointer q-ml-sm"
+                      size="xs"
+                      clickable
+                      @click.stop="onSiteModifiedLog(props.row.id, props.row.name, 'Task Owner', refreshProjectTaskList)"
                     >
-                      {{ tag.text }}
-                    </q-chip>
-                    <!-- Show "more" or "less" toggle -->
-                    <q-btn v-if="props.row.taskTags.length > 5" dense flat size="sm" @click.stop="toggleShowAllTags(props.row.id)">
-                      <template v-if="showAllTagsRowId === props.row.id">
-                        <!-- <q-icon name="o_arrow_back" /> -->
-                        <q-chip color="gray" size="sm" text-color="black" class="q-pa-xs text-caption" style="height: 16px; min-width: 16px;">
-                          -{{ props.row.taskTags.length - 5 }}
-                        </q-chip>
-                      </template>
-                      <template v-else>
-                        <div class="row items-center no-wrap">
-                          <span class="">...</span>
-                          <q-chip color="gray" size="sm" text-color="black" class="q-pa-xs text-caption" style="height: 16px; min-width: 16px;">
-                            +{{ props.row.taskTags.length - 5 }}
-                          </q-chip>
-                        </div>
-                      </template>
-                    </q-btn>
+                      <q-tooltip>Data Change Log</q-tooltip>
+                    </q-icon>
                   </div>
-                </div>
-                <!-- q-popup-edit to edit tags -->
-                <q-popup-edit
-                  v-if="props.row.isEditable"
-                  v-slot="scope"
-                  v-model="props.row.taskTags"
-                  class="common-q-td small-popup-title"
-                  style="width: 300px;"
-                  @save="val => { props.row.taskTags = val; onSubmitProjectTaskTags(props.row.id, val, refreshProjectTaskList, refreshProjectTaskTagsDropdown);}"
-                >
-                  <div class="row justify-between items-center q-mb-sm">
-                    <div class="text-subtitle2">Update Tags</div>
-                    <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
-                  </div>
-                  <TagEditor
-                    v-model="scope.value"
-                    :row-id="props.row.id"
-                    :available-tags="tagsDropdown.list.value"
-                    :clearable="false"
-                    @filter="tagsDropdown.filter"
-                  />
-                  <div class="row justify-end q-gutter-sm q-mt-sm">
-                    <q-btn v-close-popup label="Cancel" color="grey" flat dense />
-                    <q-btn label="Set" color="primary" dense @click="scope.set()" />
-                  </div>
-                </q-popup-edit>
-                <q-tooltip v-if="props.row.isEditable">Click to edit</q-tooltip>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('sortOrder')">{{ props.row.sortOrder }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('color')">
-                <div
-                  :style="{
-                    backgroundColor: props.row.color,
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '4px',
-                    border: '1px solid #ccc',
-                    margin: '0 auto'
-                  }"
-                />
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('createdBy.person.firstName')">{{ props.row.createdBy.person.firstName + " " + props.row.createdBy.person.lastName }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('createdOnUtc')">{{ props.row.createdOnUtc }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('UpdatedBy.person.firstName')">{{ props.row.updatedBy.person.firstName + " " + props.row.updatedBy.person.lastName }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('updatedOnUtc')">{{ props.row.updatedOnUtc }}</q-td>
-              <q-td class="text-center actions" style="width: 5%">
-                <a
-                  v-if="props.row.isEditable || props.row.isNotes"
-                  style="position: relative;"
-                  class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
-                  @click="onProjectTaskNotesAdd(props.row.id, 'Project Task', props.row.projectId, props.row.project.name, props.row.name, refreshProjectTaskList)"
-                >
-                  <q-tooltip anchor="bottom middle" self="top middle">
-                    Note
-                  </q-tooltip>
-                  <q-icon name="o_assignment" />
-                  <q-badge
-                    v-if="props.row.projectTaskNotesCount > 0"
-                    style="position: absolute; right: -16px; top: -15px;"
-                    color="green"
-                    text-color="white"
-                    :label="props.row.projectTaskNotesCount"
-                  />
-                </a>
-                <q-btn dense flat icon="o_more_vert" size="sm" color="primary">
-                  <q-tooltip>More Options</q-tooltip>
-                  <q-menu auto-close>
-                    <q-list style="min-width: 250px">
-                      <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskEdit(props.row.id, refreshProjectTaskList)">
-                        <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
-                        <q-item-section>Edit</q-item-section>
-                      </q-item>
-                      <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskAssignment(props.row.id, props.row.project.id, props.row.projectModule.id, props.row.name, props.row.project.name, props.row.projectModule.name,'Task Assignment', refreshProjectTaskList)">
-                        <q-item-section avatar><q-icon name="o_assignment_ind" size="xs" /></q-item-section>
-                        <q-item-section>Task Assignment</q-item-section>
-                      </q-item>
-                      <q-item v-if="props.row.isEditable" v-ripple clickable @click="openTagDialog(props.row.id)">
-                        <q-item-section avatar><q-icon name="o_local_offer" size="xs" /></q-item-section>
-                        <q-item-section>
-                          <div class="cursor-pointer" @click.stop>
-                            Add Tags
-                            <q-popup-edit
-                              v-slot="scope"
-                              v-model="props.row.taskTags"
-                              class="small-popup-title common-q-td"
-                              style="width: 300px;"
-                              @save="val => {
-                                props.row.taskTags = val;
-                                onSubmitProjectTaskTags(props.row.id, val, refreshProjectTaskList, refreshProjectTaskTagsDropdown);
-                              }"
-                            >
-                              <div class="row justify-between items-center q-mb-sm">
-                                <div class="text-subtitle2">Add Tags</div>
-                                <q-btn
-                                  v-close-popup
-                                  icon="o_close"
-                                  size="sm"
-                                  color="black"
-                                  flat
-                                  round
-                                  dense
-                                />
-                              </div>
-                              <TagEditor
-                                v-model="scope.value"
-                                :row-id="props.row.id"
-                                :available-tags="tagsDropdown.list.value"
-                                :clearable="false"
-                                @filter="tagsDropdown.filter"
-                              />
-                              <div class="row justify-end q-gutter-sm q-mt-sm">
-                                <q-btn v-close-popup label="Cancel" color="grey" flat dense />
-                                <q-btn label="Set" color="primary" dense @click="scope.set()" />
-                              </div>
-                            </q-popup-edit>
-                          </div>
-                        </q-item-section>
-                      </q-item>
-                      <q-item v-ripple clickable @click="onProjectTaskLevelTimeSheetView(props.row.id)">
-                        <q-item-section avatar><q-icon name="o_notes" size="xs" /></q-item-section>
-                        <q-item-section>Task Level Timesheet</q-item-section>
-                      </q-item>
-                      <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskFiles(props.row.id, props.row.name, props.row.project.name, props.row.projectModule.name)">
-                        <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
-                        <q-item-section>Files</q-item-section>
-                      </q-item>
-                      <q-separator />
-                      <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskCopy(props.row.id, props.row.name, props.row.projectModuleId, 'isCopy', refreshProjectTaskList)">
-                        <q-item-section avatar><q-icon name="o_copy" size="xs" /></q-item-section>
-                        <q-item-section>Copy</q-item-section>
-                      </q-item>
-                      <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskMove(props.row.id, props.row.name, props.row.projectModuleId, 'isMove', refreshProjectTaskList)">
-                        <q-item-section avatar><q-icon name="o_arrow_forward" size="xs" /></q-item-section>
-                        <q-item-section>Move</q-item-section>
-                      </q-item>
-                      <q-item v-if="props.row.isEditable" v-ripple clickable @click="onSubmitProjectTaskDelete(props.row.id, props.row.name, props.row.project.name, refreshProjectTaskList)">
-                        <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
-                        <q-item-section class="text-negative">Delete</q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
-              </q-td>
-            </q-tr>
-            <q-tr v-if="selectedColumnNames.includes('estimateTime') && props.pageIndex === rows.length - 1" class="bg-grey-2">
-              <!-- Label spanning all columns before estimateTime -->
-              <q-td
-                :colspan="computedColumns.findIndex(c => c.name === 'estimateTime') + 1"
-                class="text-right text-bold"
-              >
-                Total Hours:
-              </q-td>
 
-              <!-- Totals in the estimateTime column -->
-              <q-td class="text-right text-bold">
-                {{ totalEstimateHours() }} / {{ totalTaskEstimateTimeHours() }} / {{ totalTimesheetHours() }}
-              </q-td>
-              <q-td
-                v-for="(col, idx) in computedColumns.slice(computedColumns.findIndex(c => c.name === 'estimateTime'))"
-                :key="'blank-' + idx"
-              />
-            </q-tr>
-            <q-separator />
-          </template>
-        </q-table>
+                  <q-popup-edit
+                    v-if="props.row.isEditable"
+                    v-slot="scope"
+                    v-model="props.row.assignedToId"
+                    class="small-popup-title"
+                    style="width: 270px;"
+                    @save="val => { props.row.assignedToId = val; onSubmitProjectTaskOwner(props.row.id, val, refreshProjectTaskList); }"
+                  >
+                    <div class="row justify-between items-center">
+                      <div class="text-subtitle2 q-mb-sm">Update Task Owner</div>
+                      <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                    </div>
+                    <q-select
+                      v-model="scope.value"
+                      :options="activeEmployeesDropdown.list.value"
+                      use-input
+                      style="width: 100%;"
+                      use-chips
+                      clearable
+                      outlined
+                      dense
+                      emit-value
+                      map-options
+                      option-value="value"
+                      option-label="text"
+                      dropdown-icon="o_arrow_drop_down"
+                      @filter="activeEmployeesDropdown.filter"
+                    />
+                    <div class="row justify-end q-gutter-sm q-mt-sm">
+                      <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                      <q-btn label="Set" color="primary" dense @click="scope.set()" />
+                    </div>
+                  </q-popup-edit>
+                  <q-tooltip v-if="props.row.isEditable">Click to edit</q-tooltip>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('assignedTo.id')">
+                  <div
+                    class="flex justify-end TaskActivity"
+                    :class="{ TaskActivity: getGroupedActivities(props.row.projectActivities).length > 0 }"
+                  >
+                    <div v-for="person in visiblePersons(props.row)" :key="person.fullName">
+                      <div v-if="person.fullName?.length > 1">
+                        <span
+                          class="Person"
+                          :style="{ background: person.bgColor, color: person.color }"
+                        >
+                          {{ person.initials }}
+                        </span>
+                        <q-tooltip>
+                          <div>
+                            <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
+                            <span>{{ person.firstName }} {{ person.lastName }}</span>
+                          </div>
+                          <div v-for="(act, i) in person.activities" :key="i">
+                            <q-icon name="o_task" color="white" size="xs" class="q-mr-xs" />
+                            <span>{{ act.name }} ({{ act.estimateHours }})</span>
+                          </div>
+                        </q-tooltip>
+                      </div>
+                    </div>
+                    <!-- Show three dots if more than 3 persons and not expanded -->
+                    <span
+                      v-if="getGroupedActivities(props.row.projectActivities).length > 3"
+                      class="cursor-pointer text-primary"
+                      @click="toggleRow(props.row)"
+                    >
+                      {{ isExpandedPersons(props.row) ? '−' : '...' }}
+                    </span>
+                    <q-icon
+                      v-if="props.row.isEditable"
+                      name="o_add"
+                      class="cursor-pointer"
+                      size="xs" clickable
+                      @click="onProjectTaskAssignment(props.row.id, props.row.project.id, props.row.projectModule.id, props.row.name, props.row.project.name, props.row.projectModule.name, 'Task Assignment', refreshProjectTaskList)"
+                    >
+                      <q-tooltip>Assign Task</q-tooltip>
+                    </q-icon>
+                  </div>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('estimateTime')"
+                  class="text-right"
+                  :class="props.row.totalActivityHours > props.row.estimateTime ? 'text-red' : ''"
+                >
+                  {{ props.row.totalActivityHours }} / {{ props.row.estimateTime }} /
+                  <span
+                    class="cursor-pointer hoverable-cell"
+                    @click="onHandleProjectTaskLevelTimeSheetView(props.row.id)"
+                  >
+                    {{ props.row.totalTimesheetEstHours }}
+                    <q-tooltip v-if="!search.isTemplate">Timesheet Details</q-tooltip>
+                  </span>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('type.dropDownValue')"
+                >
+                  {{ props.row.type.dropDownValue }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('taskTags')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.isEditable }"
+                >
+                  <div v-if="props.row.taskTags?.length">
+                    <div class="row items-center q-gutter-xs">
+                      <q-chip
+                        v-for="(tag, i) in showAllTagsRowId === props.row.id ? props.row.taskTags : props.row.taskTags.slice(0, 5)"
+                        :key="i"
+                        dense
+                        removable
+                        :style="{
+                          backgroundColor: tag.bgColor,
+                          color: tag.color,
+                          padding: '4px 8px',
+                          maxWidth: '100%',
+                          wordBreak: 'break-word'
+                        }"
+                        @remove="onDeleteProjectTaskTag(props.row, tag)"
+                      >
+                        {{ tag.text }}
+                      </q-chip>
+                      <!-- Show "more" or "less" toggle -->
+                      <q-btn v-if="props.row.taskTags.length > 5" dense flat size="sm" @click.stop="toggleShowAllTags(props.row.id)">
+                        <template v-if="showAllTagsRowId === props.row.id">
+                          <!-- <q-icon name="o_arrow_back" /> -->
+                          <q-chip color="gray" size="sm" text-color="black" class="q-pa-xs text-caption" style="height: 16px; min-width: 16px;">
+                            -{{ props.row.taskTags.length - 5 }}
+                          </q-chip>
+                        </template>
+                        <template v-else>
+                          <div class="row items-center no-wrap">
+                            <span class="">...</span>
+                            <q-chip color="gray" size="sm" text-color="black" class="q-pa-xs text-caption" style="height: 16px; min-width: 16px;">
+                              +{{ props.row.taskTags.length - 5 }}
+                            </q-chip>
+                          </div>
+                        </template>
+                      </q-btn>
+                    </div>
+                  </div>
+                  <!-- q-popup-edit to edit tags -->
+                  <q-popup-edit
+                    v-if="props.row.isEditable"
+                    v-slot="scope"
+                    v-model="props.row.taskTags"
+                    class="common-q-td small-popup-title"
+                    style="width: 300px;"
+                    @save="val => { props.row.taskTags = val; onSubmitProjectTaskTags(props.row.id, val, refreshProjectTaskList, refreshProjectTaskTagsDropdown);}"
+                  >
+                    <div class="row justify-between items-center q-mb-sm">
+                      <div class="text-subtitle2">Update Tags</div>
+                      <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                    </div>
+                    <TagEditor
+                      v-model="scope.value"
+                      :row-id="props.row.id"
+                      :available-tags="tagsDropdown.list.value"
+                      :clearable="false"
+                      @filter="tagsDropdown.filter"
+                    />
+                    <div class="row justify-end q-gutter-sm q-mt-sm">
+                      <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                      <q-btn label="Set" color="primary" dense @click="scope.set()" />
+                    </div>
+                  </q-popup-edit>
+                  <q-tooltip v-if="props.row.isEditable">Click to edit</q-tooltip>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('sortOrder')">{{ props.row.sortOrder }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('color')">
+                  <div
+                    :style="{
+                      backgroundColor: props.row.color,
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '4px',
+                      border: '1px solid #ccc',
+                      margin: '0 auto'
+                    }"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('createdBy.person.firstName')">{{ props.row.createdBy.person.firstName + " " + props.row.createdBy.person.lastName }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('createdOnUtc')">{{ props.row.createdOnUtc }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('UpdatedBy.person.firstName')">{{ props.row.updatedBy.person.firstName + " " + props.row.updatedBy.person.lastName }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('updatedOnUtc')">{{ props.row.updatedOnUtc }}</q-td>
+                <q-td class="text-center actions" style="width: 5%">
+                  <a
+                    v-if="props.row.isEditable || props.row.isNotes"
+                    style="position: relative;"
+                    class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
+                    @click="onProjectTaskNotesAdd(props.row.id, 'Project Task', props.row.projectId, props.row.project.name, props.row.name, refreshProjectTaskList)"
+                  >
+                    <q-tooltip anchor="bottom middle" self="top middle">
+                      Note
+                    </q-tooltip>
+                    <q-icon name="o_assignment" />
+                    <q-badge
+                      v-if="props.row.projectTaskNotesCount > 0"
+                      style="position: absolute; right: -16px; top: -15px;"
+                      color="green"
+                      text-color="white"
+                      :label="props.row.projectTaskNotesCount"
+                    />
+                  </a>
+                  <q-btn dense flat icon="o_more_vert" size="sm" color="primary">
+                    <q-tooltip>More Options</q-tooltip>
+                    <q-menu auto-close>
+                      <q-list style="min-width: 250px">
+                        <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskEdit(props.row.id, refreshProjectTaskList)">
+                          <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
+                          <q-item-section>Edit</q-item-section>
+                        </q-item>
+                        <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskAssignment(props.row.id, props.row.project.id, props.row.projectModule.id, props.row.name, props.row.project.name, props.row.projectModule.name,'Task Assignment', refreshProjectTaskList)">
+                          <q-item-section avatar><q-icon name="o_assignment_ind" size="xs" /></q-item-section>
+                          <q-item-section>Task Assignment</q-item-section>
+                        </q-item>
+                        <q-item v-if="props.row.isEditable" v-ripple clickable @click="openTagDialog(props.row.id)">
+                          <q-item-section avatar><q-icon name="o_local_offer" size="xs" /></q-item-section>
+                          <q-item-section>
+                            <div class="cursor-pointer" @click.stop>
+                              Add Tags
+                              <q-popup-edit
+                                v-slot="scope"
+                                v-model="props.row.taskTags"
+                                class="small-popup-title common-q-td"
+                                style="width: 300px;"
+                                @save="val => {
+                                  props.row.taskTags = val;
+                                  onSubmitProjectTaskTags(props.row.id, val, refreshProjectTaskList, refreshProjectTaskTagsDropdown);
+                                }"
+                              >
+                                <div class="row justify-between items-center q-mb-sm">
+                                  <div class="text-subtitle2">Add Tags</div>
+                                  <q-btn
+                                    v-close-popup
+                                    icon="o_close"
+                                    size="sm"
+                                    color="black"
+                                    flat
+                                    round
+                                    dense
+                                  />
+                                </div>
+                                <TagEditor
+                                  v-model="scope.value"
+                                  :row-id="props.row.id"
+                                  :available-tags="tagsDropdown.list.value"
+                                  :clearable="false"
+                                  @filter="tagsDropdown.filter"
+                                />
+                                <div class="row justify-end q-gutter-sm q-mt-sm">
+                                  <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                                  <q-btn label="Set" color="primary" dense @click="scope.set()" />
+                                </div>
+                              </q-popup-edit>
+                            </div>
+                          </q-item-section>
+                        </q-item>
+                        <q-item v-ripple clickable @click="onProjectTaskLevelTimeSheetView(props.row.id)">
+                          <q-item-section avatar><q-icon name="o_notes" size="xs" /></q-item-section>
+                          <q-item-section>Task Level Timesheet</q-item-section>
+                        </q-item>
+                        <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskFiles(props.row.id, props.row.name, props.row.project.name, props.row.projectModule.name)">
+                          <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
+                          <q-item-section>Files</q-item-section>
+                        </q-item>
+                        <q-separator />
+                        <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskCopy(props.row.id, props.row.name, props.row.projectModuleId, 'isCopy', refreshProjectTaskList)">
+                          <q-item-section avatar><q-icon name="o_copy" size="xs" /></q-item-section>
+                          <q-item-section>Copy</q-item-section>
+                        </q-item>
+                        <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskMove(props.row.id, props.row.name, props.row.projectModuleId, 'isMove', refreshProjectTaskList)">
+                          <q-item-section avatar><q-icon name="o_arrow_forward" size="xs" /></q-item-section>
+                          <q-item-section>Move</q-item-section>
+                        </q-item>
+                        <q-item v-if="props.row.isEditable" v-ripple clickable @click="onSubmitProjectTaskDelete(props.row.id, props.row.name, props.row.project.name, refreshProjectTaskList)">
+                          <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
+                          <q-item-section class="text-negative">Delete</q-item-section>
+                        </q-item>
+                      </q-list>
+                    </q-menu>
+                  </q-btn>
+                </q-td>
+              </q-tr>
+              <q-tr v-if="selectedColumnNames.includes('estimateTime') && props.pageIndex === rows.length - 1" class="bg-grey-2">
+                <!-- Label spanning all columns before estimateTime -->
+                <q-td
+                  :colspan="computedColumns.findIndex(c => c.name === 'estimateTime') + 1"
+                  class="text-right text-bold"
+                >
+                  Total Hours:
+                </q-td>
+
+                <!-- Totals in the estimateTime column -->
+                <q-td class="text-right text-bold">
+                  {{ totalEstimateHours() }} / {{ totalTaskEstimateTimeHours() }} / {{ totalTimesheetHours() }}
+                </q-td>
+                <q-td
+                  v-for="(col, idx) in computedColumns.slice(computedColumns.findIndex(c => c.name === 'estimateTime'))"
+                  :key="'blank-' + idx"
+                />
+              </q-tr>
+              <q-separator />
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -1737,7 +1739,7 @@ onMounted(async () => {
 });
 </script>
 <style scoped>
-.Custom-DataTable {
+.table-project-task .Custom-DataTable {
   min-width: max-content;
 }
 </style>

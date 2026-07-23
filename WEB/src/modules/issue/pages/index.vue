@@ -208,291 +208,293 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getAllIssue"
-        >
-          <template #loading>
-            <q-inner-loading showing color="primary">
-              <q-spinner-ios size="40px" class="q-mt-xl" />
-            </q-inner-loading>
-          </template>
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <q-th auto-width class="text-center" />
-              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
-              <q-th
-                v-for="col in props.cols"
-                :key="col.name"
-                :props="props"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
-              >
-                {{ col.label }}
-                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-              <q-th auto-width class="text-center">Actions</q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
-              <q-td auto-width class="text-center hidden">
-                <q-icon :name="isExpanded(props.row.id) ? '-' : '+'" class="cursor-pointer custom-plus-minus-icon" @click="toggleExpand(props.row.id)">
-                  <q-tooltip>{{ isExpanded(props.row.id) ? 'Collapse' : 'Expand' }}</q-tooltip>
-                </q-icon>
-              </q-td>
-              <q-td class="text-center">
-                <q-checkbox v-model="props.row.checkboxStatus" @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.id, props.row.name, $event)" />
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('issueNumber')" class="text-right">
-                #{{ props.row.issueNumber }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
-                <div class="row no-wrap items-center justify-between">
-                  <span style="flex: 1; word-break: break-word; white-space: normal;" @click="onProjectView(props.row.project.id)">{{ props.row.project.name }}</span>
-                  <div class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
-                    <q-icon
-                      name="o_radio_button_checked" size="xs"
-                      class="cursor-pointer"
-                      @click="setActiveRowIdInLocalStorage(props.row.id);
-                              $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
-                    >
-                      <q-tooltip>Project Center</q-tooltip>
-                    </q-icon>
-                    <q-icon
-                      v-if="props.row.isEditable"
-                      name="o_developer_board" size="xs"
-                      class="cursor-pointer"
-                      @click="setActiveRowIdInLocalStorage(props.row.id);
-                              $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
-                    >
-                      <q-tooltip>Work Board</q-tooltip>
-                    </q-icon>
-                    <!-- New info icon for issue status -->
-                    <!-- <q-icon name="o_info" size="xs" class="cursor-pointer text-primary" v-if="statusSummary.find(x => x.projectId === props.row.project.id)"> -->
-                    <q-icon name="o_info" size="xs" class="cursor-pointer text-primary">
-                      <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-white shadow-2">
-                        <div class="text-caption">
-                          <table class="table boarded statusTable">
-                            <thead>
-                              <tr>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus > 0">No Status</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.new > 0">New</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan > 0">Test Plan</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.toDo > 0">To Do</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment > 0">In Development</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inReview > 0">In Review</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting > 0">In Testing</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.reopen > 0">Reopen</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT > 0">In UAT</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed > 0">UAT Passed</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask > 0">Converted To Task</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.onHold > 0">On Hold</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.closed > 0">Closed</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.done > 0">Done</th>
-                                <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.total > 0">Total</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.new > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.new }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.toDo > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.toDo }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inReview > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inReview }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.reopen > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.reopen }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.onHold > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.onHold }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.closed > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.closed }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.done > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.done }}</td>
-                                <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.total > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.total }}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </q-tooltip>
-                    </q-icon>
-                  </div>
-                </div>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('projectModule.name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.projectModule.name }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('requirement.title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.requirement.title }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('projectTaskRelatedMappings')">
-                <span v-if="props.row.projectTaskRelatedMappings?.length">
-                  <template v-for="(item, index) in props.row.projectTaskRelatedMappings" :key="index">
-                    <span class="hoverable-cell" style="cursor: pointer;" @click="onProjectTaskView(item.taskId)">#{{ item.projectTask?.projectTaskNumber }}
-                      <span v-if="item.projectTask?.status">
-                        ({{ item.projectTask.status.dropDownValue }})
-                      </span>
-                    </span>
-                    <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">, </span>
-                    <br>
-                  </template>
-                </span>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.name }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('priority.dropDownValue')">
-                {{ props.row.priority.dropDownValue }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('type.dropDownValue')">
-                {{ props.row.type.dropDownValue }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('status.dropDownValue')"
-                class="common-q-td"
-                :class="{ 'hoverable-cell' : props.row.isEditable }"
-                @click="activeEdit = { rowId: props.row.id, field: 'status' }"
-              >
-                <quickEditSingleSelect
-                  field="status"
-                  :row-id="props.row.id"
-                  :value="props.row.status.id"
-                  :display-value="props.row.status.dropDownValue"
-                  :editable="props.row.isEditable"
-                  :options="issueStatusDropdownSingleSelect.list.value"
-                  :active-edit="activeEdit"
-                  :show-history="false"
-                  @cancel="activeEdit = { rowId: null, field: null }"
-                  @submit="({ rowId, value }) => onSubmitIssueStatus(rowId, value, refreshIssueList)"
-                />
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('employee.person.firstName')">
-                {{ props.row.employee.person.fullName }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('reportedBy.person.firstName')">
-                {{ props.row.reportedBy.person.fullName }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
-                class="common-q-td"
-              >
-                {{ props.row.createdBy.person.fullName }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('createdOnUtc')" class="text-center">
-                {{ props.row.createdOnUtc }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedBy.person.fullName }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedOnUtc')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedOnUtc }}
-              </q-td>
-              <q-td class="text-center actions">
-                <q-icon
-                  name="o_visibility"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="onIssueView(props.row.id)"
+      <div class="table-issue">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getAllIssue"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary">
+                <q-spinner-ios size="40px" class="q-mt-xl" />
+              </q-inner-loading>
+            </template>
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <q-th auto-width class="text-center" />
+                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
                 >
-                  <q-tooltip>View</q-tooltip>
-                </q-icon>
-                  <a
-                    v-if="props.row.isEditable || props.row.isNotes"
-                    style="position: relative;"
-                    class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
-                    @click="onNoteAdd(props.row.id, 'Issue', props.row.project.id, props.row.project.name, props.row.name,`${props.row.project.name} : ${props.row.name}`, refreshIssueList)"
+                  {{ col.label }}
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+                <q-th auto-width class="text-center">Actions</q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
+                <q-td auto-width class="text-center hidden">
+                  <q-icon :name="isExpanded(props.row.id) ? '-' : '+'" class="cursor-pointer custom-plus-minus-icon" @click="toggleExpand(props.row.id)">
+                    <q-tooltip>{{ isExpanded(props.row.id) ? 'Collapse' : 'Expand' }}</q-tooltip>
+                  </q-icon>
+                </q-td>
+                <q-td class="text-center">
+                  <q-checkbox v-model="props.row.checkboxStatus" @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.id, props.row.name, $event)" />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('issueNumber')" class="text-right">
+                  #{{ props.row.issueNumber }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
+                  <div class="row no-wrap items-center justify-between">
+                    <span style="flex: 1; word-break: break-word; white-space: normal;" @click="onProjectView(props.row.project.id)">{{ props.row.project.name }}</span>
+                    <div class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
+                      <q-icon
+                        name="o_radio_button_checked" size="xs"
+                        class="cursor-pointer"
+                        @click="setActiveRowIdInLocalStorage(props.row.id);
+                                $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                      >
+                        <q-tooltip>Project Center</q-tooltip>
+                      </q-icon>
+                      <q-icon
+                        v-if="props.row.isEditable"
+                        name="o_developer_board" size="xs"
+                        class="cursor-pointer"
+                        @click="setActiveRowIdInLocalStorage(props.row.id);
+                                $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
+                      >
+                        <q-tooltip>Work Board</q-tooltip>
+                      </q-icon>
+                      <!-- New info icon for issue status -->
+                      <!-- <q-icon name="o_info" size="xs" class="cursor-pointer text-primary" v-if="statusSummary.find(x => x.projectId === props.row.project.id)"> -->
+                      <q-icon name="o_info" size="xs" class="cursor-pointer text-primary">
+                        <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-white shadow-2">
+                          <div class="text-caption">
+                            <table class="table boarded statusTable">
+                              <thead>
+                                <tr>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus > 0">No Status</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.new > 0">New</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan > 0">Test Plan</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.toDo > 0">To Do</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment > 0">In Development</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inReview > 0">In Review</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting > 0">In Testing</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.reopen > 0">Reopen</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT > 0">In UAT</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed > 0">UAT Passed</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask > 0">Converted To Task</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.onHold > 0">On Hold</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.closed > 0">Closed</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.done > 0">Done</th>
+                                  <th v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.total > 0">Total</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.noStatus }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.new > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.new }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.newFromTestPlan }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.toDo > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.toDo }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inDevelopment }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inReview > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inReview }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inTesting }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.reopen > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.reopen }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.inUAT }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.uatPassed }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.convertedToTask }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.onHold > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.onHold }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.closed > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.closed }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.done > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.done }}</td>
+                                  <td v-if="statusSummary.find(x => x.projectId === props.row.project.id)?.total > 0" class="text-center">{{ statusSummary.find(x => x.projectId === props.row.project.id)?.total }}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </q-tooltip>
+                      </q-icon>
+                    </div>
+                  </div>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('projectModule.name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.projectModule.name }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('requirement.title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.requirement.title }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('projectTaskRelatedMappings')">
+                  <span v-if="props.row.projectTaskRelatedMappings?.length">
+                    <template v-for="(item, index) in props.row.projectTaskRelatedMappings" :key="index">
+                      <span class="hoverable-cell" style="cursor: pointer;" @click="onProjectTaskView(item.taskId)">#{{ item.projectTask?.projectTaskNumber }}
+                        <span v-if="item.projectTask?.status">
+                          ({{ item.projectTask.status.dropDownValue }})
+                        </span>
+                      </span>
+                      <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">, </span>
+                      <br>
+                    </template>
+                  </span>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.name }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('priority.dropDownValue')">
+                  {{ props.row.priority.dropDownValue }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('type.dropDownValue')">
+                  {{ props.row.type.dropDownValue }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('status.dropDownValue')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.isEditable }"
+                  @click="activeEdit = { rowId: props.row.id, field: 'status' }"
+                >
+                  <quickEditSingleSelect
+                    field="status"
+                    :row-id="props.row.id"
+                    :value="props.row.status.id"
+                    :display-value="props.row.status.dropDownValue"
+                    :editable="props.row.isEditable"
+                    :options="issueStatusDropdownSingleSelect.list.value"
+                    :active-edit="activeEdit"
+                    :show-history="false"
+                    @cancel="activeEdit = { rowId: null, field: null }"
+                    @submit="({ rowId, value }) => onSubmitIssueStatus(rowId, value, refreshIssueList)"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('employee.person.firstName')">
+                  {{ props.row.employee.person.fullName }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('reportedBy.person.firstName')">
+                  {{ props.row.reportedBy.person.fullName }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                  class="common-q-td"
+                >
+                  {{ props.row.createdBy.person.fullName }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('createdOnUtc')" class="text-center">
+                  {{ props.row.createdOnUtc }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                  class="common-q-td"
+                >
+                  {{ props.row.updatedBy.person.fullName }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedOnUtc')"
+                  class="common-q-td"
+                >
+                  {{ props.row.updatedOnUtc }}
+                </q-td>
+                <q-td class="text-center actions">
+                  <q-icon
+                    name="o_visibility"
+                    class="cursor-pointer q-mr-sm"
+                    size="xs"
+                    @click="onIssueView(props.row.id)"
                   >
-                    <q-tooltip anchor="bottom middle" self="top middle">
-                      Note
-                    </q-tooltip>
-                    <q-icon name="o_assignment" />
-                    <q-badge
-                      v-if="props.row.issueNotesCount > 0"
-                      style="position: absolute; right: -16px; top: -15px;"
-                      color="green"
-                      text-color="white"
-                      :label="props.row.issueNotesCount"
-                    />
-                  </a>
-                  <q-btn dense flat icon="o_more_vert" color="primary">
-                    <q-tooltip>More Options</q-tooltip>
-                    <q-menu auto-close>
-                      <q-list style="min-width: 180px">
-                        <q-item
-                          v-if="props.row.isEditable"
-                          v-ripple clickable
-                          @click="setActiveRowIdInLocalStorage(props.row.id); onIssueEdit(props.row.id, refreshIssueList)"
-                        >
-                          <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
-                          <q-item-section>Edit</q-item-section>
-                        </q-item>
-                        <q-item
-                          v-if="props.row.isEditable"
-                          v-ripple clickable
-                          @click="setActiveRowIdInLocalStorage(props.row.id); onIssueStatusLog(props.row.id)"
-                        >
-                          <q-item-section avatar><q-icon name="o_groups" size="xs" /></q-item-section>
-                          <q-item-section>Issue Status change log</q-item-section>
-                        </q-item>
-                        <q-item
-                          v-if="props.row.isEditable"
-                          v-ripple clickable
-                          :class="{ 'disabled-icon': props.row.status.dropDownValue === 'Converted to Task' }"
-                          @click="setActiveRowIdInLocalStorage(props.row.id); onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.name, props.row.description, true)"
-                        >
-                          <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
-                          <q-item-section>Convert into Task</q-item-section>
-                        </q-item>
-                        <q-item
-                          v-if="props.row.isEditable"
-                          v-ripple clickable
-                          @click="setActiveRowIdInLocalStorage(props.row.id); onIssueAddActivity(props.row.id, refreshIssueList)"
-                        >
-                          <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
-                          <q-item-section>Add Activities</q-item-section>
-                        </q-item>
-                        <q-item
-                          v-if="props.row.isEditable"
-                          v-ripple
-                          clickable
-                          @click="onSubmitIssueDelete(props.row.id, props.row.name, refreshIssueList)"
-                        >
-                          <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
-                          <q-item-section class="text-negative">Delete</q-item-section>
-                        </q-item>
-                      </q-list>
-                    </q-menu>
-                  </q-btn>
-              </q-td>
-            </q-tr>
-            <q-tr v-if="props.pageIndex === rows.length - 1" class="hidden">
-              <q-td colspan="9" class="text-right"><b>Total  Issues:</b></q-td>
-              <q-td class="text-center"><b>{{ rows.length }}</b></q-td>
-              <q-td />
-            </q-tr><q-separator />
-          </template>
-        </q-table>
+                    <q-tooltip>View</q-tooltip>
+                  </q-icon>
+                    <a
+                      v-if="props.row.isEditable || props.row.isNotes"
+                      style="position: relative;"
+                      class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
+                      @click="onNoteAdd(props.row.id, 'Issue', props.row.project.id, props.row.project.name, props.row.name,`${props.row.project.name} : ${props.row.name}`, refreshIssueList)"
+                    >
+                      <q-tooltip anchor="bottom middle" self="top middle">
+                        Note
+                      </q-tooltip>
+                      <q-icon name="o_assignment" />
+                      <q-badge
+                        v-if="props.row.issueNotesCount > 0"
+                        style="position: absolute; right: -16px; top: -15px;"
+                        color="green"
+                        text-color="white"
+                        :label="props.row.issueNotesCount"
+                      />
+                    </a>
+                    <q-btn dense flat icon="o_more_vert" color="primary">
+                      <q-tooltip>More Options</q-tooltip>
+                      <q-menu auto-close>
+                        <q-list style="min-width: 180px">
+                          <q-item
+                            v-if="props.row.isEditable"
+                            v-ripple clickable
+                            @click="setActiveRowIdInLocalStorage(props.row.id); onIssueEdit(props.row.id, refreshIssueList)"
+                          >
+                            <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
+                            <q-item-section>Edit</q-item-section>
+                          </q-item>
+                          <q-item
+                            v-if="props.row.isEditable"
+                            v-ripple clickable
+                            @click="setActiveRowIdInLocalStorage(props.row.id); onIssueStatusLog(props.row.id)"
+                          >
+                            <q-item-section avatar><q-icon name="o_groups" size="xs" /></q-item-section>
+                            <q-item-section>Issue Status change log</q-item-section>
+                          </q-item>
+                          <q-item
+                            v-if="props.row.isEditable"
+                            v-ripple clickable
+                            :class="{ 'disabled-icon': props.row.status.dropDownValue === 'Converted to Task' }"
+                            @click="setActiveRowIdInLocalStorage(props.row.id); onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.name, props.row.description, true)"
+                          >
+                            <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
+                            <q-item-section>Convert into Task</q-item-section>
+                          </q-item>
+                          <q-item
+                            v-if="props.row.isEditable"
+                            v-ripple clickable
+                            @click="setActiveRowIdInLocalStorage(props.row.id); onIssueAddActivity(props.row.id, refreshIssueList)"
+                          >
+                            <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
+                            <q-item-section>Add Activities</q-item-section>
+                          </q-item>
+                          <q-item
+                            v-if="props.row.isEditable"
+                            v-ripple
+                            clickable
+                            @click="onSubmitIssueDelete(props.row.id, props.row.name, refreshIssueList)"
+                          >
+                            <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
+                            <q-item-section class="text-negative">Delete</q-item-section>
+                          </q-item>
+                        </q-list>
+                      </q-menu>
+                    </q-btn>
+                </q-td>
+              </q-tr>
+              <q-tr v-if="props.pageIndex === rows.length - 1" class="hidden">
+                <q-td colspan="9" class="text-right"><b>Total  Issues:</b></q-td>
+                <q-td class="text-center"><b>{{ rows.length }}</b></q-td>
+                <q-td />
+              </q-tr><q-separator />
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -1301,7 +1303,7 @@ onMounted(() => {
   pointer-events: none;
   opacity: 0.6;
 }
-.Custom-DataTable {
+.table-issue .Custom-DataTable {
   min-width: max-content;
 }
 </style>

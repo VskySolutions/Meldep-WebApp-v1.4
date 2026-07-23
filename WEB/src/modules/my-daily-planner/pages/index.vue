@@ -175,160 +175,162 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-          flat
-          :loading="loading"
-          :columns="computedColumns"
-          :rows="rows"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          :filter="filter"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getDailyPlanners"
-        >
-          <template #loading>
-            <q-inner-loading showing color="primary">
-              <q-spinner-ios size="40px" class="q-mt-xl" />
-            </q-inner-loading>
-          </template>
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
-              <q-th
-                v-for="col in props.cols"
-                :key="col.name"
-                :props="props"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
-              >
-                {{ col.label }}
-                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-              <q-td :colspan="visibleColumnCount - 1" style="background: #dbf2ff;" class="text-center">
-                {{ props.row.dailyPlannerDate }}
-              </q-td>
-              <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
-                <q-icon 
-                  name="o_forward" 
-                  class="cursor-pointer q-mr-sm" 
-                  :class="props.row.isForwordedToTimesheet ? 'hidden' : (storedUser.username === props.row.user.userName ? '' : 'hidden')" 
-                  @click="onDailyPlannerEdit(props.row.id, 'isForwarded', refreshDailyPlannerList)"
+      <div class="table-my-daily-planner">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+            flat
+            :loading="loading"
+            :columns="computedColumns"
+            :rows="rows"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            :filter="filter"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getDailyPlanners"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary">
+                <q-spinner-ios size="40px" class="q-mt-xl" />
+              </q-inner-loading>
+            </template>
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
                 >
-                  <q-tooltip>Forward To Timesheet</q-tooltip>
-                </q-icon>
-                <q-icon 
-                  :class="storedUser.username === props.row.user.userName ? '' : 'hidden'" 
-                  name="o_edit" 
-                  class="cursor-pointer q-mr-sm" 
-                  @click="onDailyPlannerEdit(props.row.id, 'isEdit', refreshDailyPlannerList)"
-                >
-                  <q-tooltip>Edit</q-tooltip>
-                </q-icon>
-                <q-icon 
-                  name="o_delete_outline" 
-                  class="cursor-pointer" 
-                  :class="storedUser.username === props.row.user.userName ? '' : 'hidden'" color="negative" 
-                  @click="onSubmitDailyPlannerDelete(props.row.id, props.row.dailyPlannerDate, refreshDailyPlannerList)"
-                >
-                  <q-tooltip>Delete</q-tooltip>
-                </q-icon>
-              </q-td>
-            </q-tr>
-            <q-tr v-for="(line) in props.row.dailyPlannerLines" :key="line.id" :class="highlightedId == line.id ? 'highlight' : ''" :set="(preProjectName = null, preProjectTask = null, preProjectDate = null, preProjectTaskDate = null,resetTracking())">
-              <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
-                <div class="row no-wrap items-center justify-between">
-                  <span v-if="preProjectName !== line.project.name || preProjectDate !== props.row.dailyPlannerDate" :set="(preProjectName = line.project.name, preProjectDate = props.row.dailyPlannerDate)" style="flex: 1; word-break: break-word; white-space: normal;" @click="onProjectView(line.project.id)">{{ line.project.name }}</span>
-                  <div v-if="shouldShowIcons(line.project.name, 'project', props.row.dailyPlannerDate)" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
-                    <q-icon
-                      name="o_radio_button_checked" size="xs"
-                      class="cursor-pointer"
-                      @click="setActiveRowIdInLocalStorage(line.id);
-                              $router.push({ path: '/project-center', state: { projectId: line.project.id } })"
-                    >
-                      <q-tooltip>Project Center</q-tooltip>
-                    </q-icon>
-                    <q-icon
-                      name="o_developer_board" size="xs"
-                      class="cursor-pointer"
-                      @click="setActiveRowIdInLocalStorage(line.id);
-                              $router.push({ path: '/project-planning/workboard', state: {projectId: line.project.id } })"
-                    >
-                      <q-tooltip>Work Board</q-tooltip>
-                    </q-icon>
-                  </div>
-                </div>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('projectModule.name')" class="text-left" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ line.projectModule.name }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('projectTask.name')" style="white-space: normal;" class="hoverable-cell">
-                <div class="row no-wrap items-center justify-between">
-                  <span
-                    v-if="preProjectTask !== line.projectTask.name || preProjectTaskDate !== props.row.dailyPlannerDate"
-                    :set="(preProjectTask = line.projectTask.name, preProjectTaskDate = props.row.dailyPlannerDate)"
-                    style="flex: 1; word-break: break-word; white-space: normal;"
-                    @click="onProjectTaskView(line.projectTask.id, refreshDailyPlannerList)"
+                  {{ col.label }}
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                <q-td :colspan="visibleColumnCount - 1" style="background: #dbf2ff;" class="text-center">
+                  {{ props.row.dailyPlannerDate }}
+                </q-td>
+                <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
+                  <q-icon
+                    name="o_forward"
+                    class="cursor-pointer q-mr-sm"
+                    :class="props.row.isForwordedToTimesheet ? 'hidden' : (storedUser.username === props.row.user.userName ? '' : 'hidden')"
+                    @click="onDailyPlannerEdit(props.row.id, 'isForwarded', refreshDailyPlannerList)"
                   >
-                    {{ line.projectTask.name }}
-                  </span>
-                </div>
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('projectActivity.name')"
-                class="text-left"
-                style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
-              >
-                {{ line.projectActivity.name }}
-                <q-icon
-                  v-if="line.activityNameDescription"
-                  name="o_info"
-                  size="15px"
-                  class="q-ml-sm"
+                    <q-tooltip>Forward To Timesheet</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    :class="storedUser.username === props.row.user.userName ? '' : 'hidden'"
+                    name="o_edit"
+                    class="cursor-pointer q-mr-sm"
+                    @click="onDailyPlannerEdit(props.row.id, 'isEdit', refreshDailyPlannerList)"
+                  >
+                    <q-tooltip>Edit</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    name="o_delete_outline"
+                    class="cursor-pointer"
+                    :class="storedUser.username === props.row.user.userName ? '' : 'hidden'" color="negative"
+                    @click="onSubmitDailyPlannerDelete(props.row.id, props.row.dailyPlannerDate, refreshDailyPlannerList)"
+                  >
+                    <q-tooltip>Delete</q-tooltip>
+                  </q-icon>
+                </q-td>
+              </q-tr>
+              <q-tr v-for="(line) in props.row.dailyPlannerLines" :key="line.id" :class="highlightedId == line.id ? 'highlight' : ''" :set="(preProjectName = null, preProjectTask = null, preProjectDate = null, preProjectTaskDate = null,resetTracking())">
+                <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
+                  <div class="row no-wrap items-center justify-between">
+                    <span v-if="preProjectName !== line.project.name || preProjectDate !== props.row.dailyPlannerDate" :set="(preProjectName = line.project.name, preProjectDate = props.row.dailyPlannerDate)" style="flex: 1; word-break: break-word; white-space: normal;" @click="onProjectView(line.project.id)">{{ line.project.name }}</span>
+                    <div v-if="shouldShowIcons(line.project.name, 'project', props.row.dailyPlannerDate)" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
+                      <q-icon
+                        name="o_radio_button_checked" size="xs"
+                        class="cursor-pointer"
+                        @click="setActiveRowIdInLocalStorage(line.id);
+                                $router.push({ path: '/project-center', state: { projectId: line.project.id } })"
+                      >
+                        <q-tooltip>Project Center</q-tooltip>
+                      </q-icon>
+                      <q-icon
+                        name="o_developer_board" size="xs"
+                        class="cursor-pointer"
+                        @click="setActiveRowIdInLocalStorage(line.id);
+                                $router.push({ path: '/project-planning/workboard', state: {projectId: line.project.id } })"
+                      >
+                        <q-tooltip>Work Board</q-tooltip>
+                      </q-icon>
+                    </div>
+                  </div>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('projectModule.name')" class="text-left" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ line.projectModule.name }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('projectTask.name')" style="white-space: normal;" class="hoverable-cell">
+                  <div class="row no-wrap items-center justify-between">
+                    <span
+                      v-if="preProjectTask !== line.projectTask.name || preProjectTaskDate !== props.row.dailyPlannerDate"
+                      :set="(preProjectTask = line.projectTask.name, preProjectTaskDate = props.row.dailyPlannerDate)"
+                      style="flex: 1; word-break: break-word; white-space: normal;"
+                      @click="onProjectTaskView(line.projectTask.id, refreshDailyPlannerList)"
+                    >
+                      {{ line.projectTask.name }}
+                    </span>
+                  </div>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('projectActivity.name')"
+                  class="text-left"
+                  style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
                 >
-                  <q-tooltip v-if="line.activityNameDescription" class="text-wrap break-words" max-width="300px">
-                    <div class="RichTextEditor" v-html="line.activityNameDescription" />
-                  </q-tooltip>
-                </q-icon>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('description')">
-                <div class="RichTextEditor" style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" v-html="line.description" />
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('createdById')" class="text-left" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.user.person.fullName }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('hours')" class="text-right">
-                {{ line.hours }}
-              </q-td>
-            </q-tr>
-            <q-tr>
-              <q-td :colspan="visibleColumnCount - 1" class="text-right">Total:</q-td>
-              <q-td class="text-right">
-                {{ calculateLineTotal(props.row.dailyPlannerLines) }}
-              </q-td>
-            </q-tr>
-            <q-tr v-if="props.pageIndex === rows.length - 1">
-              <q-td :colspan="visibleColumnCount - 1" class="text-right">Total Hours:</q-td>
-              <q-td class="text-right">
-                {{ calculateGrandTotal(rows) }}
-              </q-td>
-            </q-tr>
-            <q-separator />
-          </template>
-        </q-table>
+                  {{ line.projectActivity.name }}
+                  <q-icon
+                    v-if="line.activityNameDescription"
+                    name="o_info"
+                    size="15px"
+                    class="q-ml-sm"
+                  >
+                    <q-tooltip v-if="line.activityNameDescription" class="text-wrap break-words" max-width="300px">
+                      <div class="RichTextEditor" v-html="line.activityNameDescription" />
+                    </q-tooltip>
+                  </q-icon>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('description')">
+                  <div class="RichTextEditor" style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" v-html="line.description" />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('createdById')" class="text-left" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.user.person.fullName }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('hours')" class="text-right">
+                  {{ line.hours }}
+                </q-td>
+              </q-tr>
+              <q-tr>
+                <q-td :colspan="visibleColumnCount - 1" class="text-right">Total:</q-td>
+                <q-td class="text-right">
+                  {{ calculateLineTotal(props.row.dailyPlannerLines) }}
+                </q-td>
+              </q-tr>
+              <q-tr v-if="props.pageIndex === rows.length - 1">
+                <q-td :colspan="visibleColumnCount - 1" class="text-right">Total Hours:</q-td>
+                <q-td class="text-right">
+                  {{ calculateGrandTotal(rows) }}
+                </q-td>
+              </q-tr>
+              <q-separator />
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -435,7 +437,7 @@ const getDailyPlanners = async ({ pagination: p }) => {
   search.value.activityDate = isValidDate(search.value.activityDate) ? search.value.activityDate : null;
   search.value.toDate = isValidDate(search.value.toDate) ? search.value.toDate : null;
   search.value.fromDate = isValidDate(search.value.fromDate) ? search.value.fromDate : null;
-  
+
   const sorts = {};
   const multi = multiSort.value;
   for (let i = 0; i < multi.length; i++) {
@@ -770,7 +772,7 @@ onMounted(() => {
 
 </script>
 <style scoped>
-.Custom-DataTable {
+.table-my-daily-planner .Custom-DataTable {
   min-width: max-content;
 }
 </style>

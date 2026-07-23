@@ -338,509 +338,511 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getAllRequirement"
-        >
-        <template #loading>
-          <q-inner-loading showing color="primary">
-            <q-spinner-ios size="40px" class="q-mt-xl" />
-          </q-inner-loading>
-        </template>
-        <template #header="props">
-          <q-tr :props="props" class="bg-primary text-white">
-            <q-th auto-width class="text-center" />
-              <q-th
-                v-for="col in props.cols"
-                :key="col.name"
-                :props="props"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
-              >
-                {{ col.label }}
-                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-            <q-th auto-width class="text-center">Actions</q-th>
-          </q-tr>
-        </template>
-        <template #body="props">
-          <q-tr
-            :props="props"
-            :class="[
-               props.row.isPinned ? 'bg-amber-1' : '',
-              highlightedId == props.row.id ? 'highlight'
-                : (props.row.editingStatus === 2
-                    ? 'bg-cyan-1'
-                    : '')
-            ]"
-            :set="(preProjectName = null, resetTracking())"
+      <div class="table-requirement">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getAllRequirement"
           >
-            <q-td>
-              <div
-                v-if="props.row.requirementColor"
-                :style="{
-                  borderLeft: '5px solid ' + props.row.requirementColor,
-                  width: '5px',
-                  height: '100%',
-                  position: 'absolute',
-                  left: '0px',
-                  top: '0px',
-                  zIndex: 1
-                }"
-              >
-                <q-tooltip>Requirement Color: {{ props.row.requirementColor }}</q-tooltip>
-              </div>
-              <q-icon
-                v-if="props.row.isPinned && props.row.isEditable"
-                name="o_push_pin"
-                size="xs"
-                class="q-mr-xs hoverable-cell"
-                @click="() => { onSubmitRequirementPinned(props.row.id, !props.row.isPinned, refreshRequirementList); }"
-              >
-                <q-tooltip>Click to unpin</q-tooltip>
-              </q-icon>
-              <q-icon
-                v-if="props.row.isPinned && !props.row.isEditable"
-                name="o_push_pin"
-                size="xs"
-                class="q-mr-xs"
-              >
-                <q-tooltip>Requirement Pinned</q-tooltip>
-              </q-icon>
-              <q-checkbox
-                v-model="props.row.checkboxStatus"
-                size="sm"
-                @update:model-value="onSelectCheckbox(props.row.projectId, props.row.project.name, props.row.id, props.row.title, $event)"
-              />
-            </q-td>
-            <q-td v-if="selectedColumnNames.includes('requirementNumber')" class="text-right">
-              #{{ props.row.requirementNumber }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('project.name')"
-              class="common-q-td hoverable-cell"
-            >
-              <div class="row no-wrap items-center justify-between">
-                <span>
-                  <span
-                    v-if="preProjectName !== props.row.project.name"
-                    :set="preProjectName = props.row.project.name"
-                    @click="onProjectView(props.row.project.id)"
-                  >
-                    {{ props.row.project.name }}
-                  </span>
-                </span>
-                <div
-                  v-if="shouldShowIcons(props.row.project.name, index)"
-                  class="row items-center q-gutter-sm q-ml-sm"
-                  style="flex-shrink: 0;"
+          <template #loading>
+            <q-inner-loading showing color="primary">
+              <q-spinner-ios size="40px" class="q-mt-xl" />
+            </q-inner-loading>
+          </template>
+          <template #header="props">
+            <q-tr :props="props" class="bg-primary text-white">
+              <q-th auto-width class="text-center" />
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
                 >
-                  <q-icon
-                    name="o_radio_button_checked"
-                    size="xs" class="cursor-pointer"
-                    @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
-                  >
-                    <q-tooltip>Project Center</q-tooltip>
-                  </q-icon>
-                  <q-icon v-if="props.row.isEditable" name="o_developer_board" size="xs" class="cursor-pointer hidden" @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })">
-                    <q-tooltip>Work Board</q-tooltip>
-                  </q-icon>
+                  {{ col.label }}
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+              <q-th auto-width class="text-center">Actions</q-th>
+            </q-tr>
+          </template>
+          <template #body="props">
+            <q-tr
+              :props="props"
+              :class="[
+                props.row.isPinned ? 'bg-amber-1' : '',
+                highlightedId == props.row.id ? 'highlight'
+                  : (props.row.editingStatus === 2
+                      ? 'bg-cyan-1'
+                      : '')
+              ]"
+              :set="(preProjectName = null, resetTracking())"
+            >
+              <q-td>
+                <div
+                  v-if="props.row.requirementColor"
+                  :style="{
+                    borderLeft: '5px solid ' + props.row.requirementColor,
+                    width: '5px',
+                    height: '100%',
+                    position: 'absolute',
+                    left: '0px',
+                    top: '0px',
+                    zIndex: 1
+                  }"
+                >
+                  <q-tooltip>Requirement Color: {{ props.row.requirementColor }}</q-tooltip>
                 </div>
-              </div>
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('projectModule.name')"
-              class="common-q-td"
-            >
-              {{ props.row.projectModule.name }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('title')"
-              class="common-q-td hoverable-cell"
-            >
-              <span
-                class="cursor-pointer"
-                @click="onRequirementView(props.row.id)"
+                <q-icon
+                  v-if="props.row.isPinned && props.row.isEditable"
+                  name="o_push_pin"
+                  size="xs"
+                  class="q-mr-xs hoverable-cell"
+                  @click="() => { onSubmitRequirementPinned(props.row.id, !props.row.isPinned, refreshRequirementList); }"
+                >
+                  <q-tooltip>Click to unpin</q-tooltip>
+                </q-icon>
+                <q-icon
+                  v-if="props.row.isPinned && !props.row.isEditable"
+                  name="o_push_pin"
+                  size="xs"
+                  class="q-mr-xs"
+                >
+                  <q-tooltip>Requirement Pinned</q-tooltip>
+                </q-icon>
+                <q-checkbox
+                  v-model="props.row.checkboxStatus"
+                  size="sm"
+                  @update:model-value="onSelectCheckbox(props.row.projectId, props.row.project.name, props.row.id, props.row.title, $event)"
+                />
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('requirementNumber')" class="text-right">
+                #{{ props.row.requirementNumber }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('project.name')"
+                class="common-q-td hoverable-cell"
               >
-                {{ props.row.title }}
-              </span>
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('projectTaskRelatedMappings')"
-              class="common-q-td hoverable-cell"
-            >
-              <span v-if="props.row.projectTaskRelatedMappings?.length">
-                <template v-for="(item, index) in props.row.projectTaskRelatedMappings" :key="index">
-                  <span class="hoverable-cell" style="cursor: pointer;" @click="onProjectTaskView(item.taskId)">#{{ item.projectTask?.projectTaskNumber }}
-                    <span v-if="item.projectTask?.status">
-                      ({{ item.projectTask.status.dropDownValue }})
+                <div class="row no-wrap items-center justify-between">
+                  <span>
+                    <span
+                      v-if="preProjectName !== props.row.project.name"
+                      :set="preProjectName = props.row.project.name"
+                      @click="onProjectView(props.row.project.id)"
+                    >
+                      {{ props.row.project.name }}
                     </span>
                   </span>
-                  <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">, </span>
-                  <br>
-                </template>
-              </span>
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('editingStatus')"
-              class="common-q-td"
-            >
-              {{ props.row.editingStatus === 1 ? 'Draft' : 'Confirmed' }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('status.dropDownValue')"
-              class="common-q-td"
-              :class="{ 'hoverable-cell' : props.row.isEditable }"
-              @click="activeEdit = { rowId: props.row.id, field: 'status' }"
-            >
-              <quickEditSingleSelect
-                field="status"
-                :row-id="props.row.id"
-                :value="props.row.status.id"
-                :display-value="props.row.status.dropDownValue"
-                :editable="props.row.isEditable"
-                :options="requirementStatusDropdownSingleSelect.list.value"
-                :active-edit="activeEdit"
-                :show-history="true"
-                :disable="props.row.editingStatus === 1"
-                @filter="requirementStatusDropdownSingleSelect.filter"
-                @cancel="activeEdit = { rowId: null, field: null }"
-                @submit="({ rowId, value }) => onSubmitRequirementStatus(rowId, value, refreshRequirementList)"
-                @history="() => onSiteModifiedLog(props.row.id, props.row.status.dropDownValue, 'Requirement Status')"
-              />
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('priority.dropDownValue')"
-              class="common-q-td"
-              :class="{ 'hoverable-cell' : props.row.isEditable }"
-              @click="activeEdit = { rowId: props.row.id, field: 'priority' }"
-            >
-              <quickEditSingleSelect
-                field="priority"
-                :row-id="props.row.id"
-                :value="props.row.priority.id"
-                :display-value="props.row.priority.dropDownValue"
-                :editable="props.row.isEditable"
-                :options="requirementPriorityDropdownSingleSelect.list.value"
-                :active-edit="activeEdit"
-                :show-history="true"
-                @filter="requirementPriorityDropdownSingleSelect.filter"
-                @cancel="activeEdit = { rowId: null, field: null }"
-                @submit="({ rowId, value }) => onSubmitRequirementPriority(rowId, value, refreshRequirementList)"
-                @history="() => onSiteModifiedLog(props.row.id, props.row.priority.dropDownValue, 'Requirement Priority')"
-              />
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('userType.dropDownValue')"
-              class="common-q-td"
-            >
-                {{ props.row.userType.dropDownValue }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('employee.person.firstName')"
-              class="common-q-td">
-              {{ props.row.userType.dropDownValue === 'Customer' ? (props.row.customer && props.row.customer.fullName ? props.row.customer.fullName : 'N/A') : (props.row.employee && props.row.employee.person && props.row.employee.person.fullName ? props.row.employee.person.fullName : 'N/A') }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('identifiedDate')"
-              class="common-q-td text-center"
-            >
-                {{ props.row.identifiedDate }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('requirementTags')"
-              class="common-q-td"
-              :class="{ 'hoverable-cell' : props.row.isEditable }"
-            >
-              <div v-if="props.row.requirementTags?.length">
-                <div class="row items-center q-gutter-xs">
-                  <q-chip
-                    v-for="(tag, i) in showAllTagsRowId === props.row.id ? props.row.requirementTags : props.row.requirementTags.slice(0, 5)"
-                    :key="i"
-                    dense
-                    removable
-                    :style="{
-                      backgroundColor: tag.bgColor,
-                      color: tag.color,
-                      padding: '4px 8px',
-                      maxWidth: '100%',
-                      wordBreak: 'break-word'
-                    }"
-                    @remove="onDeleteRequirementTag(props.row, tag)"
+                  <div
+                    v-if="shouldShowIcons(props.row.project.name, index)"
+                    class="row items-center q-gutter-sm q-ml-sm"
+                    style="flex-shrink: 0;"
                   >
-                    {{ tag.text }}
-                  </q-chip>
-                  <!-- Show "more" or "less" toggle -->
-                  <q-btn v-if="props.row.requirementTags.length > 5" dense flat size="sm" @click.stop="toggleShowAllTags(props.row.id)">
-                    <template v-if="showAllTagsRowId === props.row.id">
-                      <!-- <q-icon name="o_arrow_back" /> -->
-                      <q-chip color="gray" size="sm" text-color="black" class="q-pa-xs text-caption" style="height: 16px; min-width: 16px;">
-                        -{{ props.row.requirementTags.length - 5 }}
-                      </q-chip>
-                    </template>
-                    <template v-else>
-                      <div class="row items-center no-wrap">
-                        <span class="">...</span>
-                        <q-chip color="gray" size="sm" text-color="black" class="q-pa-xs text-caption" style="height: 16px; min-width: 16px;">
-                          +{{ props.row.requirementTags.length - 5 }}
-                        </q-chip>
-                      </div>
-                    </template>
-                  </q-btn>
+                    <q-icon
+                      name="o_radio_button_checked"
+                      size="xs" class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                    >
+                      <q-tooltip>Project Center</q-tooltip>
+                    </q-icon>
+                    <q-icon v-if="props.row.isEditable" name="o_developer_board" size="xs" class="cursor-pointer hidden" @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })">
+                      <q-tooltip>Work Board</q-tooltip>
+                    </q-icon>
+                  </div>
                 </div>
-              </div>
-              <!-- q-popup-edit to edit tags -->
-              <q-popup-edit
-                v-if="props.row.isEditable"
-                v-slot="scope"
-                v-model="props.row.requirementTags"
-                class="common-q-td small-popup-title"
-                style="width: 300px;"
-                @save="val => { props.row.requirementTags = val; onSubmitRequirementTags(props.row.id, val, refreshRequirementList, refreshRequirementTagDropdown);}"
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('projectModule.name')"
+                class="common-q-td"
               >
-                <div class="row justify-between items-center q-mb-sm">
-                  <div class="text-subtitle2">Update Tags</div>
-                  <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
-                </div>
-                <TagEditor
-                  v-model="scope.value"
+                {{ props.row.projectModule.name }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('title')"
+                class="common-q-td hoverable-cell"
+              >
+                <span
+                  class="cursor-pointer"
+                  @click="onRequirementView(props.row.id)"
+                >
+                  {{ props.row.title }}
+                </span>
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('projectTaskRelatedMappings')"
+                class="common-q-td hoverable-cell"
+              >
+                <span v-if="props.row.projectTaskRelatedMappings?.length">
+                  <template v-for="(item, index) in props.row.projectTaskRelatedMappings" :key="index">
+                    <span class="hoverable-cell" style="cursor: pointer;" @click="onProjectTaskView(item.taskId)">#{{ item.projectTask?.projectTaskNumber }}
+                      <span v-if="item.projectTask?.status">
+                        ({{ item.projectTask.status.dropDownValue }})
+                      </span>
+                    </span>
+                    <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">, </span>
+                    <br>
+                  </template>
+                </span>
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('editingStatus')"
+                class="common-q-td"
+              >
+                {{ props.row.editingStatus === 1 ? 'Draft' : 'Confirmed' }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('status.dropDownValue')"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : props.row.isEditable }"
+                @click="activeEdit = { rowId: props.row.id, field: 'status' }"
+              >
+                <quickEditSingleSelect
+                  field="status"
                   :row-id="props.row.id"
-                  :available-tags="tagsDropdown.list.value"
-                  :clearable="false"
-                  @filter="tagsDropdown.filter"
+                  :value="props.row.status.id"
+                  :display-value="props.row.status.dropDownValue"
+                  :editable="props.row.isEditable"
+                  :options="requirementStatusDropdownSingleSelect.list.value"
+                  :active-edit="activeEdit"
+                  :show-history="true"
+                  :disable="props.row.editingStatus === 1"
+                  @filter="requirementStatusDropdownSingleSelect.filter"
+                  @cancel="activeEdit = { rowId: null, field: null }"
+                  @submit="({ rowId, value }) => onSubmitRequirementStatus(rowId, value, refreshRequirementList)"
+                  @history="() => onSiteModifiedLog(props.row.id, props.row.status.dropDownValue, 'Requirement Status')"
                 />
-                <div class="row justify-end q-gutter-sm q-mt-sm">
-                  <q-btn v-close-popup label="Cancel" color="grey" flat dense />
-                  <q-btn label="Set" color="primary" dense @click="scope.set()" />
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('priority.dropDownValue')"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : props.row.isEditable }"
+                @click="activeEdit = { rowId: props.row.id, field: 'priority' }"
+              >
+                <quickEditSingleSelect
+                  field="priority"
+                  :row-id="props.row.id"
+                  :value="props.row.priority.id"
+                  :display-value="props.row.priority.dropDownValue"
+                  :editable="props.row.isEditable"
+                  :options="requirementPriorityDropdownSingleSelect.list.value"
+                  :active-edit="activeEdit"
+                  :show-history="true"
+                  @filter="requirementPriorityDropdownSingleSelect.filter"
+                  @cancel="activeEdit = { rowId: null, field: null }"
+                  @submit="({ rowId, value }) => onSubmitRequirementPriority(rowId, value, refreshRequirementList)"
+                  @history="() => onSiteModifiedLog(props.row.id, props.row.priority.dropDownValue, 'Requirement Priority')"
+                />
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('userType.dropDownValue')"
+                class="common-q-td"
+              >
+                  {{ props.row.userType.dropDownValue }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('employee.person.firstName')"
+                class="common-q-td">
+                {{ props.row.userType.dropDownValue === 'Customer' ? (props.row.customer && props.row.customer.fullName ? props.row.customer.fullName : 'N/A') : (props.row.employee && props.row.employee.person && props.row.employee.person.fullName ? props.row.employee.person.fullName : 'N/A') }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('identifiedDate')"
+                class="common-q-td text-center"
+              >
+                  {{ props.row.identifiedDate }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('requirementTags')"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : props.row.isEditable }"
+              >
+                <div v-if="props.row.requirementTags?.length">
+                  <div class="row items-center q-gutter-xs">
+                    <q-chip
+                      v-for="(tag, i) in showAllTagsRowId === props.row.id ? props.row.requirementTags : props.row.requirementTags.slice(0, 5)"
+                      :key="i"
+                      dense
+                      removable
+                      :style="{
+                        backgroundColor: tag.bgColor,
+                        color: tag.color,
+                        padding: '4px 8px',
+                        maxWidth: '100%',
+                        wordBreak: 'break-word'
+                      }"
+                      @remove="onDeleteRequirementTag(props.row, tag)"
+                    >
+                      {{ tag.text }}
+                    </q-chip>
+                    <!-- Show "more" or "less" toggle -->
+                    <q-btn v-if="props.row.requirementTags.length > 5" dense flat size="sm" @click.stop="toggleShowAllTags(props.row.id)">
+                      <template v-if="showAllTagsRowId === props.row.id">
+                        <!-- <q-icon name="o_arrow_back" /> -->
+                        <q-chip color="gray" size="sm" text-color="black" class="q-pa-xs text-caption" style="height: 16px; min-width: 16px;">
+                          -{{ props.row.requirementTags.length - 5 }}
+                        </q-chip>
+                      </template>
+                      <template v-else>
+                        <div class="row items-center no-wrap">
+                          <span class="">...</span>
+                          <q-chip color="gray" size="sm" text-color="black" class="q-pa-xs text-caption" style="height: 16px; min-width: 16px;">
+                            +{{ props.row.requirementTags.length - 5 }}
+                          </q-chip>
+                        </div>
+                      </template>
+                    </q-btn>
+                  </div>
                 </div>
-              </q-popup-edit>
-              <q-tooltip v-if="props.row.isEditable">Click to edit</q-tooltip>
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('requirementType.dropDownValue')"
-              class="common-q-td"
-            >
-                {{ props.row.requirementType.dropDownValue }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('area.dropDownValue')"
-              class="common-q-td"
-            >
-                {{ props.row.area.dropDownValue }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('workspace.dropDownValue')"
-              class="common-q-td"
-            >
-                {{ props.row.workspace.dropDownValue }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('requirementEntered.person.firstName')"
-              class="common-q-td"
-            >
-                {{ props.row.requirementEntered.person.fullName}}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('approvalStatusDropDown.dropDownValue')"
-              class="common-q-td"
-            >
-                {{ props.row.approvalStatusDropDown.dropDownValue }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('lastNote')"
-              class="common-q-td hoverable-cell"
-            >
-              <span
-                @click="onNoteTimelineView(
-                props.row.id,
-                'Requirement',
-                `${props.row.project.name} : ${props.row.title}`
-                )"
+                <!-- q-popup-edit to edit tags -->
+                <q-popup-edit
+                  v-if="props.row.isEditable"
+                  v-slot="scope"
+                  v-model="props.row.requirementTags"
+                  class="common-q-td small-popup-title"
+                  style="width: 300px;"
+                  @save="val => { props.row.requirementTags = val; onSubmitRequirementTags(props.row.id, val, refreshRequirementList, refreshRequirementTagDropdown);}"
+                >
+                  <div class="row justify-between items-center q-mb-sm">
+                    <div class="text-subtitle2">Update Tags</div>
+                    <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                  </div>
+                  <TagEditor
+                    v-model="scope.value"
+                    :row-id="props.row.id"
+                    :available-tags="tagsDropdown.list.value"
+                    :clearable="false"
+                    @filter="tagsDropdown.filter"
+                  />
+                  <div class="row justify-end q-gutter-sm q-mt-sm">
+                    <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                    <q-btn label="Set" color="primary" dense @click="scope.set()" />
+                  </div>
+                </q-popup-edit>
+                <q-tooltip v-if="props.row.isEditable">Click to edit</q-tooltip>
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('requirementType.dropDownValue')"
+                class="common-q-td"
               >
-                {{ truncateText(props.row.lastNote) }}
-                <q-tooltip>
-                  View Notes
-                </q-tooltip>
-              </span>
-            </q-td>
-             <q-td
-              v-if="selectedColumnNames.includes('plannedStartDate')"
-              class="common-q-td text-center"
-            >
-                {{ props.row.plannedStartDate }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('plannedEndDate')"
-              class="common-q-td text-center"
-            >
-                {{ props.row.plannedEndDate }}
-            </q-td>
-             <q-td
-              v-if="selectedColumnNames.includes('actualStartDate')"
-              class="common-q-td text-center"
-            >
-                {{ props.row.actualStartDate }}
-            </q-td>
-             <q-td
-              v-if="selectedColumnNames.includes('actualEndDate')"
-              class="common-q-td text-center"
-            >
-                {{ props.row.actualEndDate }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('confirmedBy.person.firstName')"
-              class="common-q-td"
-            >
-                {{ props.row.confirmedBy.person.fullName}}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('approvedBy.person.firstName')"
-              class="common-q-td"
-            >
-                {{ props.row.approvedBy.person.fullName}}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('createdBy.person.firstName')"
-              class="common-q-td"
-            >
-              {{ props.row.createdBy.person.fullName }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('createdOnUtc')"
-              class="common-q-td"
-            >
-              {{ props.row.createdOnUtc }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
-              class="common-q-td"
-            >
-              {{ props.row.updatedBy.person.fullName }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('updatedOnUtc')"
-              class="common-q-td"
-            >
-              {{ props.row.updatedOnUtc }}
-            </q-td>
-            <q-td class="text-center actions">
-              <a
-                v-if="props.row.isEditable || props.row.isNotes"
-                style="position: relative;"
-                class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
-                @click="onNoteAdd(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, `${props.row.project.name} : ${props.row.title}`, refreshRequirementList)"
+                  {{ props.row.requirementType.dropDownValue }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('area.dropDownValue')"
+                class="common-q-td"
               >
-                <q-tooltip anchor="bottom middle" self="top middle">
-                  Note
-                </q-tooltip>
-                <q-icon name="o_assignment" />
-                <q-badge
-                  v-if="props.row.requirementNotesCount > 0"
-                  style="position: absolute; right: -16px; top: -15px;"
-                  color="green"
-                  text-color="white"
-                  :label="props.row.requirementNotesCount"
-                />
-              </a>
-              <q-btn dense flat icon="o_more_vert" color="primary">
-                <q-tooltip>More Options</q-tooltip>
-                <q-menu auto-close>
-                  <q-list style="min-width: 180px">
-                    <q-item
-                      v-ripple
-                      clickable
-                      @click="onRequirementView(props.row.id)"
-                    >
-                      <q-item-section avatar><q-icon name="o_visibility" size="xs" /></q-item-section>
-                      <q-item-section>View</q-item-section>
-                    </q-item>
-                    <q-item
-                      v-if="props.row.isEditable"
-                      v-ripple
-                      clickable
-                      @click="onRequirementEdit(props.row.id, refreshRequirementList)"
-                    >
-                      <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
-                      <q-item-section>Edit</q-item-section>
+                  {{ props.row.area.dropDownValue }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('workspace.dropDownValue')"
+                class="common-q-td"
+              >
+                  {{ props.row.workspace.dropDownValue }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('requirementEntered.person.firstName')"
+                class="common-q-td"
+              >
+                  {{ props.row.requirementEntered.person.fullName}}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('approvalStatusDropDown.dropDownValue')"
+                class="common-q-td"
+              >
+                  {{ props.row.approvalStatusDropDown.dropDownValue }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('lastNote')"
+                class="common-q-td hoverable-cell"
+              >
+                <span
+                  @click="onNoteTimelineView(
+                  props.row.id,
+                  'Requirement',
+                  `${props.row.project.name} : ${props.row.title}`
+                  )"
+                >
+                  {{ truncateText(props.row.lastNote) }}
+                  <q-tooltip>
+                    View Notes
+                  </q-tooltip>
+                </span>
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('plannedStartDate')"
+                class="common-q-td text-center"
+              >
+                  {{ props.row.plannedStartDate }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('plannedEndDate')"
+                class="common-q-td text-center"
+              >
+                  {{ props.row.plannedEndDate }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('actualStartDate')"
+                class="common-q-td text-center"
+              >
+                  {{ props.row.actualStartDate }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('actualEndDate')"
+                class="common-q-td text-center"
+              >
+                  {{ props.row.actualEndDate }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('confirmedBy.person.firstName')"
+                class="common-q-td"
+              >
+                  {{ props.row.confirmedBy.person.fullName}}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('approvedBy.person.firstName')"
+                class="common-q-td"
+              >
+                  {{ props.row.approvedBy.person.fullName}}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.createdBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('createdOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.createdOnUtc }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedBy.person.fullName }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('updatedOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedOnUtc }}
+              </q-td>
+              <q-td class="text-center actions">
+                <a
+                  v-if="props.row.isEditable || props.row.isNotes"
+                  style="position: relative;"
+                  class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
+                  @click="onNoteAdd(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, `${props.row.project.name} : ${props.row.title}`, refreshRequirementList)"
+                >
+                  <q-tooltip anchor="bottom middle" self="top middle">
+                    Note
+                  </q-tooltip>
+                  <q-icon name="o_assignment" />
+                  <q-badge
+                    v-if="props.row.requirementNotesCount > 0"
+                    style="position: absolute; right: -16px; top: -15px;"
+                    color="green"
+                    text-color="white"
+                    :label="props.row.requirementNotesCount"
+                  />
+                </a>
+                <q-btn dense flat icon="o_more_vert" color="primary">
+                  <q-tooltip>More Options</q-tooltip>
+                  <q-menu auto-close>
+                    <q-list style="min-width: 180px">
+                      <q-item
+                        v-ripple
+                        clickable
+                        @click="onRequirementView(props.row.id)"
+                      >
+                        <q-item-section avatar><q-icon name="o_visibility" size="xs" /></q-item-section>
+                        <q-item-section>View</q-item-section>
                       </q-item>
-                    <q-item
-                      v-if="props.row.isEditable"
-                      v-ripple clickable
-                      @click="onConvertToTask(props.row.id, props.row.project.id, props.row.projectModule.id, props.row.title, true)"
-                    >
-                      <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
-                      <q-item-section>Convert into Task</q-item-section>
-                    </q-item>
-                    <q-item v-if="props.row.isEditable">
-                      <q-item-section avatar>
-                      <q-icon v-if="props.row.requirementColor" name="o_circle" :style="`border-radius:50%;color:${props.row.requirementColor}; background-color:${props.row.requirementColor};`" size="xs" />
-                      <q-icon v-else name="o_question_mark" size="xs" />
-                      </q-item-section>
-                      <q-item-section class="row items-center" style="display: flex; align-items: center; justify-content: start; flex-direction: row;">
-                        Color
-                        <q-icon
-                          name="o_colorize"
-                          class="cursor-pointer q-ml-xs"
-                          size="xs"
-                          @click.stop="onRestorePreviousRequirementColor(props.row.requirementColor)"
-                        >
-                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                            <q-color
-                              v-model="props.row.requirementColor"
-                              no-header
-                              no-footer
-                              default-view="palette"
-                              class="my-picker"
-                              @update:model-value="onStartRequirementColorSelection"
-                                @change="onSubmitRequirementColor(props.row.id, props.row.requirementColor, isSliderActive, previousColor, refreshRequirementList)"
-                            />
-                          </q-popup-proxy>
-                        </q-icon>
-                      </q-item-section>
-                    </q-item>
-                    <q-item
-                      v-if="props.row.isEditable" v-ripple clickable
-                      @click="() => { onSubmitRequirementPinned(props.row.id, !props.row.isPinned, refreshRequirementList); }"
-                    >
-                      <q-item-section avatar>
-                        <q-icon :name="props.row.isPinned ? 'o_push_pin' : 'o_push_pin'" size="xs" />
-                      </q-item-section>
-                      <q-item-section>
-                        {{ props.row.isPinned ? "Unpin" : "Pin" }}
-                      </q-item-section>
-                    </q-item>
-                    <q-item
-                      v-if="props.row.isEditable"
-                      v-ripple
-                      clickable
-                      @click="onSubmitRequirementDelete(props.row.id, props.row.title, refreshRequirementList)"
-                    >
-                      <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
-                      <q-item-section class="text-negative">Delete</q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-menu>
-              </q-btn>
-            </q-td>
-          </q-tr>
-          <q-separator />
-        </template>
-        </q-table>
+                      <q-item
+                        v-if="props.row.isEditable"
+                        v-ripple
+                        clickable
+                        @click="onRequirementEdit(props.row.id, refreshRequirementList)"
+                      >
+                        <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
+                        <q-item-section>Edit</q-item-section>
+                        </q-item>
+                      <q-item
+                        v-if="props.row.isEditable"
+                        v-ripple clickable
+                        @click="onConvertToTask(props.row.id, props.row.project.id, props.row.projectModule.id, props.row.title, true)"
+                      >
+                        <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
+                        <q-item-section>Convert into Task</q-item-section>
+                      </q-item>
+                      <q-item v-if="props.row.isEditable">
+                        <q-item-section avatar>
+                        <q-icon v-if="props.row.requirementColor" name="o_circle" :style="`border-radius:50%;color:${props.row.requirementColor}; background-color:${props.row.requirementColor};`" size="xs" />
+                        <q-icon v-else name="o_question_mark" size="xs" />
+                        </q-item-section>
+                        <q-item-section class="row items-center" style="display: flex; align-items: center; justify-content: start; flex-direction: row;">
+                          Color
+                          <q-icon
+                            name="o_colorize"
+                            class="cursor-pointer q-ml-xs"
+                            size="xs"
+                            @click.stop="onRestorePreviousRequirementColor(props.row.requirementColor)"
+                          >
+                            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                              <q-color
+                                v-model="props.row.requirementColor"
+                                no-header
+                                no-footer
+                                default-view="palette"
+                                class="my-picker"
+                                @update:model-value="onStartRequirementColorSelection"
+                                  @change="onSubmitRequirementColor(props.row.id, props.row.requirementColor, isSliderActive, previousColor, refreshRequirementList)"
+                              />
+                            </q-popup-proxy>
+                          </q-icon>
+                        </q-item-section>
+                      </q-item>
+                      <q-item
+                        v-if="props.row.isEditable" v-ripple clickable
+                        @click="() => { onSubmitRequirementPinned(props.row.id, !props.row.isPinned, refreshRequirementList); }"
+                      >
+                        <q-item-section avatar>
+                          <q-icon :name="props.row.isPinned ? 'o_push_pin' : 'o_push_pin'" size="xs" />
+                        </q-item-section>
+                        <q-item-section>
+                          {{ props.row.isPinned ? "Unpin" : "Pin" }}
+                        </q-item-section>
+                      </q-item>
+                      <q-item
+                        v-if="props.row.isEditable"
+                        v-ripple
+                        clickable
+                        @click="onSubmitRequirementDelete(props.row.id, props.row.title, refreshRequirementList)"
+                      >
+                        <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
+                        <q-item-section class="text-negative">Delete</q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-menu>
+                </q-btn>
+              </q-td>
+            </q-tr>
+            <q-separator />
+          </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -1762,7 +1764,7 @@ onMounted(async () =>  {
 });
 </script>
 <style scoped>
-.Custom-DataTable {
+.table-requirement .Custom-DataTable {
   min-width: max-content;
 }
 </style>

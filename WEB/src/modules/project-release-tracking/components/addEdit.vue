@@ -478,6 +478,7 @@ const getReleaseTrackingInDetailsById = async (releaseTrackingId) => {
     model.value.approverId = resp.approver?.id;
     model.value.testerId = resp.tester?.id;
     model.value.releaseTypeId = resp.releaseType?.id;
+    model.value.description = resp.description ? resp.description : null;
     model.value.plannedReleaseDateStr = resp.plannedReleaseDate
       ? format(resp.plannedReleaseDate, "MM/dd/yyyy")
       : "";

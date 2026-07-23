@@ -134,163 +134,165 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getLeads"
-        >
-          <template #loading>
-            <q-inner-loading showing color="primary">
-              <q-spinner-ios size="40px" class="q-mt-xl" />
-            </q-inner-loading>
-          </template>
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <!-- <q-th auto-width class="text-center" /> -->
-                <q-th
-                  v-for="col in props.cols"
-                  :key="col.name"
-                  :props="props"
-                  :style="{
-                    width: (resizeWidths?.[col.name] || 120) + 'px',
-                    minWidth: '80px',
-                    position: 'relative'
-                  }"
-                  @click="!isResizing && col.sortable"
+      <div class="table-lead">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getLeads"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary">
+                <q-spinner-ios size="40px" class="q-mt-xl" />
+              </q-inner-loading>
+            </template>
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <!-- <q-th auto-width class="text-center" /> -->
+                  <q-th
+                    v-for="col in props.cols"
+                    :key="col.name"
+                    :props="props"
+                    :style="{
+                      width: (resizeWidths?.[col.name] || 120) + 'px',
+                      minWidth: '80px',
+                      position: 'relative'
+                    }"
+                    @click="!isResizing && col.sortable"
+                  >
+                    {{ col.label }}
+                    <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                  </q-th>
+                <q-th auto-width class="text-center">Actions</q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
+                <q-td v-if="selectedColumnNames.includes('person.firstName')">
+                  {{ props.row.person.fullName }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('company.name')">
+                  {{ props.row.company.name }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('leadGroup.dropDownValue')">
+                  {{ props.row.leadGroup.dropDownValue }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('leadSources.dropDownValue')">
+                  {{ props.row.leadSources.dropDownValue }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('person.primaryPhoneNumber')">
+                  {{ props.row.person.primaryPhoneNumber }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('person.primaryEmailAddress')">
+                  {{ props.row.person.primaryEmailAddress }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('recentActivityNote')" class="hoverable-cell">
+                  <span
+                    @click="onActivityNoteTimelineView(
+                    props.row.id,
+                    `${props.row.person.fullName} : ${props.row.company.name}`
+                    )"
+                  >
+                    {{ truncateText(props.row.leadActivityLogs?.[0]?.activityNote)  }}
+                    <q-tooltip>
+                      View Activity Notes
+                    </q-tooltip>
+                  </span>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('leadArrivalDate')" class="text-center">
+                  {{ props.row.leadArrivalDate }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('leadReference')">
+                  {{ props.row.leadReference }}
+                </q-td>
+                  <q-td
+                  v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                  class="common-q-td"
                 >
-                  {{ col.label }}
-                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-                </q-th>
-              <q-th auto-width class="text-center">Actions</q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
-              <q-td v-if="selectedColumnNames.includes('person.firstName')">
-                {{ props.row.person.fullName }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('company.name')">
-                {{ props.row.company.name }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('leadGroup.dropDownValue')">
-                {{ props.row.leadGroup.dropDownValue }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('leadSources.dropDownValue')">
-                {{ props.row.leadSources.dropDownValue }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('person.primaryPhoneNumber')">
-                {{ props.row.person.primaryPhoneNumber }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('person.primaryEmailAddress')">
-                {{ props.row.person.primaryEmailAddress }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('recentActivityNote')" class="hoverable-cell">
-                <span
-                  @click="onActivityNoteTimelineView(
-                  props.row.id,
-                  `${props.row.person.fullName} : ${props.row.company.name}`
-                  )"
-                >
-                  {{ truncateText(props.row.leadActivityLogs?.[0]?.activityNote)  }}
-                  <q-tooltip>
-                    View Activity Notes
-                  </q-tooltip>
-                </span>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('leadArrivalDate')" class="text-center">
-                {{ props.row.leadArrivalDate }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('leadReference')">
-                {{ props.row.leadReference }}
-              </q-td>
+                  {{ props.row.createdBy.person.fullName }}
+                </q-td>
                 <q-td
-                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
-                class="common-q-td"
-              >
-                {{ props.row.createdBy.person.fullName }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('createdOnUtc')"
-                class="common-q-td"
-              >
-                {{ props.row.createdOnUtc }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedBy.person.fullName }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedOnUtc')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedOnUtc }}
-              </q-td>
-              <q-td auto-width class="text-center actions">
-                <a
-                  style="position: relative;"
-                  color="negative"
-                  class="q-icon notranslate cursor-pointer q-mr-md"
-                  @click="onLeadAddActivity(props.row.id, `${props.row.person.fullName} : ${props.row.company.name}`, refreshLeadList)"
+                  v-if="selectedColumnNames.includes('createdOnUtc')"
+                  class="common-q-td"
                 >
-                  <q-tooltip>Add Activity</q-tooltip>
-                  <q-badge style="position: absolute;right: -16px;top: -15px;" color="green" text-color="white" :class="props.row.leadActivityLogs.length == 0 ? 'hidden': ''" :label="props.row.leadActivityLogs.length" />
-                  <i class="fas fa-plus" />
-                </a>
-                <q-icon
-                  name="o_visibility"
-                  class="cursor-pointer q-mr-sm"
-                  @click="onLeadView(props.row.id)"
+                  {{ props.row.createdOnUtc }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                  class="common-q-td"
                 >
-                  <q-tooltip>View</q-tooltip>
-                </q-icon>
-                <q-icon
-                  name="o_edit"
-                  class="cursor-pointer q-mr-sm"
-                  @click="onLeadEdit(props.row.id, refreshLeadList)"
+                  {{ props.row.updatedBy.person.fullName }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedOnUtc')"
+                  class="common-q-td"
                 >
-                  <q-tooltip>Edit</q-tooltip>
-                </q-icon>
-                <a
-                  style="position: relative;"
-                  class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
-                  @click="onNoteAdd(props.row.id, 'Lead', props.row.id, props.row.name, props.row.name, '', refreshLeadList)"
-                >
-                  <q-tooltip anchor="bottom middle" self="top middle">
-                    Note
-                  </q-tooltip>
-                  <q-icon name="o_assignment" />
-                  <q-badge
-                    v-if="props.row.leadNotesCount > 0"
-                    style="position: absolute; right: -16px; top: -15px;"
-                    color="green"
-                    text-color="white"
-                    :label="props.row.leadNotesCount"
-                  />
-                </a>
-                <q-icon
-                  name="o_delete_outline"
-                  class="cursor-pointer"
-                  color="negative"
-                  @click="onSubmitLeadDelete(props.row.id, props.row.person.fullName, refreshLeadList)"
-                >
-                  <q-tooltip>Delete</q-tooltip>
-                </q-icon>
-              </q-td>
-            </q-tr><q-separator />
-          </template>
-        </q-table>
+                  {{ props.row.updatedOnUtc }}
+                </q-td>
+                <q-td auto-width class="text-center actions">
+                  <a
+                    style="position: relative;"
+                    color="negative"
+                    class="q-icon notranslate cursor-pointer q-mr-md"
+                    @click="onLeadAddActivity(props.row.id, `${props.row.person.fullName} : ${props.row.company.name}`, refreshLeadList)"
+                  >
+                    <q-tooltip>Add Activity</q-tooltip>
+                    <q-badge style="position: absolute;right: -16px;top: -15px;" color="green" text-color="white" :class="props.row.leadActivityLogs.length == 0 ? 'hidden': ''" :label="props.row.leadActivityLogs.length" />
+                    <i class="fas fa-plus" />
+                  </a>
+                  <q-icon
+                    name="o_visibility"
+                    class="cursor-pointer q-mr-sm"
+                    @click="onLeadView(props.row.id)"
+                  >
+                    <q-tooltip>View</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    name="o_edit"
+                    class="cursor-pointer q-mr-sm"
+                    @click="onLeadEdit(props.row.id, refreshLeadList)"
+                  >
+                    <q-tooltip>Edit</q-tooltip>
+                  </q-icon>
+                  <a
+                    style="position: relative;"
+                    class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
+                    @click="onNoteAdd(props.row.id, 'Lead', props.row.id, props.row.name, props.row.name, '', refreshLeadList)"
+                  >
+                    <q-tooltip anchor="bottom middle" self="top middle">
+                      Note
+                    </q-tooltip>
+                    <q-icon name="o_assignment" />
+                    <q-badge
+                      v-if="props.row.leadNotesCount > 0"
+                      style="position: absolute; right: -16px; top: -15px;"
+                      color="green"
+                      text-color="white"
+                      :label="props.row.leadNotesCount"
+                    />
+                  </a>
+                  <q-icon
+                    name="o_delete_outline"
+                    class="cursor-pointer"
+                    color="negative"
+                    @click="onSubmitLeadDelete(props.row.id, props.row.person.fullName, refreshLeadList)"
+                  >
+                    <q-tooltip>Delete</q-tooltip>
+                  </q-icon>
+                </q-td>
+              </q-tr><q-separator />
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -729,7 +731,7 @@ onMounted(() => {
 });
 </script>
 <style scoped>
-.Custom-DataTable {
+.table-lead .Custom-DataTable {
   min-width: max-content;
 }
 </style>

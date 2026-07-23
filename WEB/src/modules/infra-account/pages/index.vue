@@ -125,134 +125,136 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getAllInfraAccount"
-        >
-          <template #loading>
-            <q-inner-loading showing color="primary">
-              <q-spinner-ios size="40px" class="q-mt-xl" />
-            </q-inner-loading>
-          </template>
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
-              <q-th
-                v-for="col in props.cols"
-                :key="col.name"
+      <div class="table-infra-account">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getAllInfraAccount"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary">
+                <q-spinner-ios size="40px" class="q-mt-xl" />
+              </q-inner-loading>
+            </template>
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
+                >
+                  {{ col.label }}
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+                <q-th auto-width class="text-center">Actions</q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr
                 :props="props"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
+                :class="highlightedId == props.row.id ? 'highlight' : ''"
               >
-                {{ col.label }}
-                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-              <q-th auto-width class="text-center">Actions</q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr
-              :props="props"
-              :class="highlightedId == props.row.id ? 'highlight' : ''"
-            >
-              <q-td v-if="selectedColumnNames.includes('provider.dropDownValue')">{{ props.row.provider.dropDownValue }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('name')">{{ props.row.name }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('customerId')">{{ props.row.customerId }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('url')">{{ props.row.url }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('totalServicesCost')" class="text-right">${{ props.row.totalServicesCost }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('ccLast4Digits')" align="right">{{ props.row.ccLast4Digits }}</q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
-                class="common-q-td"
+                <q-td v-if="selectedColumnNames.includes('provider.dropDownValue')">{{ props.row.provider.dropDownValue }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('name')">{{ props.row.name }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('customerId')">{{ props.row.customerId }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('url')">{{ props.row.url }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('totalServicesCost')" class="text-right">${{ props.row.totalServicesCost }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('ccLast4Digits')" align="right">{{ props.row.ccLast4Digits }}</q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                  class="common-q-td"
+                >
+                  {{ props.row.createdBy.person.fullName }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('createdOnUtc')"
+                  class="common-q-td"
+                >
+                  {{ props.row.createdOnUtc }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                  class="common-q-td"
+                >
+                  {{ props.row.updatedBy.person.fullName }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedOnUtc')"
+                  class="common-q-td"
+                >
+                  {{ props.row.updatedOnUtc }}
+                </q-td>
+                <q-td class="text-center actions">
+                  <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountView(props.row.id)">
+                    <q-tooltip>View</q-tooltip>
+                  </q-icon>
+                  <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountEdit(props.row.id, refreshInfraAccountList)">
+                    <q-tooltip>Edit</q-tooltip>
+                  </q-icon>
+                  <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
+                    <q-tooltip>Delete</q-tooltip>
+                  </q-icon>
+                </q-td>
+              </q-tr>
+              <q-separator />
+            </template>
+            <template #bottom-row>
+              <!-- <q-tr v-if="rows.length || !selectedColumnNames.includes('totalServicesCost')" class="bg-grey-2 text-black">
+                <q-td :colspan="totalColumnIndex" class="text-right text-weight-bold">
+                  Total Price:
+                </q-td>
+                <q-td class="text-right text-weight-bold">
+                  ${{ totalPrice.toFixed(2) }}
+                </q-td>
+                <q-td
+                  v-for="n in trailingColumns"
+                  :key="n"
+                />
+                <q-td />
+              </q-tr> -->
+              <q-tr
+                v-if="rows.length && totalColumnIndex !== -1"
+                class="bg-grey-2 text-black"
               >
-                {{ props.row.createdBy.person.fullName }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('createdOnUtc')"
-                class="common-q-td"
-              >
-                {{ props.row.createdOnUtc }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedBy.person.fullName }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedOnUtc')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedOnUtc }}
-              </q-td>
-              <q-td class="text-center actions">
-                <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountView(props.row.id)">
-                  <q-tooltip>View</q-tooltip>
-                </q-icon>
-                <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountEdit(props.row.id, refreshInfraAccountList)">
-                  <q-tooltip>Edit</q-tooltip>
-                </q-icon>
-                <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
-                  <q-tooltip>Delete</q-tooltip>
-                </q-icon>
-              </q-td>
-            </q-tr>
-            <q-separator />
-          </template>
-          <template #bottom-row>
-            <!-- <q-tr v-if="rows.length || !selectedColumnNames.includes('totalServicesCost')" class="bg-grey-2 text-black">
-              <q-td :colspan="totalColumnIndex" class="text-right text-weight-bold">
-                Total Price:
-              </q-td>
-              <q-td class="text-right text-weight-bold">
-                ${{ totalPrice.toFixed(2) }}
-              </q-td>
-              <q-td
-                v-for="n in trailingColumns"
-                :key="n"
-              />
-              <q-td />
-            </q-tr> -->
-            <q-tr
-              v-if="rows.length && totalColumnIndex !== -1"
-              class="bg-grey-2 text-black"
-            >
-              <q-td
-                :colspan="totalColumnIndex"
-                class="text-right text-weight-bold"
-              >
-                Total Price:
-              </q-td>
+                <q-td
+                  :colspan="totalColumnIndex"
+                  class="text-right text-weight-bold"
+                >
+                  Total Price:
+                </q-td>
 
-              <q-td class="text-right text-weight-bold">
-                ${{ totalPrice.toFixed(2) }}
-              </q-td>
+                <q-td class="text-right text-weight-bold">
+                  ${{ totalPrice.toFixed(2) }}
+                </q-td>
 
-              <q-td
-                v-for="n in trailingColumns"
-                :key="n"
-              />
-              <q-td />
-            </q-tr>
-          <q-separator>
-          </q-separator>
-          </template>
-        </q-table>
+                <q-td
+                  v-for="n in trailingColumns"
+                  :key="n"
+                />
+                <q-td />
+              </q-tr>
+            <q-separator>
+            </q-separator>
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -690,7 +692,7 @@ onMounted(() => {
 });
 </script>
 <style scoped>
-.Custom-DataTable {
+.table-infra-account .Custom-DataTable {
   min-width: max-content;
 }
 </style>

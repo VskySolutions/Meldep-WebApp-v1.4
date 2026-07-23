@@ -152,165 +152,167 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getAllTestPlan"
-        >
-          <template #loading>
-            <q-inner-loading showing color="primary">
-              <q-spinner-ios size="40px" class="q-mt-xl" />
-            </q-inner-loading>
-          </template>
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
-              <q-th
-                v-for="col in props.cols"
-                :key="col.name"
-                :props="props"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
-              >
-                {{ col.label }}
-                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-              <q-th auto-width class="text-center">Actions</q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''" :set="(preProjectName = null, resetTracking())">
-              <q-td v-if="selectedColumnNames.includes('testPlanNumber')" class="hidden">
-                #{{ props.row.testPlanNumber }}
-              </q-td>
-              <!-- <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;"><span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name">{{ props.row.project.name }}</span></q-td> -->
-              <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
-                <div class="row no-wrap items-center justify-between">
-                  <span style="flex: 1; word-break: break-word; white-space: normal;">
-                    <span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name" @click="onProjectView(props.row.project.id)">
-                      {{ props.row.project.name }}
+      <div class="table-test-plan">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getAllTestPlan"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary">
+                <q-spinner-ios size="40px" class="q-mt-xl" />
+              </q-inner-loading>
+            </template>
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
+                >
+                  {{ col.label }}
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+                <q-th auto-width class="text-center">Actions</q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''" :set="(preProjectName = null, resetTracking())">
+                <q-td v-if="selectedColumnNames.includes('testPlanNumber')" class="hidden">
+                  #{{ props.row.testPlanNumber }}
+                </q-td>
+                <!-- <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;"><span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name">{{ props.row.project.name }}</span></q-td> -->
+                <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
+                  <div class="row no-wrap items-center justify-between">
+                    <span style="flex: 1; word-break: break-word; white-space: normal;">
+                      <span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name" @click="onProjectView(props.row.project.id)">
+                        {{ props.row.project.name }}
+                      </span>
                     </span>
-                  </span>
-                  <div v-if="shouldShowIcons(props.row.project.name, index)" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
-                    <q-icon
-                      name="o_radio_button_checked" size="xs"
-                      class="cursor-pointer"
-                      @click="setActiveRowIdInLocalStorage(props.row.id);
-                              $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
-                    >
-                      <q-tooltip>Project Center</q-tooltip>
-                    </q-icon>
-                    <q-icon
-                      v-if="props.row.isEditable"
-                      name="o_developer_board" size="xs"
-                      class="cursor-pointer"
-                      @click="setActiveRowIdInLocalStorage(props.row.id);
-                              $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
-                    >
-                      <q-tooltip>Work Board</q-tooltip>
-                    </q-icon>
+                    <div v-if="shouldShowIcons(props.row.project.name, index)" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
+                      <q-icon
+                        name="o_radio_button_checked" size="xs"
+                        class="cursor-pointer"
+                        @click="setActiveRowIdInLocalStorage(props.row.id);
+                                $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                      >
+                        <q-tooltip>Project Center</q-tooltip>
+                      </q-icon>
+                      <q-icon
+                        v-if="props.row.isEditable"
+                        name="o_developer_board" size="xs"
+                        class="cursor-pointer"
+                        @click="setActiveRowIdInLocalStorage(props.row.id);
+                                $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
+                      >
+                        <q-tooltip>Work Board</q-tooltip>
+                      </q-icon>
+                    </div>
                   </div>
-                </div>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.name }}
-              </q-td>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.name }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('area.dropDownValue')"
+                  class="common-q-td"
+                >
+                  {{ props.row.area.dropDownValue }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('workspace.dropDownValue')"
+                  class="common-q-td"
+                >
+                  {{ props.row.workspace.dropDownValue }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('planMaker.person.firstName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.planMaker.person.fullName }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('planReviewer.person.firstName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.planReviewer.person.fullName }}
+                </q-td>
               <q-td
-                v-if="selectedColumnNames.includes('area.dropDownValue')"
+                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
                 class="common-q-td"
               >
-                {{ props.row.area.dropDownValue }}
+                {{ props.row.createdBy.person.fullName }}
               </q-td>
               <q-td
-                v-if="selectedColumnNames.includes('workspace.dropDownValue')"
+                v-if="selectedColumnNames.includes('createdOnUtc')"
                 class="common-q-td"
               >
-                {{ props.row.workspace.dropDownValue }}
+                {{ props.row.createdOnUtc }}
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('planMaker.person.firstName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.planMaker.person.fullName }}
+              <q-td
+                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedBy.person.fullName }}
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('planReviewer.person.firstName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                {{ props.row.planReviewer.person.fullName }}
+              <q-td
+                v-if="selectedColumnNames.includes('updatedOnUtc')"
+                class="common-q-td"
+              >
+                {{ props.row.updatedOnUtc }}
               </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('createdBy.person.firstName')"
-              class="common-q-td"
-            >
-              {{ props.row.createdBy.person.fullName }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('createdOnUtc')"
-              class="common-q-td"
-            >
-              {{ props.row.createdOnUtc }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
-              class="common-q-td"
-            >
-              {{ props.row.updatedBy.person.fullName }}
-            </q-td>
-            <q-td
-              v-if="selectedColumnNames.includes('updatedOnUtc')"
-              class="common-q-td"
-            >
-              {{ props.row.updatedOnUtc }}
-            </q-td>
-              <q-td class="text-center actions">
-                <q-icon
-                  name="o_visibility"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="onTestPlanView(props.row.id)"
-                >
-                  <q-tooltip>View</q-tooltip>
-                </q-icon>
-                <q-icon
-                  v-if="props.row.isEditable"
-                  name="o_edit"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="onTestPlanEdit(props.row.id, refreshTestPlanList)"
-                >
-                  <q-tooltip>Edit</q-tooltip>
-                </q-icon>
-                <q-icon
-                  name="o_checklist"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="$router.push({ path: '/test-case', state: { planId: props.row.id, projectId: props.row.projectId }})"
-                >
-                  <q-tooltip>Test Case</q-tooltip>
-                </q-icon>
-                <q-icon
-                  v-if="props.row.isEditable"
-                  name="o_delete_outline"
-                  class="cursor-pointer"
-                  color="negative"
-                  size="xs"
-                  @click="onSubmitTestPlanDelete(props.row.id, props.row.name, refreshTestPlanList)"
-                >
-                  <q-tooltip>Delete</q-tooltip>
-                </q-icon>
-              </q-td>
-            </q-tr><q-separator />
-          </template>
-        </q-table>
+                <q-td class="text-center actions">
+                  <q-icon
+                    name="o_visibility"
+                    class="cursor-pointer q-mr-sm"
+                    size="xs"
+                    @click="onTestPlanView(props.row.id)"
+                  >
+                    <q-tooltip>View</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    v-if="props.row.isEditable"
+                    name="o_edit"
+                    class="cursor-pointer q-mr-sm"
+                    size="xs"
+                    @click="onTestPlanEdit(props.row.id, refreshTestPlanList)"
+                  >
+                    <q-tooltip>Edit</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    name="o_checklist"
+                    class="cursor-pointer q-mr-sm"
+                    size="xs"
+                    @click="$router.push({ path: '/test-case', state: { planId: props.row.id, projectId: props.row.projectId }})"
+                  >
+                    <q-tooltip>Test Case</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    v-if="props.row.isEditable"
+                    name="o_delete_outline"
+                    class="cursor-pointer"
+                    color="negative"
+                    size="xs"
+                    @click="onSubmitTestPlanDelete(props.row.id, props.row.name, refreshTestPlanList)"
+                  >
+                    <q-tooltip>Delete</q-tooltip>
+                  </q-icon>
+                </q-td>
+              </q-tr><q-separator />
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -729,7 +731,7 @@ onMounted(() => {
 });
 </script>
 <style scoped>
-.Custom-DataTable {
+.table-test-plan .Custom-DataTable {
   min-width: max-content;
 }
 </style>

@@ -120,241 +120,243 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[15,30,50,100]"
-          @request="getAllInfraProjectInstanceForList"
-        >
-          <template #loading>
-            <q-inner-loading showing color="primary">
-              <q-spinner-ios size="40px" class="q-mt-xl" />
-            </q-inner-loading>
-          </template>
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">
-                {{ col.label }}
-                <span
-                  v-if="['infraProjectId', 'instanceTypeId', 'platformId', 'url'].includes(col.name)"
-                  class="required"
-                >*
-                </span>
-              </q-th> -->
-              <q-th
-                v-for="col in props.cols"
-                :key="col.name"
-                :props="props"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
-              >
-                {{ col.label }}
-                <span
-                  v-if="['infraProjectId', 'instanceTypeId', 'platformId', 'url'].includes(col.name)"
-                  class="required"
-                >*
-                </span>
-                 <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-              <q-th auto-width class="text-center">Actions</q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr v-if="!props.row.deleted" :class="activeRowId == props.row.id ? 'highlight' : ''">
-              <q-td v-if="selectedColumnNames.includes('infraProjectId')" class="wrap-text">
-                <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                  {{ props.row.infraProject?.name }}
-                </div>
-                <formSingleSelectDropdown
-                  v-else
-                  v-model="props.row.infraProjectId"
-                  :options="projectNameDropdownSingleSelect.list.value"
-                  :filter="projectNameDropdownSingleSelect.filter"
-                  :error="getRowValidation(props.row)?.infraProjectId?.$error"
-                  :error-message="getRowValidation(props.row)?.infraProjectId?.$errors[0]?.$message"
-                  @update:model-value="getRowValidation(props.row)?.infraProjectId?.$touch()"
-                />
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('instanceTypeId')" class="wrap-text">
-                <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                  {{ props.row.instanceType?.dropDownValue || "-" }}
-                </div>
-                <formSingleSelectDropdown
-                  v-else
-                  v-model="props.row.instanceTypeId"
-                  :options="instanceTypeDropdownSingleSelect.list.value"
-                  :filter="instanceTypeDropdownSingleSelect.filter"
-                  :error="getRowValidation(props.row)?.instanceTypeId?.$error"
-                  :error-message="getRowValidation(props.row)?.instanceTypeId?.$errors[0]?.$message"
-                  @update:model-value="getRowValidation(props.row)?.instanceTypeId?.$touch()"
-                />
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('platformId')" class="wrap-text">
-                <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                  {{ props.row.platform?.dropDownValue || "-" }}
-                </div>
-                <formSingleSelectDropdown
-                  v-else
-                  v-model="props.row.platformId"
-                  :options="platformDropdownSingleSelect.list.value"
-                  :filter="platformDropdownSingleSelect.filter"
-                  :error="getRowValidation(props.row)?.platformId?.$error"
-                  :error-message="getRowValidation(props.row)?.platformId?.$errors[0]?.$message"
-                  @update:model-value="getRowValidation(props.row)?.platformId?.$touch()"
-                />
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('url')">
-                <div class="row items-center justify-between">
-                  <div class="col">
-                    <div v-if="!props.row.isNew && editingRowId !== props.row.id">
-                      {{ props.row.url }}
-                    </div>
-                    <q-input
-                      v-else
-                      v-model="props.row.url"
-                      outlined
-                      stack-label
-                      hide-bottom-space
-                      :error="getRowValidation(props.row)?.url?.$error"
-                      :error-message="getRowValidation(props.row)?.url?.$errors[0]?.$message"
-                      @blur="getRowValidation(props.row)?.url?.$touch()"
-                    />
+      <div class="table-infra-project-instance">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[15,30,50,100]"
+            @request="getAllInfraProjectInstanceForList"
+          >
+            <template #loading>
+              <q-inner-loading showing color="primary">
+                <q-spinner-ios size="40px" class="q-mt-xl" />
+              </q-inner-loading>
+            </template>
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                  {{ col.label }}
+                  <span
+                    v-if="['infraProjectId', 'instanceTypeId', 'platformId', 'url'].includes(col.name)"
+                    class="required"
+                  >*
+                  </span>
+                </q-th> -->
+                <q-th
+                  v-for="col in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
+                >
+                  {{ col.label }}
+                  <span
+                    v-if="['infraProjectId', 'instanceTypeId', 'platformId', 'url'].includes(col.name)"
+                    class="required"
+                  >*
+                  </span>
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+                <q-th auto-width class="text-center">Actions</q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr v-if="!props.row.deleted" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                <q-td v-if="selectedColumnNames.includes('infraProjectId')" class="wrap-text">
+                  <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                    {{ props.row.infraProject?.name }}
                   </div>
-                </div>
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('createdBy.person.firstName')"
-                class="common-q-td"
-              >
-                {{ props.row.createdBy.person.fullName }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('createdOnUtc')"
-                class="common-q-td"
-              >
-                {{ props.row.createdOnUtc }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedBy.person.fullName }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedOnUtc')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedOnUtc }}
-              </q-td>
-              <q-td auto-width class="text-center actions">
-                <template v-if="editingRowId === props.row.id">
+                  <formSingleSelectDropdown
+                    v-else
+                    v-model="props.row.infraProjectId"
+                    :options="projectNameDropdownSingleSelect.list.value"
+                    :filter="projectNameDropdownSingleSelect.filter"
+                    :error="getRowValidation(props.row)?.infraProjectId?.$error"
+                    :error-message="getRowValidation(props.row)?.infraProjectId?.$errors[0]?.$message"
+                    @update:model-value="getRowValidation(props.row)?.infraProjectId?.$touch()"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('instanceTypeId')" class="wrap-text">
+                  <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                    {{ props.row.instanceType?.dropDownValue || "-" }}
+                  </div>
+                  <formSingleSelectDropdown
+                    v-else
+                    v-model="props.row.instanceTypeId"
+                    :options="instanceTypeDropdownSingleSelect.list.value"
+                    :filter="instanceTypeDropdownSingleSelect.filter"
+                    :error="getRowValidation(props.row)?.instanceTypeId?.$error"
+                    :error-message="getRowValidation(props.row)?.instanceTypeId?.$errors[0]?.$message"
+                    @update:model-value="getRowValidation(props.row)?.instanceTypeId?.$touch()"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('platformId')" class="wrap-text">
+                  <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                    {{ props.row.platform?.dropDownValue || "-" }}
+                  </div>
+                  <formSingleSelectDropdown
+                    v-else
+                    v-model="props.row.platformId"
+                    :options="platformDropdownSingleSelect.list.value"
+                    :filter="platformDropdownSingleSelect.filter"
+                    :error="getRowValidation(props.row)?.platformId?.$error"
+                    :error-message="getRowValidation(props.row)?.platformId?.$errors[0]?.$message"
+                    @update:model-value="getRowValidation(props.row)?.platformId?.$touch()"
+                  />
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('url')">
+                  <div class="row items-center justify-between">
+                    <div class="col">
+                      <div v-if="!props.row.isNew && editingRowId !== props.row.id">
+                        {{ props.row.url }}
+                      </div>
+                      <q-input
+                        v-else
+                        v-model="props.row.url"
+                        outlined
+                        stack-label
+                        hide-bottom-space
+                        :error="getRowValidation(props.row)?.url?.$error"
+                        :error-message="getRowValidation(props.row)?.url?.$errors[0]?.$message"
+                        @blur="getRowValidation(props.row)?.url?.$touch()"
+                      />
+                    </div>
+                  </div>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                  class="common-q-td"
+                >
+                  {{ props.row.createdBy.person.fullName }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('createdOnUtc')"
+                  class="common-q-td"
+                >
+                  {{ props.row.createdOnUtc }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                  class="common-q-td"
+                >
+                  {{ props.row.updatedBy.person.fullName }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedOnUtc')"
+                  class="common-q-td"
+                >
+                  {{ props.row.updatedOnUtc }}
+                </q-td>
+                <q-td auto-width class="text-center actions">
+                  <template v-if="editingRowId === props.row.id">
+                    <q-icon
+                      name="o_cancel"
+                      class="cursor-pointer q-mr-sm"
+                      size="xs"
+                      color="negative"
+                      @click="onCancel(props.row)"
+                    >
+                      <q-tooltip>Cancel</q-tooltip>
+                    </q-icon>
+                    <q-icon
+                      :loading="processing"
+                      name="o_save"
+                      class="cursor-pointer q-mr-sm hover-white"
+                      size="xs"
+                      color="primary"
+                      @click="onRowSubmit(props.row)"
+                    >
+                      <q-tooltip>Save</q-tooltip>
+                    </q-icon>
+                  </template>
+                  <q-icon v-if="!props.row.isNew" name="o_person_add_alt" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraProjectInstanceUserAdd(props.row.id, refreshInfraProjectInstancesList)">
+                    <q-tooltip>Add User</q-tooltip>
+                  </q-icon>
+                  <q-icon v-if="!props.row.isNew" name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraProjectInstanceView(props.row.id, refreshInfraProjectInstancesList)">
+                    <q-tooltip>View</q-tooltip>
+                  </q-icon>
                   <q-icon
-                    name="o_cancel"
+                    v-if="!props.row.isNew && editingRowId !== props.row.id"
+                    name="o_edit"
                     class="cursor-pointer q-mr-sm"
                     size="xs"
-                    color="negative"
-                    @click="onCancel(props.row)"
+                    @click="onEdit(props.row)"
                   >
-                    <q-tooltip>Cancel</q-tooltip>
+                    <q-tooltip>Edit</q-tooltip>
                   </q-icon>
                   <q-icon
-                    :loading="processing"
-                    name="o_save"
-                    class="cursor-pointer q-mr-sm hover-white"
+                    name="o_note_alt"
                     size="xs"
-                    color="primary"
-                    @click="onRowSubmit(props.row)"
+                    class="cursor-pointer q-mr-xs"
+                    @click="activeRowId = props.row.id"
                   >
-                    <q-tooltip>Save</q-tooltip>
-                  </q-icon>
-                </template>
-                <q-icon v-if="!props.row.isNew" name="o_person_add_alt" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraProjectInstanceUserAdd(props.row.id, refreshInfraProjectInstancesList)">
-                  <q-tooltip>Add User</q-tooltip>
-                </q-icon>
-                <q-icon v-if="!props.row.isNew" name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraProjectInstanceView(props.row.id, refreshInfraProjectInstancesList)">
-                  <q-tooltip>View</q-tooltip>
-                </q-icon>
-                <q-icon
-                  v-if="!props.row.isNew && editingRowId !== props.row.id"
-                  name="o_edit"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="onEdit(props.row)"
-                >
-                  <q-tooltip>Edit</q-tooltip>
-                </q-icon>
-                <q-icon
-                  name="o_note_alt"
-                  size="xs"
-                  class="cursor-pointer q-mr-xs"
-                  @click="activeRowId = props.row.id"
-                >
-                  <q-tooltip>Add Instructions</q-tooltip>
-                  <q-popup-edit
-                    v-model="props.row.instructions"
-                    anchor="center middle"
-                    self="center middle"
-                    buttons
-                    persistent
-                    label-set="Save"
-                    label-cancel="Cancel"
-                    class="instruction-popup"
-                    @save="val => { handleInstructionSave(props.row, val); activeRowId = null }"
-                    @hide="activeRowId = null"
-                  >
-                    <template #default="scope">
-                      <div class="popup-container q-pa-sm">
-                        <q-btn
-                          icon="o_close"
-                          flat
-                          round
-                          dense
-                          size="sm"
-                          class="absolute-top-right"
-                          @click="scope.cancel"
-                        />
-
-                        <div class="text-subtitle2 q-mb-xs">Instructions</div>
-                        <div class="editor-wrapper">
-                          <q-editor
-                            v-model="scope.value"
-                            :dense="$q.screen.lt.md"
-                            :toolbar="toolbar"
-                            :fonts="fonts"
-                            class="fixed-editor"
+                    <q-tooltip>Add Instructions</q-tooltip>
+                    <q-popup-edit
+                      v-model="props.row.instructions"
+                      anchor="center middle"
+                      self="center middle"
+                      buttons
+                      persistent
+                      label-set="Save"
+                      label-cancel="Cancel"
+                      class="instruction-popup"
+                      @save="val => { handleInstructionSave(props.row, val); activeRowId = null }"
+                      @hide="activeRowId = null"
+                    >
+                      <template #default="scope">
+                        <div class="popup-container q-pa-sm">
+                          <q-btn
+                            icon="o_close"
+                            flat
+                            round
+                            dense
+                            size="sm"
+                            class="absolute-top-right"
+                            @click="scope.cancel"
                           />
+
+                          <div class="text-subtitle2 q-mb-xs">Instructions</div>
+                          <div class="editor-wrapper">
+                            <q-editor
+                              v-model="scope.value"
+                              :dense="$q.screen.lt.md"
+                              :toolbar="toolbar"
+                              :fonts="fonts"
+                              class="fixed-editor"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </template>
-                  </q-popup-edit>
-                </q-icon>
-                <q-icon
-                  name="o_delete_outline"
-                  size="xs"
-                  class="cursor-pointer"
-                  color="negative"
-                  @click="handleDelete(props.row, props.rowIndex)"
-                >
-                  <q-tooltip>Delete</q-tooltip>
-                </q-icon>
-              </q-td>
-            </q-tr>
-            <q-separator />
-          </template>
-        </q-table>
+                      </template>
+                    </q-popup-edit>
+                  </q-icon>
+                  <q-icon
+                    name="o_delete_outline"
+                    size="xs"
+                    class="cursor-pointer"
+                    color="negative"
+                    @click="handleDelete(props.row, props.rowIndex)"
+                  >
+                    <q-tooltip>Delete</q-tooltip>
+                  </q-icon>
+                </q-td>
+              </q-tr>
+              <q-separator />
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -906,7 +908,7 @@ onMounted(async () => {
   width: 100%;
   max-width: 100%;
 }
-.Custom-DataTable {
+.table-infra-project-instance .Custom-DataTable {
   min-width: max-content;
 }
 .cursor-pointer {

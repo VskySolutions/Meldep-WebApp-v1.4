@@ -257,249 +257,251 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-scroll-container">
-        <q-table
-          ref="tableRef"
-          v-model:pagination="pagination"
-          :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
-          :loading="loading"
-          :rows="rows"
-          :columns="computedColumns"
-          row-key="id"
-          separator="cell"
-          no-data-label="No data available"
-          binary-state-sort
-          :rows-per-page-options="[20, 50, 100, 200, 500]"
-          @request="getAllHelpDesks"
-        >
-          <template #header="props">
-            <q-tr :props="props" class="bg-primary text-white">
-              <q-th
-                v-for="(col, index) in props.cols"
-                :key="col.name"
-                :props="props"
-                :style="{
-                  width: (resizeWidths?.[col.name] || 120) + 'px',
-                  minWidth: '80px',
-                  position: 'relative'
-                }"
-                @click="!isResizing && col.sortable"
-              >
-                {{ col.label }}
-                <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
-              </q-th>
-              <q-th auto-width class="text-center">Actions</q-th>
-            </q-tr>
-          </template>
-          <template #body="props">
-            <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
-              <q-td v-if="(role === 'admin' || roleSupportTeam) && selectedColumnNames.includes('requesterEmail')">
-                <div class="row items-center justify-between">
-                  <div v-if="props.row.requesterEmail" class="text-black">
-                    {{ props.row.requesterEmail }}
-                  </div>
-                  <div v-else-if="props.row.requesterId" class="text-black">
-                    {{ props.row.employee?.person?.primaryEmailAddress }}
-                  </div>
-                  <q-icon
-                    v-if="props.row.employee.person.id"
-                    name="o_person"
-                    class="cursor-pointer q-pl-sm"
-                    size="xs"
-                    @click="onPersonView(props.row.employee.person.id)"
-                  >
-                    <q-tooltip>View Requester</q-tooltip>
-                  </q-icon>
-                </div>
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('ticketNo')"
-                class="hoverable-cell"
-                @click="onHelpDeskView(props.row.id, props.row.title, props.row.employee.id, props.row.employee.person.primaryEmailAddress, props.row.twilioEmailId, 'Help Desk Notes', refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
-              >
-                #{{ props.row.displayTicketNo }}
-                <q-tooltip>View Ticket</q-tooltip>
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('title')"
-                class="common-q-td hoverable-cell"
-                @click="onHelpDeskView(props.row.id, props.row.title, props.row.employee.id, props.row.employee.person.primaryEmailAddress, props.row.twilioEmailId, 'Help Desk Notes', refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
-              >
-                <q-tooltip>View Ticket</q-tooltip>
-                {{ props.row.title }}
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('helpDeskTopic.title')">{{ props.row.helpDeskTopic?.title }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('helpDeskTopicQuestions.question')">{{ props.row.helpDeskTopicQuestions?.question }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('categoryId')">{{ props.row.category.dropDownValue }}</q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('statusId')"
-                class="common-q-td"
-                :class="{ 'hoverable-cell' : props.row.id }"
-                @click="activeEdit = { rowId: props.row.id, field: 'status' }"
-              >
-              <div class="row items-center justify-between q-pr-xs">
-                <quickEditSingleSelect
-                  field="status"
-                  :row-id="props.row.id"
-                  :value="props.row.statusId"
-                  :display-value="props.row.statusText"
-                  :editable="props.row.id"
-                  :disable="['Closed','Cancelled'].includes(props.row.statusText)"
-                  :options="getVisibleStatusOptions(props.row)"
-                  :active-edit="activeEdit"
-                  :show-history="false"
-                  :loading="updatingRow.status === props.row.id"
-                  @cancel="activeEdit = { rowId: null, field: null }"
-                  @submit="({ rowId, value }) => onSubmitHelpDeskStatus(rowId, value, refreshHelpDeskList)"
-                />
-                <div v-if="role === 'admin' && (props.row.statusText == 'Closed' && props.row.previousStatusText == 'Open')" class="q-ml-sm">
-                  <q-icon
-                    name="o_comment"
-                    size="xs"
-                    class="cursor-pointer"
-                  >
-                    <q-tooltip>Add Comments</q-tooltip>
-                    <q-popup-edit
-                      v-model="props.row.closingComment"
-                      anchor="top middle"
-                      self="bottom middle"
-                      buttons
-                      persistent
-                      label-set="Save"
-                      label-cancel="Cancel"
-                      @save="val => onSaveComment(props.row, val)"
+      <div class="table-help-desk">
+        <div class="table-scroll-container">
+          <q-table
+            ref="tableRef"
+            v-model:pagination="pagination"
+            :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+            :loading="loading"
+            :rows="rows"
+            :columns="computedColumns"
+            row-key="id"
+            separator="cell"
+            no-data-label="No data available"
+            binary-state-sort
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
+            @request="getAllHelpDesks"
+          >
+            <template #header="props">
+              <q-tr :props="props" class="bg-primary text-white">
+                <q-th
+                  v-for="(col, index) in props.cols"
+                  :key="col.name"
+                  :props="props"
+                  :style="{
+                    width: (resizeWidths?.[col.name] || 120) + 'px',
+                    minWidth: '80px',
+                    position: 'relative'
+                  }"
+                  @click="!isResizing && col.sortable"
+                >
+                  {{ col.label }}
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                </q-th>
+                <q-th auto-width class="text-center">Actions</q-th>
+              </q-tr>
+            </template>
+            <template #body="props">
+              <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
+                <q-td v-if="(role === 'admin' || roleSupportTeam) && selectedColumnNames.includes('requesterEmail')">
+                  <div class="row items-center justify-between">
+                    <div v-if="props.row.requesterEmail" class="text-black">
+                      {{ props.row.requesterEmail }}
+                    </div>
+                    <div v-else-if="props.row.requesterId" class="text-black">
+                      {{ props.row.employee?.person?.primaryEmailAddress }}
+                    </div>
+                    <q-icon
+                      v-if="props.row.employee.person.id"
+                      name="o_person"
+                      class="cursor-pointer q-pl-sm"
+                      size="xs"
+                      @click="onPersonView(props.row.employee.person.id)"
                     >
-                      <template #default="scope">
-                        <div class="relative-position q-pa-sm" style="min-width: 260px;">
-                          <q-btn
-                            icon="o_close"
-                            flat
-                            round
-                            dense
-                            size="sm"
-                            class="absolute-top-right"
-                            @click="scope.cancel"
-                          />
-
-                          <div class="text-subtitle2 q-mb-xs">Comment<span class="text-grey-6 fs-12"> (Please leave a comment when closing a ticket directly from New or Open status.)</span></div>
-
-                          <q-input
-                            v-model="scope.value"
-                            type="textarea"
-                            outlined
-                            autogrow
-                            dense
-                          />
-                        </div>
-                      </template>
-                    </q-popup-edit>
-                  </q-icon>
-                </div>
-              </div>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('priority.dropDownValue')">{{ props.row.priority.dropDownValue }}</q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('assignedTo.person.firstName')"
-                class="common-q-td"
-                :class="{ 'hoverable-cell' : props.row.id }"
-                @click="activeEdit = { rowId: props.row.id, field: 'assignedTo' }"
-              >
-              <div
-                v-if="(role === 'admin' || (roleSupportTeam && !props.row.assignedToId)) && !['Completed','Closed','Cancelled'].includes(props.row.statusText)">
-                <quickEditSingleSelect
-                  field="assignedTo"
-                  :row-id="props.row.id"
-                  :value="props.row.assignedToId"
-                  :display-value="props.row.assignedTo.person.fullName"
-                  :editable="props.row.id"
-                  :options="supportTeamUserForDropdown.list.value"
-                  :active-edit="activeEdit"
-                  :show-history="!!props.row.assignedToId"
-                  :loading="updatingRow.assignedTo === props.row.id"
-                  @cancel="activeEdit = { rowId: null, field: null }"
-                  @submit="({ rowId, value }) => onSubmitAssignedTo(rowId, value, refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
-                  @history="() => onSiteModifiedLog(props.row.id, props.row.title, 'Assigned To')"
-                />
-              </div>
-              <div v-else>
-                <div class="row items-center justify-between no-wrap q-pr-xs" style="width: 100px;">
-                  <span class="ellipsis q-ml-xs">
-                    {{ props.row.assignedTo?.person?.fullName || '-' }}
-                  </span>
-                  <q-icon
-                    v-if="props.row.assignedToCount > 1"
-                    name="o_history"
-                    class="cursor-pointer"
-                    size="xs"
-                    @click.stop="onSiteModifiedLog(props.row.id, props.row.title, 'Assigned To')"
-                  >
-                    <q-tooltip>Data Change Log</q-tooltip>
-                  </q-icon>
-                </div>
-              </div>
-              </q-td>
-              <q-td v-if="selectedColumnNames.includes('createdBy.person.firstName')">{{ props.row.createdBy.person.firstName + " " + props.row.createdBy.person.lastName }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('createdOnUtc')">{{ props.row.createdOnUtc }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('updatedBy.person.firstName')">{{ props.row.updatedBy.person.firstName + " " + props.row.updatedBy.person.lastName }}</q-td>
-              <q-td v-if="selectedColumnNames.includes('updatedOnUtc')">{{ props.row.updatedOnUtc }}</q-td>
-              <!-- <q-td v-if="role === 'admin'" style="width: 10%;" class="hidden">{{ props.row.statusText === 'Closed' || props.row.statusText === 'Completed' ? calculateDuration(props.row.createdOnUtc, props.row.dateStr) : calculateDuration(props.row.createdOnUtc, null) }}</q-td> -->
-              <q-td class="text-left actions">
-                <q-icon
-                  name="o_description"
-                  class="cursor-pointer q-mr-sm hidden"
-                  size="xs"
-                  @click="onAddHelpDeskFiles(props.row.id, refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
-                >
-                  <q-tooltip>Files</q-tooltip>
-                </q-icon>
-                <a
-                  v-if="!['Closed','Cancelled'].includes(props.row.statusText)"
-                  style="position: relative;"
-                  class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
-                  @click="onHelpDeskViewEmailReplies(props.row.id, props.row.title, props.row.employee.id, props.row.employee.person.primaryEmailAddress, props.row.twilioEmailId, 'Help Desk Notes', refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
-                >
-                  <q-tooltip anchor="bottom middle" self="top middle">
-                    Email Replies
-                  </q-tooltip>
-                  <q-icon name="o_email" />
-                  <q-badge
-                    v-if="props.row.emailRepliesCount > 0"
-                    style="position: absolute; right: -16px; top: -15px;"
-                    color="green"
-                    text-color="white"
-                    :label="props.row.emailRepliesCount"
-                  />
-                </a>
-                <q-icon
-                  name="o_visibility"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
+                      <q-tooltip>View Requester</q-tooltip>
+                    </q-icon>
+                  </div>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('ticketNo')"
+                  class="hoverable-cell"
                   @click="onHelpDeskView(props.row.id, props.row.title, props.row.employee.id, props.row.employee.person.primaryEmailAddress, props.row.twilioEmailId, 'Help Desk Notes', refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
                 >
-                  <q-tooltip>View</q-tooltip>
-                </q-icon>
-                <a
-                  style="position: relative;"
-                  class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
-                  @click="onAddNote(props.row.id, 'Help Desk Notes', props.row.id, props.row.title, props.row.title, !['Closed','Cancelled'].includes(props.row.statusText))"
+                  #{{ props.row.displayTicketNo }}
+                  <q-tooltip>View Ticket</q-tooltip>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('title')"
+                  class="common-q-td hoverable-cell"
+                  @click="onHelpDeskView(props.row.id, props.row.title, props.row.employee.id, props.row.employee.person.primaryEmailAddress, props.row.twilioEmailId, 'Help Desk Notes', refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
                 >
-                  <q-tooltip anchor="bottom middle" self="top middle">
-                    Note
-                  </q-tooltip>
-                  <q-icon name="o_assignment" />
-                  <q-badge
-                    v-if="props.row.helpDeskNotesCount > 0"
-                    style="position: absolute; right: -16px; top: -15px;"
-                    color="green"
-                    text-color="white"
-                    :label="props.row.helpDeskNotesCount"
+                  <q-tooltip>View Ticket</q-tooltip>
+                  {{ props.row.title }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('helpDeskTopic.title')">{{ props.row.helpDeskTopic?.title }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('helpDeskTopicQuestions.question')">{{ props.row.helpDeskTopicQuestions?.question }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('categoryId')">{{ props.row.category.dropDownValue }}</q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('statusId')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.id }"
+                  @click="activeEdit = { rowId: props.row.id, field: 'status' }"
+                >
+                <div class="row items-center justify-between q-pr-xs">
+                  <quickEditSingleSelect
+                    field="status"
+                    :row-id="props.row.id"
+                    :value="props.row.statusId"
+                    :display-value="props.row.statusText"
+                    :editable="props.row.id"
+                    :disable="['Closed','Cancelled'].includes(props.row.statusText)"
+                    :options="getVisibleStatusOptions(props.row)"
+                    :active-edit="activeEdit"
+                    :show-history="false"
+                    :loading="updatingRow.status === props.row.id"
+                    @cancel="activeEdit = { rowId: null, field: null }"
+                    @submit="({ rowId, value }) => onSubmitHelpDeskStatus(rowId, value, refreshHelpDeskList)"
                   />
-                </a>
-              </q-td>
-            </q-tr>
-            <q-separator />
-          </template>
-        </q-table>
+                  <div v-if="role === 'admin' && (props.row.statusText == 'Closed' && props.row.previousStatusText == 'Open')" class="q-ml-sm">
+                    <q-icon
+                      name="o_comment"
+                      size="xs"
+                      class="cursor-pointer"
+                    >
+                      <q-tooltip>Add Comments</q-tooltip>
+                      <q-popup-edit
+                        v-model="props.row.closingComment"
+                        anchor="top middle"
+                        self="bottom middle"
+                        buttons
+                        persistent
+                        label-set="Save"
+                        label-cancel="Cancel"
+                        @save="val => onSaveComment(props.row, val)"
+                      >
+                        <template #default="scope">
+                          <div class="relative-position q-pa-sm" style="min-width: 260px;">
+                            <q-btn
+                              icon="o_close"
+                              flat
+                              round
+                              dense
+                              size="sm"
+                              class="absolute-top-right"
+                              @click="scope.cancel"
+                            />
+
+                            <div class="text-subtitle2 q-mb-xs">Comment<span class="text-grey-6 fs-12"> (Please leave a comment when closing a ticket directly from New or Open status.)</span></div>
+
+                            <q-input
+                              v-model="scope.value"
+                              type="textarea"
+                              outlined
+                              autogrow
+                              dense
+                            />
+                          </div>
+                        </template>
+                      </q-popup-edit>
+                    </q-icon>
+                  </div>
+                </div>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('priority.dropDownValue')">{{ props.row.priority.dropDownValue }}</q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('assignedTo.person.firstName')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.id }"
+                  @click="activeEdit = { rowId: props.row.id, field: 'assignedTo' }"
+                >
+                <div
+                  v-if="(role === 'admin' || (roleSupportTeam && !props.row.assignedToId)) && !['Completed','Closed','Cancelled'].includes(props.row.statusText)">
+                  <quickEditSingleSelect
+                    field="assignedTo"
+                    :row-id="props.row.id"
+                    :value="props.row.assignedToId"
+                    :display-value="props.row.assignedTo.person.fullName"
+                    :editable="props.row.id"
+                    :options="supportTeamUserForDropdown.list.value"
+                    :active-edit="activeEdit"
+                    :show-history="!!props.row.assignedToId"
+                    :loading="updatingRow.assignedTo === props.row.id"
+                    @cancel="activeEdit = { rowId: null, field: null }"
+                    @submit="({ rowId, value }) => onSubmitAssignedTo(rowId, value, refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
+                    @history="() => onSiteModifiedLog(props.row.id, props.row.title, 'Assigned To')"
+                  />
+                </div>
+                <div v-else>
+                  <div class="row items-center justify-between no-wrap q-pr-xs" style="width: 100px;">
+                    <span class="ellipsis q-ml-xs">
+                      {{ props.row.assignedTo?.person?.fullName || '-' }}
+                    </span>
+                    <q-icon
+                      v-if="props.row.assignedToCount > 1"
+                      name="o_history"
+                      class="cursor-pointer"
+                      size="xs"
+                      @click.stop="onSiteModifiedLog(props.row.id, props.row.title, 'Assigned To')"
+                    >
+                      <q-tooltip>Data Change Log</q-tooltip>
+                    </q-icon>
+                  </div>
+                </div>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('createdBy.person.firstName')">{{ props.row.createdBy.person.firstName + " " + props.row.createdBy.person.lastName }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('createdOnUtc')">{{ props.row.createdOnUtc }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('updatedBy.person.firstName')">{{ props.row.updatedBy.person.firstName + " " + props.row.updatedBy.person.lastName }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('updatedOnUtc')">{{ props.row.updatedOnUtc }}</q-td>
+                <!-- <q-td v-if="role === 'admin'" style="width: 10%;" class="hidden">{{ props.row.statusText === 'Closed' || props.row.statusText === 'Completed' ? calculateDuration(props.row.createdOnUtc, props.row.dateStr) : calculateDuration(props.row.createdOnUtc, null) }}</q-td> -->
+                <q-td class="text-left actions">
+                  <q-icon
+                    name="o_description"
+                    class="cursor-pointer q-mr-sm hidden"
+                    size="xs"
+                    @click="onAddHelpDeskFiles(props.row.id, refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
+                  >
+                    <q-tooltip>Files</q-tooltip>
+                  </q-icon>
+                  <a
+                    v-if="!['Closed','Cancelled'].includes(props.row.statusText)"
+                    style="position: relative;"
+                    class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
+                    @click="onHelpDeskViewEmailReplies(props.row.id, props.row.title, props.row.employee.id, props.row.employee.person.primaryEmailAddress, props.row.twilioEmailId, 'Help Desk Notes', refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
+                  >
+                    <q-tooltip anchor="bottom middle" self="top middle">
+                      Email Replies
+                    </q-tooltip>
+                    <q-icon name="o_email" />
+                    <q-badge
+                      v-if="props.row.emailRepliesCount > 0"
+                      style="position: absolute; right: -16px; top: -15px;"
+                      color="green"
+                      text-color="white"
+                      :label="props.row.emailRepliesCount"
+                    />
+                  </a>
+                  <q-icon
+                    name="o_visibility"
+                    class="cursor-pointer q-mr-sm"
+                    size="xs"
+                    @click="onHelpDeskView(props.row.id, props.row.title, props.row.employee.id, props.row.employee.person.primaryEmailAddress, props.row.twilioEmailId, 'Help Desk Notes', refreshHelpDeskList, refreshAllUserListByRoleForDropdown)"
+                  >
+                    <q-tooltip>View</q-tooltip>
+                  </q-icon>
+                  <a
+                    style="position: relative;"
+                    class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
+                    @click="onAddNote(props.row.id, 'Help Desk Notes', props.row.id, props.row.title, props.row.title, !['Closed','Cancelled'].includes(props.row.statusText))"
+                  >
+                    <q-tooltip anchor="bottom middle" self="top middle">
+                      Note
+                    </q-tooltip>
+                    <q-icon name="o_assignment" />
+                    <q-badge
+                      v-if="props.row.helpDeskNotesCount > 0"
+                      style="position: absolute; right: -16px; top: -15px;"
+                      color="green"
+                      text-color="white"
+                      :label="props.row.helpDeskNotesCount"
+                    />
+                  </a>
+                </q-td>
+              </q-tr>
+              <q-separator />
+            </template>
+          </q-table>
+        </div>
       </div>
     </q-card>
   </q-page>
@@ -1124,7 +1126,7 @@ onMounted(() => {
   min-width: 100% !important;
   word-break: break-word;
 }
-.Custom-DataTable {
+.table-help-desk .Custom-DataTable {
   min-width: max-content;
 }
 </style>
