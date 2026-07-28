@@ -345,6 +345,7 @@
         </template>
       </q-table>
     </q-card>
+    <!-- <N8nChatbot /> -->
   </q-page>
 </template>
 <script setup>
@@ -369,6 +370,7 @@ import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSele
 
 // SOP Change :- Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
+// import N8nChatbot from 'src/modules/sop-process/components/_sopChatAssistant.vue';
 
 // SOP Change :- Shared Project Dialogs
 import {
@@ -530,6 +532,38 @@ const getAllSOPProcessList = (props) => {
   });
 };
 
+// function loadSopAssistant() {
+//   // Prevent loading the script multiple times
+//   if (document.getElementById("sop-assistant-script")) {
+//     return;
+//   }
+ 
+//   const script = document.createElement("script");
+//   script.id = "sop-assistant-script";
+//   // script.src = "https://api-sowbuddy-prasad-local.prasadsawant.site/sop-agent/cdn/vsky_sop_assistant.js";
+//   script.src = process.env.AI_Chat_Assistant_Cdn,
+//   // script.dataset.apiBase = "https://api-sowbuddy-prasad-local.prasadsawant.site";
+//   script.dataset.apiBase = process.env.AI_Chat_Assistant_ApiBase,
+//   // script.dataset.apiKey = "ag_067dc77f-6520-42ed-9e10-36c34b122434";
+//   script.dataset.apiKey = process.env.AI_Chat_Assistant_ApiKey,
+//   script.dataset.title = "SOP Assistant";
+//   script.dataset.subtitle = "Workplace process guidance";
+//   script.dataset.welcome =
+//     "Hello! How can I help with your workplace process?";
+//   script.dataset.placeholder = "Ask a process question...";
+//   script.dataset.primaryColor = "#123a55";
+//   script.dataset.width = "500";
+//   script.dataset.height = "820";
+//   script.dataset.launcherSize = "60";
+//   script.dataset.borderRadius = "20";
+//   script.dataset.side = "right";
+//   script.dataset.offsetX = "24";
+//   script.dataset.offsetY = "24";
+//   script.dataset.showSources = "true";
+ 
+//   document.body.appendChild(script);
+// }
+
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
@@ -659,6 +693,8 @@ onMounted(async () => {
   sopProcessSubCategoriesDropdown.load();
   sopProcessStatusDropdownSingleSelect.load("SOP Process Status");
   sopProcessStatusesDropdown.load("SOP Process Status");
+
+  // loadSopAssistant();
 });
 
 </script>

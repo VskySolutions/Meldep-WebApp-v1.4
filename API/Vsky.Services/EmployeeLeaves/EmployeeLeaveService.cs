@@ -610,6 +610,66 @@ namespace Vsky.Services.EmployeeLeaves
         }
         #endregion
 
+        #region GetUsedPaidLeaveByCategory
+        public decimal GetUsedPaidLeaveByCategory(
+            string employeeId,
+            int year,
+            string categoryId,
+            string id = null
+        )
+        {
+            decimal usedLeave = 0;
+
+            if (!string.IsNullOrWhiteSpace(employeeId))
+            {
+                usedLeave = _employeeLeaveRepository.Table
+                    .Where(x =>
+                        !x.Deleted &&
+                        x.IsPaidLeave &&
+                        x.EmployeeId == employeeId &&
+                        x.ToDate.Year == year &&
+                        x.LeaveCategoryId == categoryId &&
+                        x.LeaveStatuses != null &&
+                        x.LeaveStatuses.DropDownValue != "Decline" &&
+                        x.LeaveStatuses.DropDownValue != "Cancelled" &&
+                        (string.IsNullOrWhiteSpace(id) || x.Id != id))
+                    .Sum(x => x.NoofLeaves);
+            }
+
+            return usedLeave;
+        }
+        #endregion
+
+        #region GetUsedUnpaidLeaveByCategory
+        public decimal GetUsedUnpaidLeaveByCategory(
+           string employeeId,
+           int year,
+           string categoryId,
+           string id = null
+       )
+        {
+            decimal usedLeave = 0;
+
+            if (!string.IsNullOrWhiteSpace(employeeId))
+            {
+                usedLeave = _employeeLeaveRepository.Table
+                    .Where(x =>
+                        !x.Deleted &&
+                        !x.IsPaidLeave &&
+                        x.EmployeeId == employeeId &&
+                        x.ToDate.Year == year &&
+                        x.LeaveCategoryId == categoryId &&
+                        x.LeaveStatuses != null &&
+                        x.LeaveStatuses.DropDownValue != "Decline" &&
+                        x.LeaveStatuses.DropDownValue != "Cancelled" &&
+                        (string.IsNullOrWhiteSpace(id) || x.Id != id))
+                    .Sum(x => x.NoofLeaves);
+            }
+
+            return usedLeave;
+        }
+        #endregion
+
         #region GetEmployeeLeaveById
         // Title: GetEmployeeLeaveById
         // Description: This method retrieves a EmployeeLeave from the database by its unique identifier (`id`). 

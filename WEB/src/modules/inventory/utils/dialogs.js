@@ -1,5 +1,4 @@
 import { useQuasar } from "quasar";
-import addEditIssue from "modules/issue/components/addEdit.vue";
 import viewInventory from "modules/inventory/components/view_inventory.vue";
 import addeditInventory from "modules/inventory/components/addedit_inventory.vue";
 
@@ -23,7 +22,7 @@ export function onInventoryView (id) {
 
 export function onInventoryAdd (refresh) {
   $q.dialog({
-    component: addEditIssue,
+    component: addeditInventory,
     componentProps: {}
   }).onOk(() => {
     refresh();

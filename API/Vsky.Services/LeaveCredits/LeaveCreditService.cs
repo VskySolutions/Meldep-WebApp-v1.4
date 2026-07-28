@@ -158,23 +158,34 @@ namespace Vsky.Services.LeaveCredits
             var paidLeaveTypeId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Leave Type", "Paid");
             var unpaidLeaveTypeId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Leave Type", "Unpaid");
 
-            var paid = _leaveCreditRepository.Table.FirstOrDefault(x =>
-                !x.Deleted &&
-                x.EmployeeId == employeeId &&
-                x.LeaveCreditsforYear == year &&
-                x.LeaveTypeId == paidLeaveTypeId);
+            var paidLeaves = await _leaveCreditRepository.Table
+                .Where(x =>
+                    !x.Deleted &&
+                    x.EmployeeId == employeeId &&
+                    x.LeaveCreditsforYear == year &&
+                    x.LeaveTypeId == paidLeaveTypeId)
+                .ToListAsync();
 
-            var unpaid = _leaveCreditRepository.Table.FirstOrDefault(x =>
-                !x.Deleted &&
-                x.EmployeeId == employeeId &&
-                x.LeaveCreditsforYear == year &&
-                x.LeaveTypeId == unpaidLeaveTypeId);
+            var unpaidLeaves = await _leaveCreditRepository.Table
+                .Where(x =>
+                    !x.Deleted &&
+                    x.EmployeeId == employeeId &&
+                    x.LeaveCreditsforYear == year &&
+                    x.LeaveTypeId == unpaidLeaveTypeId)
+                .ToListAsync();
 
-            return (
-                paid?.CasualLeaves ?? 0,
-                paid?.SickLeaves ?? 0,
-                unpaid?.CasualLeaves ?? 0,
-                unpaid?.SickLeaves ?? 0
+            //return (
+            //    paid?.CasualLeaves ?? 0,
+            //    paid?.SickLeaves ?? 0,
+            //    unpaid?.CasualLeaves ?? 0,
+            //    unpaid?.SickLeaves ?? 0
+            //);
+            return
+            (
+                paidLeaves.Sum(x => x.CasualLeaves),
+                paidLeaves.Sum(x => x.SickLeaves),
+                unpaidLeaves.Sum(x => x.CasualLeaves),
+                unpaidLeaves.Sum(x => x.SickLeaves)
             );
         }
 

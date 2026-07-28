@@ -591,7 +591,7 @@ const showMultiSelectOptions = ref(false);
 const selectedField = ref(null);
 const authStore = useAuthStore();
 const user = authStore.user;
-const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
+const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 // const selectedProjectId = history.state?.projectId;
 const route = useRoute();
@@ -601,13 +601,6 @@ const showManageDropdownOptions = ref(false);
 const showSortDialog = ref(false);
 const activeEdit = ref({ rowId: null, field: null });
 
-// local storage values
-// const localStorageKey = "Issue";
-// const filterLocalStorage = getLocalStorage(localStorageKey);
-// const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
-
-// const highlightIssueId = filterLocalStorage?.activeRowId || null;
-// const activeRowId = ref(highlightIssueId);
 const highlightedId = computed(() => {
   return activeRowId.value;
 });
@@ -665,24 +658,6 @@ const refreshIssueList = () => {
 // ------------------------------------------------------------------------------------
 // Advance Filter :- On Submit & Cancel
 // ------------------------------------------------------------------------------------
-
-// const getFilterValue = (key, defaultValue) => {
-//   const val = filterLocalStorage?.[key];
-//   return val && val.length > 0 ? val : defaultValue;
-// };
-
-// Search variables
-// const search = ref({
-//   searchText: getFilterValue("searchText", ""),
-//   projectIds: getFilterValue("projectIds", selectedProjectId ? [selectedProjectId] : (filterLocalStorage?.projectIds || [])),
-//   projectModuleIds: getFilterValue("projectModuleIds", []),
-//   issueTypeIds: getFilterValue("issueTypeIds", []),
-//   priorityIds: getFilterValue("priorityIds", []),
-//   statusIds: getFilterValue("statusIds", []),
-//   employeeIds: getFilterValue("employeeIds", []),
-//   issueNumber: getFilterValue("issueNumber", 0),
-//   name: getFilterValue("name", "")
-// });
 
 // Search records as per parameters
 const onAdvanceSearch = () => {

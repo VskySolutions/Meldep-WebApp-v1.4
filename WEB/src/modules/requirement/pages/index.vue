@@ -961,7 +961,7 @@ const shownProjects = new Set();
 const route = useRoute();
 const authStore = useAuthStore();
 const user = authStore.user;
-const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
+const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 const editingStatusList = ref(["Confirmed", "Draft"]);
 const selectedProjectId = history.state?.projectId;

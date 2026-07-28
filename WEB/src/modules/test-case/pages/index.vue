@@ -508,7 +508,7 @@ const showFilter = ref(false);
 const searchLoader = ref(false);
 const authStore = useAuthStore();
 const user = authStore.user;
-const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
+const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 const dropdownTypes = ref([]);
 const showManageDropdownOptions = ref(false);

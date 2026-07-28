@@ -188,6 +188,7 @@ const onLogout = async () => {
   }
 
   router.replace({ name: "login" });
+  // window.location.reload();
 };
 
 const getSharedSites = async () => {

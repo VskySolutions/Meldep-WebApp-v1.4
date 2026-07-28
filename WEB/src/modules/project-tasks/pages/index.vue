@@ -901,7 +901,7 @@ const authStore = useAuthStore();
 
 const loading = ref(true);
 const user = authStore.user;
-const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
+const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 
 const activeEdit = ref({ rowId: null, field: null });

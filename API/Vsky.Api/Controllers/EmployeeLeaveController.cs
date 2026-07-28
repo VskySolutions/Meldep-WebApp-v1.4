@@ -453,49 +453,71 @@ namespace Vsky.Api.Controllers
                     // check casual leave credit balance
                     if (model.LeaveCategoryId == CasualLeaveId.Id)
                     {
-                        var totalUsedCasualLeaves = _employeeLeaveService.GetUsedLeaveByEmployeeIdAndLeaveCategoryId(employeeId, currentYear, CasualLeaveId.Id);
-                        var remainingCasualLeaves = casualLeaves - totalUsedCasualLeaves;
-                        if (model.NoofLeaves > remainingCasualLeaves || remainingCasualLeaves == 0 || model.TotalDeduction > remainingCasualLeaves)
-                            return BadRequest(new BadRequestError("You have an insufficient casual leave balance."));
+                        //var totalUsedCasualLeaves = _employeeLeaveService.GetUsedLeaveByEmployeeIdAndLeaveCategoryId(employeeId, currentYear, CasualLeaveId.Id);
+                        //var remainingCasualLeaves = casualLeaves - totalUsedCasualLeaves;
+                        //if (model.NoofLeaves > remainingCasualLeaves || remainingCasualLeaves == 0 || model.TotalDeduction > remainingCasualLeaves)
+                        //    return BadRequest(new BadRequestError("You have an insufficient casual leave balance."));
 
-                        //var remainingCasualLeaves = paidCasual - totalUsedCasualLeaves;
+                        var paidCasualUsed =  _employeeLeaveService.GetUsedPaidLeaveByCategory(
+                            employeeId,
+                            currentYear,
+                            CasualLeaveId.Id
+                        );
+
+                        var paidCasualRemaining = paidCasual - paidCasualUsed;
                         //var remainingPaidCasual = Math.Max(0, paidCasual - totalUsedCasualLeaves);
                         //var remainingTotalCasual = Math.Max(0, (paidCasual + unpaidCasual) - totalUsedCasualLeaves);
 
-                        //if (leaveToDeduct > remainingTotalCasual)
-                        //    return BadRequest(new BadRequestError("You have an insufficient casual leave balance."));
+                        if (leaveToDeduct > paidCasualRemaining)
+                            return BadRequest(new BadRequestError("You have an insufficient casual leave balance."));
 
-                        // Decide Paid / Unpaid
-                        //entity.IsPaidLeave = remainingPaidCasual >= leaveToDeduct;
+                        //Decide Paid / Unpaid
+                        entity.IsPaidLeave = paidCasualRemaining >= leaveToDeduct;
                     }
                     else
                     {
                         // check sick leave credit balance
-                        var totalUsedSickLeaves = _employeeLeaveService.GetUsedLeaveByEmployeeIdAndLeaveCategoryId(employeeId, currentYear, SickLeaveId.Id);
-                        var remainingSickLeaves = sickLeaves - totalUsedSickLeaves;
-                        if (model.NoofLeaves > remainingSickLeaves || remainingSickLeaves == 0 || model.TotalDeduction > remainingSickLeaves)
-                            return BadRequest(new BadRequestError("You have an insufficient sick leave balance."));
+                        var totalUsedSick = _employeeLeaveService.GetUsedLeaveByEmployeeIdAndLeaveCategoryId(employeeId, currentYear, SickLeaveId.Id);
+                        //var remainingSickLeaves = sickLeaves - totalUsedSickLeaves;
+                        //if (model.NoofLeaves > remainingSickLeaves || remainingSickLeaves == 0 || model.TotalDeduction > remainingSickLeaves)
+                        //    return BadRequest(new BadRequestError("You have an insufficient sick leave balance."));
 
                         //var remainingSickLeaves = paidSick - totalUsedSickLeaves;
                         //var remainingPaidSick = Math.Max(0, paidSick - totalUsedSickLeaves);
                         //var remainingTotalSick = Math.Max(0, (paidSick + unpaidSick) - totalUsedSickLeaves);
 
-                        //// Check total balance (Paid + Unpaid)
-                        //if (leaveToDeduct > remainingTotalSick)
-                        //    return BadRequest(new BadRequestError("You have an insufficient sick leave balance."));
+                        var paidSickUsed = _employeeLeaveService.GetUsedPaidLeaveByCategory(
+                            employeeId,
+                            currentYear,
+                            SickLeaveId.Id);
+
+                        var unpaidSickUsed = _employeeLeaveService.GetUsedUnpaidLeaveByCategory(
+                            employeeId,
+                            currentYear,
+                            SickLeaveId.Id);
+
+                        //var paidSickRemaining = paidSick - totalUsedSick;
+
+                        var paidSickRemaining = paidSick - paidSickUsed;
+                        var unpaidSickRemaining = unpaidSick - unpaidSickUsed;
+                        var totalRemaining = paidSickRemaining + unpaidSickRemaining;
+
+                        // Check total balance (Paid + Unpaid)
+                        if (leaveToDeduct > totalRemaining)
+                            return BadRequest(new BadRequestError("You have an insufficient sick leave balance."));
 
                         //// Decide Paid / Unpaid
-                        //entity.IsPaidLeave = remainingPaidSick >= leaveToDeduct;
+                        entity.IsPaidLeave = paidSickRemaining >= leaveToDeduct;
                     }
 
                     var (paid, unpaid) = _leaveCreditService.GetLeaveCreditsByEmployeeIdandType(SiteId, employeeId, currentYear);
                     var usedleaves = _employeeLeaveService.GetUsedLeaveByEmployeeId(employeeId, currentYear);
                     var leaveapproverId = await _employeeDesignationService.GetEmployeeDesignationByEmployeeId(entity.EmployeeId);
 
-                    if (paid > usedleaves)
-                        entity.IsPaidLeave = true;
-                    else
-                        entity.IsPaidLeave = false;
+                    //if (paid > usedleaves)
+                    //    entity.IsPaidLeave = true;
+                    //else
+                    //    entity.IsPaidLeave = false;
 
                     if (leaveapproverId != null)
                         entity.LeaveApproverId = leaveapproverId.LeaveApproverId;

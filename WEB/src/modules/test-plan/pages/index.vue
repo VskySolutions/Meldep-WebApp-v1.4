@@ -382,23 +382,10 @@ const showSortDialog = ref(false);
 const shownProjects = new Set();
 const authStore = useAuthStore();
 const user = authStore.user;
-const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
+const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
-
-// local storage values
-// const localStorageKey = "Test Plan";
-// const filterLocalStorage = getLocalStorage(localStorageKey);
-// const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
-
-// const highlightTestPlanId = filterLocalStorage?.activeRowId || null;
-// const activeRowId = ref(highlightTestPlanId);
 const highlightedId = computed(() => { return activeRowId.value; });
 
-// function setActiveRowIdInLocalStorage (id) {
-//   const storedData = getLocalStorage(localStorageKey) || {};
-//   setLocalStorage(localStorageKey, { ...storedData, activeRowId: id });
-//   activeRowId.value = id;
-// }
 function setActiveRowIdInLocalStorage(id) {
   activeRowId.value = id;
 

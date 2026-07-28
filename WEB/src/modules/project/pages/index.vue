@@ -1161,7 +1161,7 @@ const loading = ref(true);
 const user = authStore.user;
 const loggedUserId = user.userId;
 const loginUserEmployeeId = user?.employeeId;
-const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
+const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 
 const currentSiteId = computed(() => user.siteId);

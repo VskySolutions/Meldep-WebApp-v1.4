@@ -626,6 +626,8 @@ const getCompany = () => {
     // model.value.createdDateStr = resp.comapnyCreatedDate ? toDate(resp.comapnyCreatedDate) : "";
     model.value.employeeId = resp.employee.id;
     model.value.description = resp.description ? resp.description : "";
+    console.log("model.value", model.value);
+    console.log("model.value.stateProvinceId", model.value.stateProvinceId);
     rows.value = resp.companyContacts.map(contact => ({
       ...contact,
       editing: false,
@@ -640,7 +642,6 @@ const getCompany = () => {
       companyId: model.value.companyId,
       flag: "Edit"
     }));
-    console.log(model.value.stateProvinceId);
   }).finally(() => {
     loading.value = false;
   });
@@ -1058,8 +1059,12 @@ watch(() => props.id, (newValue, oldValue) => {
   }
 }, { immediate: true });
 
-watch(() => model.value.countryId, (newValue, oldValue) => {
-  model.value.stateProvinceId = newValue !== oldValue && oldValue !== null ? "" : model.value.stateProvinceId;
+const isInitialLoad = ref(true);
+watch(() => model.value.countryId, async (newValue, oldValue) => {
+  // model.value.stateProvinceId = newValue !== oldValue && oldValue !== null ? "" : model.value.stateProvinceId;
+  if (!isInitialLoad.value && newValue !== oldValue) {
+    model.value.stateProvinceId = "";
+  }
   if (newValue) {
     maxLengthCountry = baseCountryId === model.value.countryId ? "14" : "10";
     maxLengthZip = baseCountryId === model.value.countryId ? "5" : "6";

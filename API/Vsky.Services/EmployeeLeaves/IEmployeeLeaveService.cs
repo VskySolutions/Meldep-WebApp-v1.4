@@ -76,6 +76,25 @@ namespace Vsky.Services.EmployeeLeaves
         decimal GetUsedLeaveByEmployeeIdAndLeaveCategoryId(string employeeId, int year, string leaveCategoryId, string id = null);
         #endregion
 
+        #region GetUsedPaidLeaveByCategory
+        decimal GetUsedPaidLeaveByCategory(
+           string employeeId,
+           int year,
+           string categoryId,
+           string id = null
+        );
+        #endregion
+
+
+        #region GetUsedUnpaidLeaveByCategory
+        public decimal GetUsedUnpaidLeaveByCategory(
+           string employeeId,
+           int year,
+           string categoryId,
+           string id = null
+       );
+        #endregion
+
         #region GetEmployeeLeaveDetailsById
         Task<EmployeeLeave> GetEmployeeLeaveDetailsById(string id);
         #endregion

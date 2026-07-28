@@ -10,5 +10,9 @@ module.exports = {
   MS_Logout_BASE_URL: "https://meldep.com/auth/login",
   // MS_Client_Id: "719a4df3-64d2-49cc-92de-6d3694adadde",
   MS_Client_Id: "c59d0cd0-f0fa-4c59-94a4-a6b4b00582d1",
-  MS_Authority_Url: "https://login.microsoftonline.com/fe6a2362-9b42-4ec8-8684-3fb1a542df8c/oauth2/v2.0/token"
+  MS_Authority_Url: "https://login.microsoftonline.com/fe6a2362-9b42-4ec8-8684-3fb1a542df8c/oauth2/v2.0/token",
+  AI_Chat_Assistant_Cdn: "https://chatbot.meldep.com/sop-agent/cdn/vsky_sop_assistant.js",
+  AI_Chat_Assistant_ApiBase: "https://chatbot.meldep.com/",
+  AI_Chat_Assistant_ApiKey: "ag_067dc77f-6520-42ed-9e10-36c34b122411",
+  AI_Chat_Assistant_Instance: "prod"
 };
