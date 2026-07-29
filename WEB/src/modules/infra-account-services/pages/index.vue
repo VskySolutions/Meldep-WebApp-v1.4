@@ -306,7 +306,7 @@
                         v-model="props.row.priceStartDate"
                         label="Price Start Date"
                         :wrapperClass="'col-12'"
-                        :dateOptions="date => disableFutureDates(date, props.row.priceEndDate)"
+                        :dateOptions="date => disableFutureDates(date, props.row.oldPriceStartDate, props.row.priceEndDate)"
                         :error="!!props.row.priceStartDateError"
                         :error-message="props.row.priceStartDateError"
                         :disable="!isPriceChanged(props.row)"
@@ -516,7 +516,7 @@
                   >
                     <q-tooltip>Delete</q-tooltip>
                   </q-icon>
-                    <q-icon
+                  <q-icon
                     name="o_stop_circle"
                     class="cursor-pointer q-ml-sm"
                     size="xs"
@@ -556,60 +556,42 @@
               </q-tr>
               <q-separator />
             </template>
-            <!-- <template #bottom-row>
-              <q-tr v-if="rows.length" class="bg-grey-2 text-black">
-                <q-td colspan="7" class="text-right text-weight-bold">
+            <template #bottom-row>
+              <q-tr
+                v-if="rows.length && totalPriceColumnIndex !== -1"
+                class="bg-grey-2 text-black"
+              >
+                <!-- Columns before Total Services Cost -->
+                <q-td
+                  :colspan="totalPriceColumnIndex"
+                  class="text-right text-weight-bold"
+                >
                   Total Price:
                 </q-td>
+
+                <!-- Total Services Cost -->
                 <q-td class="text-right text-weight-bold">
                   ${{ totalPrice.toFixed(2) }}
                 </q-td>
-                <q-td class="text-right text-weight-bold">
+
+                <!-- Year To Date -->
+                <q-td
+                  v-if="totalYtdColumnIndex !== -1"
+                  class="text-right text-weight-bold"
+                >
                   ${{ totalYtd.toFixed(2) }}
                 </q-td>
-                <q-td />
-                <q-td />
-                <q-td />
+
+                <!-- Remaining visible columns -->
+                <q-td
+                  v-for="n in trailingColumns"
+                  :key="n"
+                />
+
+                <!-- Action column -->
                 <q-td />
               </q-tr>
-              <q-separator />
-            </template> -->
-            <template #bottom-row>
-    <q-tr
-      v-if="rows.length && totalPriceColumnIndex !== -1"
-      class="bg-grey-2 text-black"
-    >
-      <!-- Columns before Total Services Cost -->
-      <q-td
-        :colspan="totalPriceColumnIndex"
-        class="text-right text-weight-bold"
-      >
-        Total Price:
-      </q-td>
-
-      <!-- Total Services Cost -->
-      <q-td class="text-right text-weight-bold">
-        ${{ totalPrice.toFixed(2) }}
-      </q-td>
-
-      <!-- Year To Date -->
-      <q-td
-        v-if="totalYtdColumnIndex !== -1"
-        class="text-right text-weight-bold"
-      >
-        ${{ totalYtd.toFixed(2) }}
-      </q-td>
-
-      <!-- Remaining visible columns -->
-      <q-td
-        v-for="n in trailingColumns"
-        :key="n"
-      />
-
-      <!-- Action column -->
-      <q-td />
-    </q-tr>
-  </template>
+            </template>
           </q-table>
         </div>
       </div>
@@ -972,23 +954,31 @@ function disableBeforePriceStartDate(date, startDate) {
   return new Date(date) >= new Date(startDate);
 }
 
-const disableFutureDates = (date, endDate) => {
+const disableFutureDates = (date, startDate, endDate) => {
   const selectedDate = new Date(date);
   selectedDate.setHours(0, 0, 0, 0);
 
-  // No End Date → allow only today and previous dates
-  if (!endDate) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    return selectedDate <= today;
+  // End Date exists → allow only dates after End Date
+  if (endDate) {
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+
+    return selectedDate > end;
   }
 
-  // End Date exists → allow only dates AFTER End Date
-  const end = new Date(endDate);
-  end.setHours(0, 0, 0, 0);
+  // Previous Start Date exists → allow dates from Start Date to Today
+  if (startDate) {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
 
-  return selectedDate > end;
+    return selectedDate >= start && selectedDate <= today;
+  }
+
+  // Default → disable future dates
+  return selectedDate <= today;
 };
 
 function getInfraAccountServicesByInfraAccountId(infraAccountId) {

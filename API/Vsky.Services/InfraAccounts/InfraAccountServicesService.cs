@@ -276,7 +276,7 @@ namespace Vsky.Services.InfraAccounts
                     ActualPriceInDollar = Math.Round(
                         (decimal) m.InfraAccountServicesPriceHistory
                                 .Where(ph => !ph.Deleted)
-                                .OrderByDescending(ph => ph.StartDate)
+                                .OrderByDescending(ph => ph.CreatedOnUtc)
                                 .Select(ph => ph.Price)
                                 .FirstOrDefault() /
                         Math.Max(
@@ -373,7 +373,7 @@ namespace Vsky.Services.InfraAccounts
                         },
                     }).ToList(),
 
-                    Price = m.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.StartDate).Select(ph => ph.Price).FirstOrDefault(),
+                    Price = m.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.Price).FirstOrDefault(),
                 });
                 var item = await query.FirstOrDefaultAsync();
             return item;

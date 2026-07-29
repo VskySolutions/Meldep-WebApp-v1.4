@@ -236,7 +236,20 @@
                       {{ props.row.advanceExpenseStatus === 'Approved' ? 'View Details' : 'Approve/Decline Expense' }}
                     </q-tooltip>
                   </q-icon>
-                  <q-icon v-if="(roles.includes('finance-approver') || roles.includes('finance-preapprove') || role) && props.row.advanceExpenseStatus == 'Request For Cancellation'" name="o_cancel" class="cursor-pointer q-mr-sm" @click="onForwardToApprover(props.row, 'Cancelled')">
+                  <!-- <q-icon v-if="(roles.includes('finance-approver') || roles.includes('finance-preapprove') || role) && props.row.advanceExpenseStatus == 'Request For Cancellation'" name="o_cancel" class="cursor-pointer q-mr-sm" @click="onForwardToApprover(props.row, 'Cancelled')">
+                    <q-tooltip>Cancel Expense Request</q-tooltip>
+                  </q-icon> -->
+                  <q-icon
+                    v-if="
+                      (roles.includes('finance-approver') || roles.includes('finance-preapprove') || role) &&
+                      props.row.advanceExpenseStatus == 'Request For Cancellation' ||
+                      (roles.includes('finance-approver') &&
+                      props.row.advanceExpenseStatus == 'Approved')
+                    "
+                    name="o_cancel"
+                    class="cursor-pointer q-mr-sm"
+                    @click="onForwardToApprover(props.row, 'Cancelled')"
+                  >
                     <q-tooltip>Cancel Expense Request</q-tooltip>
                   </q-icon>
                   <q-icon

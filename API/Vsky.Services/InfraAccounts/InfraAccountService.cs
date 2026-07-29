@@ -272,7 +272,6 @@ namespace Vsky.Services.InfraAccounts
                         URL = m.URL,
                         StartDate = m.StartDate,
                         EndDate = m.EndDate,
-                        PriceInDollar = m.PriceInDollar,
                         WalletNumber = m.WalletNumber,
                         Instructions = m.Instructions,
                         ItemType = new DropDown
@@ -295,7 +294,9 @@ namespace Vsky.Services.InfraAccounts
                             Id = m.WalletType.Id,
                             DropDownValue = m.WalletType.DropDownValue
                         },
-                        Price = m.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.StartDate).Select(ph => ph.Price).FirstOrDefault(),
+                        Price = m.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.Price).FirstOrDefault(),
+                        PriceEndDate = (DateTime)m.InfraAccountServicesPriceHistory.OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.EndDate).FirstOrDefault(),
+                        PriceStartDate = m.InfraAccountServicesPriceHistory.OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.StartDate).FirstOrDefault(),
                         InfraFTPList = m.InfraFTPList.Where(m => !m.Deleted).Select(x => new InfraFTP
                         {
                             Id = x.Id,
