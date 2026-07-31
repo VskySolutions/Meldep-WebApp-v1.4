@@ -254,7 +254,9 @@ namespace Vsky.Services.TestCases
                     Id = x.ProjectModule.Id,
                     Name = x.ProjectModule.Name
                 },
-                Requirement = new Requirement
+                Requirement = x.Requirement == null
+                    ? null
+                    : new Requirement
                 {
                     Id = x.Requirement.Id,
                     RequirementNumber = x.Requirement.RequirementNumber
