@@ -10,6 +10,7 @@ public class ProjectTask : BaseEntity
     public string SiteId { get; set; }
     public string ProjectId { get; set; }
     public string ProjectModuleId { get; set; }
+    public string RequirementId { get; set; }
     public string AreaId { get; set; }
     public string WorkspaceId { get; set; }
     public string StatusId { get; set; }
@@ -52,6 +53,7 @@ public class ProjectTask : BaseEntity
 
     public virtual Project Project { get; set; }
     public virtual ProjectModule ProjectModule { get; set; }
+    public virtual Requirement Requirement { get; set; }
     public virtual DropDown Area { get; set; }
     public virtual DropDown Workspace { get; set; }
     public virtual Employee AssignedTo { get; set; }

@@ -591,7 +591,9 @@ namespace Vsky.Services.Requirements
                 Status = new DropDown
                 {
                     Id = x.Status.Id,
-                    DropDownValue = x.Status.DropDownValue
+                    DropDownValue = x.Status.DropDownValue,
+                    BgColor = x.Status.BgColor,
+                    Color = x.Status.Color
                 },
                 UserType = new DropDown
                 {
@@ -601,7 +603,9 @@ namespace Vsky.Services.Requirements
                 Priority = new DropDown
                 {
                     Id = x.Priority.Id,
-                    DropDownValue = x.Priority.DropDownValue
+                    DropDownValue = x.Priority.DropDownValue,
+                    BgColor = x.Priority.BgColor,
+                    Color = x.Priority.Color
                 },
                 ApprovalStatusDropDown = new DropDown
                 {

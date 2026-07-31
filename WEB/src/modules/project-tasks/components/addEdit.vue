@@ -75,7 +75,15 @@
                       </formSingleSelectDropdown>
                     </div>
                     <div class="row q-col-gutter-x-md q-mb-md">
-                      <div class="col-xxl-6 col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                      <formSingleSelectDropdown
+                        v-model="model.requirementId"
+                        label="Requirement"
+                        :required="false"
+                        :disable="!model.projectModuleId"
+                        :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
+                        :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                      />
+                      <div class="col-xxl-8 col-lg-8 col-md-8 col-sm-8 col-xs-12">
                         <label class="label q-mb-xs text-black">Task Name<span class="required">*</span></label>
                         <div>
                           <q-input
@@ -90,11 +98,12 @@
                           />
                         </div>
                       </div>
+                    </div>
+                    <div class="row q-col-gutter-x-md q-mb-lg">
                       <formSingleSelectDropdown
                         v-model="model.areaId"
                         label="Area"
                         :required="false"
-                        :wrapperClass="'col-xxl-3 col-lg-3 col-md-3 col-sm-3 col-xs-12'"
                         :options="areaForDropdownSingleSelect.list.value"
                         :filter="areaForDropdownSingleSelect.filter"
                       />
@@ -102,20 +111,18 @@
                         v-model="model.workspaceId"
                         label="Workspace"
                         :required="false"
-                        :wrapperClass="'col-xxl-3 col-lg-3 col-md-3 col-sm-3 col-xs-12'"
                         :options="workspaceForDropdownSingleSelect.list.value"
                         :filter="workspaceForDropdownSingleSelect.filter"
                       />
-                    </div>
-                    <div class="row q-col-gutter-x-md q-mb-md">
                       <formSingleSelectDropdown
                         v-model="model.actionId"
                         label="Action"
                         :required="false"
-                        :wrapperClass="'col-xxl-3 col-lg-3 col-md-3 col-sm-3 col-xs-12'"
                         :options="projectTaskActionForDropdownSingleSelect.list.value"
                         :filter="projectTaskActionForDropdownSingleSelect.filter"
                       />
+                    </div>
+                    <div class="row q-col-gutter-x-md q-mb-xs">
                       <div class="col-12 col-sm-6 col-md-3">
                         <div class="row items-end no-wrap full-width">
                           <div class="col">
@@ -190,8 +197,6 @@
                           </q-select>
                         </div>
                       </div>
-                    </div>
-                    <div class="row q-col-gutter-x-md q-mb-md">
                       <formSingleSelectDropdown
                         v-model="model.priorityId"
                         label="Priority"
@@ -201,6 +206,8 @@
                         :error="v$.priorityId.$error"
                         :error-message="v$.priorityId.$errors[0]?.$message"
                       />
+                    </div>
+                    <div class="row q-col-gutter-x-md q-mb-xs">
                       <formDate
                         v-model="model.startDateStr"
                         label="Start Date"
@@ -224,10 +231,8 @@
                         :options="projectTaskTypeForDropdownSingleSelect.list.value"
                         :filter="projectTaskTypeForDropdownSingleSelect.filter"
                       />
-                    </div>
-                    <div class="row q-col-gutter-x-md q-mb-md">
                       <div class="col-12 col-sm-3 col-md-3 col-lg-3">
-                        <div class="q-mb-xs text-black">
+                        <div class="text-black">
                           Sort Order<span class="required">*</span>
                         </div>
                         <div class="flex items-center">
@@ -486,6 +491,7 @@ import projectModuleOfProjectModule from "src/modules/project-modules/utils/drop
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectTaskModule from "src/modules/project-tasks/utils/dropdowns.js";
 import projectTasksActivities from "src/modules/project-tasks-activities/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
 // SOP Change :- Shared Project Dialogs
@@ -783,6 +789,8 @@ const {
   projectTaskPriorityForDropdownSingleSelect,
   projectTaskTypeForDropdownSingleSelect
 } = projectTaskModule();
+
+const { requirementByProjectModuleIdForDropdownSingleSelect } = requirementModule();
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // All Dropdowns
@@ -1311,6 +1319,9 @@ watch([prefix, fraction], () => {
 watch(() => model.value.projectModuleId, (newValue, oldValue) => {
   if (newValue) {
     getSortOrderByModuleId(newValue);
+    if (newValue == null) return;
+
+    requirementByProjectModuleIdForDropdownSingleSelect.load(newValue);
   }
 }, { immediate: true });
 

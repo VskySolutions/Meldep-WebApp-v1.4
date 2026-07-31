@@ -48,25 +48,33 @@
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Requirement Title</div>
+                    <div class="text-black">
+                      {{ model.requirement?.title ? model.requirement.title : "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Area</div>
                     <div class="text-black">
                       {{ model.area.dropDownValue ? model.area.dropDownValue : "-" }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Workspace</div>
                     <div class="text-black">
                       {{ model.workspace.dropDownValue ? model.workspace.dropDownValue : "-" }}
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Action</div>
                     <div class="text-black">
                       {{ model.action.dropDownValue ? model.action.dropDownValue : "-" }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Task Owner</div>
@@ -75,57 +83,56 @@
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Estimated Hours</div>
                     <div class="text-black">
                       {{ model.estimateTime ? model.estimateTime : "-" }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Status</div>
                     <div class="text-black">
                       {{ model.status.dropDownValue ? model.status.dropDownValue : "-" }}
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
-
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Priority</div>
                     <div class="text-black">
                       {{ model.priority.dropDownValue ? model.priority.dropDownValue : "-" }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Start Date</div>
                     <div class="text-black">
                       {{ model.startDate ? model.startDate : "-" }}
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Due Date</div>
                     <div class="text-black">
                       {{ model.endDate ? model.endDate : "-" }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Type</div>
                     <div class="text-black">
                       {{ model.type ? model.type.dropDownValue : "-" }}
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Sort Order</div>
                     <div class="text-black">
                       {{ Number(model.sortOrder).toFixed(3) }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Activity Hrs</div>
                     <div class="text-black">
@@ -133,10 +140,8 @@
                     </div>
                   </div>
                 </div>
-                <!-- <div class="row q-col-gutter-x-md q-mb-md">
-                </div> -->
                 <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12">
+                  <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Issue</div>
                     <div class="text-black">
                       <span v-if="model.issueNumbersWithStatuses">
@@ -151,9 +156,7 @@
                       <span v-else>-</span>
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12">
+                  <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Requirement</div>
                     <div class="text-black">
                       <span v-if="model.requirementNumbersWithStatuses">
@@ -326,6 +329,9 @@ const model = ref({
   },
   projectModule: {
     name: ""
+  },
+  requirement: {
+    title: ""
   },
   area: {
     dropDownValue: ""

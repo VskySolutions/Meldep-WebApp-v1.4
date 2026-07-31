@@ -32,6 +32,10 @@ namespace Vsky.Services.Issues
         List<VWProjectIssueStatusSummary> GetIssueStatusSummaryByProjectIds(List<string> projectIds);
         #endregion
 
+        #region GetIssuesByRequirementId
+        Task<List<Issue>> GetIssuesByRequirementId(string siteId, string requirementId);
+        #endregion
+
         #region GetIssueById
         Task<Issue> GetIssueById(string id);
         #endregion

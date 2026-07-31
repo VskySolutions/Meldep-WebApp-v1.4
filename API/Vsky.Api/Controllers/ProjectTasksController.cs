@@ -139,6 +139,7 @@ namespace Vsky.Api.Controllers
                     searchModel.ProjectTaskNumber,
                     searchModel.ProjectIds,
                     searchModel.ProjectModuleIds,
+                    searchModel.RequirementIds,
                     searchModel.ProjectTaskIds,
                     searchModel.ProjectLeadsIds,
                     searchModel.StatusIds,
@@ -977,6 +978,13 @@ namespace Vsky.Api.Controllers
                         model.TypeId != "null"
                             ? model.TypeId
                             : null;
+
+                    entity.RequirementId =
+                        !string.IsNullOrWhiteSpace(model.RequirementId) &&
+                        model.RequirementId != "undefined" &&
+                        model.RequirementId != "null"
+                            ? model.RequirementId
+                            : null;
                     entity.CreatedById = LoggedUserId;
                     entity.UpdatedById = LoggedUserId;
                     entity.CreatedOnUtc = GetDateTime;
@@ -1271,6 +1279,12 @@ namespace Vsky.Api.Controllers
 
                     entity.ProjectId = model.ProjectId;
                     entity.ProjectModuleId = model.ProjectModuleId;
+                    entity.RequirementId =
+                        !string.IsNullOrWhiteSpace(model.RequirementId) &&
+                        model.RequirementId != "undefined" &&
+                        model.RequirementId != "null"
+                            ? model.RequirementId
+                            : null;
                     entity.AreaId = model.AreaId;
                     entity.WorkspaceId = model.WorkspaceId;
                     entity.ActionId = model.ActionId;
@@ -1808,6 +1822,7 @@ namespace Vsky.Api.Controllers
                         {
                             string projectId = model.ProjectId;
                             string projectModuleId = model.ProjectModuleId;
+                            string requirementId = model.RequirementId;
                             string name = item.Name;
                             string StartDateStr = item.StartDateStr;
                             string EndDateStr = item.EndDateStr;
@@ -1829,6 +1844,7 @@ namespace Vsky.Api.Controllers
                                     moduleSortOrder = module.SortOrder;
                                     projectId = issueData.Project.Id;
                                     projectModuleId = issueData.ProjectModule.Id;
+                                    requirementId = issueData.Requirement.Id;
                                     name = issueData.Name;
                                     StartDateStr = issueData.ProjectModule?.StartDate?.ToString("MM/dd/yyyy") ?? issueData.Project?.StartDate?.ToString("MM/dd/yyyy");
                                     EndDateStr = issueData.ProjectModule?.EndDate?.ToString("MM/dd/yyyy") ?? issueData.Project?.GoLiveDate?.ToString("MM/dd/yyyy");
@@ -1848,6 +1864,7 @@ namespace Vsky.Api.Controllers
                                     moduleSortOrder = module.SortOrder;
                                     projectId = requirementData.Project.Id;
                                     projectModuleId = requirementData.ProjectModule.Id;
+                                    requirementId = item.RequirementId;
                                     name = requirementData.Title;
                                     StartDateStr = requirementData.ProjectModule?.StartDate?.ToString("MM/dd/yyyy") ?? requirementData.Project?.StartDate?.ToString("MM/dd/yyyy");
                                     EndDateStr = requirementData.ProjectModule?.EndDate?.ToString("MM/dd/yyyy") ?? requirementData.Project?.GoLiveDate?.ToString("MM/dd/yyyy");
@@ -1899,6 +1916,7 @@ namespace Vsky.Api.Controllers
                             entity.SiteId = SiteId;
                             entity.ProjectId = projectId;
                             entity.ProjectModuleId = projectModuleId;
+                            entity.RequirementId = requirementId;
                             entity.SortOrder = NextSortOrderOfProjectTask;
                             entity.ProjectTaskNumber = lastTaskNumber;
                             //entity.Description = Description;
@@ -2744,7 +2762,7 @@ namespace Vsky.Api.Controllers
                 searchModel.SortBy = "calendar";
 
             var fullPageSize = int.MaxValue;
-            var tasks = await _taskService.GetAllProjectTasks(SiteId, LoggedUserId, searchModel.SearchText, searchModel.IsTemplate, searchModel.ProjectTaskNumber, searchModel.ProjectIds, searchModel.ProjectModuleIds, null, searchModel.ProjectLeadsIds, searchModel.StatusIds, searchModel.PriorityIds, searchModel.CustomerIds, searchModel.CompanyContactIds, searchModel.ActivityOwners, searchModel.Name, searchModel.TaskTagsIds, searchModel.SortBy, searchModel.Sorts, searchModel.Descending, 1, fullPageSize);
+            var tasks = await _taskService.GetAllProjectTasks(SiteId, LoggedUserId, searchModel.SearchText, searchModel.IsTemplate, searchModel.ProjectTaskNumber, searchModel.ProjectIds, searchModel.ProjectModuleIds, searchModel.RequirementIds, null, searchModel.ProjectLeadsIds, searchModel.StatusIds, searchModel.PriorityIds, searchModel.CustomerIds, searchModel.CompanyContactIds, searchModel.ActivityOwners, searchModel.Name, searchModel.TaskTagsIds, searchModel.SortBy, searchModel.Sorts, searchModel.Descending, 1, fullPageSize);
 
             // selected month 
             //var now = CalendarMonth;

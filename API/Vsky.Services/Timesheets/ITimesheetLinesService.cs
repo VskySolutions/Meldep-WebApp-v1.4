@@ -44,6 +44,21 @@ namespace Vsky.Services.Timesheets
         Task<List<TimesheetLines>> GetTimesheetLinesDetailsByIds(string[] ids);
         #endregion
 
+        #region Get Timesheets For Requirement Center
+        Task<List<TimesheetLines>> GetTimesheetsByRequirementId(string siteId, string requirementId);
+        Task<List<TimesheetLines>> GetTimesheetDetails(
+            string siteId,
+            string requirementId,
+            string groupBy,
+            string groupId
+        );
+        Task<List<TimesheetGroupModel>> GetGroupedTimesheetsByRequirementId(
+            string siteId,
+            string requirementId,
+            string groupBy
+        );
+        #endregion
+
         #region InsertTimesheetLines
         void InsertTimesheetLines(TimesheetLines entity);
         #endregion

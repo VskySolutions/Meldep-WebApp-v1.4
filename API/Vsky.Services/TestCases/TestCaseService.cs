@@ -257,7 +257,7 @@ namespace Vsky.Services.TestCases
                 Requirement = new Requirement
                 {
                     Id = x.Requirement.Id,
-                    Title = x.Requirement.Title
+                    RequirementNumber = x.Requirement.RequirementNumber
                 },
                 Status = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
                 .Where(m => !m.Deleted)
@@ -391,6 +391,44 @@ namespace Vsky.Services.TestCases
         }
         #endregion
 
+        #region GetTestCasesByRequirementId
+        public async Task<List<TestCase>> GetTestCasesByRequirementId(string siteId, string requirementId)
+        {
+            var query = _testCaseRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+            query = query.Select(x => new TestCase
+            {
+                Id = x.Id,
+                TestCaseNumber = x.TestCaseNumber,
+                Name = x.Name,
+                TestedDate = x.TestedDate,
+                PlanId = x.PlanId,
+                Status = new DropDown
+                {
+                    Id = x.Status.Id,
+                    DropDownValue = x.Status.DropDownValue,
+                    BgColor = x.Status.BgColor,
+                    Color = x.Status.Color
+                },
+                Project = new Project
+                {
+                    Id = x.Project.Id,
+                    Name = x.Project.Name
+                },
+                TestedByEmployee = new Employee
+                {
+                    Person = new Person
+                    {
+                        Id = x.TestedByEmployee.Person.Id,
+                        FullName = x.TestedByEmployee.Person.FirstName + " " + x.TestedByEmployee.Person.LastName,
+                    }
+                }
+            });
+
+            var list = await query.ToListAsync();
+            return list;
+        }
+        #endregion
+
         #region GetStatusChangeLog
         public async Task<List<TestCaseStatusChangeLogDto>> GetStatusChangeLog(string mappingId)
         {
@@ -476,7 +514,9 @@ namespace Vsky.Services.TestCases
                 Status = new DropDown
                 {
                     Id = x.Status.Id,
-                    DropDownValue = x.Status.DropDownValue
+                    DropDownValue = x.Status.DropDownValue,
+                    BgColor = x.Status.BgColor,
+                    Color = x.Status.Color
                 },
                 TestPlan = new TestPlan
                 {

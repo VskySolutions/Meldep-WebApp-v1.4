@@ -18,6 +18,7 @@ namespace Vsky.Services.ProjectTasks
             int projectTaskNumber,
             List<string> projectIds, 
             List<string> projectModuleIds,
+            List<string> requirementIds,
             List<string> projectTaskIds,
             List<string> leadIds,
             List<string> statusIds,
@@ -100,6 +101,10 @@ namespace Vsky.Services.ProjectTasks
 
         #region GetById
         Task<ProjectTask> GetById(string id);
+        #endregion
+
+        #region GetTasksByRequirementId
+        Task<List<ProjectTask>> GetTasksByRequirementId(string siteId, string requirementId);
         #endregion
 
         #region GetProjectTaskDetailsById

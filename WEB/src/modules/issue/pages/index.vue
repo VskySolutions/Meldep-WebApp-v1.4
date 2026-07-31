@@ -13,7 +13,7 @@
               <q-breadcrumbs-el label="Issues" />
             </q-breadcrumbs>
           </div>
-          <div class="col-12 col-md-5">
+          <div class="col-12 col-md-4">
             <div class="row items-center">
               <span v-if="Object.keys(appliedFilters).length > 0" class="text-grey-10 text-caption" style="font-weight: 600;">Filters On :</span>
               <q-chip v-for="(value, key) in appliedFilters" :key="key" class="bg-grey-3 text-grey-10 text-caption q-mr-xs filter-chip">
@@ -22,7 +22,7 @@
               </q-chip>
             </div>
           </div>
-          <div class="col-12 col-md-5">
+          <div class="col-12 col-md-6">
             <div class="row items-center justify-end no-wrap">
               <div class="row items-center q-mr-xs">
                 <div class="search-container position-relative">
@@ -194,7 +194,7 @@
                   <q-tooltip>Sort</q-tooltip>
                 </q-btn>
                 <q-btn
-                  v-if="selectedProjectId"
+                  v-if="search.projectIds?.length > 0 && search.requirementIds?.length > 0"
                   icon="o_chevron_left"
                   outline
                   label="Back"
@@ -338,8 +338,14 @@
                 <q-td v-if="selectedColumnNames.includes('projectModule.name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.projectModule.name }}
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('requirement.title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                  {{ props.row.requirement.title }}
+                <q-td v-if="selectedColumnNames.includes('requirement.requirementNumber')"
+                  class="common-q-td hoverable-cell"
+                  style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
+                  @click="onRequirementView(props.row.requirement?.id)"
+                >
+                  <span v-if="props.row.requirement?.requirementNumber">
+                    #{{ props.row.requirement?.requirementNumber }}
+                  </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('projectTaskRelatedMappings')">
                   <span v-if="props.row.projectTaskRelatedMappings?.length">
@@ -573,6 +579,11 @@ import {
   onNoteAdd
 } from "src/modules/common/utils/dialogs.js";
 
+import {
+  initRequirementDialogs,
+  onRequirementView
+} from "src/modules/requirement/utils/dialogs.js";
+
 // Shared Issue Actions
 import {
   initIssueActions,
@@ -624,7 +635,7 @@ const columns = ref([
   { name: "issueNumber", label: "Id", field: "issueNumber", align: "left", sortable: true, default: true},
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true, default: true },
-  { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: false },
+  { name: "requirement.requirementNumber", label: "Requirement", field: "requirement.requirementNumber", align: "left", sortable: true, default: false },
   { name: "projectTaskRelatedMappings", label: "Task", field: "projectTaskRelatedMappings", align: "left", sortable: false, default: true },
   { name: "name", label: "Issue Name", field: "name", align: "left", sortable: true, default: true },
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true, default: true },
@@ -728,6 +739,24 @@ const {
     .filter(col => col.default === true)
     .map(col => col.name)
 });
+
+if (history.state?.projectId) {
+  search.value.projectIds = Array.isArray(history.state.projectId)
+    ? history.state.projectId
+    : [history.state.projectId];
+}
+
+if (history.state?.projectModuleId) {
+  search.value.projectModuleIds = Array.isArray(history.state.projectModuleId)
+    ? history.state.projectModuleId
+    : [history.state.projectModuleId];
+}
+
+if (history.state?.requirementId) {
+  search.value.requirementIds = Array.isArray(history.state.requirementId)
+    ? history.state.requirementId
+    : [history.state.requirementId];
+}
 
 const lsSorts = sorts.value || null;
 // ----------------------------------------------------------------------------------------------------------------
@@ -1093,6 +1122,7 @@ initIssueDialogs(activeRowId);
 initProjectDialogs(activeRowId);
 initProjectTaskDialogs(activeRowId);
 initCommonDialogs(activeRowId);
+initRequirementDialogs(activeRowId);
 initIssueActions(activeRowId);
 
 // ----------------------------------------------------------------------------------------------------------------

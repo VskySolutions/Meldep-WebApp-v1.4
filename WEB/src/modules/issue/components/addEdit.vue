@@ -12,57 +12,47 @@
             <fieldset>
               <legend>Issue Info</legend>
               <div class="row q-col-gutter-x-md q-mb-md">
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.projectId"
-                    label="Project Name"
-                    :options="projectNameDropdownSingleSelect.list.value"
-                    :filter="projectNameDropdownSingleSelect.filter"
-                    :error="v$.projectId.$error"
-                    :error-message="v$.projectId.$errors[0]?.$message"
-                  />
-                </div>
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.projectModuleId"
-                    label="Project Module"
-                    :disable="!model.projectId"
-                    :options="projectModulesByProjectIdForDropdownSingleSelect.list.value"
-                    :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
-                    :error="v$.projectModuleId.$error"
-                    :error-message="v$.projectModuleId.$errors[0]?.$message"
-                  />
-                </div>
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.requirementId"
-                    label="Requirement"
-                    :required="false"
-                    :disable="!model.projectModuleId"
-                    :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
-                    :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
-                  />
-                </div>
+                <formSingleSelectDropdown
+                  v-model="model.projectId"
+                  label="Project Name"
+                  :options="projectNameDropdownSingleSelect.list.value"
+                  :filter="projectNameDropdownSingleSelect.filter"
+                  :error="v$.projectId.$error"
+                  :error-message="v$.projectId.$errors[0]?.$message"
+                />
+                <formSingleSelectDropdown
+                  v-model="model.projectModuleId"
+                  label="Project Module"
+                  :disable="!model.projectId"
+                  :options="projectModulesByProjectIdForDropdownSingleSelect.list.value"
+                  :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
+                  :error="v$.projectModuleId.$error"
+                  :error-message="v$.projectModuleId.$errors[0]?.$message"
+                />
+                <formSingleSelectDropdown
+                  v-model="model.requirementId"
+                  label="Requirement"
+                  :required="false"
+                  :disable="!model.projectModuleId"
+                  :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
+                  :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                />
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.areaId"
-                    label="Area"
-                    :required="false"
-                    :options="areaForDropdownSingleSelect.list.value"
-                    :filter="areaForDropdownSingleSelect.filter"
-                  />
-                </div>
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.workspaceId"
-                    label="Workspace"
-                    :required="false"
-                    :options="workspaceForDropdownSingleSelect.list.value"
-                    :filter="workspaceForDropdownSingleSelect.filter"
-                  />
-                </div>
+                <formSingleSelectDropdown
+                  v-model="model.areaId"
+                  label="Area"
+                  :required="false"
+                  :options="areaForDropdownSingleSelect.list.value"
+                  :filter="areaForDropdownSingleSelect.filter"
+                />
+                <formSingleSelectDropdown
+                  v-model="model.workspaceId"
+                  label="Workspace"
+                  :required="false"
+                  :options="workspaceForDropdownSingleSelect.list.value"
+                  :filter="workspaceForDropdownSingleSelect.filter"
+                />
                 <div class="col-12 col-sm-4 col-md-4">
                   <label class="label q-mb-xs text-black">Issue Title<span class="required">*</span></label>
                   <div>
@@ -80,67 +70,55 @@
                 </div>
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.priorityId"
-                    label="Issue Priority"
-                    :options="issuePriorityDropdownSingleSelect.list.value"
-                    :filter="issuePriorityDropdownSingleSelect.filter"
-                    :error="v$.priorityId.$error"
-                    :error-message="v$.priorityId.$errors[0]?.$message"
-                  />
-                </div>
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.statusId"
-                    label="Status"
-                    :options="issueStatusDropdownSingleSelect.list.value"
-                    :filter="issueStatusDropdownSingleSelect.filter"
-                    :error="v$.statusId.$error"
-                    :error-message="v$.statusId.$errors[0]?.$message"
-                  />
-                </div>
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.typeId"
-                    label="Issue Type"
-                    :options="issueTypeForDropdownSingleSelect.list.value"
-                    :filter="issueTypeForDropdownSingleSelect.filter"
-                    :error="v$.typeId.$error"
-                    :error-message="v$.typeId.$errors[0]?.$message"
-                  />
-                </div>
+                <formSingleSelectDropdown
+                  v-model="model.priorityId"
+                  label="Issue Priority"
+                  :options="issuePriorityDropdownSingleSelect.list.value"
+                  :filter="issuePriorityDropdownSingleSelect.filter"
+                  :error="v$.priorityId.$error"
+                  :error-message="v$.priorityId.$errors[0]?.$message"
+                />
+                <formSingleSelectDropdown
+                  v-model="model.statusId"
+                  label="Status"
+                  :options="issueStatusDropdownSingleSelect.list.value"
+                  :filter="issueStatusDropdownSingleSelect.filter"
+                  :error="v$.statusId.$error"
+                  :error-message="v$.statusId.$errors[0]?.$message"
+                />
+                <formSingleSelectDropdown
+                  v-model="model.typeId"
+                  label="Issue Type"
+                  :options="issueTypeForDropdownSingleSelect.list.value"
+                  :filter="issueTypeForDropdownSingleSelect.filter"
+                  :error="v$.typeId.$error"
+                  :error-message="v$.typeId.$errors[0]?.$message"
+                />
               </div>
-              <div class="row q-col-gutter-x-md q-mb-sm">
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.reportedById"
-                    label="Reported By"
-                    :required="false"
-                    :options="activeEmployeesDropdownSingleSelect.list.value"
-                    :filter="activeEmployeesDropdownSingleSelect.filter"
-                  />
-                </div>
-                <div class="col-12 col-sm-4 col-md-4">
-                  <formSingleSelectDropdown
-                    v-model="model.employeeId"
-                    label="Assigned To"
-                    :required="false"
-                    :options="activeEmployeesDropdownSingleSelect.list.value"
-                    :filter="activeEmployeesDropdownSingleSelect.filter"
-                  />
-                </div>
-                <div class="col-12 col-sm-4 col-md-4 q-mb-md">
-                  <formDate
-                    v-model="model.dueDateStr"
-                    label="Due Date"
-                    :required="false"
-                    :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
-                    :error="v$.dueDateStr.$error"
-                    :error-message="v$.dueDateStr.$errors[0]?.$message"
-                    :onBlur="() => v$.dueDateStr.$touch()"
-                  />
-                </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
+                <formSingleSelectDropdown
+                  v-model="model.reportedById"
+                  label="Reported By"
+                  :required="false"
+                  :options="activeEmployeesDropdownSingleSelect.list.value"
+                  :filter="activeEmployeesDropdownSingleSelect.filter"
+                />
+                <formSingleSelectDropdown
+                  v-model="model.employeeId"
+                  label="Assigned To"
+                  :required="false"
+                  :options="activeEmployeesDropdownSingleSelect.list.value"
+                  :filter="activeEmployeesDropdownSingleSelect.filter"
+                />
+                <formDate
+                  v-model="model.dueDateStr"
+                  label="Due Date"
+                  :required="false"
+                  :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
+                  :error="v$.dueDateStr.$error"
+                  :error-message="v$.dueDateStr.$errors[0]?.$message"
+                  :onBlur="() => v$.dueDateStr.$touch()"
+                />
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">

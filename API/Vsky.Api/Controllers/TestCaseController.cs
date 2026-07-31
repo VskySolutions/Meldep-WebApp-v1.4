@@ -290,6 +290,14 @@ namespace Vsky.Api.Controllers
                             entity.TestCaseNumber.ToString()
                         );
 
+
+                    entity.RequirementId =
+                        !string.IsNullOrWhiteSpace(model.RequirementId) &&
+                        model.RequirementId != "undefined" &&
+                        model.RequirementId != "null"
+                            ? model.RequirementId
+                            : null;
+
                     entity.CreatedById = LoggedUserId;
                     entity.UpdatedById = LoggedUserId;
                     entity.CreatedOnUtc = GetDateTime;
@@ -315,6 +323,14 @@ namespace Vsky.Api.Controllers
                             issue.SiteId = SiteId;
                             issue.TestCaseId = TestCaseId;
                             issue.ProjectId = model.ProjectId;
+                            issue.ProjectModuleId = model.ProjectModuleId;
+
+                            issue.RequirementId =
+                                !string.IsNullOrWhiteSpace(model.RequirementId) &&
+                                model.RequirementId != "undefined" &&
+                                model.RequirementId != "null"
+                                    ? model.RequirementId
+                                    : null;
                             issue.Name = model.Name;
                             issue.PriorityId = medium;
                             issue.StatusId = newstatus;
@@ -381,7 +397,13 @@ namespace Vsky.Api.Controllers
 
                     entity.ProjectId = model.ProjectId;
                     entity.ProjectModuleId = model.ProjectModuleId;
-                    entity.RequirementId = model.RequirementId;
+
+                    entity.RequirementId =
+                        !string.IsNullOrWhiteSpace(model.RequirementId) &&
+                        model.RequirementId != "undefined" &&
+                        model.RequirementId != "null"
+                            ? model.RequirementId
+                            : null;
                     entity.PlanId = model.PlanId;
                     entity.Name = model.Name;
                     entity.StatusId = model.StatusId;
@@ -445,6 +467,8 @@ namespace Vsky.Api.Controllers
                             issue.SiteId = SiteId;
                             issue.TestCaseId = model.Id;
                             issue.ProjectId = model.ProjectId;
+                            issue.ProjectModuleId = entity.ProjectModuleId;
+                            issue.RequirementId = !string.IsNullOrWhiteSpace(entity.RequirementId) && entity.RequirementId != "undefined" && entity.RequirementId != "null" ? entity.RequirementId : null;
                             issue.Name = model.Name;
                             issue.PriorityId = medium;
                             issue.StatusId = newstatus;
@@ -542,6 +566,14 @@ namespace Vsky.Api.Controllers
                         issue.SiteId = SiteId;
                         issue.TestCaseId = entity.Id;
                         issue.ProjectId = entity.ProjectId;
+                        issue.ProjectModuleId = entity.ProjectModuleId;
+
+                        issue.RequirementId =
+                            !string.IsNullOrWhiteSpace(entity.RequirementId) &&
+                            entity.RequirementId != "undefined" &&
+                            entity.RequirementId != "null"
+                                ? entity.RequirementId
+                                : null;
                         issue.Name = entity.Name;
                         issue.PriorityId = medium;
                         issue.StatusId = newstatus;

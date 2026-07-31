@@ -322,6 +322,202 @@ namespace Vsky.Services.Timesheets
         }
         #endregion
 
+        #region Get Timesheets For Requirement Center
+        public async Task<List<TimesheetLines>> GetTimesheetsByRequirementId(string siteId, string requirementId)
+        {
+            var query = _timesheetLinesRepository.TableNoTracking.Where(m => !m.Deleted && m.Timesheet.SiteId == siteId && m.Task.RequirementId == requirementId);
+
+            query = query.Select(x => new TimesheetLines
+            {
+                Id = x.Id,
+                Hours = x.Hours,
+                Description = x.Description,
+                Project = new Project
+                {
+                    Id = x.Project.Id,
+                    Name = x.Project.Name
+                },
+                Task = new ProjectTask
+                {
+                    Id = x.Task.Id,
+                    Name = x.Task.Name
+                },
+                ProjectActivity = new ProjectActivity
+                {
+                    Id = x.ProjectActivity.Id,
+                    Name = x.ProjectActivity.Name
+                },
+                Timesheet = new Timesheet
+                {
+                    TimesheetDate = x.Timesheet.TimesheetDate,
+                    User = new ApplicationUser
+                    {
+                        Id = x.Timesheet.User.Id,
+                        UserName = x.Timesheet.User.UserName,
+                        Person = new Person
+                        {
+                            Id = x.Timesheet.User.PersonId,
+                            FirstName = x.Timesheet.User.Person.FirstName,
+                            LastName = x.Timesheet.User.Person.LastName,
+                            FullName = x.Timesheet.User.Person.FirstName + " " + x.Timesheet.User.Person.LastName,
+                        }
+                    },
+                }
+            });
+
+            var list = await query
+                .OrderByDescending(x => x.Timesheet.TimesheetDate)
+                .ThenBy(x => x.Timesheet.User.Person.FullName)
+                .ToListAsync();
+            return list;
+        }
+
+        public async Task<List<TimesheetLines>> GetTimesheetDetails(
+            string siteId,
+            string requirementId,
+            string groupBy,
+            string groupId
+        )
+        {
+            var query = _timesheetLinesRepository.TableNoTracking
+                .Where(x =>
+                    !x.Deleted &&
+                    x.Timesheet.SiteId == siteId &&
+                    x.Task.RequirementId == requirementId);
+
+            switch (groupBy?.ToLower())
+            {
+                case "employee":
+                    query = query.Where(x => x.Timesheet.User.Id == groupId);
+                    break;
+
+                case "task":
+                    query = query.Where(x => x.Task.Id == groupId);
+                    break;
+
+                default:
+                    var date = DateTime.Parse(groupId);
+
+                    query = query.Where(x =>
+                        x.Timesheet.TimesheetDate.Value.Date == date.Date);
+                    break;
+            }
+
+            return await query
+            .Select(x => new TimesheetLines
+            {
+                Id = x.Id,
+                Hours = x.Hours,
+                Description = x.Description,
+                Project = new Project
+                {
+                    Id = x.Project.Id,
+                    Name = x.Project.Name
+                },
+                Task = new ProjectTask
+                {
+                    Id = x.Task.Id,
+                    Name = x.Task.Name
+                },
+                ProjectActivity = new ProjectActivity
+                {
+                    Id = x.ProjectActivity.Id,
+                    Name = x.ProjectActivity.Name
+                },
+                Timesheet = new Timesheet
+                {
+                    TimesheetDate = x.Timesheet.TimesheetDate,
+                    User = new ApplicationUser
+                    {
+                        Id = x.Timesheet.User.Id,
+                        UserName = x.Timesheet.User.UserName,
+                        Person = new Person
+                        {
+                            Id = x.Timesheet.User.PersonId,
+                            FirstName = x.Timesheet.User.Person.FirstName,
+                            LastName = x.Timesheet.User.Person.LastName,
+                            FullName = x.Timesheet.User.Person.FirstName + " " + x.Timesheet.User.Person.LastName
+                        }
+                    }
+                }
+            })
+            .OrderByDescending(x => x.Timesheet.TimesheetDate)
+            .ThenBy(x => x.Timesheet.User.Person.FullName)
+            .ToListAsync();
+        }
+
+        public async Task<List<TimesheetGroupModel>> GetGroupedTimesheetsByRequirementId(
+            string siteId,
+            string requirementId,
+            string groupBy
+        )
+        {
+            var query = _timesheetLinesRepository.TableNoTracking
+                .Where(x =>
+                    !x.Deleted &&
+                    x.Timesheet.SiteId == siteId &&
+                    x.Task.RequirementId == requirementId);
+
+            switch (groupBy?.ToLower())
+            {
+                case "employee":
+                    return await query
+                        .GroupBy(x => new
+                        {
+                            x.Timesheet.User.Id,
+                            Name = x.Timesheet.User.Person.FirstName + " " +
+                                   x.Timesheet.User.Person.LastName
+                        })
+                        .Select(g => new TimesheetGroupModel
+                        {
+                            Id = g.Key.Id,
+                            Name = g.Key.Name,
+                            Count = g.Count(),
+                            Hours = g.Sum(x => x.Hours)
+                        })
+                        .OrderBy(x => x.Name)
+                        .ToListAsync();
+
+                case "task":
+                    return await query
+                        .GroupBy(x => new
+                        {
+                            x.Task.Id,
+                            x.Task.Name
+                        })
+                        .Select(g => new TimesheetGroupModel
+                        {
+                            Id = g.Key.Id,
+                            Name = g.Key.Name,
+                            Count = g.Count(),
+                            Hours = g.Sum(x => x.Hours)
+                        })
+                        .OrderBy(x => x.Name)
+                        .ToListAsync();
+
+                default: // date
+                    var dateGroups = await query
+                        .GroupBy(x => x.Timesheet.TimesheetDate.Value.Date)
+                        .Select(g => new
+                        {
+                            Date = g.Key,
+                            Count = g.Count(),
+                            Hours = g.Sum(x => x.Hours)
+                        })
+                        .OrderByDescending(x => x.Date)
+                        .ToListAsync();
+
+                    return dateGroups.Select(x => new TimesheetGroupModel
+                    {
+                        Id = x.Date.ToString("yyyy-MM-dd"),
+                        Name = x.Date.ToString("MM/dd/yyyy"),
+                        Count = x.Count,
+                        Hours = x.Hours
+                    }).ToList();
+            }
+        }
+        #endregion
+
         #region InsertTimesheetLines
         // Title: InsertTimesheetLines
         // Description: This method inserts a timesheet line entity into the repository. It takes a timesheet line object as input and uses the _timesheetLinesRepository to handle the insertion operation.

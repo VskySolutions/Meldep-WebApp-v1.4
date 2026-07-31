@@ -44,6 +44,7 @@ namespace Vsky.Api.Models
 
         public bool IsIssueConverted { get; set; }
         public bool IsRequirementConverted { get; set; }
+        public string RequirementId { get; set; }
 
         public virtual Project Project { get; set; }
         public virtual DropDown ProjectModuleStatus { get; set; }

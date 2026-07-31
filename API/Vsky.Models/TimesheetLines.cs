@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Vsky.Core;
 
 namespace Vsky.Models;
@@ -58,4 +54,12 @@ public class TimesheetLines : BaseEntity
 
     public virtual ApplicationUser BillableCreatedBy { get; set; }
 
+}
+public class TimesheetGroupModel
+{
+    public DateTime Date { get; set; }
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public int Count { get; set; }
+    public decimal Hours { get; set; }
 }

@@ -206,6 +206,13 @@ namespace Vsky.Api.Controllers
                             );
                     }
 
+                    entity.RequirementId =
+                        !string.IsNullOrWhiteSpace(model.RequirementId) &&
+                        model.RequirementId != "undefined" &&
+                        model.RequirementId != "null"
+                            ? model.RequirementId
+                            : null;
+
                     entity.SiteId = SiteId;
                     entity.CreatedById = LoggedUserId;
                     entity.UpdatedById = LoggedUserId;
@@ -258,7 +265,13 @@ namespace Vsky.Api.Controllers
 
                     entity.ProjectId = model.ProjectId;
                     entity.ProjectModuleId = model.ProjectModuleId;
-                    entity.RequirementId = model.RequirementId;
+
+                    entity.RequirementId =
+                        !string.IsNullOrWhiteSpace(model.RequirementId) &&
+                        model.RequirementId != "undefined" &&
+                        model.RequirementId != "null"
+                            ? model.RequirementId
+                            : null;
                     entity.AreaId = model.AreaId;
                     entity.WorkspaceId = model.WorkspaceId;
                     entity.Name = model.Name;

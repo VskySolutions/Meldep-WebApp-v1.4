@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.JsonPatch.Internal;
 using Microsoft.EntityFrameworkCore;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.ApplicationUserRoles;
 using Vsky.Services.Common;
-using Vsky.Services.Sites;
 
 namespace Vsky.Services.Issues
 {
@@ -239,7 +236,7 @@ namespace Vsky.Services.Issues
                 Requirement = new Requirement
                 {
                     Id = x.Requirement.Id,
-                    Title = x.Requirement.Title
+                    RequirementNumber = x.Requirement.RequirementNumber
                 },
                 TestCase = new TestCase
                 {
@@ -385,6 +382,51 @@ namespace Vsky.Services.Issues
             });
 
             var list = new PagedList<Issue>(query, page, pageSize);
+            return list;
+        }
+        #endregion
+
+        #region GetIssuesByRequirementId
+        public async Task<List<Issue>> GetIssuesByRequirementId(string siteId, string requirementId)
+        {
+            var query = _issueRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+            query = query.Select(x => new Issue
+            {
+                Id = x.Id,
+                IssueNumber = x.IssueNumber,
+                Name = x.Name,
+                Project = new Project
+                {
+                    Id = x.Project.Id,
+                    Name = x.Project.Name,
+                    StartDate = x.Project.StartDate,
+                    GoLiveDate = x.Project.GoLiveDate
+                },
+                Employee = new Employee
+                {
+                    Person = new Person
+                    {
+                        Id = x.Employee.Person.Id,
+                        FullName = x.Employee.Person.FirstName + " " + x.Employee.Person.LastName,
+                    }
+                },
+                Status = new DropDown
+                {
+                    Id = x.Status.Id,
+                    DropDownValue = x.Status.DropDownValue,
+                    BgColor = x.Status.BgColor,
+                    Color = x.Status.Color
+                },
+                Priority = new DropDown
+                {
+                    Id = x.Priority.Id,
+                    DropDownValue = x.Priority.DropDownValue,
+                    BgColor = x.Priority.BgColor,
+                    Color = x.Priority.Color
+                }
+            });
+
+            var list = await query.ToListAsync();
             return list;
         }
         #endregion

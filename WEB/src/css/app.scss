@@ -788,3 +788,14 @@ background-color: inherit;
   overflow-y: auto;
   max-height: 300px;
 }
+
+// Requirement dashboard
+.req-dashboard-table .q-table thead th {
+  font-size: 12px;
+  font-weight: 600;
+  // color: #64748b !important;
+}
+
+.req-dashboard-table .q-table tbody td {
+  height: 40px;
+}

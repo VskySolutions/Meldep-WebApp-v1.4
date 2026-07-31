@@ -95,6 +95,7 @@ namespace Vsky.Services.ProjectTasks
             int projectTaskNumber,
             List<string> projectIds,
             List<string> moduleIds,
+            List<string> requirementIds,
             List<string> projectTaskIds,
             List<string> leadIds,
             List<string> statusIds,
@@ -129,6 +130,7 @@ namespace Vsky.Services.ProjectTasks
             if (projectTaskNumber != 0) query = query.Where(x => x.ProjectTaskNumber == projectTaskNumber);
             if (projectIds?.Any() == true) query = query.Where(x => projectIds.Contains(x.ProjectId));
             if (moduleIds?.Any() == true) query = query.Where(x => moduleIds.Contains(x.ProjectModuleId));
+            if (requirementIds?.Any() == true) query = query.Where(x => requirementIds.Contains(x.RequirementId));
             if (projectTaskIds?.Any() == true) query = query.Where(x => projectTaskIds.Contains(x.Id));
             if (leadIds?.Any() == true) query = query.Where(x => x.Project.ProjectEmployeeMappings.Any(m => leadIds.Contains(m.EmployeeId) && !m.Deleted && m.EmployeeRoleDropdown.DropDownValue == "Project Lead"));
             if (statusIds?.Any() == true) query = query.Where(x => statusIds.Contains(x.StatusId));
@@ -209,6 +211,7 @@ namespace Vsky.Services.ProjectTasks
                 ProjectId = x.ProjectId,
                 PriorityId = x.PriorityId,
                 ProjectModuleId = x.ProjectModuleId,
+                RequirementId = x.RequirementId,
                 ProjectTaskNumber = x.ProjectTaskNumber,
                 EstimateTime = x.EstimateTime,
                 TaskMonth = x.TaskMonth,
@@ -260,6 +263,14 @@ namespace Vsky.Services.ProjectTasks
                         ViewOnly = m.ViewOnly,
                         Notes = m.Notes
                     }).ToList()
+                },
+                Requirement = x.Requirement == null
+                    ? null
+                    : new Requirement
+                {
+                    Id = x.Requirement.Id,
+                    Title = x.Requirement.Title,
+                    RequirementNumber = x.Requirement.RequirementNumber
                 },
                 Status = new DropDown { Id = x.Status.Id, DropDownValue = x.Status.DropDownValue },
                 Priority = new DropDown { Id = x.Priority.Id, DropDownValue = x.Priority.DropDownValue },
@@ -857,6 +868,53 @@ namespace Vsky.Services.ProjectTasks
         }
         #endregion
 
+        #region GetTasksByRequirementId
+        public async Task<List<ProjectTask>> GetTasksByRequirementId(string siteId, string requirementId)
+        {
+            var query = _projectTaskRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+            query = query.Select(x => new ProjectTask
+            {
+                Id = x.Id,
+                ProjectTaskNumber = x.ProjectTaskNumber,
+                Name = x.Name,
+                ProjectModuleId = x.ProjectModuleId,
+                EndDate = x.EndDate,
+                Project = new Project
+                {
+                    Id = x.Project.Id,
+                    Name = x.Project.Name,
+                    StartDate = x.Project.StartDate,
+                    GoLiveDate = x.Project.GoLiveDate
+                },
+                AssignedTo = new Employee
+                {
+                    Person = new Person
+                    {
+                        Id = x.AssignedTo.Person.Id,
+                        FullName = x.AssignedTo.Person.FirstName + " " + x.AssignedTo.Person.LastName,
+                    }
+                },
+                Status = new DropDown
+                {
+                    Id = x.Status.Id,
+                    DropDownValue = x.Status.DropDownValue,
+                    BgColor = x.Status.BgColor,
+                    Color = x.Status.Color
+                },
+                Priority = new DropDown
+                {
+                    Id = x.Priority.Id,
+                    DropDownValue = x.Priority.DropDownValue,
+                    BgColor = x.Priority.BgColor,
+                    Color = x.Priority.Color
+                }
+            });
+
+            var list = await query.ToListAsync();
+            return list;
+        }
+        #endregion
+
         #region GetProjectTaskDetailsById
         // Title: GetProjectTaskDetailsById
         // Description: The method selects relevant fields from the ProjectTask entity, including related entities such as ProjectTask status, and returns a `ProjectTask` object with these details. 
@@ -869,6 +927,7 @@ namespace Vsky.Services.ProjectTasks
                 ProjectTaskNumber = x.ProjectTaskNumber,
                 ProjectId = x.ProjectId,
                 ProjectModuleId = x.ProjectModuleId,
+                RequirementId = x.RequirementId,
                 AreaId = x.AreaId,
                 WorkspaceId = x.WorkspaceId,
                 ActionId = x.ActionId,
@@ -897,6 +956,10 @@ namespace Vsky.Services.ProjectTasks
                 {
                     Id = x.ProjectModule.Id,
                     Name = x.ProjectModule.Name
+                },
+                Requirement = new Requirement
+                {
+                    Title = x.Requirement.Title
                 },
                 Area = new DropDown
                 {

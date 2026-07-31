@@ -68,6 +68,7 @@ namespace Vsky.Api.Models
         public virtual DropDownModel Workspace { get; set; }
         public virtual DropDownModel Action { get; set; }
         public virtual ProjectModuleModel ProjectModule { get; set; }
+        public virtual Requirement Requirement { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }
 
@@ -88,6 +89,7 @@ namespace Vsky.Api.Models
         public string ProjectId { get; set; }
         public string SearchTaskText { get; set; }
         public List<string> ProjectModuleIds { get; set; }
+        public List<string> RequirementIds { get; set; }
         public List<string> ProjectTaskIds { get; set; }
         public List<string> ProjectLeadsIds { get; set; }
         public List<string> StatusIds { get; set; }

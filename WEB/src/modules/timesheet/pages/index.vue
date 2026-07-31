@@ -223,6 +223,15 @@
                   </q-badge>
                   <q-tooltip>Sort</q-tooltip>
                 </q-btn>
+                <q-btn
+                  v-if="selectedProjectId"
+                  icon="o_chevron_left"
+                  outline
+                  label="Back"
+                  no-caps
+                  class="text-primary btnRounded no-space-between q-ml-sm"
+                  @click="$router.back()"
+                />
               </div>
             </div>
           </div>
@@ -477,6 +486,7 @@ const searchLoader = ref(false);
 const shownProjects = new Set();
 const shownTasks = new Set();
 const showSortDialog = ref(false);
+const selectedProjectId = history.state?.projectId;
 
 // ----------------------------------------------------------------------------------------------------------------
 // Local Storage:- DataTable and Advance Filter Values
@@ -652,6 +662,10 @@ const {
     .filter(col => col.default === true)
     .map(col => col.name)
 });
+
+if (history.state?.projectId) {
+  search.value.projectId = history.state.projectId;
+}
 
 const lsSorts = sorts.value || null;
 const visibleColumnCount = computed(() => selectedColumnNames.value.length);

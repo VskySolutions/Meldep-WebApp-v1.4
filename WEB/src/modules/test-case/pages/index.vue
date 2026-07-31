@@ -211,7 +211,7 @@
                   <q-tooltip>Sort</q-tooltip>
                 </q-btn>
                 <q-btn
-                  v-if="search.projectIds?.length > 0 && search.planIds?.length > 0"
+                  v-if="(search.projectIds?.length > 0 && search.planIds?.length > 0) || (search.projectIds?.length > 0 && search.requirementIds?.length > 0)"
                   icon="o_chevron_left"
                   outline
                   label="Back"
@@ -322,8 +322,14 @@
                 <q-td v-if="selectedColumnNames.includes('projectModule.name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.projectModule.name }}
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('requirement.title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                  {{ props.row.requirement.title }}
+                <q-td v-if="selectedColumnNames.includes('requirement.requirementNumber')"
+                  class="common-q-td hoverable-cell"
+                  style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
+                  @click="onRequirementView(props.row.requirement?.id)"
+                >
+                  <span v-if="props.row.requirement?.requirementNumber">
+                    #{{ props.row.requirement?.requirementNumber }}
+                  </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('testPlan.name')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   <span
@@ -482,6 +488,11 @@ import {
   onTestCaseStatusChangeLog
 } from "src/modules/test-case/utils/dialogs.js";
 
+import {
+  initRequirementDialogs,
+  onRequirementView
+} from "src/modules/requirement/utils/dialogs.js";
+
 // SOP Change :- Shared Project Dialogs
 import {
   initProjectDialogs,
@@ -524,7 +535,7 @@ const columns = ref([
   { name: "testCaseNumber", label: "Id", field: "testCaseNumber", align: "left", sortable: true, default: true },
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true, default: false },
-  { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: false },
+  { name: "requirement.requirementNumber", label: "Req. No.", field: "requirement.requirementNumber", align: "left", sortable: true, default: false },
   { name: "testPlan.name", label: "Test Plan Name", field: "testPlan.name", align: "left", sortable: true, default: true },
   { name: "name", label: "Test Case Name", field: "name", align: "left", sortable: true, default: true },
   { name: "status.dropDownValue", label: "Test Case Status", field: "status.dropDownValue", align: "left", sortable: true, default: true },
@@ -666,6 +677,18 @@ if (history.state?.planId) {
   search.value.planIds = Array.isArray(history.state.planId)
     ? history.state.planId
     : [history.state.planId];
+}
+
+if (history.state?.projectModuleId) {
+  search.value.projectModuleIds = Array.isArray(history.state.projectModuleId)
+    ? history.state.projectModuleId
+    : [history.state.projectModuleId];
+}
+
+if (history.state?.requirementId) {
+  search.value.requirementIds = Array.isArray(history.state.requirementId)
+    ? history.state.requirementId
+    : [history.state.requirementId];
 }
 
 const highlightedId = computed(() => {
@@ -814,6 +837,7 @@ const {
 // DataTable:- Initialization Of Dialogs, Actions
 // ------------------------------------------------------------------------------------
 initTestCaseDialogs(activeRowId);
+initRequirementDialogs(activeRowId);
 initProjectDialogs(activeRowId);
 initTestPlanDialogs(activeRowId);
 initTestCaseActions(activeRowId);

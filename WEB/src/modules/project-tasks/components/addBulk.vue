@@ -11,14 +11,14 @@
           <div class="q-gutter-y-md">
             <fieldset>
               <legend>Basic Info</legend>
-              <div class="row q-col-gutter-x-md q-mb-md addBulkTasks">
+              <div class="row q-col-gutter-x-md q-mb-md">
                 <formSingleSelectDropdown
                   v-model="model.projectId"
                   label="Project"
                   :readonly="!!readonlyProject"
                   :options="projectNameDropdownSingleSelect.list.value"
                   :filter="projectNameDropdownSingleSelect.filter"
-                  :wrapperClass="'col-xxl-6 col-lg-6 col-md-6 col-sm-6 col-xs-12'"
+                  :wrapper-class="'addBulkTasks col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                 />
                 <formSingleSelectDropdown
                   v-model="model.projectModuleId"
@@ -26,7 +26,15 @@
                   :readonly="!!readonlyProjectModule"
                   :options="projectModulesByProjectIdForDropdownSingleSelect.list.value"
                   :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
-                  :wrapperClass="'col-xxl-6 col-lg-6 col-md-6 col-sm-6 col-xs-12'"
+                  :wrapper-class="'addBulkTasks col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
+                />
+                <formSingleSelectDropdown
+                  v-model="model.requirementId"
+                  label="Requirement"
+                  :required="false"
+                  :disable="!model.projectModuleId"
+                  :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
+                  :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
                 />
               </div>
             </fieldset>
@@ -262,6 +270,7 @@ import commonService from "services/common.service";
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectTaskModule from "src/modules/project-tasks/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
 import formDate from "src/components/form-inputs/_formDate.vue";
 
@@ -472,7 +481,7 @@ function disableBeforeStartDate (date) {
   if (!editingRow.value.startDateStr) {
     return true;
   }
-  
+
   const start = parse(editingRow.value.startDateStr, "MM/dd/yyyy", new Date());
   const currentDate = parse(date, "yyyy/MM/dd", new Date());
 
@@ -574,6 +583,7 @@ async function onSubmit () {
       const payload = {
         projectId: model.value.projectId,
         projectModuleId: model.value.projectModuleId,
+        requirementId: model.value.requirementId,
         projectTaskModel: rows.value
       };
       taskService.saveBulkTasks(payload).then(resp => {
@@ -594,10 +604,6 @@ async function onSubmit () {
     }, 1500);
   }
 }
-// --------------------------------------------------------------------------------------------------------------------------------------------------
-// Get All Dropdowns
-// --------------------------------------------------------------------------------------------------------------------------------------------------
-
 // ------------------------------------------------------------------------------------
 // Advance Filter :- All Dropdowns (SOP Change)
 // ------------------------------------------------------------------------------------
@@ -608,6 +614,7 @@ const {
   projectTaskPriorityForDropdownSingleSelect
 } = projectTaskModule();
 
+const { requirementByProjectModuleIdForDropdownSingleSelect } = requirementModule();
 const { projectModulesByProjectIdForDropdownSingleSelect } = projectModuleOfProjectModule();
 
 function handlePopupShow (taskStatus, projectStatusLabel) {
@@ -674,6 +681,14 @@ watch(() => model.value.projectId, async (newId) => {
     model.value.projectStatus = selected.data;
   }
 
+}, { immediate: true });
+
+watch(() => model.value.projectModuleId, (newValue, oldValue) => {
+  if (newValue) {
+    if (newValue == null) return;
+
+    requirementByProjectModuleIdForDropdownSingleSelect.load(newValue);
+  }
 }, { immediate: true });
 
 // On page rendering

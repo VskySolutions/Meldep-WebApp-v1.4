@@ -49,6 +49,10 @@ namespace Vsky.Services.TestCases
         Task<List<TestCase>> GetAllTestCasesListForDropdown(string SiteId);
         #endregion
 
+        #region GetTestCasesByRequirementId
+        Task<List<TestCase>> GetTestCasesByRequirementId(string siteId, string requirementId);
+        #endregion
+
         #region GetStatusChangeLog
         Task<List<TestCaseStatusChangeLogDto>> GetStatusChangeLog(string mappingId);
         #endregion

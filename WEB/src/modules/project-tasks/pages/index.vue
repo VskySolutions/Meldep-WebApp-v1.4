@@ -75,6 +75,12 @@
                       :filter="projectModulesByProjectIdForDropdown.filter"
                     />
                     <multiSelectDropdown
+                      v-model="search.requirementIds"
+                      label="Requirement"
+                      :options="requirementsByProjectModuleIdForDropdown.list.value"
+                      :filter="requirementsByProjectModuleIdForDropdown.filter"
+                    />
+                    <multiSelectDropdown
                       v-model="search.projectTaskIds"
                       label="Task Names"
                       :options="projectTasksByProjectIdAndModuleIdForDropdown.list.value"
@@ -325,6 +331,15 @@
                     :set="preProjectModuleName = props.row.projectModule.name"
                   >
                     {{ props.row.projectModule.name }}
+                  </span>
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('requirement.requirementNumber')"
+                  class="common-q-td hoverable-cell"
+                  style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
+                  @click="onRequirementView(props.row.requirement?.id)"
+                >
+                  <span v-if="props.row.requirement?.requirementNumber">
+                    #{{ props.row.requirement?.requirementNumber }}
                   </span>
                 </q-td>
                 <q-td
@@ -824,6 +839,7 @@ import companyContactsModule from "src/modules/company-contacts/utils/dropdowns.
 import manageDropdownModule from "src/modules/dropdown/utils/dropdowns.js";
 import tagModule from "src/modules/tags/utils/dropdowns.js";
 import userModule from "src/modules/user-management/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 
 // Shared DataTable Features
 import { useColumnManager } from "composables/dataTable/useColumnManager.js"; // useActiveRowReset
@@ -879,6 +895,11 @@ import {
   onProjectTaskAssignment
 } from "src/modules/project-tasks-activities/utils/dialogs.js";
 
+import {
+  initRequirementDialogs,
+  onRequirementView
+} from "src/modules/requirement/utils/dialogs.js";
+
 // Shared Project Task Actions
 import {
   initProjectTaskActions,
@@ -906,6 +927,8 @@ const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 
 const activeEdit = ref({ rowId: null, field: null });
 const selectedProjectId = ref(history.state?.projectId);
+const selectedProjectModuleId = ref(history.state?.projectModuleId);
+const selectedRequirementId = ref(history.state?.requirementId);
 
 const showFilter = ref(false);
 const showMultiSelectOptions = ref(false);
@@ -1173,7 +1196,8 @@ const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
-  { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true, default: true },
+  { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true, default: false },
+  { name: "requirement.requirementNumber", label: "Req. No.", field: "requirement.requirementNumber", align: "left", sortable: true, default: true },
   { name: "name", label: "Task Name", field: "name", align: "left", sortable: true, default: true },
   { name: "area.dropDownValue", label: "Area", field: "area.dropDownValue", align: "left", sortable: true, default: false },
   { name: "workspace.dropDownValue", label: "Workspace", field: "workspace.dropDownValue", align: "left", sortable: true, default: false },
@@ -1203,6 +1227,7 @@ const {
   sorts,
   resizeWidths,
   selectedColumnNames,
+  getTableState,
   saveDataTableState,
   saveResizableWidthState,
   saveColumnsState
@@ -1234,6 +1259,7 @@ const {
       ? [selectedProjectId.value]
       : [],
     projectModuleIds: [],
+    requirementIds: [],
     projectTaskIds: [],
     projectLeadsIds: [],
     activityOwners: user?.employeeId
@@ -1260,6 +1286,21 @@ const {
     .filter(col => col.default === true)
     .map(col => col.name)
 });
+
+const tableState = getTableState();
+
+if (selectedProjectId.value) {
+  tableState.search.projectIds = [selectedProjectId.value];
+  tableState.search.projectModuleIds = [selectedProjectModuleId.value];
+  tableState.search.requirementIds = [selectedRequirementId.value];
+
+  // Optional: persist the new state
+  saveDataTableState({
+    search: tableState.search
+  });
+}
+
+search.value = tableState.search;
 
 const lsSorts = sorts.value || null;
 // ----------------------------------------------------------------------------------------------------------------
@@ -1436,6 +1477,7 @@ initProjectDialogs(activeRowId);
 initProjectModuleDialogs(activeRowId);
 initProjectTaskDialogs(activeRowId);
 initProjectTaskActivityDialogs(activeRowId);
+initRequirementDialogs(activeRowId);
 initSiteDialogs(activeRowId);
 
 initProjectTaskActions(activeRowId);
@@ -1455,6 +1497,7 @@ const onClear = () => {
   search.value.projectIds = [];
   if (selectedProjectId?.value?.length > 0) { selectedProjectId.value = ""; delete history?.state?.projectId; }
   search.value.projectModuleIds = [];
+  search.value.requirementIds = [];
   search.value.projectTaskIds = [];
   search.value.projectLeadsIds = [];
   search.value.statusIds = [];
@@ -1487,6 +1530,7 @@ const appliedFilters = computed(() => ({
   ...(search.value.projectTaskNumber > 0 ? { "Task Number": search.value.projectTaskNumber } : {}),
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
+  ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
   ...mapFilterToLabel(search.value.projectTaskIds, projectTasksByProjectIdAndModuleIdForDropdown.list, "Project Task"),
   ...mapFilterToLabel(search.value.projectLeadsIds, activeEmployeesDropdown.list, "Project Leads"),
   ...mapFilterToLabel(search.value.activityOwners, activeEmployeesDropdown.list, "Activity Owner"),
@@ -1505,6 +1549,8 @@ const onClearFilters = (key) => {
     if (selectedProjectId?.value?.length > 0) { selectedProjectId.value = ""; delete history?.state?.projectId; }
   } else if (key === "Project Module") {
     search.value.projectModuleIds = [];
+  } else if (key === "Requirement") {
+    search.value.requirementIds = [];
   } else if (key === "Project Task") {
     search.value.projectTaskIds = [];
   } else if (key === "Project Leads") {
@@ -1530,6 +1576,7 @@ function getFilterCount (key) {
   switch (key) {
   case "Project Name": return search.value.projectIds?.length || 0;
   case "Project Module": return search.value.projectModuleIds?.length || 0;
+  case "Requirement": return search.value.requirementIds?.length || 0;
   case "Project Task": return search.value.projectTaskIds?.length || 0;
   case "Project Leads": return search.value.projectLeadsIds?.length || 0;
   case "Task Status": return search.value.statusIds?.length || 0;
@@ -1555,6 +1602,7 @@ const { companyContactNameDropdown } = companyContactsModule();
 const { getDropdownTypesByModuleNameForDropdown } = manageDropdownModule();
 const { tagsDropdown } = tagModule();
 const { allUsersForDropdown } = userModule();
+const { requirementsByProjectModuleIdForDropdown } = requirementModule();
 
 const convertProjectIdsAndModuleIds = (projectIds, moduleIds) => {
   const projectId = Array.isArray(projectIds) ? projectIds.join(",") : projectIds || null;
@@ -1697,7 +1745,7 @@ watch(() => search.value.customerIds, (newValue, oldValue) => {
 watch(() => search.value.projectIds, async (newValue, oldValue) => {
   if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
 
-  search.value.projectModuleIds = [];
+  if (!selectedProjectId) search.value.projectModuleIds = [];
   await projectModulesByProjectIdForDropdown.load(search.value.isTemplate, false, search.value.projectIds);
 }, { immediate: true });
 
@@ -1707,6 +1755,9 @@ watch(() => search.value.projectModuleIds, (newValue, oldValue) => {
   search.value.projectTaskIds = [];
   const { projectId, projectModuleId } = convertProjectIdsAndModuleIds(search.value.projectIds, newValue);
   projectTasksByProjectIdAndModuleIdForDropdown.load(search.value.isTemplate, projectId, projectModuleId);
+
+  if (newValue == null) return;
+    requirementsByProjectModuleIdForDropdown.load(newValue);
 }, { immediate: true });
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -1718,6 +1769,8 @@ onMounted(async () => {
 
   projectNameDropdown.load();
   if (search.value.projectIds.length > 0) projectModulesByProjectIdForDropdown.load(search.value.isTemplate, false, search.value.projectIds);
+
+  if (search.value.projectModuleIds.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
 
   projectTaskPrioritiesForDropdown.load("Task Priorities");
   projectTaskTagsDropdown.load();

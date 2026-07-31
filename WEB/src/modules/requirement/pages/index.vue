@@ -474,12 +474,28 @@
                 v-if="selectedColumnNames.includes('title')"
                 class="common-q-td hoverable-cell"
               >
-                <span
-                  class="cursor-pointer"
-                  @click="onRequirementView(props.row.id)"
-                >
-                  {{ props.row.title }}
-                </span>
+                <div class="row no-wrap items-center justify-between">
+                  <span>
+                    <span
+                      class="cursor-pointer"
+                      @click="onRequirementView(props.row.id)"
+                    >
+                      {{ props.row.title }}
+                    </span>
+                  </span>
+                  <div
+                    class="row items-center q-gutter-sm q-ml-sm"
+                    style="flex-shrink: 0;"
+                  >
+                    <q-icon
+                      name="o_radio_button_checked"
+                      size="xs" class="cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.id } })"
+                    >
+                      <q-tooltip>Requirement Center</q-tooltip>
+                    </q-icon>
+                  </div>
+                </div>
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('projectTaskRelatedMappings')"
