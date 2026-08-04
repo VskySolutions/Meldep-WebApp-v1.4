@@ -29,6 +29,7 @@ namespace Vsky.Api.Models
         public DateTime? DueDate { get; set; }
         public int IssueNumber { get; set; }
         public DateTime CreatedOnUtc { get; set; }
+        public DateTime UpdatedOnUtc { get; set; }
         public bool IsTaskCreated { get; set; }
 
         public string LastUpdatedDateStr { get; set; }
@@ -60,7 +61,6 @@ namespace Vsky.Api.Models
         //public virtual ICollection<ProjectUserMapping> ProjectUserMappings { get; set; } = new List<ProjectUserMapping>();
         //public virtual VWProjectIssueStatusSummary VWProjectIssueStatusSummary { get; set; }
     }
-
     public record IssueSearchModel : BaseSearchModel
     {
         public List<string> ProjectIds { get; set; }
@@ -76,7 +76,18 @@ namespace Vsky.Api.Models
         public string TargetMonthStr { get; set; }
         public string SearchText { get; set; }
     }
-
+    public record RequirementCenterIssueSearchModel : BaseSearchModel
+    {
+        public string RequirementId { get; set; }
+        public List<string> IssueTypeIds { get; set; }
+        public List<string> PriorityIds { get; set; }
+        public List<string> StatusIds { get; set; }
+        public List<string> EmployeeIds { get; set; }
+        public int IssueNumber { get; set; }
+        public string Name { get; set; }
+        public string TargetMonthStr { get; set; }
+        public string SearchText { get; set; }
+    }
     public record IssueListModel : BasePagedListModel<IssueModel>
     {
         public bool editing { get; set; }

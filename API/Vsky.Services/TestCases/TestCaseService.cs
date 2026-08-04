@@ -394,9 +394,110 @@ namespace Vsky.Services.TestCases
         #endregion
 
         #region GetTestCasesByRequirementId
-        public async Task<List<TestCase>> GetTestCasesByRequirementId(string siteId, string requirementId)
+        public async Task<List<TestCase>> GetTestCasesByRequirementId(
+            string siteId,
+            string LoggedUserId,
+            string requirementId,
+            string SearchText,
+            int testCaseNumber,
+            List<string> planIds,
+            List<string> testedBys,
+            List<string> statusIds,
+            string versionNumber,
+            DateTime? fromDate,
+            DateTime? toDate,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        )
         {
             var query = _testCaseRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+
+            if (testCaseNumber != 0)
+                query = query.Where(x => x.TestCaseNumber == testCaseNumber);
+
+            if (planIds != null && planIds.Any())
+                query = query.Where(x => planIds.Contains(x.PlanId));
+
+            if (testedBys != null && testedBys.Any())
+                query = query.Where(x => testedBys.Contains(x.TestedBy));
+
+            if (statusIds != null && statusIds.Any())
+            {
+                query = query.Where(x =>
+                    statusIds.Contains(
+                        x.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                            .SelectMany(m => m.TestCaseExecutionLog)
+                            .OrderByDescending(l => l.CreatedOnUtc)
+                            .Select(l => l.StatusId)
+                            .FirstOrDefault()
+                        ?? x.StatusId
+                    ));
+            }
+
+            if (!string.IsNullOrWhiteSpace(versionNumber))
+            {
+                versionNumber = versionNumber.Trim();
+
+                query = query.Where(x =>
+                    x.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                        .Any(m => m.ReleaseTracking.VersionNumber.Contains(versionNumber)));
+            }
+
+            //Search by FromDate and Todate
+            if (fromDate != null)
+                query = query.Where(x => x.CreatedOnUtc >= fromDate);
+            if (toDate != null)
+                query = query.Where(a => a.CreatedOnUtc <= toDate);
+
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+                query = query.OrderBy(orderBy);
+            }
+            else
+            {
+                query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                SearchText = SearchText.Trim().ToLower();
+                DateTime.TryParse(SearchText, out var parsedDate);
+
+                query = query.Where(m =>
+                    m.TestCaseNumber.ToString().Contains(SearchText) ||
+                    m.TestPlan.Name.ToLower().Contains(SearchText) ||
+                    m.Name.ToLower().Contains(SearchText) ||
+                    (
+                        m.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                            .SelectMany(x => x.TestCaseExecutionLog)
+                            .OrderByDescending(x => x.CreatedOnUtc)
+                            .Select(x => x.Status.DropDownValue)
+                            .FirstOrDefault()
+                        ?? m.Status.DropDownValue
+                    ).ToLower().Contains(SearchText) ||
+
+                     m.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                        .Any(x => x.ReleaseTracking.VersionNumber.ToLower().Contains(SearchText)) ||
+
+                    (m.TestedByEmployee.Person.FirstName + " " + m.TestedByEmployee.Person.LastName)
+                        .ToLower()
+                        .Contains(SearchText) ||
+
+                    m.CreatedOnUtc.Date == parsedDate.Date
+                );
+            }
+
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
+
             query = query.Select(x => new TestCase
             {
                 Id = x.Id,

@@ -50,12 +50,37 @@ namespace Vsky.Services.Timesheets
             string siteId,
             string requirementId,
             string groupBy,
-            string groupId
+            string groupId,
+            string createdBy,
+            string searchText,
+            string employeeId,
+            string projectTaskId,
+            string projectActivityId,
+            DateTime? activityDate,
+            DateTime? fromDate,
+            DateTime? toDate,
+            bool thisWeek,
+            int lastNumberOfWeeks
         );
         Task<List<TimesheetGroupModel>> GetGroupedTimesheetsByRequirementId(
             string siteId,
             string requirementId,
-            string groupBy
+            string groupBy,
+            string createdBy,
+            string searchText,
+            string employeeId,
+            string projectTaskId,
+            string projectActivityId,
+            DateTime? activityDate,
+            DateTime? fromDate,
+            DateTime? toDate,
+            bool thisWeek,
+            int lastNumberOfWeeks,
+            string sortBy,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
         );
         #endregion
 

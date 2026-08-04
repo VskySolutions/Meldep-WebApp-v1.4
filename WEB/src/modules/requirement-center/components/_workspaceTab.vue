@@ -84,6 +84,7 @@
           <q-tab-panel name="tasks" class="q-pa-none">
             <TaskList
               :requirement-id="requirementId"
+              :project-id="projectId"
               @select="selectedTask = $event"
               @count="taskCount = $event"
             />
@@ -92,7 +93,9 @@
          <q-tab-panel name="timesheet" class="q-pa-none">
             <TimesheetList
               :requirement-id="requirementId"
+              :project-id="projectId"
               @select="onSelectGroup"
+              @search-change="timesheetSearchModel = $event"
             />
           </q-tab-panel>
 
@@ -107,6 +110,7 @@
           <q-tab-panel name="testCases" class="q-pa-none">
             <TestCaseList
               :requirement-id="requirementId"
+              :project-id="projectId"
               @select="selectedTestCase = $event"
               @count="testCaseCount = $event"
             />
@@ -142,6 +146,7 @@
             <TimesheetDetails
               v-if="selectedGroup"
               :requirement-id="requirementId"
+              :search-model="timesheetSearchModel"
               :group="selectedGroup"
             />
           </q-tab-panel>
@@ -168,13 +173,9 @@
               :id="selectedIssue.id"
             />
           </q-tab-panel>
-
         </q-tab-panels>
-
       </div>
-
     </div>
-
   </div>
 </template>
 
@@ -197,6 +198,7 @@ import IssueDetails from './details/_issueDetails.vue';
 
 const props = defineProps({
   requirementId: String,
+  projectId: String,
   taskCount: {
     type: Number,
     default: 0
@@ -220,9 +222,9 @@ const selectedTask = ref(null);
 const selectedTestCase = ref(null);
 const selectedIssue = ref(null);
 const selectedGroup = ref(null);
+const timesheetSearchModel = ref({});
 
 const onSelectGroup = group => {
-  console.log("Parent received:", group);
   selectedGroup.value = group;
 };
 </script>

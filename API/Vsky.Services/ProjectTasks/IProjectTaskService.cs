@@ -104,7 +104,23 @@ namespace Vsky.Services.ProjectTasks
         #endregion
 
         #region GetTasksByRequirementId
-        Task<List<ProjectTask>> GetTasksByRequirementId(string siteId, string requirementId);
+        Task<List<ProjectTask>> GetTasksByRequirementId(
+            string siteId,
+            string userId,
+            string searchText,
+            string requirementId,
+            int projectTaskNumber,
+            List<string> projectTaskIds,
+            List<string> activityOwners,
+            List<string> statusIds,
+            List<string> priorityIds,
+            List<string> tagIds,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue
+        );
         #endregion
 
         #region GetProjectTaskDetailsById

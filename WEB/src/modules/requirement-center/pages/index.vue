@@ -177,6 +177,7 @@
       <q-tab-panel name="workspace">
         <WorkspaceTab
           :requirement-id="requirementId"
+          :project-id="requirement.projectId"
           :task-count="counts.taskCount"
           :test-case-count="counts.testCaseCount"
           :issue-count="counts.issueCount"
@@ -233,7 +234,6 @@ const counts = ref({
 
 const onDashboardLoaded = (data) => {
   counts.value = data;
-  console.log(data);
 };
 
 const getRequirement = async (requirementId) => {

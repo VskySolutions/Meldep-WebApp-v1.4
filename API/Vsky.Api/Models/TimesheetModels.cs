@@ -72,7 +72,23 @@ namespace Vsky.Api.Models
         public int LastNumberOfWeeks { get; set; }
         public bool IsActionDisabled { get; set; }
     }
-
+    public record RequirementCenterTimesheetSearchModel : BaseSearchModel
+    {
+        public string RequirementId { get; set; }
+        public string CreatedBy { get; set; }
+        public string GroupBy { get; set; }
+        public string GroupId { get; set; }
+        public string EmployeeId { get; set; }
+        public string ProjectTaskId { get; set; }
+        public string ProjectActivityId { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? ActivityDate { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
+        public string SearchText { get; set; }
+        public bool ThisWeek { get; set; }
+        public int LastNumberOfWeeks { get; set; }
+    }
     public record TimesheetListModel : BasePagedListModel<TimesheetModel>
     {
         public bool editing { get; set; }

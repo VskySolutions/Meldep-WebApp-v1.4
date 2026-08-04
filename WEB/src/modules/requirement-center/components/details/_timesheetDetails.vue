@@ -51,6 +51,10 @@
 
       <template #body="props">
         <q-tr :props="props">
+          <!-- Timesheet Date -->
+          <q-td v-if="groupByFilter !== 'date'" style="width:15%;">
+            {{ props.row.timesheet?.timesheetDate || "-" }}
+          </q-td>
           <!-- Project -->
           <q-td style="width:15%;">
             {{ props.row.project?.name || "-" }}
@@ -114,24 +118,36 @@ const props = defineProps({
     type: String,
     required: true
   },
+  searchModel: {
+    type: Object,
+    required: true
+  },
   group: {
     type: Object,
     required: true
   }
 });
 
+const groupByFilter = computed(() => props.group?.groupBy ?? "date");
 const loading = ref(false);
 const rows = ref([]);
 
 const pagination = ref({ sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
-const columns = [
-  { name: "project", label: "Project", field: row => row.project?.name ?? "-", align: "left" },
-  { name: "task", label: "Task", field: row => row.task?.name ?? "-", align: "left" },
-  { name: "activity", label: "Activity", field: row => row.projectActivity?.name ?? "-", align: "left" },
-  { name: "description", label: "Activity Details", field: "description", align: "left" },
-  { name: "employee", label: "Employee", field: row => row.timesheet?.user?.person?.fullName ?? "-", align: "left" },
-  { name: "hours", label: "Hours", field: "hours", align: "right" }
-];
+const columns = computed(() => {
+  const allColumns = [
+    { name: "timesheetDate", label: "Date", field: row => row.timesheet?.timesheetDate ?? "-", align: "left" },
+    { name: "project", label: "Project", field: row => row.project?.name ?? "-", align: "left" },
+    { name: "task", label: "Task", field: row => row.task?.name ?? "-", align: "left" },
+    { name: "activity", label: "Activity", field: row => row.projectActivity?.name ?? "-", align: "left" },
+    { name: "description", label: "Activity Details", field: "description", align: "left" },
+    { name: "employee", label: "Employee", field: row => row.timesheet?.user?.person?.fullName ?? "-", align: "left" },
+    { name: "hours", label: "Hours", field: "hours", align: "right" }
+  ];
+
+  return groupByFilter.value === "date"
+    ? allColumns.filter(c => c.name !== "timesheetDate")
+    : allColumns;
+});
 
 const totalHours = computed(() =>
   Array.isArray(rows.value)
@@ -148,13 +164,16 @@ const getTimesheetDetails = async () => {
   try {
     loading.value = true;
 
-    const response = await requirementCenterService.getTimesheetDetails(
-  props.requirementId,
-  props.group.groupBy,
-  props.group.id
-);
+    const request = {
+      ...props.searchModel,
+      requirementId: props.requirementId,
+      groupBy: props.group.groupBy,
+      groupId: props.group.id
+    };
 
-rows.value = Array.isArray(response) ? response : [];
+    const response = await requirementCenterService.getTimesheetDetails(request);
+    rows.value = response || [];
+
   } catch (err) {
     notifyError({ message: "Failed to load Timesheet Details" });
   } finally {

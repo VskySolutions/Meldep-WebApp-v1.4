@@ -59,7 +59,18 @@ namespace Vsky.Api.Models
         public string SearchText { get; set; }
         public string VersionNumber { get; set; }
     }
-
+    public record RequirementCenterTestCaseSearchModel : BaseSearchModel
+    {
+        public string RequirementId { get; set; }
+        public int TestCaseNumber { get; set; }
+        public List<string> PlanIds { get; set; }
+        public List<string> TestedBys { get; set; }
+        public List<string> StatusIds { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
+        public string SearchText { get; set; }
+        public string VersionNumber { get; set; }
+    }
     public record TestCaseListModel : BasePagedListModel<TestCaseModel>
     {
         public bool editing { get; set; }

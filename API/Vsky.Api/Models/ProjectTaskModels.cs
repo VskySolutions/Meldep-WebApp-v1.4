@@ -119,6 +119,20 @@ namespace Vsky.Api.Models
         public bool IsTemplate { get; set; }
     }
 
+    public record RequirementCenterTaskSearchModel : BaseSearchModel
+    {
+        public string RequirementId { get; set; }
+        public string Name { get; set; }
+        public List<string> ProjectTaskIds { get; set; }
+        public List<string> StatusIds { get; set; }
+        public List<string> PriorityIds { get; set; }
+        public List<string> ActivityOwners { get; set; }
+        public string SortByFilterId { get; set; }
+        public string SearchText { get; set; }
+        public List<string> TaskTagsIds { get; set; }
+        public int ProjectTaskNumber { get; set; }
+    }
+
     public record ProjectTaskListModel : BasePagedListModel<ProjectTaskModel>
     {
     }

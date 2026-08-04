@@ -1,5 +1,5 @@
 <template>
-  <q-card flat bordered class="dashboard-card">
+  <q-card flat bordered class="dashboard-card" style="border: 0.5px solid #1b75ab;">
     <!-- Header -->
     <q-card-section class="row items-center justify-between q-pb-sm">
       <div class="row items-center">

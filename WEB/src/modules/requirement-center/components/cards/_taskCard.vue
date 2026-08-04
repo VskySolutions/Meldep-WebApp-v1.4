@@ -1,5 +1,5 @@
 <template>
-  <q-card flat bordered class="dashboard-card">
+  <q-card flat bordered class="dashboard-card" style="border: 0.5px solid #1b75ab;">
     <!-- Header -->
     <q-card-section class="row items-center justify-between q-pb-sm">
       <div class="row items-center">
@@ -152,13 +152,20 @@ const columns = [
 
 const projectId = ref('');
 const projectModuleId = ref('');
-const getTasksByRequirementId = async (requirementId) => {
-  if (!requirementId) return;
+const getTasksByRequirementId = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;
+  const payload = {
+    requirementId: props.requirementId,
+    sortBy: sortBy,
+    // sorts: sorts.value,
+    descending: descending,
+    page: page,
+    pageSize: rowsPerPage
+  };
 
   try {
     loading.value = true;
-
-    const resp = await requirementCenterService.getTasksByRequirementId(requirementId);
+    const resp = await requirementCenterService.getTasksByRequirementId(payload);
     rows.value = resp.map(item => ({
       ...item,
       owner: item.assignedTo?.person?.fullName ?? '-',
@@ -203,11 +210,11 @@ initProjectTaskDialogs(activeRowId);
 
 watch(
   () => props.requirementId,
-    async (id) => {
-      await getTasksByRequirementId(id);
-    },
-  {
-    immediate: true
-  }
+  async () => {
+    await getTasksByRequirementId({
+      pagination: pagination.value
+    });
+  },
+  { immediate: true }
 );
 </script>

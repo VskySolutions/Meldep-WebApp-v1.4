@@ -1,28 +1,24 @@
 import { http } from "boot/axios";
 
 export default {
-  getTestCasesByRequirementId (requirementId) {
-    return http.get(`/requirement-dashboard/test-case-list?requirementId=${requirementId}`).then(response => response.data);
+  getTestCasesByRequirementId (model) {
+    return http.post("/requirement-dashboard/test-case-list", model).then(response => response.data);
   },
-  getIssuesByRequirementId (requirementId) {
-    return http.get(`/requirement-dashboard/issue-list?requirementId=${requirementId}`).then(response => response.data);
+  getIssuesByRequirementId (model) {
+    return http.post("/requirement-dashboard/issue-list", model).then(response => response.data);
   },
-  getTasksByRequirementId (requirementId) {
-    return http.get(`/requirement-dashboard/task-list?requirementId=${requirementId}`).then(response => response.data);
+  getTasksByRequirementId (model) {
+    return http.post("/requirement-dashboard/task-list", model).then(response => response.data);
   },
   getTimesheetByRequirementId (requirementId) {
     return http.get(`/requirement-dashboard/timesheet-list?requirementId=${requirementId}`).then(response => response.data);
   },
-  getGroupedTimesheetsByRequirementId(requirementId, groupBy) {
-    return http.get(
-      `/requirement-dashboard/timesheet-groups?requirementId=${requirementId}&groupBy=${groupBy}`
-    ).then(r => r.data);
+  getGroupedTimesheetsByRequirementId (model) {
+    return http.post("/requirement-dashboard/timesheet-groups", model).then(response => response.data);
   },
-  getTimesheetDetails(requirementId, groupBy, groupId) {
+  getTimesheetDetails(searchModel) {
     return http
-      .get(
-        `/requirement-dashboard/timesheet-details?requirementId=${requirementId}&groupBy=${groupBy}&groupId=${groupId}`
-      )
+      .post("/requirement-dashboard/timesheet-details", searchModel)
       .then(response => response.data);
-  },
+  }
 };

@@ -33,7 +33,24 @@ namespace Vsky.Services.Issues
         #endregion
 
         #region GetIssuesByRequirementId
-        Task<List<Issue>> GetIssuesByRequirementId(string siteId, string requirementId);
+        Task<List<Issue>> GetIssuesByRequirementId(
+            string siteId,
+            string requirementId,
+            string LoggedUserId,
+            string SearchText,
+            int issueNumber,
+            string name,
+            List<string> priorityIds,
+            List<string> statusIds,
+            List<string> issueTypeIds,
+            List<string> employeeIds,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
         #endregion
 
         #region GetIssueById

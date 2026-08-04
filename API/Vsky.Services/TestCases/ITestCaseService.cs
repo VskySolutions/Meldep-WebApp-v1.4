@@ -50,7 +50,25 @@ namespace Vsky.Services.TestCases
         #endregion
 
         #region GetTestCasesByRequirementId
-        Task<List<TestCase>> GetTestCasesByRequirementId(string siteId, string requirementId);
+        Task<List<TestCase>> GetTestCasesByRequirementId(
+            string siteId,
+            string LoggedUserId,
+            string requirementId,
+            string SearchText,
+            int testCaseNumber,
+            List<string> planIds,
+            List<string> testedBys,
+            List<string> statusIds,
+            string versionNumber,
+            DateTime? fromDate,
+            DateTime? toDate,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
         #endregion
 
         #region GetStatusChangeLog

@@ -1,5 +1,5 @@
 <template>
-  <q-card flat bordered class="dashboard-card">
+  <q-card flat bordered class="dashboard-card" style="border: 0.5px solid #1b75ab;">
     <q-card-section class="row items-center justify-between q-pb-sm">
       <div class="row items-center">
         <q-avatar
@@ -148,13 +148,20 @@ const columns = [
 
 const projectId = ref('');
 const projectModuleId = ref('');
-const getTestCasesByRequirementId = async (requirementId) => {
-  if (!requirementId) return;
+const getTestCasesByRequirementId = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;
+  const payload = {
+    requirementId: props.requirementId,
+    sortBy: sortBy,
+    descending: descending,
+    page: page,
+    pageSize: rowsPerPage
+  };
 
   try {
     loading.value = true;
 
-    const resp = await requirementCenterService.getTestCasesByRequirementId(requirementId);
+    const resp = await requirementCenterService.getTestCasesByRequirementId(payload);
     rows.value = resp.map(item => ({
       ...item,
       owner: item.testedByEmployee?.person?.fullName ?? '-',
@@ -195,8 +202,10 @@ initTestCaseDialogs(activeRowId);
 
 watch(
   () => props.requirementId,
-    async (id) => {
-      await getTestCasesByRequirementId(id);
+    async () => {
+      await getTestCasesByRequirementId({
+        pagination: pagination.value
+      });
     },
   {
     immediate: true

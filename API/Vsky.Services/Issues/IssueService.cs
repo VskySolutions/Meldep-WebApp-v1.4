@@ -390,9 +390,73 @@ namespace Vsky.Services.Issues
         #endregion
 
         #region GetIssuesByRequirementId
-        public async Task<List<Issue>> GetIssuesByRequirementId(string siteId, string requirementId)
+        public async Task<List<Issue>> GetIssuesByRequirementId(
+            string siteId, 
+            string requirementId,
+            string LoggedUserId,
+            string SearchText,
+            int issueNumber,
+            string name,
+            List<string> priorityIds,
+            List<string> statusIds,
+            List<string> issueTypeIds,
+            List<string> employeeIds,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        )
         {
             var query = _issueRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+
+            if (priorityIds != null && priorityIds.Any())
+                query = query.Where(x => priorityIds.Contains(x.PriorityId));
+
+            if (statusIds != null && statusIds.Any())
+                query = query.Where(x => statusIds.Contains(x.StatusId));
+
+            if (issueTypeIds != null && issueTypeIds.Any())
+                query = query.Where(x => issueTypeIds.Contains(x.TypeId));
+
+            if (employeeIds != null && employeeIds.Any())
+                query = query.Where(x => employeeIds.Contains(x.EmployeeId));
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                name = name.Trim().ToLower(); // Normalize input
+                query = query.Where(x => x.Name.ToLower().Contains(name)); // Partial match for the name
+            }
+
+            if (issueNumber != 0)
+            {
+                query = query.Where(x => x.IssueNumber == issueNumber);
+            }
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+                query = query.OrderBy(orderBy);
+            }
+            else
+            {
+                query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+            if (!string.IsNullOrEmpty(SearchText))
+            {
+                DateTime.TryParse(SearchText, out var parsedDate);
+                query = query.Where(m =>
+                    m.IssueNumber.ToString().Contains(SearchText.ToLower()) ||
+                    m.Name.ToLower().Contains(SearchText.ToLower()) ||
+                    m.Priority.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
+                    m.Type.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
+                    m.Status.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
+                    (m.Employee.Person.FirstName + " " + m.Employee.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
+                    (m.ReportedBy.Person.FirstName + " " + m.ReportedBy.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
+                    m.CreatedOnUtc.Date == parsedDate.Date
+                );
+            }
+
             query = query.Select(x => new Issue
             {
                 Id = x.Id,
@@ -489,6 +553,7 @@ namespace Vsky.Services.Issues
                 AreaId = x.AreaId,
                 WorkspaceId = x.WorkspaceId,
                 CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 Requirement = new Requirement
                 {
                     Id = x.Requirement.Id,
@@ -569,6 +634,26 @@ namespace Vsky.Services.Issues
                 {
                     Id = x.TestCase.Id,
                     Name = x.TestCase.Name
+                },
+                CreatedBy = new ApplicationUser
+                {
+                    Id = x.CreatedBy.Id,
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FirstName = x.CreatedBy.Person.FirstName,
+                        LastName = x.CreatedBy.Person.LastName,
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Id = x.UpdatedBy.Id,
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.PersonId,
+                        FirstName = x.UpdatedBy.Person.FirstName,
+                        LastName = x.UpdatedBy.Person.LastName,
+                    }
                 },
                 IssueStatusChangedLog = x.IssueStatusChangedLog.OrderByDescending(m => m.StatusChangedDate).Select(p => new IssueStatusChangedLog
                 {

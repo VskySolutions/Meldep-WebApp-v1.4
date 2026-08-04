@@ -371,21 +371,38 @@ namespace Vsky.Services.Timesheets
                 .ToListAsync();
             return list;
         }
-
         public async Task<List<TimesheetLines>> GetTimesheetDetails(
             string siteId,
             string requirementId,
             string groupBy,
-            string groupId
+            string groupId,
+            string createdBy,
+            string searchText,
+            string employeeId,
+            string projectTaskId,
+            string projectActivityId,
+            DateTime? activityDate,
+            DateTime? fromDate,
+            DateTime? toDate,
+            bool thisWeek,
+            int lastNumberOfWeeks
         )
         {
-            var query = _timesheetLinesRepository.TableNoTracking
-                .Where(x =>
-                    !x.Deleted &&
-                    x.Timesheet.SiteId == siteId &&
-                    x.Task.RequirementId == requirementId);
+            var query = GetFilteredTimesheetQuery(
+                siteId,
+                requirementId,
+                createdBy,
+                searchText,
+                employeeId,
+                projectTaskId,
+                projectActivityId,
+                activityDate,
+                fromDate,
+                toDate,
+                thisWeek,
+                lastNumberOfWeeks);
 
-            switch (groupBy?.ToLower())
+            switch ((groupBy ?? "date").ToLower())
             {
                 case "employee":
                     query = query.Where(x => x.Timesheet.User.Id == groupId);
@@ -399,57 +416,215 @@ namespace Vsky.Services.Timesheets
                     var date = DateTime.Parse(groupId);
 
                     query = query.Where(x =>
-                        x.Timesheet.TimesheetDate.Value.Date == date.Date);
+                        x.Timesheet.TimesheetDate >= date.Date &&
+                        x.Timesheet.TimesheetDate < date.Date.AddDays(1));
                     break;
             }
 
             return await query
-            .Select(x => new TimesheetLines
-            {
-                Id = x.Id,
-                Hours = x.Hours,
-                Description = x.Description,
-                Project = new Project
+                .Select(x => new TimesheetLines
                 {
-                    Id = x.Project.Id,
-                    Name = x.Project.Name
-                },
-                Task = new ProjectTask
-                {
-                    Id = x.Task.Id,
-                    Name = x.Task.Name
-                },
-                ProjectActivity = new ProjectActivity
-                {
-                    Id = x.ProjectActivity.Id,
-                    Name = x.ProjectActivity.Name
-                },
-                Timesheet = new Timesheet
-                {
-                    TimesheetDate = x.Timesheet.TimesheetDate,
-                    User = new ApplicationUser
+                    Id = x.Id,
+                    Hours = x.Hours,
+                    Description = x.Description,
+
+                    Project = new Project
                     {
-                        Id = x.Timesheet.User.Id,
-                        UserName = x.Timesheet.User.UserName,
-                        Person = new Person
+                        Id = x.Project.Id,
+                        Name = x.Project.Name
+                    },
+
+                    Task = new ProjectTask
+                    {
+                        Id = x.Task.Id,
+                        Name = x.Task.Name
+                    },
+
+                    ProjectActivity = new ProjectActivity
+                    {
+                        Id = x.ProjectActivity.Id,
+                        Name = x.ProjectActivity.Name
+                    },
+
+                    Timesheet = new Timesheet
+                    {
+                        TimesheetDate = x.Timesheet.TimesheetDate,
+
+                        User = new ApplicationUser
                         {
-                            Id = x.Timesheet.User.PersonId,
-                            FirstName = x.Timesheet.User.Person.FirstName,
-                            LastName = x.Timesheet.User.Person.LastName,
-                            FullName = x.Timesheet.User.Person.FirstName + " " + x.Timesheet.User.Person.LastName
+                            Id = x.Timesheet.User.Id,
+                            UserName = x.Timesheet.User.UserName,
+
+                            Person = new Person
+                            {
+                                Id = x.Timesheet.User.PersonId,
+                                FirstName = x.Timesheet.User.Person.FirstName,
+                                LastName = x.Timesheet.User.Person.LastName,
+                                FullName = x.Timesheet.User.Person.FirstName + " " +
+                                           x.Timesheet.User.Person.LastName
+                            }
                         }
                     }
-                }
-            })
-            .OrderByDescending(x => x.Timesheet.TimesheetDate)
-            .ThenBy(x => x.Timesheet.User.Person.FullName)
-            .ToListAsync();
+                })
+                .OrderByDescending(x => x.Timesheet.TimesheetDate)
+                .ThenBy(x => x.Timesheet.User.Person.FullName)
+                .ToListAsync();
         }
 
         public async Task<List<TimesheetGroupModel>> GetGroupedTimesheetsByRequirementId(
             string siteId,
             string requirementId,
-            string groupBy
+            string groupBy,
+            string createdBy,
+            string searchText,
+            string employeeId,
+            string projectTaskId,
+            string projectActivityId,
+            DateTime? activityDate,
+            DateTime? fromDate,
+            DateTime? toDate,
+            bool thisWeek,
+            int lastNumberOfWeeks,
+            string sortBy,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        )
+        {
+            var query = GetFilteredTimesheetQuery(
+                siteId,
+                requirementId,
+                createdBy,
+                searchText,
+                employeeId,
+                projectTaskId,
+                projectActivityId,
+                activityDate,
+                fromDate,
+                toDate,
+                thisWeek,
+                lastNumberOfWeeks);
+
+            switch ((groupBy ?? "date").ToLower())
+            {
+                case "employee":
+                    {
+                        var result = query
+                            .GroupBy(x => new
+                            {
+                                x.Timesheet.User.Id,
+                                Name = x.Timesheet.User.Person.FirstName + " " +
+                                       x.Timesheet.User.Person.LastName
+                            })
+                            .Select(g => new TimesheetGroupModel
+                            {
+                                Id = g.Key.Id,
+                                Name = g.Key.Name,
+                                Count = g.Count(),
+                                Hours = g.Sum(x => x.Hours)
+                            });
+
+                        result = (sortBy ?? "").ToLower() switch
+                        {
+                            "hours" => descending ? result.OrderByDescending(x => x.Hours) : result.OrderBy(x => x.Hours),
+                            "count" => descending ? result.OrderByDescending(x => x.Count) : result.OrderBy(x => x.Count),
+                            _ => descending ? result.OrderByDescending(x => x.Name) : result.OrderBy(x => x.Name)
+                        };
+
+                        return await result
+                            .Skip((page - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToListAsync();
+                    }
+
+                case "task":
+                    {
+                        var result = query
+                            .GroupBy(x => new
+                            {
+                                x.Task.Id,
+                                x.Task.Name
+                            })
+                            .Select(g => new TimesheetGroupModel
+                            {
+                                Id = g.Key.Id,
+                                Name = g.Key.Name,
+                                Count = g.Count(),
+                                Hours = g.Sum(x => x.Hours)
+                            });
+
+                        result = (sortBy ?? "").ToLower() switch
+                        {
+                            "hours" => descending ? result.OrderByDescending(x => x.Hours) : result.OrderBy(x => x.Hours),
+                            "count" => descending ? result.OrderByDescending(x => x.Count) : result.OrderBy(x => x.Count),
+                            _ => descending ? result.OrderByDescending(x => x.Name) : result.OrderBy(x => x.Name)
+                        };
+
+                        return await result
+                            .Skip((page - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToListAsync();
+                    }
+
+                default:
+                    {
+                        var dateGroups = await query
+                            .GroupBy(x => x.Timesheet.TimesheetDate.Value.Date)
+                            .Select(g => new
+                            {
+                                Date = g.Key,
+                                Count = g.Count(),
+                                Hours = g.Sum(x => x.Hours)
+                            })
+                            .ToListAsync();
+
+                        var result = dateGroups
+                            .Select(x => new TimesheetGroupModel
+                            {
+                                Id = x.Date.ToString("yyyy-MM-dd"),
+                                Name = x.Date.ToString("MM/dd/yyyy"),
+                                Count = x.Count,
+                                Hours = x.Hours
+                            });
+
+                        result = (sortBy ?? "").ToLower() switch
+                        {
+                            "hours" => descending
+                                ? result.OrderByDescending(x => x.Hours)
+                                : result.OrderBy(x => x.Hours),
+
+                            "count" => descending
+                                ? result.OrderByDescending(x => x.Count)
+                                : result.OrderBy(x => x.Count),
+
+                            _ => descending
+                                ? result.OrderByDescending(x => DateTime.ParseExact(x.Name, "MM/dd/yyyy", null))
+                                : result.OrderBy(x => DateTime.ParseExact(x.Name, "MM/dd/yyyy", null))
+                        };
+
+                        return result
+                            .Skip((page - 1) * pageSize)
+                            .Take(pageSize)
+                            .ToList();
+                    }
+            }
+        }
+
+        #region Private method
+        private IQueryable<TimesheetLines> GetFilteredTimesheetQuery(
+            string siteId,
+            string requirementId,
+            string createdBy,
+            string searchText,
+            string employeeId,
+            string projectTaskId,
+            string projectActivityId,
+            DateTime? activityDate,
+            DateTime? fromDate,
+            DateTime? toDate,
+            bool thisWeek,
+            int lastNumberOfWeeks
         )
         {
             var query = _timesheetLinesRepository.TableNoTracking
@@ -458,64 +633,84 @@ namespace Vsky.Services.Timesheets
                     x.Timesheet.SiteId == siteId &&
                     x.Task.RequirementId == requirementId);
 
-            switch (groupBy?.ToLower())
+            if (!string.IsNullOrWhiteSpace(createdBy))
+                query = query.Where(x => x.CreatedById == createdBy);
+
+            if (!string.IsNullOrWhiteSpace(employeeId))
+                query = query.Where(x => x.Timesheet.EmployeeId == employeeId);
+
+            if (!string.IsNullOrWhiteSpace(projectTaskId))
+                query = query.Where(x => x.ProjectTaskId == projectTaskId);
+
+            if (!string.IsNullOrWhiteSpace(projectActivityId))
+                query = query.Where(x => x.ProjectActivityId == projectActivityId);
+
+            if (activityDate.HasValue && activityDate.Value != DateTime.MinValue)
             {
-                case "employee":
-                    return await query
-                        .GroupBy(x => new
-                        {
-                            x.Timesheet.User.Id,
-                            Name = x.Timesheet.User.Person.FirstName + " " +
-                                   x.Timesheet.User.Person.LastName
-                        })
-                        .Select(g => new TimesheetGroupModel
-                        {
-                            Id = g.Key.Id,
-                            Name = g.Key.Name,
-                            Count = g.Count(),
-                            Hours = g.Sum(x => x.Hours)
-                        })
-                        .OrderBy(x => x.Name)
-                        .ToListAsync();
+                var date = activityDate.Value.Date;
 
-                case "task":
-                    return await query
-                        .GroupBy(x => new
-                        {
-                            x.Task.Id,
-                            x.Task.Name
-                        })
-                        .Select(g => new TimesheetGroupModel
-                        {
-                            Id = g.Key.Id,
-                            Name = g.Key.Name,
-                            Count = g.Count(),
-                            Hours = g.Sum(x => x.Hours)
-                        })
-                        .OrderBy(x => x.Name)
-                        .ToListAsync();
-
-                default: // date
-                    var dateGroups = await query
-                        .GroupBy(x => x.Timesheet.TimesheetDate.Value.Date)
-                        .Select(g => new
-                        {
-                            Date = g.Key,
-                            Count = g.Count(),
-                            Hours = g.Sum(x => x.Hours)
-                        })
-                        .OrderByDescending(x => x.Date)
-                        .ToListAsync();
-
-                    return dateGroups.Select(x => new TimesheetGroupModel
-                    {
-                        Id = x.Date.ToString("yyyy-MM-dd"),
-                        Name = x.Date.ToString("MM/dd/yyyy"),
-                        Count = x.Count,
-                        Hours = x.Hours
-                    }).ToList();
+                query = query.Where(x =>
+                    x.Timesheet.TimesheetDate >= date &&
+                    x.Timesheet.TimesheetDate < date.AddDays(1));
             }
+
+            if (fromDate.HasValue)
+            {
+                var startDate = fromDate.Value.Date;
+
+                query = query.Where(x =>
+                    x.Timesheet.TimesheetDate >= startDate);
+            }
+
+            if (toDate.HasValue)
+            {
+                var endDate = toDate.Value.Date.AddDays(1);
+
+                query = query.Where(x =>
+                    x.Timesheet.TimesheetDate < endDate);
+            }
+
+            if (thisWeek)
+            {
+                var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+                var endOfWeek = startOfWeek.AddDays(7);
+
+                query = query.Where(x =>
+                    x.Timesheet.TimesheetDate >= startOfWeek &&
+                    x.Timesheet.TimesheetDate < endOfWeek);
+            }
+
+            if (lastNumberOfWeeks > 0)
+            {
+                var from = DateTime.Today.AddDays(-(lastNumberOfWeeks * 7));
+
+                query = query.Where(x =>
+                    x.Timesheet.TimesheetDate >= from);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                searchText = searchText.Trim();
+
+                DateTime.TryParse(searchText, out var parsedDate);
+
+                query = query.Where(x =>
+                    x.Project.Name.Contains(searchText) ||
+                    x.Task.Name.Contains(searchText) ||
+                    x.ProjectActivity.Name.Contains(searchText) ||
+                    x.Description.Contains(searchText) ||
+                    (x.Timesheet.Employee.Person.FirstName + " " +
+                     x.Timesheet.Employee.Person.LastName).Contains(searchText) ||
+                    x.Hours.ToString().Contains(searchText) ||
+                    (parsedDate != default &&
+                     x.Timesheet.TimesheetDate >= parsedDate.Date &&
+                     x.Timesheet.TimesheetDate < parsedDate.Date.AddDays(1)));
+            }
+
+            return query;
         }
+        #endregion
+
         #endregion
 
         #region InsertTimesheetLines

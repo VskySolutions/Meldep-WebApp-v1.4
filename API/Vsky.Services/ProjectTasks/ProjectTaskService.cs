@@ -821,7 +821,7 @@ namespace Vsky.Services.ProjectTasks
                 query = query.Where(x => projectIdArray.Contains(x.ProjectId) && !x.Project.Deleted);
             }
 
-            if (!string.IsNullOrWhiteSpace(projectModuleId))
+            if (!string.IsNullOrWhiteSpace(projectModuleId) && projectModuleId != "undefined")
             {
                 var projectModuleIdArray = projectModuleId.Split(',');
                 query = query.Where(x => projectModuleIdArray.Contains(x.ProjectModuleId) && !x.ProjectModule.Deleted);
@@ -869,9 +869,61 @@ namespace Vsky.Services.ProjectTasks
         #endregion
 
         #region GetTasksByRequirementId
-        public async Task<List<ProjectTask>> GetTasksByRequirementId(string siteId, string requirementId)
+        public async Task<List<ProjectTask>> GetTasksByRequirementId(
+            string siteId,
+            string userId,
+            string searchText,
+            string requirementId,
+            int projectTaskNumber,
+            List<string> projectTaskIds,
+            List<string> activityOwners,
+            List<string> statusIds,
+            List<string> priorityIds,
+            List<string> tagIds,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue
+        )
         {
             var query = _projectTaskRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+
+
+            if (projectTaskNumber != 0) query = query.Where(x => x.ProjectTaskNumber == projectTaskNumber);
+            if (projectTaskIds?.Any() == true) query = query.Where(x => projectTaskIds.Contains(x.Id));
+            if (statusIds?.Any() == true) query = query.Where(x => statusIds.Contains(x.StatusId));
+            if (priorityIds?.Any() == true) query = query.Where(x => priorityIds.Contains(x.PriorityId));
+            if (tagIds?.Any() == true) query = query.Where(x => x.ProjectTask_Tags.Any(t => !t.Deleted && t.AspNetUserId == userId && tagIds.Contains(t.Tags.Id)));
+            if (activityOwners?.Any() == true) query = query.Where(x => x.ProjectActivities.Any(a => activityOwners.Contains(a.AssignedToId)));
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                searchText = searchText.ToLower();
+                var isDate = DateTime.TryParse(searchText, out var parsedDate);
+
+                query = query.Where(m =>
+                     m.ProjectTaskNumber.ToString().Contains(searchText)
+                     || (m.Project != null && m.Project.Name.ToLower().Contains(searchText))
+                     || (m.Name != null && m.Name.ToLower().Contains(searchText))
+                     || (m.Priority != null && m.Priority.DropDownValue.ToLower().Contains(searchText))
+                     || (m.Status != null && m.Status.DropDownValue.ToLower().Contains(searchText))
+                     || (isDate && m.StartDate.HasValue && m.StartDate.Value.Date == parsedDate.Date)
+                     || (isDate && m.EndDate.HasValue && m.EndDate.Value.Date == parsedDate.Date)
+                     || m.ProjectTask_Tags.Any(t => t.Tags.Name.ToLower().Contains(searchText))
+                 );
+            }
+
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+                query = query.OrderBy(orderBy);
+            }
+            else
+            {
+                query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
             query = query.Select(x => new ProjectTask
             {
                 Id = x.Id,

@@ -41,9 +41,7 @@
       v-model="tab"
       animated
     >
-      <!-- ================================================= -->
       <!-- Details -->
-      <!-- ================================================= -->
       <q-tab-panel name="details">
         <div class="row q-col-gutter-lg">
           <div class="col-12 col-md-6">
@@ -138,9 +136,7 @@
         </div>
       </q-tab-panel>
 
-      <!-- ================================================= -->
       <!-- Description -->
-      <!-- ================================================= -->
       <q-tab-panel name="description">
         <q-card
           flat
@@ -154,9 +150,7 @@
         </q-card>
       </q-tab-panel>
 
-      <!-- ================================================= -->
       <!-- Steps -->
-      <!-- ================================================= -->
       <q-tab-panel name="steps">
         <q-card
           flat
@@ -170,9 +164,7 @@
         </q-card>
       </q-tab-panel>
 
-      <!-- ================================================= -->
       <!-- Expected Result -->
-      <!-- ================================================= -->
       <q-tab-panel name="expected">
         <q-card
           flat
@@ -186,9 +178,7 @@
         </q-card>
       </q-tab-panel>
 
-      <!-- ================================================= -->
       <!-- Actual Result -->
-      <!-- ================================================= -->
       <q-tab-panel name="actual">
         <q-card
           flat
@@ -202,9 +192,7 @@
         </q-card>
       </q-tab-panel>
 
-      <!-- ================================================= -->
       <!-- Test Plan -->
-      <!-- ================================================= -->
       <q-tab-panel name="testPlan">
         <div class="row q-col-gutter-lg">
           <div class="col-12 col-md-6">
@@ -256,20 +244,16 @@
               </q-item>
             </q-list>
           </div>
-          <div class="col-12">
-            <div class="text-subtitle2 q-mb-sm">
-              Description
-            </div>
-            <q-card
-              flat
-              bordered
-              class="q-pa-md"
-            >
+
+          <div class="row q-col-gutter-md q-mb-md q-ml-xs">
+            <div class="col-12">
+              <div class="text-caption text-grey q-mb-sm">Description</div>
+
               <div
                 class="RichTextEditor"
                 v-html="testPlanModel.description || '-'"
               />
-            </q-card>
+            </div>
           </div>
         </div>
       </q-tab-panel>

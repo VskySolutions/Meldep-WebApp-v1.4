@@ -1,6 +1,6 @@
 <template>
   <div class="summary-row q-mb-md">
-    <q-card flat bordered class="summary-card">
+    <q-card flat bordered class="summary-card card-border">
       <q-card-section>
         <div class="text-h4 text-weight-bold text-primary">
           {{ taskSummary.open }}
@@ -11,7 +11,7 @@
       </q-card-section>
     </q-card>
 
-    <q-card flat bordered class="summary-card">
+    <q-card flat bordered class="summary-card card-border">
       <q-card-section>
         <div class="text-h4 text-weight-bold text-primary">
           {{ timesheetSummary.totalHours }}
@@ -33,7 +33,7 @@
       </q-card-section>
     </q-card> -->
 
-    <q-card flat bordered class="summary-card">
+    <q-card flat bordered class="summary-card card-border">
       <q-card-section>
         <div class="text-h4 text-weight-bold text-primary">
           {{ testCaseSummary.passed }} / {{ testCaseSummary.total }}
@@ -44,7 +44,7 @@
       </q-card-section>
     </q-card>
 
-    <q-card flat bordered class="summary-card">
+    <q-card flat bordered class="summary-card card-border">
       <q-card-section>
         <div class="text-h4 text-weight-bold text-primary">
           {{ issueSummary.open }}
@@ -199,5 +199,8 @@ const updateIssueSummary = (summary) => {
   flex: 1 1 20%;
   min-width: 0;
   border-radius: 12px;
+}
+.card-border {
+  border: 0.5px solid #1b75ab;
 }
 </style>

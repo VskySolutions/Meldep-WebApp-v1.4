@@ -21,7 +21,7 @@
     </q-card-section>
     <q-separator />
     <q-card-section>
-      <div class="row q-col-gutter-md">
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-12 col-md-6">
           <div class="text-caption text-grey">Project</div>
           <div>{{ model.project?.name || "-" }}</div>
@@ -31,7 +31,8 @@
           <div class="text-caption text-grey">Project Module</div>
           <div>{{ model.projectModule?.name || "-" }}</div>
         </div>
-
+      </div>
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-12 col-md-6">
           <div class="text-caption text-grey">Requirement</div>
           <div>{{ model.requirement?.title || "-" }}</div>
@@ -41,7 +42,8 @@
           <div class="text-caption text-grey">Area</div>
           <div>{{ model.area?.dropDownValue || "-" }}</div>
         </div>
-
+      </div>
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-12 col-md-6">
           <div class="text-caption text-grey">Workspace</div>
           <div>{{ model.workspace?.dropDownValue || "-" }}</div>
@@ -51,7 +53,8 @@
           <div class="text-caption text-grey">Assign To</div>
           <div>{{ model.employee?.person?.fullName !== ' ' ? model.employee?.person?.fullName : "-" }}</div>
         </div>
-
+      </div>
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-12 col-md-6">
           <div class="text-caption text-grey">Reported By</div>
           <div>{{ model.reportedBy?.person?.fullName || "-" }}</div>
@@ -61,7 +64,8 @@
           <div class="text-caption text-grey">Priority</div>
           <div>{{ model.priority?.dropDownValue || "-" }}</div>
         </div>
-
+      </div>
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-12">
           <div class="text-caption text-grey">Task</div>
 
@@ -87,12 +91,8 @@
           </div>
           <div v-else>-</div>
         </div>
-
-        <div class="col-12 col-md-6">
-          <div class="text-caption text-grey">Created Date</div>
-          <div>{{ model.createdOnUtc || "-" }}</div>
-        </div>
-
+      </div>
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-12">
           <div class="text-caption text-grey q-mb-sm">Description</div>
 
@@ -100,6 +100,26 @@
             class="RichTextEditor"
             v-html="model.description || '-'"
           />
+        </div>
+      </div>
+      <div class="row q-col-gutter-md q-mb-md">
+        <div class="col-12 col-md-6">
+          <div class="text-caption text-grey">Created By</div>
+          <div>{{ model.createdBy.person.firstName ? model.createdBy.person.firstName + " "+ model.createdBy.person.lastName : "-" }}</div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="text-caption text-grey">Created Date</div>
+          <div>{{ model.createdOnUtc || "-" }}</div>
+        </div>
+      </div>
+      <div class="row q-col-gutter-md q-mb-md">
+        <div class="col-12 col-md-6">
+          <div class="text-caption text-grey">Updated By</div>
+          <div>{{ model.updatedBy.person.firstName ? model.updatedBy.person.firstName + " "+ model.updatedBy.person.lastName : "-" }}</div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="text-caption text-grey">Updated Date</div>
+          <div>{{ model.updatedOnUtc || "-" }}</div>
         </div>
       </div>
     </q-card-section>
@@ -126,7 +146,6 @@ const props = defineProps({
 })
 
 const loading = ref(false);
-const tab = ref('details');
 const activeRowId = ref(null);
 
 const model = ref({
@@ -134,6 +153,7 @@ const model = ref({
   issueNumber: "",
   description: "",
   createdOnUtc: "",
+  updatedOnUtc: "",
   status: "",
   project: "",
   projectModule: "",
@@ -147,7 +167,9 @@ const model = ref({
   reportedBy: {
     person: ""
   },
-  projectTaskRelatedMappings: []
+  projectTaskRelatedMappings: [],
+  createdBy: { person: {} },
+  updatedBy: { person: {} }
 })
 
 const getIssueDetails = async () => {
