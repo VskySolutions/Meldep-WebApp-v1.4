@@ -21,6 +21,12 @@ namespace Vsky.Services.Expences
         Task<List<ExpenseAdvanceRequestFiles>> GetAllExpenseAdvanceRequestFileByExpenseAdvanceRequestId(string siteId, string expensePurchaseRequestId);
         #endregion
 
+        #region GetExpenseAdvanceFileByFileId
+        // Title: GetExpenseAdvanceFileByFileId
+        // Description: This method retrieves a ExpenseAdvanceFile from the database by fileId. 
+        Task<ExpenseAdvanceRequestFiles> GetExpenseAdvanceFileByFileId(string fileId);
+        #endregion
+
         #region InsertExpenseAdvanceRequestFile
         void InsertExpenseAdvanceRequestFile(ExpenseAdvanceRequestFiles entity);
         #endregion

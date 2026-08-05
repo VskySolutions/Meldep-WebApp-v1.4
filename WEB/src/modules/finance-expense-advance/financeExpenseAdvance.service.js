@@ -8,6 +8,9 @@ export default {
   getAllApproveAdvanceExpenseRequests (model) {
     return http.post("/advance-expense-request/approve-advance-expense-list", model).then(response => response.data);
   },
+  getAllFilesByExpenseId (model) {
+    return http.post("/advance-expense-request/filesList", model).then(response => response.data);
+  },
 
   getById (id) {
     return http.get(`/advance-expense-request/${id}`).then(response => response.data);
@@ -24,7 +27,9 @@ export default {
       return http.post("/advance-expense-request", model, { headers: { "Content-Type": "multipart/form-data" } }).then(response => response.data);
     }
   },
-
+  saveAdvanceExpenseRequestFiles (model) {
+    return http.post("/advance-expense-request/add-advance-expense-files", model, { headers: { "Content-Type": "multipart/form-data" } }).then(response => response.data);
+  },
   delete (ExpenseId) {
     return http.delete(`/advance-expense-request/${ExpenseId}`).then(response => response.data);
   },

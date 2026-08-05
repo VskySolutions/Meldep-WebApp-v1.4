@@ -62,6 +62,18 @@ namespace Vsky.Services.Common
 
         IPagedList<Picture> GetAllFilesByProjectId(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
 
+        #region GetAllFilesByExpenseId
+        public IPagedList<Picture> GetAllFilesByExpenseId(
+            string SiteId,
+            string expenseId,
+            string sortBy,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
+        #endregion
+
         #region GetPicturesCountBySubModuleId
         Task<int> GetPicturesCountBySubModuleId(string subModuleId, string type);
         #endregion

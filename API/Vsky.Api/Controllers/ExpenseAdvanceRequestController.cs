@@ -258,6 +258,32 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GetAllFilesByAdvanceExpenseId
+        [HttpPost("filesList")]
+        public IActionResult GetAllFilesByAdvanceExpenseId(PicturesSearchModel searchModel)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+
+                var list = _commonService.GetAllFilesByExpenseId(SiteId, searchModel.ExpenseId, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+
+                var model = new PicturesListModel
+                {
+                    Data = _mapper.Map<IList<PicturesModel>>(list),
+                    Total = list.TotalCount
+                };
+
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region Create Advance Expense Request
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] Expense_Advance_Requests_Models model)
@@ -356,6 +382,84 @@ namespace Vsky.Api.Controllers
             catch (Exception e)
             {
                 return BadRequest(e.Message);
+            }
+        }
+        #endregion
+
+        #region AddFiles
+        // Title: AddFiles
+        [HttpPost("add-advance-expense-files")]
+        public async Task<IActionResult> AddFiles([FromForm] Expense_Advance_Requests_Models model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var LoggedUserId = User.GetLoggedInUserId<string>();
+                    var SiteId = _globalVariable.SiteId;
+                    var SiteData = await _siteService.GetById(SiteId);
+                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                    // Fetch the entity by its ID
+                    var entity = await _expense_Advance_Requests_Service.GetById(model.Id);
+
+                    // If no expense is found with the given ID, return a bad request with an error message
+                    if (entity == null)
+                        return BadRequest(new BadRequestError("No data found with the specified ID."));
+
+                    string ExpenseId = entity.Id;
+
+                    if (model.ExpenseAdvanceRequestFiles != null && model.ExpenseAdvanceRequestFiles.Any())
+                    {
+                        int existingImagesCount = await _commonService.GetPicturesCountBySubModuleId(ExpenseId, "Expense Advance Requests");
+
+                        // Upload multiple files to Azure
+                        var urls = await _azureBlobImageServices.UploadFilesAsync(SiteData.Name, "finance-advance-expenses-requests", model.ExpenseAdvanceRequestFiles, entity.Id, existingImagesCount);
+                        int index = 0;
+                        var itemCategory = await _dropDownTypeService.GetDropDownTypeById(entity.ItemCategoryId);
+
+                        foreach (var fileUrl in urls)
+                        {
+                            var file = model.ExpenseAdvanceRequestFiles[index];
+
+                            var picture = new Picture
+                            {
+                                SeoFilename = Path.GetFileName(file.FileName),
+                                MimeType = file.ContentType,
+                                VirtualPath = fileUrl, // Azure URL
+                                ModuleId = ExpenseId,
+                                Module = itemCategory?.Type,
+                                SubModuleId = ExpenseId,
+                                Sub_Module = itemCategory?.Type,
+                                Type = "Expense Advance Requests",
+                                SiteId = SiteId,
+                                CreatedById = LoggedUserId,
+                                CreatedOnUtc = GetDateTime
+                            };
+
+                            _commonService.InsertPicture(picture);
+
+                            var expenseAdvanceRequestFiles = new ExpenseAdvanceRequestFiles
+                            {
+                                FileId = picture.Id,
+                                ExpenseAdvanceRequestId = ExpenseId,
+                                CreatedById = LoggedUserId,
+                                CreatedOnUtc = GetDateTime
+                            };
+
+                            _expenseAdvanceRequestFilesService.InsertExpenseAdvanceRequestFile(expenseAdvanceRequestFiles);
+
+                            index++;
+                        }
+                    }
+                    return Ok(entity);
+                }
+                // Return model state errors if the model state is not valid
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message + ":- " + ex.InnerException);
             }
         }
         #endregion

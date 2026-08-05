@@ -1,6 +1,7 @@
 import { useQuasar } from "quasar";
 import addEditAdvanceExpense from "modules/finance-expense-advance/components/addEdit.vue";
 import viewAdvanceExpense from "modules/finance-expense-advance/components/view.vue";
+import viewAdvanceExpenseFiles from "modules/finance-expense-advance/components/_uploadFilesToAdvanceExpense.vue";
 
 let $q;
 let activeRowId;
@@ -50,4 +51,15 @@ export function onAdvanceExpenseEdit (id, refresh) {
   })
     .onCancel(() => { })
     .onDismiss(() => { });
+}
+
+// View Advance expense Files
+export function onAdvanceExpenseFilesView (id, itemCategoryType, refresh) {
+  activeRowId.value = id;
+  $q.dialog({
+    component: viewAdvanceExpenseFiles,
+    componentProps: { id, itemCategoryType }
+  }).onOk(refresh)
+    .onCancel(refresh)
+    .onDismiss(() => { activeRowId.value = id; });
 }

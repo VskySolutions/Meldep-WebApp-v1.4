@@ -72,6 +72,17 @@ namespace Vsky.Services.Expences
         }
         #endregion
 
+        #region GetExpenseAdvanceFileByFileId
+        // Title: GetExpenseAdvanceFileByFileId
+        // Description: This method retrieves a ExpenseAdvanceFile from the database by fileId. 
+        public async Task<ExpenseAdvanceRequestFiles> GetExpenseAdvanceFileByFileId(string fileId)
+        {
+            var query = _expenseAdvanceRequestFilesRepository.TableNoTracking.Where(x => !x.Deleted && x.FileId == fileId);
+            var item = await query.FirstOrDefaultAsync();
+            return item;
+        }
+        #endregion
+
         #region InsertExpenseAdvanceRequestFile
         // Title: InsertExpenseAdvanceRequestFile
         // Description: This method inserts a new ExpenseAdvanceRequestFiles entity into the repository. It takes a ExpenseAdvanceRequestFiles object as input and uses the _expenseAdvanceRequestFilesRepository to handle the insertion operation.

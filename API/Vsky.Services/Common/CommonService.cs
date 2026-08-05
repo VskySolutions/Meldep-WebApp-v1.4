@@ -274,6 +274,49 @@ namespace Vsky.Services.Common
             return list;
         }
 
+        #region GetAllFilesByExpenseId
+        public IPagedList<Picture> GetAllFilesByExpenseId(
+            string SiteId, 
+            string expenseId, 
+            string sortBy,
+            bool descending, 
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        )
+        {
+            var query = _pictureRepository.TableNoTracking.Where(x => x.SiteId == SiteId && x.ModuleId == expenseId && !x.Deleted);
+
+            query = query.OrderByDescending(x => x.CreatedOnUtc).Select(x => new Picture
+            {
+                Id = x.Id,
+                SubModuleId = x.SubModuleId,
+                Type = x.Type,
+                Module = x.Module,
+                ModuleId = x.ModuleId,
+                Sub_Module = x.Sub_Module,
+                VirtualPath = x.VirtualPath,
+                SeoFilename = x.SeoFilename,
+                CreatedById = x.CreatedById,
+                CreatedOnUtc = x.CreatedOnUtc,
+                CreatedBy = new ApplicationUser
+                {
+                    Id = x.CreatedBy.Id,
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.Person.Id,
+                        FirstName = x.CreatedBy.Person.FirstName,
+                        LastName = x.CreatedBy.Person.LastName,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+                    }
+                },
+            });
+
+            var list = new PagedList<Picture>(query, page, pageSize);
+            return list;
+        }
+        #endregion
+
         #region GetPicturesBySubModuleId
         public async Task<int> GetPicturesCountBySubModuleId(string subModuleId, string type)
         {

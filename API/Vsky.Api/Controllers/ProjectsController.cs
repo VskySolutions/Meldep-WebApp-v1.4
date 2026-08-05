@@ -18,6 +18,7 @@ using Vsky.Services.AzureBlobImage;
 using Vsky.Services.Common;
 using Vsky.Services.DailyPlanners;
 using Vsky.Services.DropDowns;
+using Vsky.Services.Expences;
 using Vsky.Services.HelpDesks;
 using Vsky.Services.Issues;
 using Vsky.Services.Notifications;
@@ -86,6 +87,7 @@ namespace Vsky.Api.Controllers
         private readonly ITimesheetLinesService _timesheetLinesService;
         private readonly IProjectsPinnedService _projectsPinnedService;
         private readonly IProjectsColorService _projectsColorService;
+        private readonly IExpenseAdvanceRequestFilesService _expenseAdvanceRequestFilesService;
         #endregion
 
         #region Services Initializations
@@ -130,7 +132,8 @@ namespace Vsky.Api.Controllers
             IDailyPlannerLineService dailyPlannerLineService,
             ITimesheetLinesService timesheetLinesService,
             IProjectsPinnedService projectsPinnedService,
-            IProjectsColorService projectsColorService
+            IProjectsColorService projectsColorService,
+            IExpenseAdvanceRequestFilesService expenseAdvanceRequestFilesService
         )
         {
             _globalVariable = globalVariable;
@@ -175,6 +178,7 @@ namespace Vsky.Api.Controllers
             _timesheetLinesService = timesheetLinesService;
             _projectsPinnedService = projectsPinnedService;
             _projectsColorService = projectsColorService;
+            _expenseAdvanceRequestFilesService = expenseAdvanceRequestFilesService;
         }
         #endregion
 
@@ -1501,6 +1505,18 @@ namespace Vsky.Api.Controllers
 
                             // Delete the file using the project service
                             _helpDeskFilesService.DeleteHelpDeskFile(fileEntity);
+                            break;
+                        }
+                    case "Expense Advance Requests":
+                        {
+                            // Fetch the file entity by its ID
+                            var fileEntity = await _expenseAdvanceRequestFilesService.GetExpenseAdvanceFileByFileId(id);
+                            // If no file is found, return a BadRequest response with an error message
+                            if (fileEntity == null)
+                                return BadRequest(new BadRequestError("No file found with the specified id."));
+
+                            // Delete the file using the project service
+                            _expenseAdvanceRequestFilesService.DeleteExpenseAdvanceRequestFile(fileEntity);
                             break;
                         }
                     default:

@@ -123,6 +123,15 @@
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
                   <q-icon
+                    name="o_description"
+                    class="cursor-pointer q-mr-sm"
+                    :class="props.row.advanceExpenseStatus !== 'Cancelled' && props.row.advanceExpenseStatus !== 'Request For Cancellation' ? '' : 'hidden'"
+                    size="xs"
+                    @click="onAdvanceExpenseFilesView(props.row.id, props.row.itemCategory?.type, refreshAdvanceExpenseList)"
+                  >
+                    <q-tooltip>Files</q-tooltip>
+                  </q-icon>
+                  <q-icon
                     name="o_history"
                     class="cursor-pointer q-mr-sm"
                     size="xs"
@@ -173,6 +182,7 @@ import {
   onAdvanceExpenseView,
   onAdvanceExpenseAdd,
   onAdvanceExpenseEdit,
+  onAdvanceExpenseFilesView
 } from "src/modules/finance-expense-advance/utils/dialogs.js";
 
 // Shared Expense Advance Actions

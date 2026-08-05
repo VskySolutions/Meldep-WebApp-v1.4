@@ -464,11 +464,19 @@ namespace Vsky.Api.Controllers
                             CasualLeaveId.Id
                         );
 
+                        var unpaidCasualUsed = _employeeLeaveService.GetUsedUnpaidLeaveByCategory(
+                            employeeId,
+                            currentYear,
+                            CasualLeaveId.Id
+                        );
+
                         var paidCasualRemaining = paidCasual - paidCasualUsed;
+                        var unpaidCasualRemaining = unpaidCasual - unpaidCasualUsed;
+                        var totalRemaining = paidCasualRemaining + unpaidCasualRemaining;
                         //var remainingPaidCasual = Math.Max(0, paidCasual - totalUsedCasualLeaves);
                         //var remainingTotalCasual = Math.Max(0, (paidCasual + unpaidCasual) - totalUsedCasualLeaves);
 
-                        if (leaveToDeduct > paidCasualRemaining)
+                        if (leaveToDeduct > totalRemaining)
                             return BadRequest(new BadRequestError("You have an insufficient casual leave balance."));
 
                         //Decide Paid / Unpaid

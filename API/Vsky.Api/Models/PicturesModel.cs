@@ -34,6 +34,7 @@ namespace Vsky.Api.Models
     public record PicturesSearchModel : BaseSearchModel
     {
         public string ProjectId { get; set; }
+        public string ExpenseId { get; set; }
     }
     public record PicturesListModel : BasePagedListModel<PicturesModel>
     {

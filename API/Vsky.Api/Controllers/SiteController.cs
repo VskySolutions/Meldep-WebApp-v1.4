@@ -426,7 +426,9 @@ namespace Vsky.Api.Controllers
                     user.PhoneNumberConfirmed = true;
                     user.TwoFactorEnabled = false;
                     user.LockoutEnabled = false;
+                    user.Type = "Employee";
                     user.CreatedOnUtc = GetDateTime;
+                    user.CreatedById = LoggedUserId;
                     user.UpdatedById = LoggedUserId;
                     user.UpdatedOnUtc = GetDateTime;
                     user.Active = true;

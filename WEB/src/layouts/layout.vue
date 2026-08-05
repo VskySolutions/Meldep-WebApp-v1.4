@@ -698,41 +698,40 @@ function validateTaskEstimatedHours (value) {
   return "Invalid Hours Format.";
 }
 
-console.log("router", route.path);
-function loadSopAssistant() {
-  // Prevent loading the script multiple times
-  if (document.getElementById("sop-assistant-script")) {
-    return;
-  }
+// function loadSopAssistant() {
+//   // Prevent loading the script multiple times
+//   if (document.getElementById("sop-assistant-script")) {
+//     return;
+//   }
 
-  if (route.path === 'auth/login') return
+//   if (route.path === 'auth/login') return
  
-  const script = document.createElement("script");
-  script.id = "sop-assistant-script";
-  // script.src = "https://api-sowbuddy-prasad-local.prasadsawant.site/sop-agent/cdn/vsky_sop_assistant.js";
-  script.src = process.env.AI_Chat_Assistant_Cdn,
-  // script.dataset.apiBase = "https://api-sowbuddy-prasad-local.prasadsawant.site";
-  script.dataset.apiBase = process.env.AI_Chat_Assistant_ApiBase,
-  // script.dataset.apiKey = "ag_067dc77f-6520-42ed-9e10-36c34b122434";
-  script.dataset.apiKey = process.env.AI_Chat_Assistant_ApiKey,
-  script.dataset.instance = process.env.AI_Chat_Assistant_Instance,
-  script.dataset.title = "SOP Assistant";
-  script.dataset.subtitle = "Workplace process guidance";
-  script.dataset.welcome =
-    "Hello! How can I help with your workplace process?";
-  script.dataset.placeholder = "Ask a process question...";
-  script.dataset.primaryColor = "#123a55";
-  script.dataset.width = "500";
-  script.dataset.height = "820";
-  script.dataset.launcherSize = "60";
-  script.dataset.borderRadius = "20";
-  script.dataset.side = "right";
-  script.dataset.offsetX = "24";
-  script.dataset.offsetY = "24";
-  script.dataset.showSources = "true";
+//   const script = document.createElement("script");
+//   script.id = "sop-assistant-script";
+//   // script.src = "https://api-sowbuddy-prasad-local.prasadsawant.site/sop-agent/cdn/vsky_sop_assistant.js";
+//   script.src = process.env.AI_Chat_Assistant_Cdn,
+//   // script.dataset.apiBase = "https://api-sowbuddy-prasad-local.prasadsawant.site";
+//   script.dataset.apiBase = process.env.AI_Chat_Assistant_ApiBase,
+//   // script.dataset.apiKey = "ag_067dc77f-6520-42ed-9e10-36c34b122434";
+//   script.dataset.apiKey = process.env.AI_Chat_Assistant_ApiKey,
+//   script.dataset.instance = process.env.AI_Chat_Assistant_Instance,
+//   script.dataset.title = "SOP Assistant";
+//   script.dataset.subtitle = "Workplace process guidance";
+//   script.dataset.welcome =
+//     "Hello! How can I help with your workplace process?";
+//   script.dataset.placeholder = "Ask a process question...";
+//   script.dataset.primaryColor = "#123a55";
+//   script.dataset.width = "500";
+//   script.dataset.height = "820";
+//   script.dataset.launcherSize = "60";
+//   script.dataset.borderRadius = "20";
+//   script.dataset.side = "right";
+//   script.dataset.offsetX = "24";
+//   script.dataset.offsetY = "24";
+//   script.dataset.showSources = "true";
  
-  document.body.appendChild(script);
-}
+//   document.body.appendChild(script);
+// }
 
 // On Load
 onMounted(() => {
@@ -740,7 +739,10 @@ onMounted(() => {
   // getAllReports();
   getNotificationList();
   getNotificationCount();
-  loadSopAssistant();
+
+  // if (storedUser.siteName == "Vsky Solutions") {
+  //   loadSopAssistant();
+  // }
 
   // calling getNotificationCount every 10s
   notificationInterval = setInterval(() => {
