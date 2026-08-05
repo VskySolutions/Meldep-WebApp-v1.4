@@ -43,7 +43,16 @@ namespace Vsky.Api.Models
         public List<ColumnModel> Columns { get; set; } = new List<ColumnModel>();
         public virtual ApplicationUser BillableCreatedBy { get; set; }
     }
+    public class TimesheetGroupResponse
+    {
+        public DateTime Date { get; set; }
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public int Count { get; set; }
 
+        [JsonConverter(typeof(HoursConverter))]
+        public decimal Hours { get; set; }
+    }
     public record TimesheetLinesSearchModel : BaseSearchModel
     {
         public string ProjectId { get; set; }

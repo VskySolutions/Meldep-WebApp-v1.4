@@ -85,6 +85,7 @@
             <TaskList
               :requirement-id="requirementId"
               :project-id="projectId"
+              :active-tab="leftTab"
               @select="selectedTask = $event"
               @count="taskCount = $event"
             />
@@ -94,6 +95,7 @@
             <TimesheetList
               :requirement-id="requirementId"
               :project-id="projectId"
+              :active-tab="leftTab"
               @select="onSelectGroup"
               @search-change="timesheetSearchModel = $event"
             />
@@ -111,6 +113,7 @@
             <TestCaseList
               :requirement-id="requirementId"
               :project-id="projectId"
+              :active-tab="leftTab"
               @select="selectedTestCase = $event"
               @count="testCaseCount = $event"
             />
@@ -119,6 +122,7 @@
           <q-tab-panel name="issues" class="q-pa-none">
             <IssueList
               :requirement-id="requirementId"
+              :active-tab="leftTab"
               @select="selectedIssue = $event"
               @count="issueCount = $event"
             />

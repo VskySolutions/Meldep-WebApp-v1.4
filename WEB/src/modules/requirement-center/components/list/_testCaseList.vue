@@ -228,7 +228,8 @@ const props = defineProps({
   projectId: {
     type: String,
     required: true
-  }
+  },
+  activeTab: String
 });
 
 const selectedTestCase = ref(null);
@@ -450,6 +451,13 @@ watch(
   () => {
     searchLoader.value = true;
     refreshTestCaseList();
+  }
+);
+
+watch(
+  () => props.activeTab,
+  () => {
+    showFilter.value = false;
   }
 );
 

@@ -124,6 +124,9 @@ namespace Vsky.Api.AutoMapper
             CreateMap<TimesheetAISummary, TimesheetAISummaryModel>();
             CreateMap<TimesheetAISummaryModel, TimesheetAISummary>();
 
+            CreateMap<TimesheetGroupModel, TimesheetGroupResponse>();
+            CreateMap<TimesheetGroupResponse, TimesheetGroupModel>();
+
             CreateMap<EmployeeType, EmployeeTypeModel>();
             CreateMap<EmployeeTypeModel, EmployeeType>();            
             

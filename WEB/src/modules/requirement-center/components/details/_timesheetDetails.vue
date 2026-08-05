@@ -95,7 +95,10 @@
 
         <!-- Total Row -->
         <q-tr v-if="props.pageIndex === rows.length - 1">
-          <q-td colspan="5" class="text-right">
+          <q-td
+            :colspan="groupByFilter !== 'date' ? 6 : 5"
+            class="text-right"
+          >
             <b>Total Hours:</b>
           </q-td>
 
@@ -103,6 +106,7 @@
             <b>{{ totalHours }}</b>
           </q-td>
         </q-tr>
+        <q-separator></q-separator>
       </template>
     </q-table>
   </q-card>
@@ -149,11 +153,39 @@ const columns = computed(() => {
     : allColumns;
 });
 
-const totalHours = computed(() =>
-  Array.isArray(rows.value)
-    ? rows.value.reduce((sum, row) => sum + (row.hours || 0), 0)
-    : 0
-);
+function calculateTotalHours(rows) {
+  let totalMinutes = 0;
+
+  rows.forEach(row => {
+    if (row.hours == null) return;
+
+    let hour = "0";
+    let minute = "0";
+
+    if (typeof row.hours === "string") {
+      [hour, minute] = row.hours.split(":");
+    } else {
+      // Convert HH.MM number to HH:mm string
+      const value = Number(row.hours);
+      const h = Math.floor(value);
+      const m = Math.round((value - h) * 60);
+
+      hour = h.toString();
+      minute = m.toString().padStart(2, "0");
+    }
+
+    totalMinutes += parseInt(hour, 10) * 60 + parseInt(minute, 10);
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+const totalHours = computed(() => calculateTotalHours(rows.value));
 
 const getTimesheetDetails = async () => {
   if (!props.requirementId || !props.group) {

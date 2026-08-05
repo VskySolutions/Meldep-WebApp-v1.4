@@ -164,7 +164,7 @@ const getTimesheetByRequirementId = async (requirementId) => {
 
     emit('summary', {
       total: rows.value.length,
-      totalHours: rows.value.reduce((sum, row) => sum + row.hours, 0)
+      totalHours: totalHours
     });
   } catch (err) {
     console.error(err);
@@ -174,10 +174,39 @@ const getTimesheetByRequirementId = async (requirementId) => {
   }
 };
 
-const totalHours = computed(() =>
-  rows.value.reduce((sum, row) => sum + row.hours, 0)
-);
+function calculateTotalHours(rows) {
+  let totalMinutes = 0;
 
+  rows.forEach(row => {
+    if (row.hours == null) return;
+
+    let hour = "0";
+    let minute = "0";
+
+    if (typeof row.hours === "string") {
+      [hour, minute] = row.hours.split(":");
+    } else {
+      // Convert HH.MM number to HH:mm string
+      const value = Number(row.hours);
+      const h = Math.floor(value);
+      const m = Math.round((value - h) * 100);
+
+      hour = h.toString();
+      minute = m.toString().padStart(2, "0");
+    }
+
+    totalMinutes += parseInt(hour, 10) * 60 + parseInt(minute, 10);
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+const totalHours = computed(() => calculateTotalHours(rows.value));
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load
 // --------------------------------------------------------------------------------------------------------------------------------------------------

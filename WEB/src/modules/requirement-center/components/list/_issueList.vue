@@ -195,7 +195,8 @@ const props = defineProps({
   requirementId: {
     type: String,
     required: true
-  }
+  },
+  activeTab: String
 });
 
 const selectedIssue = ref(null);
@@ -394,6 +395,12 @@ watch(
   }
 );
 
+watch(
+  () => props.activeTab,
+  () => {
+    showFilter.value = false;
+  }
+);
 // ----------------------------------------------------------------------------------------------------------------
 // On page rendering
 // ----------------------------------------------------------------------------------------------------------------

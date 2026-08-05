@@ -191,7 +191,8 @@ const props = defineProps({
   projectId: {
     type: String,
     required: true
-  }
+  },
+  activeTab: String
 });
 
 const authStore = useAuthStore();
@@ -437,6 +438,13 @@ watch(
   () => {
     searchLoader.value = true;
     refreshProjectTaskList();
+  }
+);
+
+watch(
+  () => props.activeTab,
+  () => {
+    showFilter.value = false;
   }
 );
 

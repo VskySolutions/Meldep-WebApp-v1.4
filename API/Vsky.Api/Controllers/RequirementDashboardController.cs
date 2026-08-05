@@ -241,7 +241,8 @@ namespace Vsky.Api.Controllers
                 searchModel.PageSize
             );
 
-            return Ok(result);
+            var model = _mapper.Map<List<TimesheetGroupResponse>>(result);
+            return Ok(model);
         }
         #endregion
         #endregion
