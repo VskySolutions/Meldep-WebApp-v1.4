@@ -1378,17 +1378,30 @@ function totalEstimateHours () {
   return total.toFixed(2);
 }
 
-function getTotalHoursByProject (lines) {
+function getTotalHoursByProject(lines) {
   const projectMap = {};
+
   for (const line of lines) {
     const name = line.project?.name;
-    projectMap[name] = (projectMap[name] || 0) + (line.hours || 0);
+    const time = line.hours || "00:00";
+
+    const [hours, minutes] = time.split(":").map(Number);
+    const totalMinutes = (hours * 60) + minutes;
+
+    projectMap[name] = (projectMap[name] || 0) + totalMinutes;
   }
 
-  return Object.entries(projectMap).map(([name, total]) => ({
-    projectName: name,
-    totalHours: parseFloat(total.toFixed(2)).toString()
-  }));
+  return Object.entries(projectMap).map(([name, totalMinutes]) => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    return {
+      projectName: name,
+      totalHours: `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}`
+    };
+  });
 }
 
 // Fetch Time In / Time Out for a specific employee

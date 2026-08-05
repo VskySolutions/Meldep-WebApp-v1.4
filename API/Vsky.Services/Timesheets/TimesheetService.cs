@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MailKit.Search;
 using Microsoft.EntityFrameworkCore;
@@ -111,9 +112,15 @@ namespace Vsky.Services.Timesheets
             {
                 query = query.Where(x => x.TimesheetLines.Any(m => m.ProjectActivityId == projectActivityId));
             }
+            decimal? searchHours = null;
 
             if (!string.IsNullOrEmpty(SearchText))
             {
+                if (Regex.IsMatch(SearchText, @"^\d{1,2}:\d{2}$"))
+                {
+                    searchHours = ConvertTimeToDecimalHours(SearchText);
+                }
+
                 DateTime.TryParse(SearchText, out var parsedDate);
                 query = query.Where(m =>
                     m.TimesheetLines.Any(line => line.Project.Name.ToLower().Contains(SearchText.ToLower())) ||
@@ -122,7 +129,8 @@ namespace Vsky.Services.Timesheets
                     m.TimesheetLines.Any(line => line.ProjectActivity.Name.ToLower().Contains(SearchText.ToLower())) ||
                     m.TimesheetLines.Any(line => line.Description.ToLower().Contains(SearchText.ToLower())) ||
                     (m.Employee.Person.FirstName + " " + m.Employee.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
-                    m.TimesheetLines.Any(line => line.Hours.ToString().Contains(SearchText.ToLower())) ||
+                    (searchHours.HasValue && m.TimesheetLines.Any(line => line.Hours == searchHours.Value)) ||
+                    // m.TimesheetLines.Any(line => line.Hours.ToString().Contains(SearchText.ToLower())) ||
                     m.TimesheetDate.Value.Date == parsedDate.Date
                 );
             }
@@ -175,7 +183,7 @@ namespace Vsky.Services.Timesheets
                         FullName = x.User.Person.FirstName + " " + x.User.Person.LastName,
                     }
                 },
-                TimesheetLines = x.TimesheetLines.Where(m => !m.Deleted && (string.IsNullOrWhiteSpace(projectId) || m.ProjectId == projectId) && (string.IsNullOrWhiteSpace(projectModuleId) || m.ProjectModuleId == projectModuleId) && (string.IsNullOrWhiteSpace(projectTaskId) || m.ProjectTaskId == projectTaskId)).Select(mapping => new TimesheetLines
+                TimesheetLines = x.TimesheetLines.Where(m => !m.Deleted && (string.IsNullOrWhiteSpace(projectId) || m.ProjectId == projectId) && (string.IsNullOrWhiteSpace(projectModuleId) || m.ProjectModuleId == projectModuleId) && (string.IsNullOrWhiteSpace(projectTaskId) || m.ProjectTaskId == projectTaskId) && (!searchHours.HasValue || m.Hours == searchHours.Value)).Select(mapping => new TimesheetLines
                 {
                     Id = mapping.Id,
                     Hours = mapping.Hours,
@@ -1026,6 +1034,28 @@ namespace Vsky.Services.Timesheets
             return list;
         }
         #endregion
+
+        private static string ConvertDecimalHoursToTime(decimal hours)
+        {
+            int hh = (int)hours;
+            int mm = (int)Math.Round((hours - hh) * 60, MidpointRounding.AwayFromZero);
+
+            if (mm == 60)
+            {
+                hh++;
+                mm = 0;
+            }
+
+            return $"{hh:D2}:{mm:D2}";
+        }
+        private decimal ConvertTimeToDecimalHours(string time)
+        {
+            if (string.IsNullOrWhiteSpace(time))
+                return 0;
+
+            var parts = time.Split(':');
+            return int.Parse(parts[0]) + (int.Parse(parts[1]) / 60m);
+        }
     }
 }
 

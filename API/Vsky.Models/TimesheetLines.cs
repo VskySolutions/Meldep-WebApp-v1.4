@@ -16,7 +16,6 @@ public class TimesheetLines : BaseEntity
     public string ProjectActivityId { get; set; }
 
     public string Description { get; set; }
-
     public decimal Hours { get; set; }
     public decimal BillableHours { get; set; }
     public string MeetingUId { get; set; }

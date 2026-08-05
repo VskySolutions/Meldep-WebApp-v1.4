@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
+using Vsky.Api.Converter;
 using Vsky.Api.Framework.Models;
 using Vsky.Models;
+using System.Text.Json.Serialization;
 
 namespace Vsky.Api.Models
 {
@@ -10,6 +12,8 @@ namespace Vsky.Api.Models
     {
         public string DailyPlannerId { get; set; }
         public string Description { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal Hours { get; set; }
         public string ProjectId { get; set; }
         public string ProjectModuleId { get; set; }

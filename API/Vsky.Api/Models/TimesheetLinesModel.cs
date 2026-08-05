@@ -2,6 +2,9 @@
 using System;
 using System.Collections.Generic;
 using Vsky.Api.Framework.Models;
+using System.ComponentModel.DataAnnotations.Schema;
+using Vsky.Api.Converter;
+using System.Text.Json.Serialization;
 
 namespace Vsky.Api.Models
 {
@@ -14,6 +17,8 @@ namespace Vsky.Api.Models
         public string ProjectActivityId { get; set; }
 
         public string Description { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal Hours { get; set; }
         public decimal BillableHours { get; set; }
         public string MeetingUId { get; set; }
@@ -26,6 +31,7 @@ namespace Vsky.Api.Models
         public string ActivityNameDescription { get; set; }
         public string? BillableCreatedById { get; set; }
         public DateTime? BillableCreatedOnUtc { get; set; }
+        public string HoursStr { get; set; }
 
         public virtual Timesheet Timesheet { get; set; }
         public virtual Project Project { get; set; }

@@ -228,12 +228,37 @@
                         hide-bottom-space
                         dense
                         maxlength="5"
-                        hint="hh.mm"
+                        @blur="formatHoursValue(props.row)"
                         :rules="[validateHours]"
                         :error="rowValidations[props.rowIndex]?.value?.hours.$error"
                         :error-message="rowValidations[props.rowIndex]?.value?.hours.$errors[0]?.$message"
-                      />
+                      >
+                       <template v-if="!props.row.hours" v-slot:hint>
+                        hh:mm
+                      </template>
+                      </q-input>
+                      <div
+                        v-if="props.row.hours && validateHours(props.row.hours) === true"
+                        class="text-caption text-primary q-mt-xs"
+                      >
+                        {{ getHoursMinutesText(props.row.hours) }}
+                      </div>
                     </q-td>
+                    <!-- <q-td style="width: 200px; max-width: 200px;">
+                      <q-input
+                        v-model="props.row.hoursStr"
+                        outlined
+                        stack-label
+                        hide-bottom-space
+                        dense
+                        maxlength="5"
+                        hint="hh:mm"
+                        @blur="formatHoursValue(props.row)"
+                        :rules="[validateHours]"
+                        :error="rowValidations[props.rowIndex]?.value?.hoursStr.$error"
+                        :error-message="rowValidations[props.rowIndex]?.value?.hoursStr.$errors[0]?.$message"
+                      />
+                    </q-td> -->
                     <q-td auto-width class="text-center">
                       <q-td auto-width class="text-center" style="width: 5%;">
                         <q-icon name="o_delete_outline" size="xs" class="cursor-pointer" color="negative" @click="onDeleteTimesheet(props.rowIndex)">
@@ -376,41 +401,179 @@ const rules = {
 
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 
-const totalHours = computed(() => {
-  const total = timesheetRows.value.reduce((sum, row) => {
-    if (!row.deleted) {
-      sum += parseFloat(row.hours) || 0;
-    }
-    return sum;
-  }, 0);
-
-  // Round to 2 decimal places without using toFixed()
-  return Math.round(total * 100) / 100;
-});
-
 const editingRowrules = {
   projectId: { required: helpers.withMessage("Project is Required", required) },
   projectModuleId: { required: helpers.withMessage("Project module is Required", required) },
   projectTaskId: { required: helpers.withMessage("Project task is Required", required) },
   projectActivityId: { required: helpers.withMessage("Project activity is Required", required) },
+  // hours: {
+  //   required: helpers.withMessage("Hours is Required", required),
+  //   min: helpers.withMessage("Please check hours", (value) => parseFloat(value?.toString().trim()) >= 0.1),
+  //   validFormat: helpers.withMessage("Invalid hours format", (value) => {
+  //     const regex = /^(?:\d{1,2}(?:\.\d{1,2})?)$/;
+  //     return regex.test(value?.toString().trim());
+  //   })
+  // }
   hours: {
     required: helpers.withMessage("Hours is Required", required),
-    min: helpers.withMessage("Please check hours", (value) => parseFloat(value?.toString().trim()) >= 0.1),
-    validFormat: helpers.withMessage("Invalid hours format", (value) => {
-      const regex = /^(?:\d{1,2}(?:\.\d{1,2})?)$/;
-      return regex.test(value?.toString().trim());
-    })
+
+    validFormat: helpers.withMessage(
+      "Invalid hours format.",
+      (value) => {
+        if (!value) return true;
+        return /^(\d{1,2}):(\d{2})$/.test(value.toString().trim());
+      }
+    ),
+
+    validRange: helpers.withMessage(
+      "Please check hours.",
+    (value) => {
+      if (!value) return true;
+
+      const match = value.toString().trim().match(/^(\d{1,2}):(\d{2})$/);
+      if (!match) return true;
+
+      const hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+
+      return hours >= 0 &&
+             hours <= 99 &&
+             minutes >= 0 &&
+             minutes <= 59 &&
+             !(hours === 0 && minutes === 0);
+      }
+    )
   }
 };
 
-function validateHours (value) {
+function validateHours(value) {
   const strValue = (value ?? "").toString().trim();
-  const regex = /^(?:\d{1,2}(?:\.\d{1,2})?)$/;
-  if (!strValue || (regex.test(strValue) && strValue.length <= 5)) {
-    return true; // Valid input
+  if (!strValue) {
+    return true;
   }
-  return "Invalid hours format.";
+
+  if (/^\d{1,2}$/.test(strValue)) {
+    const hours = parseInt(strValue, 10);
+    return hours <= 99 ? true : "Please check hours.";
+  }
+
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) {
+    return "Invalid hours format.";
+  }
+
+  const hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+
+  if (
+    hours > 99 ||
+    minutes > 59 ||
+    (hours === 0 && minutes === 0)
+  ) {
+    return "Please check hours.";
+  }
+  return true;
 }
+
+// const formatHoursValue = (row) => {
+//   if (!row.hours) return;
+
+//   const value = row.hours.toString().trim();
+
+//   // Case 1: Only hours entered (e.g. 5 -> 05:00)
+//   if (/^\d{1,2}$/.test(value)) {
+//     const hours = parseInt(value, 10);
+
+//     if (hours <= 99) {
+//       row.hours = `${hours.toString().padStart(2, "0")}:00`;
+//     }
+
+//     return;
+//   }
+
+//   // Case 2: HH:M or HH:MM
+//   const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+
+//   if (!match) {
+//     return; // Invalid input -> do not modify
+//   }
+
+//   const hours = parseInt(match[1], 10);
+//   const minutes = parseInt(match[2], 10);
+
+//   // Only format if the value is valid
+//   if (hours > 99 || minutes > 59) {
+//     return;
+//   }
+
+//   row.hours = `${hours.toString().padStart(2, "0")}:${minutes
+//     .toString()
+//     .padEnd(2, "0")
+//     .substring(0, 2)}`;
+// };
+
+function formatHoursValue(row) {
+  if (!row.hours) return;
+
+  let value = row.hours.trim();
+
+  // If only hours are entered (e.g. 2), convert to HH:00
+  if (!value.includes(":")) {
+    const hours = value.padStart(2, "0");
+    row.hours = `${hours}:00`;
+    return;
+  }
+
+  const parts = value.split(":");
+  if (parts.length !== 2) return;
+
+  let hours = parts[0];
+  let minutes = parts[1];
+  if (minutes.length === 1) {
+    minutes = minutes + "0";
+  }
+
+  hours = hours.padStart(2, "0");
+
+  row.hours = `${hours}:${minutes}`;
+}
+
+const totalHours = computed(() => {
+  let totalMinutes = 0;
+
+  timesheetRows.value.forEach(row => {
+    if (!row.deleted && row.hours) {
+      const value = row.hours.toString().trim();
+
+      // Skip invalid values
+      if (!/^\d{1,2}:\d{2}$/.test(value)) {
+        return;
+      }
+
+      const [hours, minutes] = value.split(":");
+
+      totalMinutes +=
+        (parseInt(hours, 10) * 60) +
+        parseInt(minutes, 10);
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
+});
+
+// function validateHours (value) {
+//   const strValue = (value ?? "").toString().trim();
+//   const regex = /^(?:\d{1,2}(?:\.\d{1,2})?)$/;
+//   if (!strValue || (regex.test(strValue) && strValue.length <= 5)) {
+//     return true; // Valid input
+//   }
+//   return "Invalid hours format.";
+// }
 
 // ------------------------------------------------------------------------------------
 // Get All Dropdowns
@@ -707,6 +870,37 @@ function getTimesheetAllowedDateRange(
   )
 }
 
+function getHoursMinutesText(value) {
+  if (!value) return "";
+
+  value = value.trim();
+
+  // Hours only
+  if (/^\d{1,2}$/.test(value)) {
+    const hrs = parseInt(value, 10);
+    return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  }
+
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) return "";
+
+  const hrs = parseInt(match[1], 10);
+  let mins = parseInt(match[2], 10);
+
+  if (match[2].length === 1) {
+    mins *= 10;
+  }
+
+  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+
+  const hrText = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  const minText = mins > 0 ? `${mins} min` : "";
+
+  return [hrText, minText].filter(Boolean).join(" ");
+}
+
 async function onAddTimesheet () {
   timesheetRows.value.push({
     id: uid(),
@@ -789,16 +983,16 @@ async function onSubmit (shouldClose, buttonType) {
     if (await v$.value.$validate() && isValid) {
       processing.value = true;
       const cleanedRows = timesheetRows.value.map(row => {
-        const trimmedHours = (row.hours ?? "").toString().trim();
-        let parsedHours;
-        if (row.deleted === true) {
-          parsedHours = 0.0;
-        } else {
-          parsedHours = trimmedHours === "" ? null : parseFloat(trimmedHours);
-        }
+        // const trimmedHours = (row.hours ?? "").toString().trim();
+        // let parsedHours;
+        // if (row.deleted === true) {
+        //   parsedHours = 0.0;
+        // } else {
+        //   parsedHours = trimmedHours === "" ? null : parseFloat(trimmedHours);
+        // }
         return {
           ...row,
-          hours: parsedHours,
+          // hours: parsedHours,
           isMyTaskActivity: row.isMyTaskActivity ?? false,
           projectName: row.projectName ?? "",
           moduleName: row.moduleName ?? "",
@@ -811,6 +1005,7 @@ async function onSubmit (shouldClose, buttonType) {
         // timesheetLineModel: timesheetRows.value
         timesheetLineModel: cleanedRows
       };
+      console.log("Payload for saving timesheet:", payload);
       const resp = await timesheetService.saveTimesheet(TimesheetId, payload);
       TimesheetId = resp.timesheetId;
       timesheetRows.value = resp.timesheetLineModel.map(savedRow => {
@@ -896,7 +1091,7 @@ onMounted(() => {
       projectModuleId: "",
       projectTaskId: "",
       projectActivityId: "",
-      hours: "",
+      hoursStr: "",
       description: "",
       deleted: false,
       isMyTaskActivity: true,

@@ -211,11 +211,18 @@
                           maxlength="5"
                           hint="hh.mm"
                           :dense="true"
+                          @blur="formatHoursValue(props.row)"
+                          :rules="[validateHours]"
                           :error="rowValidations[props.rowIndex]?.value?.hours.$error"
                           :error-message="rowValidations[props.rowIndex]?.value?.hours.$errors[0]?.$message"
-                          :rules="[validateHours]"
-                          @blur="rowValidations[props.rowIndex]?.value?.hours.$touch"
-                        />
+                        >
+                        </q-input>
+                        <div
+                          v-if="props.row.hours && validateHours(props.row.hours) === true"
+                          class="text-caption text-primary q-mt-xs"
+                        >
+                          {{ getHoursMinutesText(props.row.hours) }}
+                        </div>
                       </q-td>
                       <q-td class="text-center" style="width: 5%;">
                         <q-icon name="o_delete_outline" size="xs" class="cursor-pointer" color="negative" @click="onDeleteDailyPlanner(props.rowIndex)">
@@ -337,28 +344,93 @@ const editingRowrules = {
   projectModuleId: { required: helpers.withMessage("Project module is required", required) },
   projectTaskId: { required: helpers.withMessage("Task is required", required) },
   projectActivityId: { required: helpers.withMessage("Project activity is required", required) },
-  hours: {
-    required: helpers.withMessage("Hours is required", required),
-    min: helpers.withMessage("Please check hours", (value) => parseFloat(value?.toString().trim()) >= 0.1),
-    validFormat: helpers.withMessage("Invalid hours format", (value) => {
-      const regex = /^(?:\d{1,2}(?:\.\d{1,2})?)$/;
-      return regex.test(value?.toString().trim());
-    })
+ hours: {
+    required: helpers.withMessage("Hours is Required", required),
+
+    validFormat: helpers.withMessage(
+      "Invalid hours format.",
+      (value) => {
+        if (!value) return true;
+        return /^(\d{1,2}):(\d{2})$/.test(value.toString().trim());
+      }
+    ),
+
+    validRange: helpers.withMessage(
+      "Please check hours.",
+    (value) => {
+      if (!value) return true;
+
+      const match = value.toString().trim().match(/^(\d{1,2}):(\d{2})$/);
+      if (!match) return true;
+
+      const hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+
+      return hours >= 0 &&
+             hours <= 99 &&
+             minutes >= 0 &&
+             minutes <= 59 &&
+             !(hours === 0 && minutes === 0);
+      }
+    )
   }
 };
 
 // validation for hrs
-function validateHours (value) {
-  // Ensure value is treated as a string
+function validateHours(value) {
   const strValue = (value ?? "").toString().trim();
-  const regex = /^(?:\d{1,2}(?:\.\d{1,2})?)$/;
-  if (!strValue || (regex.test(strValue) && strValue.length <= 5)) {
-    return true; // Valid input
+  if (!strValue) {
+    return true;
   }
-  return "Invalid hours format.";
+
+  if (/^\d{1,2}$/.test(strValue)) {
+    const hours = parseInt(strValue, 10);
+    return hours <= 99 ? true : "Please check hours.";
+  }
+
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) {
+    return "Invalid hours format.";
+  }
+
+  const hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+
+  if (
+    hours > 99 ||
+    minutes > 59 ||
+    (hours === 0 && minutes === 0)
+  ) {
+    return "Please check hours.";
+  }
+  return true;
 }
 
+function formatHoursValue(row) {
+  if (!row.hours) return;
 
+  let value = row.hours.trim();
+
+  // If only hours are entered (e.g. 2), convert to HH:00
+  if (!value.includes(":")) {
+    const hours = value.padStart(2, "0");
+    row.hours = `${hours}:00`;
+    return;
+  }
+
+  const parts = value.split(":");
+  if (parts.length !== 2) return;
+
+  let hours = parts[0];
+  let minutes = parts[1];
+  if (minutes.length === 1) {
+    minutes = minutes + "0";
+  }
+
+  hours = hours.padStart(2, "0");
+
+  row.hours = `${hours}:${minutes}`;
+}
 // ------------------------------------------------------------------------------------
 // Get All Dropdowns
 // ------------------------------------------------------------------------------------
@@ -579,6 +651,37 @@ function getTimesheetAllowedDateRange(
   return selectedDate >= today
 }
 
+function getHoursMinutesText(value) {
+  if (!value) return "";
+
+  value = value.trim();
+
+  // Hours only
+  if (/^\d{1,2}$/.test(value)) {
+    const hrs = parseInt(value, 10);
+    return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  }
+
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) return "";
+
+  const hrs = parseInt(match[1], 10);
+  let mins = parseInt(match[2], 10);
+
+  if (match[2].length === 1) {
+    mins *= 10;
+  }
+
+  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+
+  const hrText = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  const minText = mins > 0 ? `${mins} min` : "";
+
+  return [hrText, minText].filter(Boolean).join(" ");
+}
+
 async function onAddDailyPlanner () {
   dailyPlanRows.value.push({
     id: uid(),
@@ -611,15 +714,31 @@ function onDialogClose () {
 }
 
 const totalHours = computed(() => {
-  const total = dailyPlanRows.value.reduce((sum, row) => {
-    if (!row.deleted) {
-      sum += parseFloat(row.hours) || 0;
-    }
-    return sum;
-  }, 0);
+  let totalMinutes = 0;
 
-  // Round to 2 decimal places without using toFixed()
-  return Math.round(total * 100) / 100;
+  dailyPlanRows.value.forEach(row => {
+    if (!row.deleted && row.hours) {
+      const value = row.hours.toString().trim();
+
+      // Skip invalid values
+      if (!/^\d{1,2}:\d{2}$/.test(value)) {
+        return;
+      }
+
+      const [hours, minutes] = value.split(":");
+
+      totalMinutes +=
+        (parseInt(hours, 10) * 60) +
+        parseInt(minutes, 10);
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 });
 
 async function onSubmit (shouldClose, buttonType) {
@@ -663,7 +782,7 @@ async function onSubmit (shouldClose, buttonType) {
         }
         return {
           ...row,
-          hours: parsedHours,
+          // hours: parsedHours,
           isMyTaskActivity: row.isMyTaskActivity ?? false,
           projectName: row.projectName ?? "",
           moduleName: row.moduleName ?? "",

@@ -4,7 +4,7 @@
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
         <div v-if="!isCharter" class="text-h2 text-white">{{ id ? "Edit" : "Add" }} Project</div>
         <div v-else class="text-h2 text-white">{{ model.name }}</div>
-        <q-btn v-close-popup icon="o_close" class="close" color="white" flat round dense />
+        <q-btn icon="o_close" class="close" color="white" flat round dense  @click="confirmProjectClose"/>
       </q-card-section>
       <q-separator />
       <q-form greedy @submit.prevent.stop="onSubmit">
@@ -234,9 +234,9 @@
                       </div>
                     </div>
                     <div align="center" class="q-gutter-sm justify-center">
-                      <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="onDialogCancel" />
+                      <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="confirmProjectClose" />
                       <q-btn v-if="tab === '1_tab'" label="Save & Next" type="submit" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps />
-                      <q-btn label="Save & Close" type="button" color="primary" class="actionBtn" :loading="processingClose" :disable="processingClose" no-caps @click="onSubmitClose()" />
+                      <q-btn label="Save & Close" type="button" color="primary" class="actionBtn hidden" :loading="processingClose" :disable="processingClose" no-caps @click="onSubmitClose()" />
                     </div>
                   </fieldset>
                 </q-tab-panel>
@@ -289,6 +289,7 @@
                                 v-model="props.row.employeeDesignationId"
                                 :options="employeeDesignationDropdownSingleSelect.list.value"
                                 :filter="employeeDesignationDropdownSingleSelect.filter"
+                                :disable="props.row.isDefaultRole"
                                 :error="rowValidations[props.rowIndex]?.value?.employeeDesignationId.$error"
                                 :error-message="rowValidations[props.rowIndex]?.value?.employeeDesignationId.$errors[0]?.$message"
                               />
@@ -308,8 +309,15 @@
                               />
                             </q-td>
                             <q-td class="text-center" style="width: 10%;">
-                              <q-icon name="o_delete" size="xs" class="cursor-pointer text-red" @click="onDeleteProjectCharter(props.row)">
-                                <q-tooltip>Delete</q-tooltip>
+                             <q-icon
+                                name="o_delete"
+                                size="xs"
+                                :class="props.row.isDefaultRole ? 'text-red-3 cursor-not-allowed' : 'cursor-pointer text-red'"
+                                @click="!props.row.isDefaultRole && onDeleteProjectCharter(props.row)"
+                              >
+                                <q-tooltip v-if="!props.row.isDefaultRole">
+                                  Delete
+                                </q-tooltip>
                               </q-icon>
                             </q-td>
                           </q-tr>
@@ -317,7 +325,7 @@
                       </q-table>
                     </div>
                     <div align="center" class="q-gutter-sm justify-center q-mt-sm">
-                      <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="onDialogCancel" />
+                      <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="confirmProjectClose" />
                       <q-btn v-if="tab === '1_tab'" label="Save & Next" type="submit" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps />
                       <q-btn label="Save & Close" type="button" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps @click="onSubmitClose()" />
                     </div>
@@ -337,7 +345,7 @@
 import _ from "lodash";
 import { useAuthStore } from "stores/auth";
 import { isDate } from "validators/zw_validators.js";
-import { zwConfirmDelete, notifySuccess, notifyError, notifyWarning } from "assets/utils";
+import { zwConfirm, zwConfirmDelete, notifySuccess, notifyError, notifyWarning } from "assets/utils";
 import { ref, watch, onMounted, toRaw } from "vue";
 import { useQuasar, useDialogPluginComponent, uid } from "quasar";
 import { required, helpers, minLength, maxLength } from "@vuelidate/validators";
@@ -377,7 +385,10 @@ const loading = ref(true);
 const processing = ref(false);
 const processingClose = ref(false);
 const isFilesValid = ref(true);
+const defaultRoles = [ "Project Manager", "Project Coordinator", "Project Lead" ];
+const hasSavedDefaultRoles = ref(false);
 
+console.log(tab.value, "tab.value");
 const rows = ref([]);
 const rowCounter = ref(0);
 const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1 });
@@ -478,14 +489,16 @@ const getProject = (projectId) => {
       const row = {
         ...item,
         rowCounter: ++counter,
-        productivityFactor: item.productivityFactor,
+       productivityFactor: item.productivityFactor ?? 0,
         editing: false,
         flag: "Edit"
       };
       return row;
     });
     rowCounter.value = counter;
-  }).finally(() => {
+    addDefaultProjectCharterRows();
+    syncRowValidations();
+    }).finally(() => {
     loading.value = false;
   });
 };
@@ -525,7 +538,7 @@ function onAddProjectCharter () {
     id: uid(),
     employeeId: "",
     employeeDesignationId: "",
-    productivityFactor: "",
+    productivityFactor: 0,
     deleted: false,
     rowCounter: currentCounter
   });
@@ -547,6 +560,42 @@ const onDeleteProjectCharter = (row) => {
   );
 };
 
+
+function addDefaultProjectCharterRows() {
+  defaultRoles.forEach(role => {
+    // Find the designation in the dropdown
+    const designation = employeeDesignationDropdownSingleSelect.list.value.find(
+      x => x.text === role
+    );
+
+    if (!designation) return;
+
+    // Check if the role already exists in the table
+    const existingRow = rows.value.find(
+      x => x.employeeDesignationId === designation.value
+    );
+
+    if (existingRow) {
+      existingRow.isDefaultRole = true;
+      return;
+    }
+
+    hasSavedDefaultRoles.value = true;
+    // Role does not exist - add a new default row
+    const currentCounter = ++rowCounter.value;
+
+    rows.value.push({
+      id: uid(),
+      employeeId: user?.employeeId ? user.employeeId : "",
+      employeeDesignationId: designation.value,
+      productivityFactor: 0,
+      deleted: false,
+      rowCounter: currentCounter,
+      isDefaultRole: true
+    });
+  });
+}
+
 function disableProjectDatesBeforeStartDate (date) {
   // If no Start Date is set, allow all dates
   if (!model.value.startDateStr) {
@@ -559,6 +608,22 @@ function disableProjectDatesBeforeStartDate (date) {
   return current >= start;
 }
 
+const confirmProjectClose = async () => {
+  // If the required roles are already saved, close immediately
+  if (!hasSavedDefaultRoles.value) {
+    onDialogCancel();
+    return;
+  }
+
+  const formName = props.isCharter ? "Project Charter" : "Project";
+
+  zwConfirm({
+    title: "Confirmation",
+    message: `Please assign employees to the required Project Manager (PM), Project Coordinator (PC), and Project Lead (PL) roles, save the ${formName} form, and then close it.`,
+    cancel: false,
+    okLabel: "OK"
+  });
+};
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On Save & Next or Save & Close
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -570,6 +635,145 @@ const onSubmitClose = () => {
   onSubmit(1);
 };
 
+// const onSubmit = async (isClose = 0) => {
+//   if (isClose === 1) {
+//     processingClose.value = true;
+//     processing.value = false;
+//   } else {
+//     processing.value = true;
+//   }
+//   try {
+//     const formData = new FormData();
+//     let isValid = true;
+//     rowValidations.value = rows.value.map(row =>
+//       !row.deleted ? useVuelidate(rowRules, row, { $lazy: true, $autoDirty: true }) : null
+//     );
+
+//     for (let i = 0; i < rowValidations.value.length; i++) {
+//       const validation = rowValidations.value[i];
+//       const row = rows.value[i];
+
+//       if (!row.deleted && validation?.value) {
+//         await validation.value.$touch();
+//         const isRowValid = await validation.value.$validate();
+//         if (!isRowValid) isValid = false;
+//       }
+//     }
+
+//     if (!isFilesValid.value) {
+//       notifyWarning({ message: "Please upload valid files" });
+//       return;
+//     }
+
+//     if ((await v$.value.$validate() && isValid) || (props.isCharter && isValid)) {
+//       if (tab.value === "2_tab" && rows.value.length === 0) {
+//         notifyError({ message: "Add at least one employee in project." });
+//         return;
+//       }
+//       if (isClose === 1) {
+//         processingClose.value = true;
+//       } else {
+//         processing.value = true;
+//       }
+//       if (!props.isCharter) {
+//         // Append other fields
+//         formData.append("companyContactId", model.value.companyContactId);
+//         formData.append("projectStatusId", model.value.projectStatusId);
+//         formData.append("projectCategoryId", model.value.projectCategoryId ? model.value.projectCategoryId : "");
+//         formData.append("projectSubcategoryId", model.value.projectSubcategoryId ? model.value.projectSubcategoryId : "");
+//         formData.append("startDateStr", model.value.startDateStr);
+//         formData.append("goLiveDateStr", model.value.goLiveDateStr);
+//         formData.append("projectPriorityId", model.value.projectPriorityId);
+//         formData.append("projectTypeId", model.value.projectTypeId);
+//         formData.append("planApproverId", model.value.planApproverId);
+//         formData.append("active", model.value.active);
+//         formData.append("isTemplate", model.value.isTemplate ?? false);
+//         formData.append("description", model.value.description);
+
+//         toRaw(model.value.projectFiles || []).forEach((file) => {
+//           if (file.file && file.file.virtualPath) {
+//             // For existing files, append metadata instead of the file itself
+//             formData.append("ExistingFiles", JSON.stringify({
+//               id: file.id,
+//               virtualPath: file.file.virtualPath
+//             }));
+//           } else {
+//             // For new files, append as raw file objects (IFormFile)
+//             formData.append("ProjectFiles", file);
+//           }
+//         });
+
+//         // Also pass the projectFileFlag for general status tracking
+//         formData.append("projectFileFlag", model.value.projectFileFlag || "no_change");
+//       }
+//       const isValidRow = (emp) => {
+//         if (emp.deleted && emp.id === null) return false;
+//         if (!emp) return false;
+
+//         return true;
+//       };
+
+//       model.value.projectEmployeeMappings = rows.value
+//         .filter(isValidRow)
+//         .map(emp => ({ ...emp }));
+
+//       formData.append("name", model.value.name);
+//       formData.append("customerId", model.value.customerId);
+//       formData.append("isCharter", props.isCharter);
+//       formData.append("tab", tab.value);
+//       model.value.projectEmployeeMappings.forEach((emp, index) => {
+//         const trimmedProductivityFactor = (emp.productivityFactor ?? "").toString().trim();
+//         const parsedProductivityFactor =
+//       emp.deleted === true ? 0 : trimmedProductivityFactor === "" ? null : parseFloat(trimmedProductivityFactor);
+
+//         formData.append(`projectEmployeeMappings[${index}].id`, emp.id ?? uid());
+//         formData.append(`projectEmployeeMappings[${index}].employeeId`, emp.employeeId ?? "");
+//         formData.append(`projectEmployeeMappings[${index}].employeeDesignationId`, emp.employeeDesignationId ?? "");
+//         formData.append(`projectEmployeeMappings[${index}].productivityFactor`, parsedProductivityFactor);
+//         formData.append(`projectEmployeeMappings[${index}].deleted`, emp.deleted ?? false);
+//       });
+
+//       projectService.saveProject(projectId, formData).then((resp) => {
+//         notifySuccess({ message: "Project is saved successfully." });
+//         if (tab.value === "2_tab" && rows.value.length === 0) {
+//           notifyError({ message: "Add at least one role in project charter." });
+//           return;
+//         }
+//         projectId = resp.id;
+//         disableTab = false;
+//         getProject(projectId);
+//         if (isClose === 1) {
+//           onDialogOK();
+//         } else {
+//           const currentTab = tab.value;
+//           switch (currentTab) {
+//           case "1_tab":
+//             tab.value = "2_tab";
+//             break;
+//           default:
+//             break;
+//           }
+//         }
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Error in submitting the project:", error);
+//     notifyError({ message: "An error occurred while saving the project." });
+//   } finally {
+//     if (isClose === 1) {
+//       processingClose.value = true;
+//       processing.value = false;
+//     } else {
+//       processing.value = true;
+//     }
+
+//     setTimeout(() => {
+//       processing.value = false;
+//       processingClose.value = false;
+//     }, 1500);
+//   }
+// };
+
 const onSubmit = async (isClose = 0) => {
   if (isClose === 1) {
     processingClose.value = true;
@@ -580,27 +784,45 @@ const onSubmit = async (isClose = 0) => {
   try {
     const formData = new FormData();
     let isValid = true;
-    rowValidations.value = rows.value.map(row =>
-      !row.deleted ? useVuelidate(rowRules, row, { $lazy: true, $autoDirty: true }) : null
-    );
+    if (isClose === 1 || props.isCharter) {
+      rowValidations.value = rows.value.map(row =>
+        !row.deleted
+          ? useVuelidate(rowRules, row, { $lazy: true, $autoDirty: true })
+          : null
+      );
 
-    for (let i = 0; i < rowValidations.value.length; i++) {
-      const validation = rowValidations.value[i];
-      const row = rows.value[i];
+      for (let i = 0; i < rowValidations.value.length; i++) {
+        const validation = rowValidations.value[i];
+        const row = rows.value[i];
 
-      if (!row.deleted && validation?.value) {
-        await validation.value.$touch();
-        const isRowValid = await validation.value.$validate();
-        if (!isRowValid) isValid = false;
+        if (!row.deleted && validation?.value) {
+          await validation.value.$touch();
+          const isRowValid = await validation.value.$validate();
+
+          if (!isRowValid) {
+            isValid = false;
+          }
+        }
       }
     }
+    if (tab.value === "2_tab" && !props.isCharter) {
+      const formValid = await v$.value.$validate();
 
+      if (!formValid) {
+        notifyError({
+          message: "Required fields are blank in Project Info. Tab."
+        });
+
+        tab.value = "1_tab"; // Navigate to Project Info tab
+        return;
+      }
+    }
     if (!isFilesValid.value) {
       notifyWarning({ message: "Please upload valid files" });
       return;
     }
-
-    if ((await v$.value.$validate() && isValid) || (props.isCharter && isValid)) {
+    const formValid = props.isCharter ? true : await v$.value.$validate();
+    if (formValid && isValid) {
       if (tab.value === "2_tab" && rows.value.length === 0) {
         notifyError({ message: "Add at least one employee in project." });
         return;
@@ -664,7 +886,7 @@ const onSubmit = async (isClose = 0) => {
         formData.append(`projectEmployeeMappings[${index}].id`, emp.id ?? uid());
         formData.append(`projectEmployeeMappings[${index}].employeeId`, emp.employeeId ?? "");
         formData.append(`projectEmployeeMappings[${index}].employeeDesignationId`, emp.employeeDesignationId ?? "");
-        formData.append(`projectEmployeeMappings[${index}].productivityFactor`, parsedProductivityFactor);
+        formData.append(`projectEmployeeMappings[${index}].productivityFactor`, parsedProductivityFactor ?? 0 );
         formData.append(`projectEmployeeMappings[${index}].deleted`, emp.deleted ?? false);
       });
 
@@ -676,14 +898,28 @@ const onSubmit = async (isClose = 0) => {
         }
         projectId = resp.id;
         disableTab = false;
-        getProject(projectId);
-        if (isClose === 1) {
+        // getProject(projectId);
+        // if (isClose === 1) {
+        //   onDialogOK();
+        // } else {
+        //   const currentTab = tab.value;
+        //   switch (currentTab) {
+        //   case "1_tab":
+        //     tab.value = "2_tab";
+        //     break;
+        //   default:
+        //     break;
+        //   }
+        // }
+         if (isClose === 1) {
+          getProject(projectId);
           onDialogOK();
         } else {
           const currentTab = tab.value;
           switch (currentTab) {
           case "1_tab":
             tab.value = "2_tab";
+            getProject(projectId);
             break;
           default:
             break;
@@ -937,11 +1173,18 @@ watch(tab, (newVal, oldVal) => {
   employeeDesignationDropdownSingleSelect.reset();
   }
 });
+
+watch(tab, async (newTab) => {
+  if (newTab === "2_tab") {
+      addDefaultProjectCharterRows();
+  }
+});
+
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load - If changed
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
-onMounted(() => {
+onMounted(async () => {
   projectApproverDropdownSingleSelect.load(user.siteId);
   employeeDesignationDropdownSingleSelect.load("Employee Designation");
   customerDropdownSingleSelect.load();
@@ -951,10 +1194,15 @@ onMounted(() => {
   projectCategoryDropdownSingleSelect.load("ProjectCategory");
 });
 
-watch(() => projectId, (newValue, oldValue) => {
-  if (newValue) {
-    getProject(projectId);
-  }
-}, { immediate: true });
+watch(
+  () => employeeDesignationDropdownSingleSelect.list.value.length,
+  (length) => {
+    if (length > 0 && projectId) {
+      getProject(projectId);
+    }
+  },
+  { immediate: true }
+);
+
 
 </script>

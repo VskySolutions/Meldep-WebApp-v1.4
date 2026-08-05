@@ -183,7 +183,6 @@ namespace Vsky.Api.Controllers
                             obj2.Project = line.Project;
                             obj2.ProjectModule = line.ProjectModule;
                             obj2.Task = line.Task;
-                            obj2.Task = line.Task;
                             obj2.ProjectActivity = line.ProjectActivity;
                             obj2.Hours = line.Hours;
                             obj2.Description = line.Description;

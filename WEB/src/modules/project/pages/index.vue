@@ -858,7 +858,7 @@
                         <q-item
                           v-if="props.row.isEditable && !search.isTemplate"
                           v-ripple clickable
-                          @click="setActiveRowIdInLocalStorage(props.row.id); onProjectEdit(props.row.id, true)"
+                          @click="setActiveRowIdInLocalStorage(props.row.id); onProjectEdit(props.row.id, true, refreshProjectList)"
                         >
                           <q-item-section avatar><q-icon name="o_groups" size="xs" /></q-item-section>
                           <q-item-section>Charter</q-item-section>

@@ -530,21 +530,47 @@ function shouldShowIcons (name, type, date) {
   }
 }
 
-function calculateLineTotal (dailyPlannerLines = []) {
-  const total = dailyPlannerLines.reduce((sum, line) => {
-    return sum + (parseFloat(line.hours) || 0);
-  }, 0);
-  return Number(total.toFixed(2));
+
+// Calculate total hours for a single daily planner
+function calculateLineTotal(dailyPlannerLines) {
+  let totalMinutes = 0;
+
+  dailyPlannerLines.forEach(line => {
+    if (line.hours) {
+      const [hours = "0", minutes = "0"] = line.hours.split(":");
+      totalMinutes += (parseInt(hours, 10) * 60) + parseInt(minutes, 10);
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
-// Function to calculate total hours
-function calculateGrandTotal (rows) {
-  return rows.reduce((grandTotal, row) => {
-    const lineTotal = calculateLineTotal(row.dailyPlannerLines);
-    return grandTotal + lineTotal;
-  }, 0);
-}
+// Calculate grand total
+function calculateGrandTotal(rows) {
+  let totalMinutes = 0;
 
+  rows.forEach(row => {
+    row.dailyPlannerLines.forEach(line => {
+      if (line.hours) {
+        const [hours = "0", minutes = "0"] = line.hours.split(":");
+
+        totalMinutes += (parseInt(hours, 10) * 60) + parseInt(minutes, 10);
+      }
+    });
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
+}
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
 // ----------------------------------------------------------------------------------------------------------------

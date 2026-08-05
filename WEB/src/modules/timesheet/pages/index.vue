@@ -775,18 +775,60 @@ const isValidDate = (dateStr) => {
   return date.getFullYear() === yyyy && date.getMonth() === mm - 1 && date.getDate() === dd;
 };
 
-function calculateLineTotal (timesheetLines) {
-  const total = timesheetLines.reduce((sum, line) => {
-    return sum + (parseFloat(line.hours) || 0);
-  }, 0);
-  return Number(total.toFixed(2));
+// function calculateLineTotal (timesheetLines) {
+//   const total = timesheetLines.reduce((sum, line) => {
+//     return sum + (parseFloat(line.hours) || 0);
+//   }, 0);
+//   return Number(total.toFixed(2));
+// }
+
+// // Function to calculate total hours
+// function calculateGrandTotal (rows) {
+//   return rows.reduce((grandTotal, row) => {
+//     return grandTotal + calculateLineTotal(row.timesheetLines);
+//   }, 0);
+// }
+
+// Calculate total hours for a single employee/timesheet
+function calculateLineTotal(timesheetLines) {
+  let totalMinutes = 0;
+
+  timesheetLines.forEach(line => {
+    if (line.hours) {
+      const [hours = "0", minutes = "0"] = line.hours.split(":");
+
+      totalMinutes += (parseInt(hours, 10) * 60) + parseInt(minutes, 10);
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
-// Function to calculate total hours
-function calculateGrandTotal (rows) {
-  return rows.reduce((grandTotal, row) => {
-    return grandTotal + calculateLineTotal(row.timesheetLines);
-  }, 0);
+// Calculate grand total
+function calculateGrandTotal(rows) {
+  let totalMinutes = 0;
+
+  rows.forEach(row => {
+    row.timesheetLines.forEach(line => {
+      if (line.hours) {
+        const [hours = "0", minutes = "0"] = line.hours.split(":");
+
+        totalMinutes += (parseInt(hours, 10) * 60) + parseInt(minutes, 10);
+      }
+    });
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
 function resetTracking () {
