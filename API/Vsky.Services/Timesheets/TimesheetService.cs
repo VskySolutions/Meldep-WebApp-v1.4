@@ -112,6 +112,7 @@ namespace Vsky.Services.Timesheets
             {
                 query = query.Where(x => x.TimesheetLines.Any(m => m.ProjectActivityId == projectActivityId));
             }
+
             decimal? searchHours = null;
 
             if (!string.IsNullOrEmpty(SearchText))
@@ -270,10 +271,17 @@ namespace Vsky.Services.Timesheets
 
             if (companyContactIds != null && companyContactIds.Any())
                 query = query.Where(x => companyContactIds.Contains(x.Project.CompanyContactId));
-            
+
+            decimal? searchHours = null;
+
             if (!string.IsNullOrEmpty(SearchText))
             {
                 DateTime.TryParse(SearchText, out var parsedDate);
+
+                if (Regex.IsMatch(SearchText, @"^\d{1,2}:\d{2}$"))
+                {
+                    searchHours = ConvertTimeToDecimalHours(SearchText);
+                }
                 query = query.Where(m =>
                     m.Project.Name.ToLower().Contains(SearchText.ToLower()) ||
                     m.Task.Name.ToLower().Contains(SearchText.ToLower()) ||
@@ -281,7 +289,7 @@ namespace Vsky.Services.Timesheets
                     m.ProjectActivity.Name.ToLower().Contains(SearchText.ToLower()) ||
                     m.Description.ToLower().Contains(SearchText.ToLower()) ||
                     m.Hours.ToString().Contains(SearchText.ToLower()) ||
-                    m.BillableHours.ToString().Contains(SearchText.ToLower()) ||
+                    (searchHours.HasValue && m.Hours == searchHours.Value) ||
                     (m.Timesheet.Employee.Person.FirstName + " " + m.Timesheet.Employee.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
                     m.Timesheet.TimesheetDate.Value.Date == parsedDate.Date
                 );
@@ -1035,19 +1043,7 @@ namespace Vsky.Services.Timesheets
         }
         #endregion
 
-        private static string ConvertDecimalHoursToTime(decimal hours)
-        {
-            int hh = (int)hours;
-            int mm = (int)Math.Round((hours - hh) * 60, MidpointRounding.AwayFromZero);
-
-            if (mm == 60)
-            {
-                hh++;
-                mm = 0;
-            }
-
-            return $"{hh:D2}:{mm:D2}";
-        }
+        #region Private Function
         private decimal ConvertTimeToDecimalHours(string time)
         {
             if (string.IsNullOrWhiteSpace(time))
@@ -1056,6 +1052,7 @@ namespace Vsky.Services.Timesheets
             var parts = time.Split(':');
             return int.Parse(parts[0]) + (int.Parse(parts[1]) / 60m);
         }
+        #endregion
     }
 }
 

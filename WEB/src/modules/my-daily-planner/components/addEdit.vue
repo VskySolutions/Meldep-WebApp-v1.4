@@ -209,13 +209,16 @@
                           outlined
                           hide-bottom-space
                           maxlength="5"
-                          hint="hh.mm"
-                          :dense="true"
+                          mask="##:##"
+                          dense
                           @blur="formatHoursValue(props.row)"
                           :rules="[validateHours]"
                           :error="rowValidations[props.rowIndex]?.value?.hours.$error"
                           :error-message="rowValidations[props.rowIndex]?.value?.hours.$errors[0]?.$message"
                         >
+                          <template v-if="!props.row.hours" v-slot:hint>
+                            hh:mm
+                          </template>
                         </q-input>
                         <div
                           v-if="props.row.hours && validateHours(props.row.hours) === true"
@@ -344,34 +347,11 @@ const editingRowrules = {
   projectModuleId: { required: helpers.withMessage("Project module is required", required) },
   projectTaskId: { required: helpers.withMessage("Task is required", required) },
   projectActivityId: { required: helpers.withMessage("Project activity is required", required) },
- hours: {
-    required: helpers.withMessage("Hours is Required", required),
-
-    validFormat: helpers.withMessage(
-      "Invalid hours format.",
-      (value) => {
-        if (!value) return true;
-        return /^(\d{1,2}):(\d{2})$/.test(value.toString().trim());
-      }
-    ),
-
-    validRange: helpers.withMessage(
-      "Please check hours.",
-    (value) => {
-      if (!value) return true;
-
-      const match = value.toString().trim().match(/^(\d{1,2}):(\d{2})$/);
-      if (!match) return true;
-
-      const hours = parseInt(match[1], 10);
-      const minutes = parseInt(match[2], 10);
-
-      return hours >= 0 &&
-             hours <= 99 &&
-             minutes >= 0 &&
-             minutes <= 59 &&
-             !(hours === 0 && minutes === 0);
-      }
+  hours: {
+    required: helpers.withMessage("Hours are required.", required),
+    validHours: helpers.withMessage(
+      (value) => validateHours(value),
+      (value) => validateHours(value) === true
     )
   }
 };
@@ -380,7 +360,7 @@ const editingRowrules = {
 function validateHours(value) {
   const strValue = (value ?? "").toString().trim();
   if (!strValue) {
-    return true;
+    return "Hours are required.";
   }
 
   if (/^\d{1,2}$/.test(strValue)) {
@@ -396,12 +376,16 @@ function validateHours(value) {
   const hours = parseInt(match[1], 10);
   const minutes = parseInt(match[2], 10);
 
-  if (
-    hours > 99 ||
-    minutes > 59 ||
-    (hours === 0 && minutes === 0)
-  ) {
-    return "Please check hours.";
+  if (hours > 99) {
+    return "Maximum hours allowed is 99.";
+  }
+
+  if (minutes > 59) {
+    return "Minutes cannot exceed 59.";
+  }
+
+  if (hours === 0 && minutes === 0) {
+    return "Hours must be greater than 00:00.";
   }
   return true;
 }

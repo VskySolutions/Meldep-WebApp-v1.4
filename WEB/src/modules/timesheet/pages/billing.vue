@@ -173,13 +173,39 @@
             <q-td class="RichTextEditor common-q-td"><div v-html="props.row.description" /></q-td>
             <q-td class="text-left common-q-td">{{ props.row.timesheet.user.person.fullName }}</q-td>
             <q-td class="text-right" style="width: 5%;">{{ props.row.hours }}</q-td>
-            <q-td class="text-right" style="width: 5%;">
+            <q-td class="text-right" style="width: 10%;">
               <div class="row items-center no-wrap justify-end">
-                <q-input v-model="props.row.billableHours" class="billableHrsInput" :style="{ marginBottom: validateHours(props.row.billableHours) !== true ? '20px' : '0' }" maxlength="5" type="text" :rules="[validateHours]" dense @blur="onChangeBillableHrs(props.row.id, props.row.billableHours, props.row.hours)">
+                <q-input v-model="props.row.billableHours"
+                  class="billableHrsInput"
+                  :style="{
+                    marginBottom:
+                      validateHours(props.row.billableHours) !== true ||
+                      (props.row.billableHours && getHoursMinutesText(props.row.billableHours))
+                        ? '20px'
+                        : '0'
+                  }"
+                  maxlength="5"
+                  mask="##:##"
+                  type="text"
+                  :rules="[validateHours]"
+                  dense
+                 @blur="
+                  props.row.billableHours = formatHoursValue(props.row.billableHours);
+                  onChangeBillableHrs(props.row.id, props.row.billableHours, props.row.hours);
+                  "
+                >
                   <template #error>
                     <div>
                       {{ validateHours(props.row.billableHours) !== true ? validateHours(props.row.billableHours) : '' }}
                     </div>
+                  </template>
+                  <template #hint>
+                    <span
+                      v-if="props.row.billableHours && validateHours(props.row.billableHours) === true"
+                      class="text-primary"
+                    >
+                      {{ getHoursMinutesText(props.row.billableHours) }}
+                    </span>
                   </template>
                 </q-input>
                 <div class="row items-center justify-center" style="width: 20%;">
@@ -269,7 +295,10 @@ const getBillableTimesheets = (props) => {
   const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
   setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination });
   timesheetService.getBillableTimesheets(payload).then((resp) => {
-    rows.value = resp.data;
+    rows.value = resp.data.map(x => ({
+      ...x,
+      originalBillableHours: x.billableHours
+    }));
     pagination.value.page = page;
     pagination.value.rowsPerPage = rowsPerPage;
     pagination.value.sortBy = sortBy;
@@ -281,6 +310,35 @@ const getBillableTimesheets = (props) => {
   });
 };
 
+function getHoursMinutesText(value) {
+  if (!value) return "";
+
+  // Hours only
+  if (/^\d{1,2}$/.test(value)) {
+    const hrs = parseInt(value, 10);
+    return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  }
+
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) return "";
+
+  const hrs = parseInt(match[1], 10);
+  let mins = parseInt(match[2], 10);
+
+  if (match[2].length === 1) {
+    mins *= 10;
+  }
+
+  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+
+  const hrText = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  const minText = mins > 0 ? `${mins} min` : "";
+
+  return [hrText, minText].filter(Boolean).join(" ");
+}
+
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions
 // ----------------------------------------------------------------------------------------------------------------
@@ -288,60 +346,138 @@ const refreshBillableTimesheetList = () => {
   getBillableTimesheets({ pagination: pagination.value });
 };
 
-function totalEstimateHours () {
-  const total = rows.value.reduce((total, row) => total + (row.hours || 0), 0);
-  return total.toFixed(2);
+function totalEstimateHours() {
+  const totalMinutes = rows.value.reduce((total, row) => {
+    if (row.deleted || !row.hours) return total;
+
+    const [hours = 0, minutes = 0] = row.hours.split(":").map(Number);
+    return total + (hours * 60) + minutes;
+  }, 0);
+
+  return `${String(Math.floor(totalMinutes / 60)).padStart(2, "0")}:${String(totalMinutes % 60).padStart(2, "0")}`;
 }
 
-function totalBillableHours () {
-  const total = rows.value.reduce((total, row) => total + (row.billableHours || 0), 0);
-  return total.toFixed(2);
+function totalBillableHours() {
+  const totalMinutes = rows.value.reduce((total, row) => {
+    if (row.deleted || !row.billableHours) return total;
+
+    const match = row.billableHours.trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return total;
+
+    const [, hours, minutes] = match;
+
+    return total + (Number(hours) * 60) + Number(minutes);
+  }, 0);
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
-function onChangeBillableHrs (id, billableHrs, actualHours) {
+function onChangeBillableHrs(id, billableHrs, actualHours) {
   if (validateHours(billableHrs) !== true) {
-    return; // Stop execution if validation fails (No error message displayed)
-  }
-  const hours = billableHrs ? parseFloat(billableHrs) : 0; // Convert input to a float, default to 0 if invalid
-  if (hours < 0) {
-    notifyError({ message: "Billable hours cannot be negative." });
     return;
   }
+
   const rowIndex = rows.value.findIndex(row => row.id === id);
-  if (rows.value[rowIndex].billableHours === hours) {
+  if (rowIndex === -1) return;
+
+  if (rows.value[rowIndex].originalBillableHours === billableHrs) {
     return;
   }
 
-  if (rowIndex !== -1) {
-    rows.value[rowIndex].billableHours = hours;
-  }
+  const [billableHours, billableMinutes] = billableHrs.split(":").map(Number);
+  const [actualHour, actualMinutes] = actualHours.split(":").map(Number);
 
-  if (billableHrs > actualHours) {
-    rows.value[rowIndex].billableHours = 0;
+  if (
+    billableHours > actualHour ||
+    (billableHours === actualHour && billableMinutes > actualMinutes)
+  ) {
     notifyError({
       message: "Billable hours cannot be greater than actual hours."
     });
     return;
   }
-
   rows.value = [...rows.value];
-  setTimeout(function () {
-    timesheetService.updateBillableHrs(id, hours).then(resp => {
-      notifySuccess({ message: "Billable hours updated successfully." });
+  const model = {
+    billableHours: billableHrs
+  };
+
+  setTimeout(() => {
+    timesheetService.updateBillableHrs(id, model).then(() => {
+      notifySuccess({
+        message: "Billable hours updated successfully."
+      });
       getBillableTimesheets({ pagination: pagination.value });
     });
   });
 }
 
 // validation for hrs
-function validateHours (value) {
-  // Ensure value is treated as a string
-  const strValue = value.toString();
-  const regex = /^(\d+(\.\d{1,2})?)?$/;
-  if (!strValue || (regex.test(strValue) && strValue.length <= 5)) {
-    return true; // Valid input
+// function validateHours (value) {
+//   // Ensure value is treated as a string
+//   const strValue = value.toString();
+//   const regex = /^(\d+(\.\d{1,2})?)?$/;
+//   if (!strValue || (regex.test(strValue) && strValue.length <= 5)) {
+//     return true; // Valid input
+//   }
+//   return "Invalid hours format.";
+// }
+
+function validateHours(value) {
+  if (!value || !value.trim()) {
+    return true;
   }
-  return "Invalid hours format.";
+
+  if (/^\d{1,2}$/.test(value)) {
+    const hours = parseInt(value, 10);
+    return hours <= 99 ? true : "Please check hours.";
+  }
+
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) {
+    return "Invalid hours format.";
+  }
+
+  const hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+
+  if (hours > 99) {
+    return "Maximum hours allowed is 99.";
+  }
+
+  if (minutes > 59) {
+    return "Minutes cannot exceed 59.";
+  }
+
+  return true;
+}
+
+function formatHoursValue(value) {
+  // If empty, default to 00:00
+  if (!value || !value.trim()) {
+    return "00:00";
+  }
+
+  value = value.trim();
+
+  if (!value.includes(":")) {
+    return `${value.padStart(2, "0")}:00`;
+  }
+
+  const parts = value.split(":");
+  if (parts.length !== 2) return value;
+
+  let [hours, minutes] = parts;
+
+  if (minutes.length === 1) {
+    minutes += "0";
+  }
+
+  hours = hours.padStart(2, "0");
+
+  return `${hours}:${minutes}`;
 }
 
 function disableBeforeStartDate (date) {

@@ -1498,8 +1498,8 @@ namespace Vsky.Api.Controllers
 
         #region Timesheet Billable Hrs
         //created for update job status from list page
-        [HttpPut("{id}/{billableHrs}")]
-        public async Task<IActionResult> UpdateBillableHrs(string id, decimal billableHrs)
+        [HttpPut("{id}/billable-hours")]
+        public async Task<IActionResult> UpdateBillableHrs(string id, [FromBody] TimesheetLinesModel model)
         {
             try
             {
@@ -1515,7 +1515,7 @@ namespace Vsky.Api.Controllers
                     if (entity == null)
                         return BadRequest(new BadRequestError("No timesheet found with the specified id."));
 
-                    entity.BillableHours = billableHrs;
+                    entity.BillableHours = model.BillableHours;
                     entity.BillableCreatedById = LoggedUserId;
                     entity.BillableCreatedOnUtc = GetDateTime;
                     entity.UpdatedById = LoggedUserId;

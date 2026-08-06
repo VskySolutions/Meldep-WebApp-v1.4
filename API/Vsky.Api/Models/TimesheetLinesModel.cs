@@ -20,6 +20,8 @@ namespace Vsky.Api.Models
 
         [JsonConverter(typeof(HoursConverter))]
         public decimal Hours { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal BillableHours { get; set; }
         public string MeetingUId { get; set; }
 

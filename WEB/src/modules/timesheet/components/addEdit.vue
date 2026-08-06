@@ -228,6 +228,7 @@
                         hide-bottom-space
                         dense
                         maxlength="5"
+                        mask="##:##"
                         @blur="formatHoursValue(props.row)"
                         :rules="[validateHours]"
                         :error="rowValidations[props.rowIndex]?.value?.hours.$error"
@@ -406,42 +407,11 @@ const editingRowrules = {
   projectModuleId: { required: helpers.withMessage("Project module is Required", required) },
   projectTaskId: { required: helpers.withMessage("Project task is Required", required) },
   projectActivityId: { required: helpers.withMessage("Project activity is Required", required) },
-  // hours: {
-  //   required: helpers.withMessage("Hours is Required", required),
-  //   min: helpers.withMessage("Please check hours", (value) => parseFloat(value?.toString().trim()) >= 0.1),
-  //   validFormat: helpers.withMessage("Invalid hours format", (value) => {
-  //     const regex = /^(?:\d{1,2}(?:\.\d{1,2})?)$/;
-  //     return regex.test(value?.toString().trim());
-  //   })
-  // }
   hours: {
-    required: helpers.withMessage("Hours is Required", required),
-
-    validFormat: helpers.withMessage(
-      "Invalid hours format.",
-      (value) => {
-        if (!value) return true;
-        return /^(\d{1,2}):(\d{2})$/.test(value.toString().trim());
-      }
-    ),
-
-    validRange: helpers.withMessage(
-      "Please check hours.",
-    (value) => {
-      if (!value) return true;
-
-      const match = value.toString().trim().match(/^(\d{1,2}):(\d{2})$/);
-      if (!match) return true;
-
-      const hours = parseInt(match[1], 10);
-      const minutes = parseInt(match[2], 10);
-
-      return hours >= 0 &&
-             hours <= 99 &&
-             minutes >= 0 &&
-             minutes <= 59 &&
-             !(hours === 0 && minutes === 0);
-      }
+    required: helpers.withMessage("Hours are required.", required),
+    validHours: helpers.withMessage(
+      (value) => validateHours(value),
+      (value) => validateHours(value) === true
     )
   }
 };
@@ -449,7 +419,7 @@ const editingRowrules = {
 function validateHours(value) {
   const strValue = (value ?? "").toString().trim();
   if (!strValue) {
-    return true;
+    return "Hours are required.";
   }
 
   if (/^\d{1,2}$/.test(strValue)) {
@@ -465,52 +435,15 @@ function validateHours(value) {
   const hours = parseInt(match[1], 10);
   const minutes = parseInt(match[2], 10);
 
-  if (
-    hours > 99 ||
-    minutes > 59 ||
-    (hours === 0 && minutes === 0)
-  ) {
-    return "Please check hours.";
+  if (minutes > 59) {
+    return "Minutes cannot exceed 59.";
+  }
+
+  if (hours === 0 && minutes === 0) {
+    return "Hours must be greater than 00:00.";
   }
   return true;
 }
-
-// const formatHoursValue = (row) => {
-//   if (!row.hours) return;
-
-//   const value = row.hours.toString().trim();
-
-//   // Case 1: Only hours entered (e.g. 5 -> 05:00)
-//   if (/^\d{1,2}$/.test(value)) {
-//     const hours = parseInt(value, 10);
-
-//     if (hours <= 99) {
-//       row.hours = `${hours.toString().padStart(2, "0")}:00`;
-//     }
-
-//     return;
-//   }
-
-//   // Case 2: HH:M or HH:MM
-//   const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
-
-//   if (!match) {
-//     return; // Invalid input -> do not modify
-//   }
-
-//   const hours = parseInt(match[1], 10);
-//   const minutes = parseInt(match[2], 10);
-
-//   // Only format if the value is valid
-//   if (hours > 99 || minutes > 59) {
-//     return;
-//   }
-
-//   row.hours = `${hours.toString().padStart(2, "0")}:${minutes
-//     .toString()
-//     .padEnd(2, "0")
-//     .substring(0, 2)}`;
-// };
 
 function formatHoursValue(row) {
   if (!row.hours) return;
@@ -1005,7 +938,6 @@ async function onSubmit (shouldClose, buttonType) {
         // timesheetLineModel: timesheetRows.value
         timesheetLineModel: cleanedRows
       };
-      console.log("Payload for saving timesheet:", payload);
       const resp = await timesheetService.saveTimesheet(TimesheetId, payload);
       TimesheetId = resp.timesheetId;
       timesheetRows.value = resp.timesheetLineModel.map(savedRow => {

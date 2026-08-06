@@ -68,7 +68,7 @@ export default {
   getGroupedBillingTimesheet (model) {
     return http.post("/Timesheet/groupedBillingTimesheetList", model).then(response => response.data);
   },
-  updateBillableHrs (id, billableHrs) {
-    return http.put(`/Timesheet/${id}/${billableHrs}`).then(response => response.data);
+  updateBillableHrs (id, model) {
+    return http.put(`/Timesheet/${id}/billable-hours`, model).then(response => response.data);
   }
 };

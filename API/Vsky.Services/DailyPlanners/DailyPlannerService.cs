@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.PowerBI.Api.Models;
@@ -83,8 +84,15 @@ namespace Vsky.Services.DailyPlanners
             if (toDate != null)
                 query = query.Where(a => a.DailyPlannerDate <= toDate);
 
+            decimal? searchHours = null;
+
             if (!string.IsNullOrEmpty(SearchText))
             {
+                if (Regex.IsMatch(SearchText, @"^\d{1,2}:\d{2}$"))
+                {
+                    searchHours = ConvertTimeToDecimalHours(SearchText);
+                }
+
                 DateTime.TryParse(SearchText, out var parsedDate);
                 query = query.Where(m =>
                     m.DailyPlannerLines.Any(line => line.Project.Name.ToLower().Contains(SearchText.ToLower())) ||
@@ -93,7 +101,7 @@ namespace Vsky.Services.DailyPlanners
                     m.DailyPlannerLines.Any(line => line.ProjectActivity.Name.ToLower().Contains(SearchText.ToLower())) ||
                     m.DailyPlannerLines.Any(line => line.Description.ToLower().Contains(SearchText.ToLower())) ||
                     (m.Employee.Person.FirstName + " " + m.Employee.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
-                    m.DailyPlannerLines.Any(line => line.Hours.ToString().Contains(SearchText.ToLower())) ||
+                    (searchHours.HasValue && m.DailyPlannerLines.Any(line => line.Hours == searchHours.Value)) ||
                     (m.DailyPlannerDate.Value.Date == parsedDate.Date)
                 );
             }
@@ -135,7 +143,8 @@ namespace Vsky.Services.DailyPlanners
                         FullName = x.User.Person.FirstName + " " + x.User.Person.LastName,
                     }
                 },
-                DailyPlannerLines = x.DailyPlannerLines.Where(m => !m.Deleted && (string.IsNullOrWhiteSpace(projectId) || m.ProjectId == projectId)).Select(mapping => new DailyPlannerLine
+                DailyPlannerLines = x.DailyPlannerLines.Where(m => !m.Deleted && (string.IsNullOrWhiteSpace(projectId) || m.ProjectId == projectId) &&
+                (!searchHours.HasValue || m.Hours == searchHours.Value)).Select(mapping => new DailyPlannerLine
                 {
                     Id = mapping.Id,
                     Hours = mapping.Hours,
@@ -372,6 +381,17 @@ namespace Vsky.Services.DailyPlanners
 
             var list = new PagedList<DailyPlanner>(query, page, pageSize);
             return list;
+        }
+        #endregion
+
+        #region Private Function
+        private decimal ConvertTimeToDecimalHours(string time)
+        {
+            if (string.IsNullOrWhiteSpace(time))
+                return 0;
+
+            var parts = time.Split(':');
+            return int.Parse(parts[0]) + (int.Parse(parts[1]) / 60m);
         }
         #endregion
     }
