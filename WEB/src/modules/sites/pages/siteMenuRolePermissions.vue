@@ -151,7 +151,7 @@
         <formMultiSelectDropdown
           v-model="model.siteRoleId"
           :options="siteRolesDropdown.list.value"
-          :filter="siteRolesDropdown.list.filter"
+          :filter="siteRolesDropdown.filter"
           :option-disable="isRoleDisabled"
           popup-content-class="customPopupContentClass"
         />

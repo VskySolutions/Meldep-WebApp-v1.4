@@ -94,6 +94,7 @@ namespace Vsky.Data
         public virtual DbSet<ProjectEmployeeMapping> ProjectEmployeeMappings { get; set; }
         public virtual DbSet<ProjectTaskRelatedMapping> ProjectTaskRelatedMapping { get; set; }
         public virtual DbSet<ProjectActionItems> ProjectActionItems { get; set; }
+        public virtual DbSet<ProjectQuestionsAnswers> ProjectQuestionsAnswers { get; set; }
 
         // Project Release Tracking
         public virtual DbSet<ProjectReleaseTracking> ProjectReleaseTracking { get; set; }
@@ -1488,6 +1489,17 @@ namespace Vsky.Data
                 entity.HasOne(d => d.Project).WithMany().HasForeignKey(d => d.ProjectId);
                 entity.HasOne(d => d.Requirement).WithMany().HasForeignKey(d => d.RequirementId);
                 entity.HasOne(d => d.Priority).WithMany().HasForeignKey(d => d.PriorityId);
+            });
+            
+            builder.Entity<ProjectQuestionsAnswers>(entity =>
+            {
+                entity.ToTable("ProjectQuestionsAnswers");
+
+                entity.Property(e => e.ProjectId).IsRequired().HasMaxLength(450);
+                entity.Property(e => e.RequirementId).HasMaxLength(450);
+
+                entity.HasOne(d => d.Project).WithMany().HasForeignKey(d => d.ProjectId);
+                entity.HasOne(d => d.Requirement).WithMany().HasForeignKey(d => d.RequirementId);
             });
 
             builder.Entity<ProjectTask_Tags>(entity =>

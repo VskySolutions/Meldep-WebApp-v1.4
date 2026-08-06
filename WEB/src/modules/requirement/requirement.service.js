@@ -17,8 +17,8 @@ export default {
     return http.get(`/requirement/description/${id}`).then(response => response.data);
   },
 
-  getAllRequirementListForDropdown (projectModuleId) {
-    return http.get(`/requirement/dropdown/list?projectModuleId=${projectModuleId}`).then(response => response.data);
+  getAllRequirementListForDropdown (projectModuleId, projectId) {
+    return http.get(`/requirement/dropdown/list?projectModuleId=${projectModuleId}&projectId=${projectId}`).then(response => response.data);
   },
 
   getAllRequirementTagListForDropdown () {

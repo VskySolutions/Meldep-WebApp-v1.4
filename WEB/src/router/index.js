@@ -80,6 +80,7 @@ import sopAssignmentRoutes from "src/modules/sop-assignment/routes";
 import siteSharing from "src/modules/sites-sharing/routes";
 import sopProcessRoutes from "src/modules/sop-process/routes";
 import projectActionItems from "src/modules/project-action-items/routes";
+import projectQuestionsAnswersRoutes from "src/modules/project-questions-answers/routes";
 
 routes.push(...userManagementRoutes);
 routes.push(...companyRoutes);
@@ -149,6 +150,7 @@ routes.push(...sopAssignmentRoutes);
 routes.push(...siteSharing);
 routes.push(...sopProcessRoutes);
 routes.push(...projectActionItems);
+routes.push(...projectQuestionsAnswersRoutes);
 
 export default route(function ({ store } /* { store, ssrContext } */) {
   const createHistory = process.env.SERVER

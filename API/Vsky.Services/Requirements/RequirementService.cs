@@ -437,7 +437,7 @@ namespace Vsky.Services.Requirements
         #endregion
 
         #region GetAllRequirementListForDropdown
-        public async Task<List<CommonDropDown>> GetAllRequirementListForDropdown(string siteId, string projectModuleId = null)
+        public async Task<List<CommonDropDown>> GetAllRequirementListForDropdown(string siteId, string projectModuleId = null, string projectId = null)
         {
             var query = _requirementRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active);
 
@@ -445,6 +445,12 @@ namespace Vsky.Services.Requirements
             {
                 var projectModuleIdArray = projectModuleId.Split(',');
                 query = query.Where(x => projectModuleIdArray.Contains(x.ProjectModuleId) && !x.ProjectModule.Deleted);
+            }
+
+            if (!string.IsNullOrWhiteSpace(projectId) && projectId != "undefined")
+            {
+                var projectIdArray = projectId.Split(',');
+                query = query.Where(x => projectIdArray.Contains(x.ProjectId) && !x.Project.Deleted);
             }
 
             var list = await query

@@ -373,7 +373,6 @@ namespace Vsky.Api.Controllers
         {
             try
             {
-                var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
 
                 // Fetch the project entity by its ID

@@ -106,6 +106,7 @@ using Vsky.Services.ProjectEmployeeMappings;
 using Vsky.Services.ProjectMessage;
 using Vsky.Services.ProjectModules;
 using Vsky.Services.ProjectModulesUserMappings;
+using Vsky.Services.ProjectQuestionsAnswer;
 using Vsky.Services.ProjectReleaseTrackings;
 using Vsky.Services.Projects;
 using Vsky.Services.ProjectsColor;
@@ -525,6 +526,8 @@ namespace Vsky.Api
             builder.Services.AddScoped<IProjectReleaseTrackingService, ProjectReleaseTrackingService>();
             builder.Services.AddScoped<IProjectReleaseTrackingStatusLogService, ProjectReleaseTrackingStatusLogService>();
             builder.Services.AddScoped<IProjectReleaseTrackingReqPlanTaskIssueMappingService, ProjectReleaseTrackingReqPlanTaskIssueMappingService>();
+
+            builder.Services.AddScoped<IProjectQuestionsAnswersService, ProjectQuestionsAnswersService>();
 
             builder.Services.ConfigureCors();
             builder.Services.ConfigureIISIntegration();
