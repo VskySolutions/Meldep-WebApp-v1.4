@@ -902,42 +902,6 @@ const onConvertToTask = (id, projectId, projectModuleId, name, description, isIs
   });
 };
 
-// Added colors for task status dropdown list
-// function getStatusColor (statusText) {
-//   if (statusText) {
-//     switch (statusText) {
-//     case "Done":
-//       return "purple-4";
-//     case "Reopen":
-//       return "purple-4";
-//     case "To Do":
-//       return "deep-orange-4";
-//     case "Closed":
-//       return "grey-4";
-//     case "Converted to Task":
-//       return "green-4";
-//     case "In Development":
-//       return "yellow-4";
-//     case "In Review":
-//       return "cyan-4";
-//     case "In Testing":
-//       return "deep-orange-4";
-//     case "New":
-//       return "blue-4";
-//     case "New from Test Plan":
-//       return "blue-4";
-//     case "On Hold":
-//       return "brown-4";
-//     case "In UAT":
-//       return "blue-grey-4";
-//     case "UAT Passed":
-//       return "green-9";
-//     default:
-//       return "#ffffff";
-//     }
-//   }
-// }
-
 const multiSelectRequirementProjectMap = ref([]);
 const multiSelectProjectIds = ref([]);
 const multiSelectProjectName = ref([]);
@@ -1236,10 +1200,11 @@ watch(multiSelectIssueIds, () => {
   }
 }, { deep: true });
 
-watch(() => search.value.projectIds, (newValue, oldValue) => {
-  if (newValue) {
-    projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
-  }
+watch(() => search.value.projectIds, async (newValue, oldValue) => {
+  if (search.value?.projectIds?.length === 0) search.value.projectModuleIds = [];
+  if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
+
+  await projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
 }, { immediate: true });
 
 // Quick Search
@@ -1265,14 +1230,12 @@ watch(activeRowId, (val) => {
   });
 });
 
-watch(
-  () => search.value.projectModuleIds,
-  (moduleIds) => {
-    if (moduleIds == null) return;
-    requirementsByProjectModuleIdForDropdown.load(moduleIds);
-  },
-  { immediate: true }
-);
+watch(() => search.value.projectModuleIds, async (newValue, oldValue) => {
+  if (search.value?.projectModuleIds?.length === 0) search.value.requirementIds = [];
+  if (search.value?.projectModuleIds?.length === 0 || newValue === oldValue) return;
+
+  await requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
+}, { immediate: true });
 
 // onBeforeUnmount(() => {
 //   document.removeEventListener("click", handleDocumentClick);

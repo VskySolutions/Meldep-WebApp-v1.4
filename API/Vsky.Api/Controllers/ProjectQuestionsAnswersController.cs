@@ -6,7 +6,6 @@ using Vsky.Api.Extensions;
 using Vsky.Api.Models;
 using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
-using Vsky.Services.Common;
 using Vsky.Services.ProjectQuestionsAnswer;
 using Vsky.Services.Sites;
 
@@ -38,7 +37,6 @@ namespace Vsky.Api.Controllers
         {
             try
             {
-                var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
 
                 var list = _projectQuestionsAnswerService.GetAllProjectQuestionsAnswers(
@@ -73,7 +71,6 @@ namespace Vsky.Api.Controllers
         {
             try
             {
-                var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
 
                 var entity = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByIdInDetail(SiteId, id);
@@ -103,7 +100,7 @@ namespace Vsky.Api.Controllers
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
-                    var exists = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByTitle(SiteId, model.Title);
+                    var exists = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByTitle(SiteId, model.ProjectId, model.Title);
                     if (exists != null)
                         return BadRequest(new BadRequestError("Project question already exists"));
 
@@ -165,7 +162,7 @@ namespace Vsky.Api.Controllers
                         return BadRequest(new BadRequestError("No project questions answer found with the specified id."));
 
                     //Check if the project questions answer already exists
-                    var exists = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByTitle(SiteId, model.Title, id);
+                    var exists = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByTitle(SiteId, model.ProjectId, model.Title, id);
                     if (exists != null)
                         return BadRequest(new BadRequestError("project questions answer title already exists, try with another."));
 

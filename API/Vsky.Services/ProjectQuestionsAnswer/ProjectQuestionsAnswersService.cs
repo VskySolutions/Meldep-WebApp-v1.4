@@ -205,11 +205,11 @@ namespace Vsky.Services.ProjectQuestionsAnswer
         #endregion
 
         #region GetProjectQuestionsAnswerByTitle
-        public async Task<ProjectQuestionsAnswers> GetProjectQuestionsAnswerByTitle(string siteId, string title, string id = null)
+        public async Task<ProjectQuestionsAnswers> GetProjectQuestionsAnswerByTitle(string siteId, string projectId, string title, string id = null)
         {
             var query = _projectQuestionsAnswersRepository.TableNoTracking
                 .Where(x => !x.Deleted
-                         && x.SiteId == siteId && x.Title.ToLower() == title.ToLower());
+                         && x.SiteId == siteId && x.ProjectId == projectId && x.Title.ToLower() == title.ToLower());
 
             if (!string.IsNullOrEmpty(id))
                 query = query.Where(x => x.Id != id);

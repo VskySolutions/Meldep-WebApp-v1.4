@@ -590,9 +590,9 @@ watch(() => search.value.searchText, () => {
 });
 
 watch(() => search.value.projectIds, async (newValue, oldValue) => {
+  if (search.value?.projectIds?.length === 0) search.value.requirementIds = [];
   if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
 
-  search.value.requirementIds = [];
   requirementsByProjectModuleIdForDropdown.load('', newValue);
 }, { immediate: true });
 

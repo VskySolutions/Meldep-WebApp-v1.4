@@ -9,6 +9,7 @@
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
           <fieldset>
+            <legend>Project Question Answers Info</legend>
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Project Name</div>

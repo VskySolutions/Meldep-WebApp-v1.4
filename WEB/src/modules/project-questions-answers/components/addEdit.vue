@@ -190,7 +190,7 @@ watch(
   () => model.value.projectId,
   async (newValue) => {
     if (!isInitializing.value) {
-      model.value.requirementId = null;
+      model.value.requirementId = "";
     }
     if (!newValue) return;
 

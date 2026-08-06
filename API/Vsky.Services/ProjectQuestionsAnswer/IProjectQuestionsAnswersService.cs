@@ -22,7 +22,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
 
         Task<ProjectQuestionsAnswers> GetProjectQuestionsAnswerById(string Id);
         Task<Vsky.Models.ProjectQuestionsAnswers> GetProjectQuestionsAnswerByIdInDetail(string siteId, string Id);
-        Task<ProjectQuestionsAnswers> GetProjectQuestionsAnswerByTitle(string SiteId, string title, string id = null);
+        Task<ProjectQuestionsAnswers> GetProjectQuestionsAnswerByTitle(string SiteId, string projectId, string title, string id = null);
         void InsertProjectQuestionsAnswer(ProjectQuestionsAnswers entity);
         void UpdateProjectQuestionsAnswer(ProjectQuestionsAnswers entity);
         void DeleteProjectQuestionsAnswer(ProjectQuestionsAnswers entity);
