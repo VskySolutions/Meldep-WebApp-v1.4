@@ -93,6 +93,7 @@ namespace Vsky.Data
         public virtual DbSet<ProjectColor> ProjectColor { get; set; }
         public virtual DbSet<ProjectEmployeeMapping> ProjectEmployeeMappings { get; set; }
         public virtual DbSet<ProjectTaskRelatedMapping> ProjectTaskRelatedMapping { get; set; }
+        public virtual DbSet<ProjectActionItems> ProjectActionItems { get; set; }
 
         // Project Release Tracking
         public virtual DbSet<ProjectReleaseTracking> ProjectReleaseTracking { get; set; }
@@ -1477,6 +1478,16 @@ namespace Vsky.Data
                 entity.HasOne(d => d.ProjectTask).WithMany(x => x.ProjectTaskRelatedMappings).HasForeignKey(d => d.TaskId);
                 entity.HasOne(d => d.Issue).WithMany(x => x.ProjectTaskRelatedMappings).HasForeignKey(d => d.IssueId);
                 entity.HasOne(d => d.Requirement).WithMany(x => x.ProjectTaskRelatedMappings).HasForeignKey(d => d.RequirementId);
+            });
+
+            builder.Entity<ProjectActionItems>(entity =>
+            {
+                entity.ToTable("ProjectActionItems");
+
+                entity.HasOne(d => d.Site).WithMany().HasForeignKey(d => d.SiteId);
+                entity.HasOne(d => d.Project).WithMany().HasForeignKey(d => d.ProjectId);
+                entity.HasOne(d => d.Requirement).WithMany().HasForeignKey(d => d.RequirementId);
+                entity.HasOne(d => d.Priority).WithMany().HasForeignKey(d => d.PriorityId);
             });
 
             builder.Entity<ProjectTask_Tags>(entity =>

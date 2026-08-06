@@ -100,6 +100,7 @@ using Vsky.Services.Note;
 using Vsky.Services.Notifications;
 using Vsky.Services.Persons;
 using Vsky.Services.PowerBI;
+using Vsky.Services.ProjectActionItem;
 using Vsky.Services.ProjectActivities;
 using Vsky.Services.ProjectEmployeeMappings;
 using Vsky.Services.ProjectMessage;
@@ -518,6 +519,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<ISOPProcessService, SOPProcessService>();
             builder.Services.AddScoped<ISOPProcessStatusLogService, SOPProcessStatusLogService>();
             builder.Services.AddScoped<ITimeZoneService, TimeZoneService>();
+            builder.Services.AddScoped<IProjectActionItemsService, ProjectActionItemsService>();
 
             // Release Tracking
             builder.Services.AddScoped<IProjectReleaseTrackingService, ProjectReleaseTrackingService>();
