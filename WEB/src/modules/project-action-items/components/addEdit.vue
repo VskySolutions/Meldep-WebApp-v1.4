@@ -26,9 +26,12 @@
                   <formSingleSelectDropdown
                     v-model="model.requirementId"
                     label="Requirement"
-                    :required="false"
+                    :disable="!model.projectId"
+                    :required="true"
                     :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
                     :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                    :error="v$.requirementId.$error"
+                    :error-message="v$.requirementId.$errors[0]?.$message"
                   />
                 </div>
               </div>
@@ -71,6 +74,7 @@
                 <div class="col-12 col-sm-4 col-md-4">
                   <formDate
                     v-model="model.dueDate"
+                    :required="false"
                     label="Due Date"
                     :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                   />
@@ -151,6 +155,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginC
 
 const loading = ref(true);
 const processing = ref(false);
+const isInitializing = ref(false);
 const $q = useQuasar();
 const authStore = useAuthStore();
 const user = authStore.user;
@@ -196,6 +201,7 @@ const model = ref({
 const rules = {
   projectId: { required: helpers.withMessage("Project name is required", required) },
   title: { required: helpers.withMessage("Title is required", required), minLength: minLength(1), maxLength: maxLength(500) },
+  requirementId: { required: helpers.withMessage("Requirement is required", required) },
   dueDate: {
     isDate: helpers.withMessage("Date is invalid", isDate)
   }
@@ -208,15 +214,19 @@ const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 // Get Project Action Items
 // ----------------------------------------------------------------------------------------------------------------
 
-const getProjectActionItemDetailsById = () => {
+const getProjectActionItemDetailsById = async () => {
   loading.value = true;
-  projectActionItemsService.getProjectActionItemDetailsById(props.id).then((resp) => {
+  isInitializing.value = true;
+  try {    
+    const resp = await projectActionItemsService.getProjectActionItemDetailsById(props.id);
     model.value = _.cloneDeep(resp);
+    await requirementByProjectModuleIdForDropdownSingleSelect.load("", model.value.projectId);
     model.id = props.id ? props.id : "";
     model.value.dueDate = resp.dueDate ? format(resp.dueDate, "MM/dd/yyyy") : "";
-  }).finally(() => {
+  } finally {
     loading.value = false;
-  });
+    isInitializing.value = false;
+  }
 };
 
 // ------------------------------------------------------------------------------------
@@ -260,6 +270,18 @@ watch(() => props.id, (newValue, oldValue) => {
   }
 }, { immediate: true });
 
+watch(
+  () => model.value.projectId,
+  async (newValue) => {
+    if (!isInitializing.value) {
+      model.value.requirementId = null;
+    }
+    if (!newValue) return;
+
+    await requirementByProjectModuleIdForDropdownSingleSelect.load("", newValue);
+  }, { immediate: true }
+);
+
 // ----------------------------------------------------------------------------------------------------------------
 // On page load
 // ----------------------------------------------------------------------------------------------------------------
@@ -281,6 +303,13 @@ onMounted(async () => {
 
     model.value.projectId = selectedProjectId;
   }
+  
+  // Set "Medium" Priority as the default if it exists
+  const mediumPriority = await projectActionItemPrioritySingleSelect.getValueByLabel("Medium");
+  if (mediumPriority && props.id === "") {
+    model.value.priorityId = mediumPriority;
+  }
+
 });
 
 </script>

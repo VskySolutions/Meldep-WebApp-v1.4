@@ -3,15 +3,16 @@
     <q-card class="project6">
       <q-card-section class="card-header with-tools">
         <div class="row items-center">
-          <div class="col-12 col-md-2">
+          <div class="col-12 col-md-3">
             <q-breadcrumbs class="text-brown text-weight-bold text-h3">
               <template #separator>
                 <q-icon size="1.5em" name="o_chevron_right" color="primary" />
               </template>
+              <q-breadcrumbs-el label="Project Management" />
               <q-breadcrumbs-el label="Project Action Items" />
             </q-breadcrumbs>
           </div>
-          <div class="col-12 col-md-5">
+          <div class="col-12 col-md-4">
             <div class="row items-center">
               <span v-if="Object.keys(appliedFilters).length > 0" class="text-grey-10 text-caption" style="font-weight: 600;">Filters On :</span>
               <q-chip v-for="(value, key) in appliedFilters" :key="key" class="bg-grey-3 text-grey-10 text-caption q-mr-xs filter-chip">
@@ -42,6 +43,7 @@
                       <multiSelectDropdown
                         v-model="search.requirementIds"
                         label="Requirement"
+                        :disable="!search.projectIds"
                         :options="requirementsByProjectModuleIdForDropdown.list.value"
                         :filter="requirementsByProjectModuleIdForDropdown.filter"
                       />
@@ -87,13 +89,14 @@
                             <q-input
                               v-model="search.dueDate"
                               fill-input
-                              dense mask="##/##/####"
+                              dense
+                              mask="##/##/####"
                             >
                               <template #append>
                                 <q-icon name="o_calendar_month" class="cursor-pointer">
                                   <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
                                     <q-date
-                                      v-model="search.fromDate"
+                                      v-model="search.dueDate"
                                       mask="MM/DD/YYYY"
                                       @update:model-value="() => $refs.qDateProxy.hide()"
                                     />
@@ -159,7 +162,7 @@
         </div>
       </q-card-section>
       <q-separator />
-      <div class="table-test-case">
+      <div class="table-project-action">
         <div class="table-scroll-container">
           <q-table
             ref="tableRef"
@@ -238,7 +241,7 @@
                         <q-tooltip>Project Center</q-tooltip>
                       </q-icon>
                       <q-icon
-                        name="o_developer_board" size="xs"
+                        name="o_developer_board hidden" size="xs"
                         class="cursor-pointer"
                         @click="setActiveRowIdInLocalStorage(props.row.id);
                                 $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
@@ -254,7 +257,7 @@
                   @click="onRequirementView(props.row.requirement?.id)"
                 >
                   <span v-if="props.row.requirement?.title">
-                    #{{ props.row.requirement?.title }}
+                    {{ props.row.requirement?.title }}
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('title')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
@@ -692,7 +695,7 @@ const mapFilterToLabel = (ids, list, label) => {
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
-  ...mapFilterToLabel(search.value.priorityIds, projectActionItemPriorityForDropdown.list, "Project Action Item Priority"),
+  ...mapFilterToLabel(search.value.priorityIds, projectActionItemPriorityForDropdown.list, "Priority"),
   ...(search.value.title ? { "Title": search.value.title } : {}),
   ...(search.value.assignedTo ? { "Assigned To": search.value.assignedTo } : {}),
   ...(search.value.dueDate ? { "Due Date": search.value.dueDate } : {})
@@ -767,6 +770,13 @@ watch(activeRowId, (val) => {
   });
 });
 
+watch(() => search.value.projectIds, async (newValue, oldValue) => {
+  if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
+
+  search.value.requirementIds = [];
+  requirementsByProjectModuleIdForDropdown.load('', newValue);
+}, { immediate: true });
+
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleDocumentClick);
 });
@@ -775,17 +785,23 @@ onBeforeUnmount(() => {
 // On page rendering
 // ------------------------------------------------------------------------------------
 
-onMounted(() => {
+onMounted(async () => {
   refreshProjectActionItemsList();
   projectNameDropdown.load();
-  requirementsByProjectModuleIdForDropdown.load();
-  projectActionItemPriorityForDropdown.load("Project Action Item Priority");
+  if (search.value.projectIds.length > 0) requirementsByProjectModuleIdForDropdown.load('', search.value.projectIds);
+  await projectActionItemPriorityForDropdown.load("Project Action Item Priority");
+  
+  // const setPriority = projectActionItemPriorityForDropdown.getValuesByLabels(["Medium"]);
+  // if (setPriority.length && !search.value.priorityIds?.length) {
+  //   search.value.priorityIds = setPriority;
+  // }
+
   document.addEventListener("click", handleDocumentClick);
 });
 
 </script>
 <style scoped>
-.table-test-case .Custom-DataTable {
+.table-project-action .Custom-DataTable {
   min-width: max-content;
 }
 </style>
