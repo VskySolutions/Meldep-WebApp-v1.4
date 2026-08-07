@@ -203,6 +203,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                     Id = p.Id,
                     Description = p.Description,
                     CreatedOnUtc = p.CreatedOnUtc,
+                    UpdatedOnUtc = x.UpdatedOnUtc,
                     CreatedBy = new ApplicationUser
                     {
                         Person = new Person
@@ -211,6 +212,14 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                             FullName = p.CreatedBy.Person.FirstName + " " + p.CreatedBy.Person.LastName,
                         }
                     },
+                    UpdatedBy = new ApplicationUser
+                    {
+                        Person = new Person
+                        {
+                            Id = p.UpdatedBy.Person.Id,
+                            FullName = p.UpdatedBy.Person.FirstName + " " + p.UpdatedBy.Person.LastName,
+                        }
+                    }
                 }).ToList(),
             });
 

@@ -53,6 +53,39 @@
               </div>
             </div>
           </fieldset>
+          <fieldset v-if="changeLogRows && changeLogRows.length > 0" class="q-mb-lg">
+            <legend>Response Log</legend>
+            <q-table
+              ref="tableRef"
+              v-model:pagination="changeLogPagination"
+              bordered
+              class="no-shadow"
+              :loading="loading"
+              :rows="changeLogRows"
+              :columns="changeLogColumns"
+              row-key="id"
+              separator="cell"
+              no-data-label="No data available"
+              binary-state-sort
+              :rows-per-page-options="[20, 50, 100, 200, 500]"
+            >
+              <template #header="props">
+                <q-tr :props="props" class="bg-primary text-white">
+                  <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+                </q-tr>
+              </template>
+
+              <template #body="props">
+                <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                  <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 40%;"><div class="RichTextEditor" v-html="props.row.description" /></q-td>
+                  <q-td>{{ props.row.createdBy?.person?.fullName }}</q-td>
+                  <q-td>{{ props.row.createdOnUtc }}</q-td>
+                  <q-td>{{ props.row.updatedBy?.person?.fullName }}</q-td>
+                  <q-td>{{ props.row.updatedOnUtc }}</q-td>
+                </q-tr>
+              </template>
+            </q-table>
+          </fieldset>
         </div>
       </div>
     </q-card>
@@ -62,7 +95,7 @@
 <script setup>
 // Import libraries
 import { useDialogPluginComponent } from "quasar";
-import { ref, watch } from "vue";
+import { ref, onMounted } from "vue";
 import _ from "lodash";
 
 import projectQuestionsAnswersService from "modules/project-questions-answers/projectQuestionsAnswers.service";
@@ -75,6 +108,7 @@ const props = defineProps({ id: { type: String, default: "" } });
 
 // Common variables
 const loading = ref(true);
+const changeLogRows = ref([]);
 
 // Define model values
 const model = ref({
@@ -99,24 +133,43 @@ const model = ref({
   }
 });
 
+const changeLogPagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
+const changeLogColumns = ref([
+  { name: "description", label: "Description", field: "description", align: "left", sortable: true },
+  { name: "createdBy.person.fullName", label: "Created By", field: "createdBy.person.fullName", align: "left", sortable: true },
+  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true },
+  { name: "updatedBy.person.fullName", label: "Updated By", field: "updatedBy.person.fullName", align: "left", sortable: true },
+  { name: "updatedOnUtc", label: "Updated Date", field: "updatedOnUtc", align: "left", sortable: true }
+]);
+
 // get Question Answers details
-const getQuestionAnswersInDetailsById = async (questionAnswersId) => {
+const getQuestionAnswersInDetailsById = async () => {
   loading.value = true;
 
   try {
-    const resp = await projectQuestionsAnswersService.getQuestionAnswersInDetailsById(questionAnswersId);
+    const resp = await projectQuestionsAnswersService.getQuestionAnswersInDetailsById(props.id);
 
     model.value = _.cloneDeep(resp);
+
+    changeLogRows.value = (resp.projectQuestionsAnswersResponseLog ?? []).map(item => ({
+      ...item,
+      editing: false,
+      flag: "Edit"
+    }));
+    console.log(changeLogRows.value);
   } finally {
     loading.value = false;
   }
 };
 
 // On page rendering
-watch(() => props.id, async (newValue) => {
-  if (newValue) {
-    await getQuestionAnswersInDetailsById(newValue);
-  }
-}, { immediate: true });
+// watch(() => props.id, async (newValue) => {
+//   if (newValue) {
+//     await getQuestionAnswersInDetailsById(newValue);
+//   }
+// }, { immediate: true });
 
+onMounted(() => {
+  getQuestionAnswersInDetailsById();
+});
 </script>
