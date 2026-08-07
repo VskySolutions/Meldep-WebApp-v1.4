@@ -604,7 +604,6 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
-// const selectedProjectId = history.state?.projectId;
 const route = useRoute();
 const processing = ref(false);
 const dropdownTypes = ref([]);
@@ -1150,6 +1149,7 @@ function onClearFilters (key) {
     search.value.projectIds = [];
   } else if (key === "Project Module") {
     search.value.projectModuleIds = [];
+    search.value.requirementIds = [];
   } else if (key === "Requirement") {
     search.value.requirementIds = [];
   } else if (key === "Issue Priority") {
@@ -1230,13 +1230,25 @@ watch(activeRowId, (val) => {
   });
 });
 
-watch(() => search.value.projectModuleIds, async (newValue, oldValue) => {
-  if (search.value?.projectModuleIds?.length === 0) search.value.requirementIds = [];
-  if (search.value?.projectModuleIds?.length === 0 || newValue === oldValue) return;
+// watch(() => search.value.projectModuleIds, async (newValue, oldValue) => {
+//   debugger;
+//   if (search.value.projectModuleIds?.length === 0) search.value.requirementIds = [];
+//   if (search.value?.projectModuleIds?.length === 0 || newValue === oldValue) return;
 
-  await requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
-}, { immediate: true });
+//   await requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
+// }, { immediate: true });
+watch(
+  () => [...(search.value.projectModuleIds || [])],
+  async (newValue, oldValue) => {
+    if (newValue.length === 0) {
+      search.value.requirementIds = [];
+      return;
+    }
 
+    await requirementsByProjectModuleIdForDropdown.load(newValue);
+  },
+  { immediate: true }
+);
 // onBeforeUnmount(() => {
 //   document.removeEventListener("click", handleDocumentClick);
 // });
@@ -1249,7 +1261,7 @@ onMounted(() => {
   tableRef.value.requestServerInteraction();
   activeEmployeesDropdown.load(user.siteId);
   projectNameDropdown.load();
-  if (search.value.projectIds.length > 0) projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
+  if (search.value.projectIds?.length > 0) projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
   getDropdownTypeByModuleName("SDLC");
   issueStatusForDropdown.load("Issue Status");
   issuePriorityForDropdown.load("Issue Priority");
@@ -1259,7 +1271,7 @@ onMounted(() => {
   if (!activeRowId.value) {
     activeRowId.value = null;
   }
-  if (search.value.projectModuleIds.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
+  if (search.value.projectModuleIds?.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
 
   // document.addEventListener("click", handleDocumentClick);
 });

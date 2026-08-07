@@ -998,7 +998,7 @@ const getAllProjectTaskList = async ({ pagination: p }) => {
     loading.value = false;
     searchLoader.value = false;
   }
-};
+}
 
 function transformTaskRow (task, storedTaskIds, isAdmin) {
   const projectMapping = task?.project?.projectUserMappings?.[0] || {};
@@ -1234,22 +1234,6 @@ const {
 } = useSiteTableState({
   storageKey: "project-Tasks-Index",
   siteId,
-
-  // defaultSearch: {
-  //   searchText: "",
-  //   projectIds: [],
-  //   projectCategoryIds: [],
-  //   projectStatusIds: [],
-  //   statusId: null,
-  //   projectCoordinatorIds: [],
-  //   projectLeadsIds: [],
-  //   projectPriorityIds: [],
-  //   projectTypeIds: [],
-  //   customerIds: [],
-  //   companyContactIds: [],
-  //   isTemplate: false,
-  //   projectTagIds: null
-  // },
   defaultSearch: {
     searchText: "",
     projectTaskNumber: 0,
@@ -1549,6 +1533,7 @@ const onClearFilters = (key) => {
     if (selectedProjectId?.value?.length > 0) { selectedProjectId.value = ""; delete history?.state?.projectId; }
   } else if (key === "Project Module") {
     search.value.projectModuleIds = [];
+    search.value.requirementIds = [];
   } else if (key === "Requirement") {
     search.value.requirementIds = [];
   } else if (key === "Project Task") {
@@ -1750,6 +1735,10 @@ watch(() => search.value.projectIds, async (newValue, oldValue) => {
 }, { immediate: true });
 
 watch(() => search.value.projectModuleIds, (newValue, oldValue) => {
+  if (search.value.projectModuleIds?.length === 0) {
+    search.value.requirementIds = [];
+    return;
+  }
   if (search.value?.projectModuleIds?.length === 0 || newValue === oldValue) return;
 
   search.value.projectTaskIds = [];
@@ -1768,9 +1757,9 @@ onMounted(async () => {
   tableRef.value.requestServerInteraction();
 
   projectNameDropdown.load();
-  if (search.value.projectIds.length > 0) projectModulesByProjectIdForDropdown.load(search.value.isTemplate, false, search.value.projectIds);
+  if (search.value.projectIds?.length > 0) projectModulesByProjectIdForDropdown.load(search.value.isTemplate, false, search.value.projectIds);
 
-  if (search.value.projectModuleIds.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
+  if (search.value.projectModuleIds?.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
 
   projectTaskPrioritiesForDropdown.load("Task Priorities");
   projectTaskTagsDropdown.load();

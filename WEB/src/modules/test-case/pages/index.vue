@@ -890,6 +890,7 @@ function onClearFilters (key) {
     search.value.projectIds = [];
   } else if (key === "Project Module") {
     search.value.projectModuleIds = [];
+    search.value.requirementIds = [];
   } else if (key === "Requirement") {
     search.value.requirementIds = [];
   } else if (key === "Test Plan Name") {
@@ -911,7 +912,7 @@ function onClearFilters (key) {
     pagination: pagination.value,
     activeRowId: activeRowId.value
   });
-  refreshTestCaseList();
+  onAdvanceSearch();
 }
 
 // ------------------------------------------------------------------------------------
@@ -938,18 +939,22 @@ watch(() => search.value.searchText, () => {
 });
 
 watch(() => search.value.projectIds, async (newValue, oldValue) => {
+  if (search.value?.projectIds?.length === 0) search.value.projectModuleIds = [];
   if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
 
-  search.value.projectModuleIds = [];
   projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
   await testPlansByProjectIdForDropdown.load(search.value.projectIds);
 }, { immediate: true });
 
 watch(
-  () => search.value.projectModuleIds,
-  (moduleIds) => {
-    if (moduleIds == null) return;
-    requirementsByProjectModuleIdForDropdown.load(moduleIds);
+  () => [...(search.value.projectModuleIds || [])],
+  async (newValue, oldValue) => {
+    if (newValue.length === 0) {
+      search.value.requirementIds = [];
+      return;
+    }
+
+    await requirementsByProjectModuleIdForDropdown.load(newValue);
   },
   { immediate: true }
 );
@@ -987,7 +992,7 @@ onMounted(() => {
   testCaseStatusDropdownSingleSelect.load("Test Case Status");
   if (search.value.projectIds?.length > 0) testPlansByProjectIdForDropdown.load(search.value.projectIds);
   if (search.value.projectIds.length > 0) projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
-  if (search.value.projectModuleIds.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
+  if (search.value.projectModuleIds?.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
   getDropdownTypeByModuleName("SDLC");
   document.addEventListener("click", handleDocumentClick);
 });
