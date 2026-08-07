@@ -528,6 +528,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<IProjectReleaseTrackingReqPlanTaskIssueMappingService, ProjectReleaseTrackingReqPlanTaskIssueMappingService>();
 
             builder.Services.AddScoped<IProjectQuestionsAnswersService, ProjectQuestionsAnswersService>();
+            builder.Services.AddScoped<IProjectQuestionsAnswersResponseLogService, ProjectQuestionsAnswersResponseLogService>();
 
             builder.Services.ConfigureCors();
             builder.Services.ConfigureIISIntegration();

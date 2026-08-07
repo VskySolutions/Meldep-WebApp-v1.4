@@ -195,7 +195,23 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                         FullName = (x.UpdatedBy.Person.FirstName ?? "") + " " +
                        (x.UpdatedBy.Person.LastName ?? "")
                     }
-                }
+                },
+                ProjectQuestionsAnswersResponseLog = x.ProjectQuestionsAnswersResponseLog.Where(p => !p.Deleted)
+                .OrderByDescending(p => p.CreatedOnUtc)
+                .Select(p => new ProjectQuestionsAnswersResponseLog
+                {
+                    Id = p.Id,
+                    Description = p.Description,
+                    CreatedOnUtc = p.CreatedOnUtc,
+                    CreatedBy = new ApplicationUser
+                    {
+                        Person = new Person
+                        {
+                            Id = p.CreatedBy.Person.Id,
+                            FullName = p.CreatedBy.Person.FirstName + " " + p.CreatedBy.Person.LastName,
+                        }
+                    },
+                }).ToList(),
             });
 
             var item = await query.FirstOrDefaultAsync();

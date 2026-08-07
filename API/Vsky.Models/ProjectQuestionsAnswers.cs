@@ -28,6 +28,23 @@ namespace Vsky.Models
         public virtual Requirement Requirement { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }
+        public virtual ICollection<ProjectQuestionsAnswersResponseLog> ProjectQuestionsAnswersResponseLog { get; set; } = new List<ProjectQuestionsAnswersResponseLog>();
+    }
+    public class ProjectQuestionsAnswersResponseLog : BaseEntity
+    {
+        public string ProjectQuestionsAnswersId { get; set; }
+        public string Description { get; set; }
+        public string CreatedById { get; set; }
+        public DateTime CreatedOnUtc { get; set; }
+        public string UpdatedById { get; set; }
+        public DateTime UpdatedOnUtc { get; set; }
+        public bool Deleted { get; set; }
+        [NotMapped]
+        public string Flag { get; set; }
+
+        public virtual ProjectQuestionsAnswers ProjectQuestionsAnswers { get; set; }
+        public virtual ApplicationUser CreatedBy { get; set; }
+        public virtual ApplicationUser UpdatedBy { get; set; }
     }
     public class SaveProjectQuestionsAnswers
     {
@@ -37,6 +54,7 @@ namespace Vsky.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public bool Deleted { get; set; }
+        public virtual ICollection<ProjectQuestionsAnswersResponseLog> ProjectQuestionsAnswersResponseLogs { get; set; } = new List<ProjectQuestionsAnswersResponseLog>();
     }
 }
 

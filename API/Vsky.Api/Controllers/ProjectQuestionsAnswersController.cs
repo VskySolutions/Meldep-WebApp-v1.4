@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
@@ -19,16 +22,19 @@ namespace Vsky.Api.Controllers
         private readonly ISiteService _siteService;
         private readonly IAzureBlobImageServices _azureBlobImageServices;
         private readonly IProjectQuestionsAnswersService _projectQuestionsAnswerService;
+        private readonly IProjectQuestionsAnswersResponseLogService _projectQuestionsAnswersResponseLogService;
         public ProjectQuestionsAnswerController(
             GlobalVariable globalVariable,
             ISiteService siteService,
             IAzureBlobImageServices azureBlobImageServices,
-            IProjectQuestionsAnswersService projectQuestionsAnswerService)
+            IProjectQuestionsAnswersService projectQuestionsAnswerService,
+            IProjectQuestionsAnswersResponseLogService projectQuestionsAnswersResponseLogService)
         {
             _globalVariable = globalVariable;
             _siteService = siteService;
             _azureBlobImageServices = azureBlobImageServices;
             _projectQuestionsAnswerService = projectQuestionsAnswerService;
+            _projectQuestionsAnswersResponseLogService = projectQuestionsAnswersResponseLogService;
         }
         #endregion
 
@@ -166,12 +172,6 @@ namespace Vsky.Api.Controllers
                     if (exists != null)
                         return BadRequest(new BadRequestError("project questions answer title already exists, try with another."));
 
-                    bool isDescriptionChanged = !string.Equals(
-                        entity.Description?.Trim(),
-                        model.Description?.Trim(),
-                        StringComparison.Ordinal);
-
-
                     entity.Title = model.Title;
                     entity.ProjectId = model.ProjectId;
                     entity.RequirementId = model.RequirementId;
@@ -190,8 +190,94 @@ namespace Vsky.Api.Controllers
                     }
 
                     _projectQuestionsAnswerService.UpdateProjectQuestionsAnswer(entity);
+
+
+                    //save Response Change Log
+                    if (model.ProjectQuestionsAnswersResponseLogs?.Any() == true)
+                    {
+                        var addList = new List<ProjectQuestionsAnswersResponseLog>();
+                        var deleteList = new List<ProjectQuestionsAnswersResponseLog>();
+                        var updateList = new List<ProjectQuestionsAnswersResponseLog>();
+
+                        foreach (var item in model.ProjectQuestionsAnswersResponseLogs)
+                        {
+                            // Fetch the ProjectQuestionsAnswersResponseLog entity by its ID
+                            var type = await _projectQuestionsAnswersResponseLogService.GetProjectQuestionsAnswersResponseLogById(item.Id);
+                            if (item.Flag == "Edit")
+                            {
+                                // If no ProjectQuestionsAnswersResponseLog is found with the given ID, continue
+                                if (type == null)
+                                    continue;
+
+                                type.ProjectQuestionsAnswersId = entity.Id;
+
+                                if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    type.Description = await _azureBlobImageServices
+                                        .ProcessHtmlAndManageImagesAsync(
+                                            item.Description,
+                                            SiteData.Name,
+                                            "Project-Questions-Answers",
+                                            entity.Id,
+                                            type.Description
+                                        );
+                                }
+
+                                // Set the Updated by and Updated on properties
+                                type.UpdatedById = loggedUserId;
+                                type.UpdatedOnUtc = currentDateTime;
+                                updateList.Add(type);
+                            }
+                            else if (item.Flag == "New")
+                            {
+                                // If no ProjectQuestionsAnswersResponseLog is found with the given ID, continue
+                                if (type != null)
+                                    continue;
+
+                                var data = new ProjectQuestionsAnswersResponseLog
+                                {
+                                    ProjectQuestionsAnswersId = entity.Id,
+                                    CreatedById = loggedUserId,
+                                    UpdatedById = loggedUserId,
+                                    CreatedOnUtc = currentDateTime,
+                                    UpdatedOnUtc = currentDateTime
+                                };
+
+                                if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    data.Description = await _azureBlobImageServices
+                                        .ProcessHtmlAndManageImagesAsync(
+                                            item.Description,
+                                            SiteData.Name,
+                                            "Project-Questions-Answers",
+                                            entity.Id
+                                        );
+                                }
+
+                                addList.Add(data);
+                            }
+                            else if (item.Flag == "Delete")
+                            {
+                                // If no RequirementChangeLog is found with the given ID, continue
+                                if (type == null)
+                                    continue;
+
+                                deleteList.Add(type);
+                            }
+                        }
+
+                        if (addList.Count > 0)
+                            _projectQuestionsAnswersResponseLogService.InsertProjectQuestionsAnswersResponseLogList(addList);
+
+                        if (updateList.Count > 0)
+                            _projectQuestionsAnswersResponseLogService.UpdateProjectQuestionsAnswersResponseLogList(updateList);
+
+                        if (deleteList.Count > 0)
+                            _projectQuestionsAnswersResponseLogService.DeleteProjectQuestionsAnswersResponseLogList(deleteList);
+                    }
+                    return Ok();
                 }
-                return NoContent();
+                return ModelStateError(ModelState);
             }
             catch (Exception ex)
             {
