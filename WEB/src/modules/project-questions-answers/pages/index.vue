@@ -192,7 +192,7 @@
                     </div>
                   </div>
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('requirement.title')"
+                <!-- <q-td v-if="selectedColumnNames.includes('requirement.title')"
                   class="common-q-td hoverable-cell"
                   style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
                   @click="onRequirementView(props.row.requirement?.id)"
@@ -200,6 +200,33 @@
                   <span v-if="props.row.requirement?.title">
                     {{ props.row.requirement?.title }}
                   </span>
+                </q-td> -->
+                <q-td
+                  v-if="selectedColumnNames.includes('requirement.title')"
+                  class="common-q-td hoverable-cell"
+                >
+                  <div class="row no-wrap items-center justify-between">
+                    <span>
+                      <span
+                        class="cursor-pointer"
+                        @click="onRequirementView(props.row.requirement?.id)"
+                      >
+                        {{ props.row.requirement?.title }}
+                      </span>
+                    </span>
+                    <div
+                      class="row items-center q-gutter-sm q-ml-sm"
+                      style="flex-shrink: 0;"
+                    >
+                      <q-icon
+                        name="o_radio_button_checked"
+                        size="xs" class="cursor-pointer"
+                        @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.requirement?.id } })"
+                      >
+                        <q-tooltip>Requirement Center</q-tooltip>
+                      </q-icon>
+                    </div>
+                  </div>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.title }}

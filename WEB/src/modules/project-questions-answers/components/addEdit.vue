@@ -246,7 +246,8 @@ const formatDateTime = (value) =>
       : editingLogRow.value.createdBy?.person?.fullName;
   }
 
-  return row.createdBy?.person?.fullName;
+  // return row.value.createdBy?.person?.fullName;
+  return row?.createdBy?.person?.fullName || '';
 };
 
 const getCreatedOn = (row) => {
@@ -256,7 +257,7 @@ const getCreatedOn = (row) => {
       : editingLogRow.value.createdOnUtc;
   }
 
-  return row.createdOnUtc;
+  return row?.createdOnUtc;
 };
 // Common variables
 const loading = ref(true);
