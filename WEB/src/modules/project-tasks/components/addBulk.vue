@@ -31,10 +31,11 @@
                 <formSingleSelectDropdown
                   v-model="model.requirementId"
                   label="Requirement"
-                  :required="false"
                   :disable="!model.projectModuleId"
                   :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
                   :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                  :error="v$.requirementId.$error"
+                  :error-message="v$.requirementId.$errors[0]?.$message"
                 />
               </div>
             </fieldset>
@@ -489,6 +490,15 @@ function disableBeforeStartDate (date) {
   return currentDate >= start;
 }
 
+// ==================================================================================
+// Validation rules
+// ==================================================================================
+const rules = {
+  requirementId: { required: helpers.withMessage("Requirement is required", required) }
+};
+
+const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
+
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On Save & Close
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -569,6 +579,14 @@ async function onSubmit () {
   // }
   processing.value = true;
   try {
+    // validation for target month
+    await v$.value.$touch();
+    const isFormValid = await v$.value.$validate();
+
+    if (!isFormValid) {
+      notifyError({ message: "Please fill in all required fields." });
+      return;
+    }
     if (rows.value.length === 0) {
       notifyError({ message: "Add at-least one task." });
     } else {

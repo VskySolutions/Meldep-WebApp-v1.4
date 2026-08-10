@@ -561,6 +561,11 @@ namespace Vsky.Services.TestCases
             {
                 Id = x.Id,
                 ProjectId = x.ProjectId,
+                ProjectModuleId = x.ProjectModuleId,
+                RequirementId = x.RequirementId,
+                EmployeeId = x.EmployeeId,
+                TestedBy = x.TestedBy,
+                PlanId = x.PlanId,
                 AreaId = x.AreaId,
                 WorkspaceId = x.WorkspaceId,
                 Name = x.Name,
@@ -614,12 +619,38 @@ namespace Vsky.Services.TestCases
                     Id = x.Requirement.Id,
                     Title = x.Requirement.Title
                 },
-                Status = new DropDown
+
+                ProjectReleaseTrackingReqPlanTaskIssueMappingId = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                .Where(m => !m.Deleted)
+                .OrderByDescending(m => m.ReleaseTracking.CreatedOnUtc)
+                .Select(m => m.Id)
+                .FirstOrDefault(),
+                //Status = new DropDown
+                //{
+                //    Id = x.Status.Id,
+                //    DropDownValue = x.Status.DropDownValue,
+                //    BgColor = x.Status.BgColor,
+                //    Color = x.Status.Color
+                //},
+                Status = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
+                .Where(m => !m.Deleted)
+                .OrderByDescending(m => m.ReleaseTracking.CreatedOnUtc)
+                .SelectMany(m => m.TestCaseExecutionLog
+                    .Where(l => !l.Deleted)
+                    .OrderByDescending(l => l.CreatedOnUtc)
+                    .Take(1))
+                .Select(l => new DropDown
+                {
+                    Id = l.Status.Id,
+                    DropDownValue = l.Status.DropDownValue,
+                    BgColor = l.Status.BgColor,
+                    Color = l.Status.Color
+                })
+                .FirstOrDefault()
+                ?? new DropDown
                 {
                     Id = x.Status.Id,
-                    DropDownValue = x.Status.DropDownValue,
-                    BgColor = x.Status.BgColor,
-                    Color = x.Status.Color
+                    DropDownValue = x.Status.DropDownValue
                 },
                 TestPlan = new TestPlan
                 {

@@ -32,10 +32,11 @@
                 <formSingleSelectDropdown
                   v-model="model.requirementId"
                   label="Requirement"
-                  :required="false"
                   :disable="!model.projectModuleId"
                   :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
                   :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                  :error="v$.requirementId.$error"
+                  :error-message="v$.requirementId.$errors[0]?.$message"
                 />
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
@@ -259,6 +260,7 @@ const model = ref({
 const rules = {
   projectId: { required: helpers.withMessage("Project is required", required) },
   projectModuleId: { required: helpers.withMessage("Project module is required", required) },
+  requirementId: { required: helpers.withMessage("Requirement is required", required) },
   priorityId: { required: helpers.withMessage("Priority is required", required) },
   statusId: { required: helpers.withMessage("Status is required", required) },
   typeId: { required: helpers.withMessage("Type is required", required) },

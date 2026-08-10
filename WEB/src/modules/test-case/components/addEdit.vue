@@ -53,10 +53,11 @@
                   <formSingleSelectDropdown
                     v-model="model.requirementId"
                     label="Requirement"
-                    :required="false"
                     :disable="!model.projectModuleId"
                     :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
                     :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                    :error="v$.requirementId.$error"
+                    :error-message="v$.requirementId.$errors[0]?.$message"
                   />
                 </div>
               </div>
@@ -307,6 +308,7 @@ const model = ref({
 const rules = {
   projectId: { required: helpers.withMessage("Project name is required", required) },
   projectModuleId: { required: helpers.withMessage("Project module is required", required) },
+  requirementId: { required: helpers.withMessage("Requirement is required", required) },
   planId: { required: helpers.withMessage("Test plan is required", required) },
   name: { required: helpers.withMessage("Name is required", required), minLength: minLength(1), maxLength: maxLength(200) },
   testedDateStr: {
@@ -323,8 +325,9 @@ const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 
 const getTestCase = () => {
   loading.value = true;
-  testcaseService.getTestCase(props.id).then((resp) => {
+  testcaseService.getTestCaseDetails(props.id).then((resp) => {
     model.value = _.cloneDeep(resp);
+    model.value.statusId = resp.status.id;
     model.value.testedDateStr = resp.testedDate ? format(resp.testedDate, "MM/dd/yyyy") : "";
     testPlansByProjectIdForDropdownSingleSelect.load(resp.projectId);
   }).finally(() => {
@@ -449,7 +452,7 @@ onMounted(async () => {
 
   // Set "New" status as the default if it exists
   const newStatus = await testCaseStatusForDropdownSingleSelect.getValueByLabel("New");
-  if (newStatus && props.id === "") {
+  if (newStatus && !props.id) {
     model.value.statusId = newStatus;
   }
 

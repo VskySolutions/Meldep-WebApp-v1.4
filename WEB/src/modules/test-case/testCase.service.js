@@ -5,9 +5,9 @@ export default {
     return http.post("/test-case/list", model).then(response => response.data);
   },
 
-  getTestCase (id) {
-    return http.get(`/test-case/${id}`).then(response => response.data);
-  },
+  // getTestCase (id) {
+  //   return http.get(`/test-case/${id}`).then(response => response.data);
+  // },
 
   getTestCaseDetails (id) {
     return http.get(`/test-case/details/${id}`).then(response => response.data);

@@ -78,10 +78,11 @@
                       <formSingleSelectDropdown
                         v-model="model.requirementId"
                         label="Requirement"
-                        :required="false"
                         :disable="!model.projectModuleId"
                         :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
                         :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                        :error="v$.requirementId.$error"
+                        :error-message="v$.requirementId.$errors[0]?.$message"
                       />
                       <div class="col-xxl-8 col-lg-8 col-md-8 col-sm-8 col-xs-12">
                         <label class="label q-mb-xs text-black">Task Name<span class="required">*</span></label>
@@ -995,6 +996,7 @@ function removeFile (index) {
 const rules = {
   projectId: { required: helpers.withMessage("Project is required", required) },
   projectModuleId: { required: helpers.withMessage("Project module is required", required) },
+  requirementId: { required: helpers.withMessage("Requirement is required", required) },
   name: { required: helpers.withMessage("Task name is required", required), minLength: minLength(1), maxLength: maxLength(300) },
   statusId: { required: helpers.withMessage("Status is required", required) },
   sortOrder: { required: helpers.withMessage("Sort Order is required", required) },

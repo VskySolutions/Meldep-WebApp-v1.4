@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.PowerBI.Api.Models;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
 using Vsky.Api.Models;
@@ -395,6 +396,23 @@ namespace Vsky.Api.Controllers
                     if (testCaseExists != null)
                         return BadRequest(new BadRequestError("The test case already exists"));
 
+                    bool hasMapping = !string.IsNullOrWhiteSpace(model.ProjectReleaseTrackingReqPlanTaskIssueMappingId) &&
+                     !model.ProjectReleaseTrackingReqPlanTaskIssueMappingId.Equals("undefined", StringComparison.OrdinalIgnoreCase);
+
+                    if (!hasMapping)
+                    {
+                        bool IsTestCaseStatusChanged = model.StatusId != entity.StatusId;
+                        if (IsTestCaseStatusChanged)
+                        {
+                            var testCaseStatus = await _dropDownService.GetDropDownById(model.StatusId);
+                            var status = testCaseStatus.DropDownValue;
+
+                            _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "TestCase", entity.Id, entity.Name, entity.Id, entity.Name, "Test Case Status", status, LoggedUserId, GetDateTime);
+                        }
+
+                        entity.StatusId = model.StatusId;
+                    }
+
                     entity.ProjectId = model.ProjectId;
                     entity.ProjectModuleId = model.ProjectModuleId;
 
@@ -406,7 +424,6 @@ namespace Vsky.Api.Controllers
                             : null;
                     entity.PlanId = model.PlanId;
                     entity.Name = model.Name;
-                    entity.StatusId = model.StatusId;
                     entity.TestedBy = model.TestedBy;
                     entity.EmployeeId = model.EmployeeId;
 
@@ -451,6 +468,7 @@ namespace Vsky.Api.Controllers
                     entity.UpdatedOnUtc = GetDateTime;
                     _testCaseService.UpdateTestCase(entity);
 
+                    string issueId = null;
                     var testcasestatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Test Case Status", "Fail");
                     if (model.StatusId == testcasestatus)
                     {
@@ -497,7 +515,25 @@ namespace Vsky.Api.Controllers
                             issue.CreatedOnUtc = GetDateTime;
                             issue.UpdatedOnUtc = GetDateTime;
                             _issueService.InsertIssue(issue);
+
+                            issueId = issue.Id;
                         }
+                    }
+                    if (hasMapping)
+                    {
+                        _testCaseExecutionLogExecutionLogService.InsertTestCaseExecutionLog(
+                            new TestCaseExecutionLog
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                ProjectReleaseTracking_ReqPlanTaskIssueMappingId = model.ProjectReleaseTrackingReqPlanTaskIssueMappingId,
+                                StatusId = model.StatusId,
+                                Comment = null,
+                                IssueId = issueId,
+                                CreatedById = LoggedUserId,
+                                CreatedOnUtc = GetDateTime,
+                                UpdatedById = LoggedUserId,
+                                UpdatedOnUtc = GetDateTime
+                            });
                     }
                     return Ok(entity);
                 }
