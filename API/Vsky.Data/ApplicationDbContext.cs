@@ -1475,11 +1475,9 @@ namespace Vsky.Data
 
                 entity.Property(e => e.TaskId).IsRequired().HasMaxLength(450);
                 entity.Property(e => e.IssueId).HasMaxLength(450);
-                entity.Property(e => e.RequirementId).HasMaxLength(450);
 
                 entity.HasOne(d => d.ProjectTask).WithMany(x => x.ProjectTaskRelatedMappings).HasForeignKey(d => d.TaskId);
                 entity.HasOne(d => d.Issue).WithMany(x => x.ProjectTaskRelatedMappings).HasForeignKey(d => d.IssueId);
-                entity.HasOne(d => d.Requirement).WithMany(x => x.ProjectTaskRelatedMappings).HasForeignKey(d => d.RequirementId);
             });
 
             builder.Entity<ProjectActionItems>(entity =>

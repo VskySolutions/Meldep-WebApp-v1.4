@@ -1010,8 +1010,8 @@ function transformTaskRow (task, storedTaskIds, isAdmin) {
   const combinedEditable = isAdmin || (moduleMapping ? moduleMapping.fullAccess : projectFullAccess);
   const combinedNote = isAdmin || (moduleMapping ? moduleMapping.notes : projectNote);
 
-  const issueMapping = task.projectTaskRelatedMappings?.find(m => m.issueId);
-  const requirementMapping = task.projectTaskRelatedMappings?.find(m => m.requirementId);
+  // const issueMapping = task.projectTaskRelatedMappings?.find(m => m.issueId);
+  // const requirementMapping = task.projectTaskRelatedMappings?.find(m => m.requirementId);
 
   return {
     ...task,
@@ -1034,17 +1034,17 @@ function transformTaskRow (task, storedTaskIds, isAdmin) {
       bgColor: tag.tags.bgColor
     })) ?? [],
 
-    issueNumbersWithStatuses: issueMapping && {
-      value: String(issueMapping.id),
-      text: `#${issueMapping.issue?.issueNumber ?? ""} (${issueMapping.issue?.status?.dropDownValue ?? ""})`,
-      issueId: issueMapping.issueId
-    },
+    // issueNumbersWithStatuses: issueMapping && {
+    //   value: String(issueMapping.id),
+    //   text: `#${issueMapping.issue?.issueNumber ?? ""} (${issueMapping.issue?.status?.dropDownValue ?? ""})`,
+    //   issueId: issueMapping.issueId
+    // },
 
-    requirementNumbersWithStatuses: requirementMapping && {
-      value: String(requirementMapping.id),
-      text: `#${requirementMapping.requirement?.requirementNumber ?? ""} (${requirementMapping.requirement?.status?.dropDownValue ?? ""})`,
-      requirementId: requirementMapping.requirementId
-    },
+    // requirementNumbersWithStatuses: task.requirement && {
+    //   value: String(task.requirement.id),
+    //   text: `#${task.requirement?.requirementNumber ?? ""} (${task.requirement?.status?.dropDownValue ?? ""})`,
+    //   requirementId: task.requirement.id
+    // },
 
     totalActivityHours: totalActivityHours(task.projectActivities)
   };

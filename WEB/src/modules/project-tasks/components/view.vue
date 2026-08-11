@@ -159,13 +159,13 @@
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Requirement</div>
                     <div class="text-black">
-                      <span v-if="model.requirementNumbersWithStatuses">
+                      <span v-if="model.requirement">
                         <span
                           class="hoverable-cell"
                           style="cursor: pointer;"
-                          @click="onViewRequirement(model.requirementNumbersWithStatuses.requirementId)"
+                          @click="onViewRequirement(model.requirement.id)"
                         >
-                          {{ model.requirementNumbersWithStatuses.text }}
+                          {{ '#' + (model.requirement?.requirementNumber ?? '') + ' (' + (model.requirement?.status?.dropDownValue ?? '') + ')' }}
                         </span>
                       </span>
                       <span v-else>-</span>

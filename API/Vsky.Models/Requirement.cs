@@ -76,7 +76,7 @@ namespace Vsky.Models
         public virtual Employee ApprovedBy { get; set; }
         public virtual ICollection<FilePathDetails> FilePathDetails { get; set; } = new List<FilePathDetails>();
         public virtual ICollection<RequirementChangeLog> RequirementChangeLog { get; set; } = new List<RequirementChangeLog>();
-        public virtual ICollection<ProjectTaskRelatedMapping> ProjectTaskRelatedMappings { get; set; } = new List<ProjectTaskRelatedMapping>();
+        public virtual ICollection<ProjectTask> ProjectTaskRelatedMappings { get; set; } = new List<ProjectTask>();
         public virtual ICollection<RequirementTags> RequirementTags { get; set; } = new List<RequirementTags>();
         public virtual ICollection<RequirementPinned> RequirementPinned { get; set; } = new List<RequirementPinned>();
         public virtual ICollection<RequirementColor> RequirementColors { get; set; } = new List<RequirementColor>();

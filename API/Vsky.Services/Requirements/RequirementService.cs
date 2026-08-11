@@ -129,8 +129,8 @@ namespace Vsky.Services.Requirements
             if (identifiedEmployeeIds != null && identifiedEmployeeIds.Any())
                 query = query.Where(x => identifiedEmployeeIds.Contains(x.IdentifiedEmployeeId));
 
-            if (requirementTagIds?.Any() == true) 
-                query = query.Where(x => x.RequirementTags.Any(t => !t.Deleted && t.AspNetUserId == LoggedUserId &&  requirementTagIds.Contains(t.Tags.Id)));
+            if (requirementTagIds?.Any() == true)
+                query = query.Where(x => x.RequirementTags.Any(t => !t.Deleted && t.AspNetUserId == LoggedUserId && requirementTagIds.Contains(t.Tags.Id)));
 
             //Search by FromDate and Todate
             if (fromDate != null)
@@ -154,7 +154,7 @@ namespace Vsky.Services.Requirements
                         .Any(p => p.AspNetUserId == LoggedUserId && p.IsPinned))
                     .ThenByDescending(x => x.CreatedOnUtc);
             }
-           
+
             if (!string.IsNullOrEmpty(SearchText))
             {
                 DateTime.TryParse(SearchText, out var parsedDate);
@@ -186,7 +186,7 @@ namespace Vsky.Services.Requirements
                        (SearchText.ToLower() == "confirmed" && m.EditingStatus != 1)
                 );
             }
-         
+
             // Apply multi-level dictionary sorting
             if (sorts != null && sorts.Count > 0)
             {
@@ -326,16 +326,23 @@ namespace Vsky.Services.Requirements
                     RequirementId = t.RequirementId,
                     Tags = new Tags { Id = t.Tags.Id, Name = t.Tags.Name, Color = t.Tags.Color, BgColor = t.Tags.BgColor }
                 }).ToList(),
+                //ProjectTaskRelatedMappings = x.ProjectTaskRelatedMappings.Where(m => m.RequirementId == x.Id && !m.Deleted && m.RequirementId != null)
+                //.Select(m => new ProjectTaskRelatedMapping
+                //{
+                //    Id = m.Id,
+                //    TaskId = m.TaskId,
+                //    ProjectTask = new ProjectTask
+                //    {
+                //        ProjectTaskNumber = m.ProjectTask.ProjectTaskNumber,
+                //        Status = new DropDown { Id = m.ProjectTask.Status.Id, DropDownValue = m.ProjectTask.Status.DropDownValue }
+                //    }
+                //}).ToList(),
                 ProjectTaskRelatedMappings = x.ProjectTaskRelatedMappings.Where(m => m.RequirementId == x.Id && !m.Deleted && m.RequirementId != null)
-                .Select(m => new ProjectTaskRelatedMapping
+                .Select(m => new ProjectTask
                 {
                     Id = m.Id,
-                    TaskId = m.TaskId,
-                    ProjectTask = new ProjectTask
-                    {
-                        ProjectTaskNumber = m.ProjectTask.ProjectTaskNumber,
-                        Status = new DropDown { Id = m.ProjectTask.Status.Id, DropDownValue = m.ProjectTask.Status.DropDownValue }
-                    }
+                    ProjectTaskNumber = m.ProjectTaskNumber,
+                    Status = new DropDown { Id = m.Status.Id, DropDownValue = m.Status.DropDownValue }
                 }).ToList(),
                 RequirementNotesCount = notesQuery.Where(m => m.SubModuleId == x.Id).Count(),
                 LastNote = notesQuery.Where(n => n.SubModuleId == x.Id).OrderByDescending(n => n.CreatedOnUtc).Select(n => n.Note).FirstOrDefault()
@@ -623,11 +630,6 @@ namespace Vsky.Services.Requirements
                     Id = x.RequirementType.Id,
                     DropDownValue = x.RequirementType.DropDownValue
                 },
-                //RequirementGroup = new RequirementGroup
-                //{
-                //    Id = x.RequirementGroup.Id,
-                //    Name = x.RequirementGroup.Name
-                //},
                 CreatedBy = new ApplicationUser
                 {
                     Id = x.CreatedBy.Id,
@@ -674,16 +676,23 @@ namespace Vsky.Services.Requirements
                         }
                     },
                 }).ToList(),
+                //ProjectTaskRelatedMappings = x.ProjectTaskRelatedMappings.Where(m => m.RequirementId == x.Id && !m.Deleted && m.RequirementId != null)
+                //.Select(m => new ProjectTaskRelatedMapping
+                //{
+                //    Id = m.Id,
+                //    TaskId = m.TaskId,
+                //    ProjectTask = new ProjectTask
+                //    {
+                //        ProjectTaskNumber = m.ProjectTask.ProjectTaskNumber,
+                //        Status = new DropDown { Id = m.ProjectTask.Status.Id, DropDownValue = m.ProjectTask.Status.DropDownValue }
+                //    }
+                //}).ToList(),
                 ProjectTaskRelatedMappings = x.ProjectTaskRelatedMappings.Where(m => m.RequirementId == x.Id && !m.Deleted && m.RequirementId != null)
-                .Select(m => new ProjectTaskRelatedMapping
+                .Select(m => new ProjectTask
                 {
                     Id = m.Id,
-                    TaskId = m.TaskId,
-                    ProjectTask = new ProjectTask
-                    {
-                        ProjectTaskNumber = m.ProjectTask.ProjectTaskNumber,
-                        Status = new DropDown { Id = m.ProjectTask.Status.Id, DropDownValue = m.ProjectTask.Status.DropDownValue }
-                    }
+                    ProjectTaskNumber = m.ProjectTaskNumber,
+                    Status = new DropDown { Id = m.Status.Id, DropDownValue = m.Status.DropDownValue }
                 }).ToList(),
                 LastNote = notesQuery.Where(n => n.SubModuleId == x.Id).OrderByDescending(n => n.CreatedOnUtc).Select(n => n.Note).FirstOrDefault()
             });

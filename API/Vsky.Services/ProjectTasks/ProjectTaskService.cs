@@ -270,7 +270,8 @@ namespace Vsky.Services.ProjectTasks
                 {
                     Id = x.Requirement.Id,
                     Title = x.Requirement.Title,
-                    RequirementNumber = x.Requirement.RequirementNumber
+                    RequirementNumber = x.Requirement.RequirementNumber,
+                    Status = new DropDown { DropDownValue = x.Requirement.Status.DropDownValue }
                 },
                 Status = new DropDown { Id = x.Status.Id, DropDownValue = x.Status.DropDownValue },
                 Priority = new DropDown { Id = x.Priority.Id, DropDownValue = x.Priority.DropDownValue },
@@ -354,22 +355,21 @@ namespace Vsky.Services.ProjectTasks
                             }
                         }
                     }).ToList(),
-                ProjectTaskRelatedMappings = x.ProjectTaskRelatedMappings.Where(m => m.TaskId == x.Id && !m.Deleted && (m.RequirementId != null || m.IssueId != null))
+                ProjectTaskRelatedMappings = x.ProjectTaskRelatedMappings.Where(m => m.TaskId == x.Id && !m.Deleted && (m.IssueId != null))
                 .Select(m => new ProjectTaskRelatedMapping
                 {
                     Id = m.Id,
-                    RequirementId = m.RequirementId,
                     IssueId = m.IssueId,
                     Issue = m.Issue == null ? null : new Issue
                     {
                         IssueNumber = m.Issue.IssueNumber,
                         Status = m.Issue.Status == null ? null : new DropDown { Id = m.Issue.Status.Id, DropDownValue = m.Issue.Status.DropDownValue }
-                    },
-                    Requirement = m.Requirement == null ? null : new Requirement
-                    {
-                        RequirementNumber = m.Requirement.RequirementNumber,
-                        Status = m.Requirement.Status == null ? null : new DropDown { Id = m.Requirement.Status.Id, DropDownValue = m.Requirement.Status.DropDownValue }
                     }
+                    //Requirement = m.Requirement == null ? null : new Requirement
+                    //{
+                    //    RequirementNumber = m.Requirement.RequirementNumber,
+                    //    Status = m.Requirement.Status == null ? null : new DropDown { Id = m.Requirement.Status.Id, DropDownValue = m.Requirement.Status.DropDownValue }
+                    //}
                 }).ToList(),
                 ProjectTaskNotesCount = _notesRepository.TableNoTracking.Count(m => !m.Deleted && m.SubModuleId == x.Id && m.Type == "Project Task")
 
@@ -1011,7 +1011,10 @@ namespace Vsky.Services.ProjectTasks
                 },
                 Requirement = new Requirement
                 {
-                    Title = x.Requirement.Title
+                    Id = x.Requirement.Id,
+                    Title = x.Requirement.Title,
+                    RequirementNumber = x.Requirement.RequirementNumber,
+                    Status = new DropDown { DropDownValue = x.Requirement.Status.DropDownValue }
                 },
                 Area = new DropDown
                 {
@@ -1154,22 +1157,21 @@ namespace Vsky.Services.ProjectTasks
                         SeoFilename = mapping.File.SeoFilename
                     }
                 }).ToList(),
-                ProjectTaskRelatedMappings = x.ProjectTaskRelatedMappings.Where(m => m.TaskId == x.Id && !m.Deleted && (m.RequirementId != null || m.IssueId != null))
+                ProjectTaskRelatedMappings = x.ProjectTaskRelatedMappings.Where(m => m.TaskId == x.Id && !m.Deleted && m.IssueId != null)
                 .Select(m => new ProjectTaskRelatedMapping
                 {
                     Id = m.Id,
-                    RequirementId = m.RequirementId,
                     IssueId = m.IssueId,
                     Issue = m.Issue == null ? null : new Issue
                     {
                         IssueNumber = m.Issue.IssueNumber,
                         Status = m.Issue.Status == null ? null : new DropDown { Id = m.Issue.Status.Id, DropDownValue = m.Issue.Status.DropDownValue }
-                    },
-                    Requirement = m.Requirement == null ? null : new Requirement
-                    {
-                        RequirementNumber = m.Requirement.RequirementNumber,
-                        Status = m.Requirement.Status == null ? null : new DropDown { Id = m.Requirement.Status.Id, DropDownValue = m.Requirement.Status.DropDownValue }
                     }
+                    //Requirement = m.Requirement == null ? null : new Requirement
+                    //{
+                    //    RequirementNumber = m.Requirement.RequirementNumber,
+                    //    Status = m.Requirement.Status == null ? null : new DropDown { Id = m.Requirement.Status.Id, DropDownValue = m.Requirement.Status.DropDownValue }
+                    //}
                 }).ToList(),
             });
             var item = await query.FirstOrDefaultAsync();

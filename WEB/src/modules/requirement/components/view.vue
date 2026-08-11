@@ -54,10 +54,10 @@
                 <div class="text-black">
                   <span v-if="model.projectTaskRelatedMappings?.length">
                     <template v-for="(item, index) in model.projectTaskRelatedMappings" :key="index">
-                      <span class="hoverable-cell" style="cursor: pointer;" @click="onViewTask(item.taskId)">
-                        #{{ item.projectTask?.projectTaskNumber }}
-                        <span v-if="item.projectTask?.status">
-                          ({{ item.projectTask.status.dropDownValue }})
+                      <span class="hoverable-cell" style="cursor: pointer;" @click="onViewTask(item.id)">
+                        #{{ item.projectTaskNumber }}
+                        <span v-if="item.status">
+                          ({{ item.status.dropDownValue }})
                         </span>
                       </span>
                       <span v-if="index < model.projectTaskRelatedMappings.length - 1">, </span>
@@ -179,7 +179,7 @@
                 <div class="q-mb-xs">Notes :</div>
                 <div class="text-black"><p v-html="model.notes ? model.notes : '-'" /></div>
               </div>
-            </div>            
+            </div>
             <div v-if="model.lastNote" class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-sm-12 col-md-12">
                 <div class="q-mb-xs">Last Note :</div>

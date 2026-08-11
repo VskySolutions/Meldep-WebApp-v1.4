@@ -559,7 +559,7 @@ namespace Vsky.Services.Projects
                         EndDate = m.InfraAccountServices.EndDate,
                         Price = m.InfraAccountServices.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.Price).FirstOrDefault(),
                         ActualPriceInDollar = Math.Round(
-                               (decimal) m.InfraAccountServices.InfraAccountServicesPriceHistory
+                               (decimal)m.InfraAccountServices.InfraAccountServicesPriceHistory
                                 .Where(ph => !ph.Deleted)
                                 .OrderByDescending(ph => ph.CreatedOnUtc)
                                 .Select(ph => ph.Price)
@@ -873,22 +873,21 @@ namespace Vsky.Services.Projects
                                 SeoFilename = mapping.File.SeoFilename
                             }
                         }).ToList(),
-                        ProjectTaskRelatedMappings = mapping.ProjectTaskRelatedMappings.Where(m => m.TaskId == mapping.Id && !m.Deleted && (m.RequirementId != null || m.IssueId != null))
+                        ProjectTaskRelatedMappings = mapping.ProjectTaskRelatedMappings.Where(m => m.TaskId == mapping.Id && !m.Deleted && m.IssueId != null)
                         .Select(m => new ProjectTaskRelatedMapping
                         {
                             Id = m.Id,
-                            RequirementId = m.RequirementId,
                             IssueId = m.IssueId,
                             Issue = m.Issue == null ? null : new Issue
                             {
                                 IssueNumber = m.Issue.IssueNumber,
                                 Status = m.Issue.Status == null ? null : new DropDown { Id = m.Issue.Status.Id, DropDownValue = m.Issue.Status.DropDownValue }
-                            },
-                            Requirement = m.Requirement == null ? null : new Requirement
-                            {
-                                RequirementNumber = m.Requirement.RequirementNumber,
-                                Status = m.Requirement.Status == null ? null : new DropDown { Id = m.Requirement.Status.Id, DropDownValue = m.Requirement.Status.DropDownValue }
                             }
+                            //Requirement = m.Requirement == null ? null : new Requirement
+                            //{
+                            //    RequirementNumber = m.Requirement.RequirementNumber,
+                            //    Status = m.Requirement.Status == null ? null : new DropDown { Id = m.Requirement.Status.Id, DropDownValue = m.Requirement.Status.DropDownValue }
+                            //}
                         }).ToList(),
                     }).ToList()
                 }).ToList(),
@@ -1381,16 +1380,23 @@ namespace Vsky.Services.Projects
                         FilePath = p.FilePath,
                         Note = p.Note
                     }).ToList(),
+                    //ProjectTaskRelatedMappings = req.ProjectTaskRelatedMappings.Where(m => m.RequirementId == req.Id && !m.Deleted && m.RequirementId != null)
+                    //.Select(m => new ProjectTaskRelatedMapping
+                    //{
+                    //    Id = m.Id,
+                    //    TaskId = m.TaskId,
+                    //    ProjectTask = new ProjectTask
+                    //    {
+                    //        ProjectTaskNumber = m.ProjectTask.ProjectTaskNumber,
+                    //        Status = new DropDown { Id = m.ProjectTask.Status.Id, DropDownValue = m.ProjectTask.Status.DropDownValue }
+                    //    }
+                    //}).ToList(),
                     ProjectTaskRelatedMappings = req.ProjectTaskRelatedMappings.Where(m => m.RequirementId == req.Id && !m.Deleted && m.RequirementId != null)
-                    .Select(m => new ProjectTaskRelatedMapping
+                    .Select(m => new ProjectTask
                     {
                         Id = m.Id,
-                        TaskId = m.TaskId,
-                        ProjectTask = new ProjectTask
-                        {
-                            ProjectTaskNumber = m.ProjectTask.ProjectTaskNumber,
-                            Status = new DropDown { Id = m.ProjectTask.Status.Id, DropDownValue = m.ProjectTask.Status.DropDownValue }
-                        }
+                        ProjectTaskNumber = m.ProjectTaskNumber,
+                        Status = new DropDown { Id = m.Status.Id, DropDownValue = m.Status.DropDownValue }
                     }).ToList(),
                 }).ToList(),
                 Issue = x.Issue.Where(i => !i.Deleted && i.CreatedOnUtc >= startOfYear && i.CreatedOnUtc < startOfNextYear).Select(issue => new Issue

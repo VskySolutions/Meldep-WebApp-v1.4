@@ -1318,14 +1318,29 @@ watch([prefix, fraction], () => {
   model.value.sortOrder = `${prefix.value}.${fraction.value}`;
 });
 
-watch(() => model.value.projectModuleId, (newValue, oldValue) => {
-  if (newValue) {
+watch(
+  () => model.value.projectModuleId,
+  async (newValue, oldValue) => {
     getSortOrderByModuleId(newValue);
-    if (newValue == null) return;
 
-    requirementByProjectModuleIdForDropdownSingleSelect.load(newValue);
-  }
-}, { immediate: true });
+    // Form opening / initial population.
+    // Keep the existing requirementId.
+    if (oldValue === undefined) {
+      if (!newValue) return;
+      await requirementByProjectModuleIdForDropdownSingleSelect.load(newValue);
+      return;
+    }
+
+    // User changed the module.
+    if (newValue !== oldValue) {
+      model.value.requirementId = "";
+    }
+
+    if (!newValue) return;
+    await requirementByProjectModuleIdForDropdownSingleSelect.load(newValue);
+  },
+  { immediate: true }
+);
 
 watch(
   () => projectTaskPriorityForDropdownSingleSelect.list.value,

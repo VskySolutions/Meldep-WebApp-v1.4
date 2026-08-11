@@ -503,9 +503,9 @@
               >
                 <span v-if="props.row.projectTaskRelatedMappings?.length">
                   <template v-for="(item, index) in props.row.projectTaskRelatedMappings" :key="index">
-                    <span class="hoverable-cell" style="cursor: pointer;" @click="onProjectTaskView(item.taskId)">#{{ item.projectTask?.projectTaskNumber }}
-                      <span v-if="item.projectTask?.status">
-                        ({{ item.projectTask.status.dropDownValue }})
+                    <span class="hoverable-cell" style="cursor: pointer;" @click="onProjectTaskView(item.id)">#{{ item.projectTaskNumber }}
+                      <span v-if="item.status">
+                        ({{ item.status.dropDownValue }})
                       </span>
                     </span>
                     <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">, </span>
@@ -1200,8 +1200,8 @@ const onConvertToTask = (id, projectId, projectModuleId, title, isRequirementCon
   rows.value.filter(row => id === row.id).forEach(req => {
     if (req.projectTaskRelatedMappings?.length) {
       req.projectTaskRelatedMappings.forEach(mapping => {
-        if (mapping.projectTask?.projectTaskNumber) {
-          taskNumbers.push(mapping.projectTask.projectTaskNumber);
+        if (mapping.projectTaskNumber) {
+          taskNumbers.push(mapping.projectTaskNumber);
         }
       });
     }
@@ -1351,7 +1351,7 @@ function onBulkRequirementsConvertToTask (requirementIds) {
     if (req.projectTaskRelatedMappings?.length) {
       req.projectTaskRelatedMappings.forEach(mapping => {
         const requirementName = req.title || "Unnamed Requirement";
-        const taskNumber = mapping.projectTask?.projectTaskNumber;
+        const taskNumber = mapping.projectTaskNumber;
 
         if (taskNumber) {
           if (!createdTasks[requirementName]) {

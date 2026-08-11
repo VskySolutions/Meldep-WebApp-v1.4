@@ -1081,17 +1081,17 @@ namespace Vsky.Api.Controllers
                     }
 
                     // If converted from Requirement
-                    if (model.IsRequirementConverted)
-                    {
-                        var projectTaskRelatedMapping = new ProjectTaskRelatedMapping
-                        {
-                            TaskId = entity.Id,
-                            RequirementId = model.RequirementId,
-                            CreatedById = LoggedUserId,
-                            CreatedOnUtc = GetDateTime
-                        };
-                        _projectTaskRelatedMappingsService.InsertProjectTaskRelatedMapping(projectTaskRelatedMapping);
-                    }
+                    //if (model.IsRequirementConverted)
+                    //{
+                    //    var projectTaskRelatedMapping = new ProjectTaskRelatedMapping
+                    //    {
+                    //        TaskId = entity.Id,
+                    //        RequirementId = model.RequirementId,
+                    //        CreatedById = LoggedUserId,
+                    //        CreatedOnUtc = GetDateTime
+                    //    };
+                    //    _projectTaskRelatedMappingsService.InsertProjectTaskRelatedMapping(projectTaskRelatedMapping);
+                    //}
 
                     return Ok(entity);
                 }
@@ -1965,17 +1965,17 @@ namespace Vsky.Api.Controllers
                             }
 
                             // If converted from Requirement
-                            if (model.IsRequirementConverted)
-                            {
-                                var projectTaskRelatedMapping = new ProjectTaskRelatedMapping
-                                {
-                                    TaskId = entity.Id,
-                                    RequirementId = item.RequirementId,
-                                    CreatedById = LoggedUserId,
-                                    CreatedOnUtc = GetDateTime
-                                };
-                                _projectTaskRelatedMappingsService.InsertProjectTaskRelatedMapping(projectTaskRelatedMapping);
-                            }
+                            //if (model.IsRequirementConverted)
+                            //{
+                            //    var projectTaskRelatedMapping = new ProjectTaskRelatedMapping
+                            //    {
+                            //        TaskId = entity.Id,
+                            //        RequirementId = item.RequirementId,
+                            //        CreatedById = LoggedUserId,
+                            //        CreatedOnUtc = GetDateTime
+                            //    };
+                            //    _projectTaskRelatedMappingsService.InsertProjectTaskRelatedMapping(projectTaskRelatedMapping);
+                            //}
                         }
                     }
                     return NoContent();
