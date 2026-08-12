@@ -256,11 +256,23 @@
                   {{ props.row.updatedOnUtc }}
                 </q-td>
                 <q-td class="text-center actions">
-                  <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onQuestionAnswersView(props.row.id)">
+                  <q-icon name="o_visibility" class="cursor-pointer q-mr-xs" size="xs" @click="onQuestionAnswersView(props.row.id)">
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
-                  <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onQuestionAnswersEdit(props.row.id, refreshQuestionsAnswersList)">
+                  <q-icon name="o_edit" class="cursor-pointer q-mr-xs" size="xs" @click="onQuestionAnswersEdit(props.row.id, refreshQuestionsAnswersList)">
                     <q-tooltip>Edit</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    name="o_history"
+                    class="cursor-pointer q-mr-xs"
+                    size="xs"
+                    @click="onQuestionAnswersEdit(
+                      props.row.id,
+                      refreshQuestionsAnswersList,
+                      true
+                    )"
+                  >
+                    <q-tooltip>Response Log</q-tooltip>
                   </q-icon>
                   <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitQuestionsAnswersDelete(props.row.id, props.row.title, refreshQuestionsAnswersList)">
                     <q-tooltip>Delete</q-tooltip>

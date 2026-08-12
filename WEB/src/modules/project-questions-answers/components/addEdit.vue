@@ -9,7 +9,7 @@
       <q-form greedy @submit.prevent.stop="onSubmit">
         <div class="q-pa-md cardTable">
           <div class="q-gutter-y-md">
-            <fieldset>
+            <fieldset v-if="!showResponseLog">
               <div class="row q-col-gutter-x-md q-mb-md">
                 <formSingleSelectDropdown
                   v-model="model.projectId"
@@ -229,12 +229,23 @@ const { fonts, toolbar } = getEditorConfig($q);
 const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
 
 // Props values i.e. come from query string
-const props = defineProps({ id: { type: String, default: "" } });
+// const props = defineProps({ id: { type: String, default: "" } });
+const props = defineProps({
+  id: {
+    type: String,
+    default: ""
+  },
+  showResponseLog: {
+    type: Boolean,
+    default: false
+  }
+});
 
 const $emit = defineEmits(["hide", "ok"]);
 const authStore = useAuthStore();
 const user = authStore.user;
 const currentDate = ref(new Date());
+const showResponseLog = ref(props.showResponseLog);
 
 const formatDateTime = (value) =>
   value ? date.formatDate(value, "MM/DD/YYYY hh:mm A") : "";

@@ -31,14 +31,19 @@ export function onQuestionAnswersAdd (refresh) {
     .onDismiss(() => { });
 }
 
-export function onQuestionAnswersEdit (id, refresh) {
+export function onQuestionAnswersEdit(id, refresh, showResponseLog = false) {
   activeRowId.value = id;
+
   $q.dialog({
     component: addEditQuestionAnswers,
-    componentProps: { id }
-  }).onOk(() => {
-    refresh();
+    componentProps: {
+      id,
+      showResponseLog
+    }
   })
-    .onCancel(() => { })
-    .onDismiss(() => { });
+    .onOk(() => {
+      refresh();
+    })
+    .onCancel(() => {})
+    .onDismiss(() => {});
 }
