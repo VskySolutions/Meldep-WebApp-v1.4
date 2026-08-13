@@ -2,7 +2,7 @@
   <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" full-height persistent position="right" @hide="onDialogHide">
     <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 60vw !important;max-width: 60vw;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader justify-between">
-        <div class="text-h2 text-white">View SOP Process</div>
+        <div class="text-h2 text-white">{{ model.title }}</div>
         <q-btn v-close-popup icon="o_close" class="close" color="white" flat round dense />
       </q-card-section>
       <q-separator />
@@ -10,7 +10,7 @@
         <div class="q-gutter-y-md">
           <fieldset>
             <legend>Process Info</legend>
-            <div class="row q-col-gutter-x-md q-mb-md">
+            <div class="row q-col-gutter-x-md q-mb-md hidden">
               <div class="col-12">
                 <div class="q-mb-xs">Title</div>
                 <div class="text-black">
@@ -26,7 +26,7 @@
                 </div>
               </div>
             </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
+            <div class="row q-col-gutter-x-md q-mb-md hidden">
               <div class="col-12 col-md-6">
                 <div class="q-mb-xs">Category</div>
                 <div class="text-black">
@@ -40,7 +40,7 @@
                 </div>
               </div>
             </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
+            <div class="row q-col-gutter-x-md q-mb-md hidden">
               <div class="col-12 col-md-6">
                 <div class="q-mb-xs">Version</div>
                 <div class="text-black">
@@ -54,7 +54,7 @@
                 </div>
               </div>
             </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
+            <div class="row q-col-gutter-x-md q-mb-md hidden">
               <div class="col-12 col-sm-6 col-md-6">
                 <div>
                   <div class="q-mb-xs">Is Active?</div>
@@ -80,7 +80,7 @@
                 </div>
               </div>
             </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
+            <div class="row q-col-gutter-x-md q-mb-md hidden">
               <div class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Created By</div>
                 <div class="text-black">
@@ -94,7 +94,7 @@
                 </div>
               </div>
             </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
+            <div class="row q-col-gutter-x-md q-mb-md hidden">
               <div class="col-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Updated By</div>
                 <div class="text-black">

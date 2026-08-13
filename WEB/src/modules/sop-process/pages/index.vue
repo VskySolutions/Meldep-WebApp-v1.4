@@ -139,7 +139,10 @@
         <template #body="props">
           <q-tr
             :props="props"
-            :class="highlightedId == props.row.id ? 'highlight' : ''"
+            :class="highlightedId == props.row.id ? 'highlight'
+                  : (props.row.statusText?.toLowerCase() === 'submitted'
+                      ? 'bg-cyan-1'
+                      : '')"
           >
             <q-td
               style="width: 2%; position: relative;"
@@ -537,7 +540,7 @@ const getAllSOPProcessList = (props) => {
 //   if (document.getElementById("sop-assistant-script")) {
 //     return;
 //   }
- 
+
 //   const script = document.createElement("script");
 //   script.id = "sop-assistant-script";
 //   // script.src = "https://api-sowbuddy-prasad-local.prasadsawant.site/sop-agent/cdn/vsky_sop_assistant.js";
@@ -560,7 +563,7 @@ const getAllSOPProcessList = (props) => {
 //   script.dataset.offsetX = "24";
 //   script.dataset.offsetY = "24";
 //   script.dataset.showSources = "true";
- 
+
 //   document.body.appendChild(script);
 // }
 
