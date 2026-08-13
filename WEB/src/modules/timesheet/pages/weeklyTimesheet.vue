@@ -425,7 +425,7 @@ function onAdd () {
     projectId: null,
     projectName: "",
     projectModuleId: null,
-    hours: weekDates.value.map(() => 0),
+    hours: weekDates.value.map(() => "00:00"),
     lineIds: weekDates.value.map(() => null),
     description: weekDates.value.map(() => ""),
     timesheetIds: weekDates.value.map(() => null),
@@ -574,10 +574,6 @@ function onTaskSelect (taskId, row) {
       debouncedSave(row, i);
     }
   });
-}
-
-function roundToTwo (num) {
-  return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 
 function calculateHoursTotal(hours) {

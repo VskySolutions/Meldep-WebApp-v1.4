@@ -554,11 +554,13 @@ namespace Vsky.Services.Issues
                 WorkspaceId = x.WorkspaceId,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
-                Requirement = new Requirement
-                {
-                    Id = x.Requirement.Id,
-                    Title = x.Requirement.Title
-                },
+                Requirement = x.Requirement == null
+                    ? null
+                    : new Requirement
+                    {
+                        Id = x.Requirement.Id,
+                        Title = x.Requirement.Title
+                    },
                 Area = new DropDown
                 {
                     Id = x.Area.Id,

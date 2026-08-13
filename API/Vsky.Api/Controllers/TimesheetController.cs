@@ -487,7 +487,7 @@ namespace Vsky.Api.Controllers
                         .SelectMany(t => t.TimesheetLines)
                         .Sum(l => l.Hours);
 
-                    rowData[$"col{index++}"] = totalHours;
+                    rowData[$"col{index++}"] = HoursConverter.ConvertDecimalHoursToTime(totalHours);
                 }
 
                 var model = new TimesheetWeeklyMonthlyHoursModel
@@ -533,7 +533,7 @@ namespace Vsky.Api.Controllers
                         .SelectMany(t => t.TimesheetLines)
                         .Sum(l => l.Hours);
 
-                    rowData[$"col{colIndex}"] = totalHours;
+                    rowData[$"col{colIndex}"] = HoursConverter.ConvertDecimalHoursToTime(totalHours);
 
                     colIndex++;
                     current = current.AddDays(7);

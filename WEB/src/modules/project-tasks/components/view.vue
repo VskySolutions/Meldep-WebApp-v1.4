@@ -392,13 +392,22 @@ const taskActivityColumns = ref([
   { name: "description", label: "Description", field: "description", align: "left", sortable: true }
 ]);
 
-function totalEstimateHours () {
-  // Calculate the total estimate hours
-  const total = rows.value.reduce((sum, activity) => {
-    return sum + (activity.estimateHours || 0); // Add activity's estimateHours if present
-  }, 0);
+function totalEstimateHours() {
+  let totalMinutes = 0;
 
-  return parseFloat(total.toFixed(2)); // Round to 2 decimal places
+  rows.value.forEach(activity => {
+    const value = String(activity.estimateHours ?? "").trim();
+
+    if (/^\d{1,2}:\d{2}$/.test(value)) {
+      const [hours, minutes] = value.split(":").map(Number);
+      totalMinutes += hours * 60 + minutes;
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
 // get project details

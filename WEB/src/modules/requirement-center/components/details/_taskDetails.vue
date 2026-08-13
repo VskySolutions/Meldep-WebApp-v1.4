@@ -415,10 +415,22 @@ const fileColumns = ref([
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left" }
 ]);
 
-const totalEstimateHours = () =>
-  projectActivities.value
-    .reduce((sum, item) => sum + (item.estimateHours || 0), 0)
-    .toFixed(2);
+const totalEstimateHours = () => {
+  const totalMinutes = projectActivities.value.reduce((total, item) => {
+    const value = String(item.estimateHours ?? "").trim();
+
+    if (!value) return total;
+
+    const [hours = 0, minutes = 0] = value.split(":").map(Number);
+
+    return total + (hours * 60) + minutes;
+  }, 0);
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
 
 function extractFileName(path) {
   return path ? path.split("/").pop() : "-";

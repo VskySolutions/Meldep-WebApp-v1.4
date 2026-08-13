@@ -1009,13 +1009,15 @@ namespace Vsky.Services.ProjectTasks
                     Id = x.ProjectModule.Id,
                     Name = x.ProjectModule.Name
                 },
-                Requirement = new Requirement
-                {
-                    Id = x.Requirement.Id,
-                    Title = x.Requirement.Title,
-                    RequirementNumber = x.Requirement.RequirementNumber,
-                    Status = new DropDown { DropDownValue = x.Requirement.Status.DropDownValue }
-                },
+                Requirement = x.Requirement == null
+                    ? null
+                    : new Requirement
+                    {
+                        Id = x.Requirement.Id,
+                        Title = x.Requirement.Title,
+                        RequirementNumber = x.Requirement.RequirementNumber,
+                        Status = new DropDown { DropDownValue = x.Requirement.Status.DropDownValue }
+                    },
                 Area = new DropDown
                 {
                     Id = x.Area.Id,

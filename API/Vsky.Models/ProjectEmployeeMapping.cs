@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Vsky.Core;
+using System.Text.Json.Serialization;
 
 namespace Vsky.Models;
 
@@ -47,5 +48,7 @@ public class ProjectCharterEmployee
 public class ProjectCharterEmployeeAssignedHours
 {
     public DateTime WeekendDate { get; set; }
+
+    [JsonConverter(typeof(HoursConverter))]
     public decimal TotalHours { get; set; }
 }

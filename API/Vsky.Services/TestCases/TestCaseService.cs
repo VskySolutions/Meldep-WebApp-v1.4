@@ -196,7 +196,7 @@ namespace Vsky.Services.TestCases
                 TestedDate = x.TestedDate,
                 AreaId = x.AreaId,
                 WorkspaceId = x.WorkspaceId,
-                TestCaseNumber=x.TestCaseNumber,
+                TestCaseNumber = x.TestCaseNumber,
                 CreatedOnUtc = x.CreatedOnUtc,
 
                 ProjectReleaseTrackingReqPlanTaskIssueMappingId = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
@@ -257,10 +257,10 @@ namespace Vsky.Services.TestCases
                 Requirement = x.Requirement == null
                     ? null
                     : new Requirement
-                {
-                    Id = x.Requirement.Id,
-                    RequirementNumber = x.Requirement.RequirementNumber
-                },
+                    {
+                        Id = x.Requirement.Id,
+                        RequirementNumber = x.Requirement.RequirementNumber
+                    },
                 Status = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
                 .Where(m => !m.Deleted)
                 .OrderByDescending(m => m.ReleaseTracking.CreatedOnUtc)
@@ -614,12 +614,13 @@ namespace Vsky.Services.TestCases
                     Id = x.ProjectModule.Id,
                     Name = x.ProjectModule.Name
                 },
-                Requirement = new Requirement
-                {
-                    Id = x.Requirement.Id,
-                    Title = x.Requirement.Title
-                },
-
+                Requirement = x.Requirement == null
+                    ? null
+                    : new Requirement
+                    {
+                        Id = x.Requirement.Id,
+                        Title = x.Requirement.Title
+                    },
                 ProjectReleaseTrackingReqPlanTaskIssueMappingId = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
                 .Where(m => !m.Deleted)
                 .OrderByDescending(m => m.ReleaseTracking.CreatedOnUtc)
@@ -676,11 +677,11 @@ namespace Vsky.Services.TestCases
         // Description: This method retrieves a Test Case based on its name and Id. It allows an optional exclusion of a Test Case by its ID, which can be useful for scenarios like checking for duplicates. while excluding a specific Test Case. The method returns the first matching Test Case or null if no match is found.
         public async Task<TestCase> GetTestCaseByName(string siteId, string projectId, string testPlanId, string projectModuleId, string name, string id = null)
         {
-            var query = _testCaseRepository.TableNoTracking.Where(x => 
-                !x.Deleted && 
-                x.SiteId == siteId && 
-                x.Name.ToLower() == name.ToLower() && 
-                x.ProjectId == projectId && 
+            var query = _testCaseRepository.TableNoTracking.Where(x =>
+                !x.Deleted &&
+                x.SiteId == siteId &&
+                x.Name.ToLower() == name.ToLower() &&
+                x.ProjectId == projectId &&
                 x.PlanId == testPlanId &&
                 x.ProjectModuleId == projectModuleId
             );
