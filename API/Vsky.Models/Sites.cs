@@ -26,6 +26,7 @@ public class Site : BaseEntity
     public int NumberOfWorkingDays { get; set; }
     public bool CheckLeavesForTimesheetReminder { get; set; }
     public bool IsDropdownGenerated { get; set; }
+    public bool IsWorkspaceAreaGenerated { get; set; }
     public virtual Person Person { get; set; }
     public virtual Address Address { get; set; }
     public virtual ICollection<SitesRoles> SitesRoles { get; set; } = new List<SitesRoles>();

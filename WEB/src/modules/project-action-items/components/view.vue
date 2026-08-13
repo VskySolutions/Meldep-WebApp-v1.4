@@ -17,6 +17,8 @@
                   {{ model.project.name }}
                 </div>
               </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col">
                 <div class="col-12 col-md-6">Requirement</div>
                 <div class="text-black">
@@ -34,23 +36,29 @@
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-md-6">
-                <div class="q-mb-xs">AssignedTo</div>
+                <div class="q-mb-xs">Customer</div>
                 <div class="text-black">
-                  {{ model.assignedTo }}
+                  {{ model.customer?.name ? model.customer?.name : '-' }}
                 </div>
               </div>
               <div class="col-12 col-md-6">
-                <div class="q-mb-xs">Priority</div>
+                <div class="q-mb-xs">Employee</div>
                 <div class="text-black">
-                  {{ model.priority.dropDownValue }}
+                  {{ model.employee?.person?.fullName ? model.employee?.person?.fullName : "-" }}
                 </div>
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-md-6">
+                <div class="q-mb-xs">Priority</div>
+                <div class="text-black">
+                  {{ model.priority.dropDownValue ? model.priority.dropDownValue : '-' }}
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
                 <div class="q-mb-xs">Due Date</div>
                 <div class="text-black">
-                  {{ model.dueDate }}
+                  {{ model.dueDate ? model.dueDate : '-' }}
                 </div>
               </div>
             </div>
@@ -119,7 +127,6 @@ const { dialogRef, onDialogHide } = useDialogPluginComponent();
 const model = ref({
   title: "",
   description: "",
-  assignedTo: "",
   dueDate: "",
   createdOnUtc: "",
   updatedOnUtc: "",
@@ -131,6 +138,14 @@ const model = ref({
   },
   priority: {
     dropDownValue: ""
+  },
+  employee: {
+    person: {
+      fullName: ""
+    }
+  },
+  customer: {
+    name : ""
   },
   createdBy: {
     person: {

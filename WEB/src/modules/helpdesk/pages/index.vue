@@ -439,6 +439,30 @@
                   </div>
                 </div>
                 </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('dueDate')"
+                  class="common-q-td"
+                  :class="{ 'hoverable-cell' : props.row.id }"
+                  @click="activeEdit = { rowId: props.row.id, field: 'dueDate' }"
+                >
+                <div v-if="(role === 'admin' || (roleSupportTeam && props.row.assignedToId)) && !['Completed','Closed','Cancelled'].includes(props.row.statusText)">
+                  <quickEditDate
+                    :row-id="props.row.id"
+                    :model-value="props.row.dueDate"
+                    :editable="props.row.id"
+                    :show-history="false"
+                    :options="disableBeforeCreatedDate(props.row.createdOnUtc)"
+                    @submit="({ rowId, value }) => onSubmitDueDate(rowId, value, refreshHelpDeskList)"
+                  />
+                </div>
+                <div v-else>
+                  <div class="row items-center justify-between no-wrap q-pr-xs" style="width: 100px;">
+                    <span class="ellipsis q-ml-xs">
+                      {{ props.row.dueDate || '-' }}
+                    </span>
+                  </div>
+                </div>
+                </q-td>
                 <q-td v-if="selectedColumnNames.includes('createdBy.person.firstName')">{{ props.row.createdBy.person.firstName + " " + props.row.createdBy.person.lastName }}</q-td>
                 <q-td v-if="selectedColumnNames.includes('createdOnUtc')">{{ props.row.createdOnUtc }}</q-td>
                 <q-td v-if="selectedColumnNames.includes('updatedBy.person.firstName')">{{ props.row.updatedBy.person.firstName + " " + props.row.updatedBy.person.lastName }}</q-td>
@@ -523,6 +547,7 @@ import { useQuasar } from "quasar";
 import { notifySuccess } from "assets/utils";
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
+import { format } from "date-fns";
 
 import helpDeskService from "modules/helpdesk/helpDesk.service";
 import addNote from "modules/common/components/addNote.vue";
@@ -533,6 +558,7 @@ import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSele
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
 import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
 import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import quickEditDate from "src/components/dataTable/_quickEditDate.vue";
 
 // Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
@@ -575,6 +601,7 @@ import {
   initHelpDeskActions,
   onSubmitHelpDeskStatus,
   onSubmitAssignedTo,
+  onSubmitDueDate,
   updatingRow
 } from "src/modules/helpdesk/utils/actions.js";
 // ----------------------------------------------------------------------------------------------------------------
@@ -599,6 +626,7 @@ const prefixRef = ref("");
 // const activeRowId = ref(null);
 const activeEdit = ref({ rowId: null, field: null });
 const showSortDialog = ref(false);
+const startDate = ref(format(new Date(), "MM/dd/yyyy"));
 
 const currentSiteId = computed(() => user?.siteId || null);
 // const updatingRow = ref({
@@ -623,6 +651,7 @@ const columns = ref([
   { name: "statusId", label: "Status", field: "statusId", align: "left", sortable: true, default: true },
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true, default: true },
   { name: "assignedTo.person.firstName", label: "Assigned To", field: "assignedTo.person.firstName", align: "left", isEditing: false, sortable: true, default: true },
+  { name: "dueDate", label: "Due Date", field: "dueDate", align: "center", sortable: true, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: false },
   { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: true },
@@ -837,6 +866,26 @@ function onSaveComment(model, comment) {
       refreshGetHelpDesk();
     });
   });
+}
+
+function disableBeforeStartDate (date) {
+  if (!startDate.value) {
+    return true;
+  }
+  const start = new Date(startDate.value);
+  const current = new Date(date);
+  return current >= start;
+}
+
+function disableBeforeCreatedDate(createdOnUtc) {
+  if (!createdOnUtc) {
+    return true;
+  }
+
+  const createdDate = new Date(createdOnUtc);
+  const currentDate = new Date();
+
+  return currentDate >= createdDate;
 }
 // ===========================================================
 // Status Flow

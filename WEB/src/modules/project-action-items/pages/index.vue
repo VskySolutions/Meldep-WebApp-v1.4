@@ -60,19 +60,18 @@
                           />
                         </div>
                       </div>
-                      <div class="row items-center q-mb-sm">
-                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                          <label class="Cutomlabel q-mt-sm fs-13">Assigned To</label>
-                        </div>
-                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
-                          <q-input
-                            v-model="search.assignedTo"
-                            fill-input
-                            class="q-mx-sm w-100 h-auto"
-                            :dense="true"
-                          />
-                        </div>
-                      </div>
+                      <multiSelectDropdown
+                        v-model="search.customerIds"
+                        label="Customer"
+                        :options="customerNameDropdown.list.value"
+                        :filter="customerNameDropdown.filter"
+                      />
+                      <multiSelectDropdown
+                        v-model="search.employeeIds"
+                        label="Employee"
+                        :options="activeEmployeesDropdown.list.value"
+                        :filter="activeEmployeesDropdown.filter"
+                      />
                       <multiSelectDropdown
                         v-model="search.priorityIds"
                         label="Priority"
@@ -263,8 +262,11 @@
                 <q-td v-if="selectedColumnNames.includes('title')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.title }}
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('assignedTo')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                  {{ props.row.assignedTo }}
+                <q-td v-if="selectedColumnNames.includes('customer.name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.customer.name }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('employee.person.fullName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  {{ props.row.employee.person.fullName }}
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('dueDate')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.dueDate }}
@@ -364,6 +366,8 @@ import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectActionItemModule from "src/modules/project-action-items/utils/dropdowns.js";
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
+import employeeModule from "src/modules/employee/utils/dropdowns.js";
+import customerModule from "src/modules/customer/utils/dropdowns.js";
 
 // SOP Change :- Shared Scripts DataTable Features
 import { useColumnManager } from "composables/dataTable/useColumnManager.js";
@@ -414,7 +418,8 @@ const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: true },
   { name: "title", label: "Title", field: "title", align: "left", sortable: true, default: true },
-  { name: "assignedTo", label: "Assigned To", field: "assignedTo", align: "left", sortable: true, default: true },
+  { name: "customer.name", label: "Customer", field: "customer.name", align: "left", sortable: true, default: true },
+  { name: "employee.person.fullName", label: "Employee", field: "employee.person.fullName", align: "left", sortable: true, default: true },
   { name: "dueDate", label: "Due Date", field: "dueDate", align: "left", sortable: true, default: true },
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
@@ -490,7 +495,8 @@ const defaultSearch = {
   priorityIds: [],
   dueDate: "",
   title: "",
-  assignedTo: ""
+  customerIds: [],
+  employeeIds: []
 };
 
 const defaultPagination = {
@@ -610,7 +616,8 @@ const onAdvanceClear = () => {
   search.value.requirementIds = [];
   search.value.priorityIds = [];
   search.value.title = "";
-  search.value.assignedTo = "";
+  search.value.customerIds = [];
+  search.value.employeeIds = [];
   search.value.dueDate = null;
   saveDataTableState({
     search: {
@@ -696,6 +703,8 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
   ...mapFilterToLabel(search.value.priorityIds, projectActionItemPriorityForDropdown.list, "Priority"),
+  ...mapFilterToLabel(search.value.customerIds, customerNameDropdown.list, "Customer"),
+  ...mapFilterToLabel(search.value.employeeIds, activeEmployeesDropdown.list, "Employee"),
   ...(search.value.title ? { "Title": search.value.title } : {}),
   ...(search.value.assignedTo ? { "Assigned To": search.value.assignedTo } : {}),
   ...(search.value.dueDate ? { "Due Date": search.value.dueDate } : {})
@@ -706,6 +715,8 @@ function getFilterCount (key) {
   case "Project Name": return search.value.projectIds?.length || 0;
   case "Requirement": return search.value.requirementIds?.length || 0;
   case "Priority": return search.value.priorityIds?.length || 0;
+  case "Customer": return search.value.customerIds?.length || 0;
+  case "Employee": return search.value.employeeIds?.length || 0;
   default: return null;
   }
 }
@@ -719,8 +730,10 @@ function onClearFilters (key) {
     search.value.priorityIds = [];
   } else if (key === "Title") {
     search.value.title = "";
-  } else if (key === "Assigned To") {
-    search.value.assignedTo = "";
+  } else if (key === "Customer") {
+    search.value.customerIds = [];
+  } else if (key === "Employee") {
+    search.value.employeeIds = [];
   } else if (key === "Due Date") {
     search.value.dueDate = "";
   }
@@ -737,15 +750,15 @@ function onClearFilters (key) {
 // Advance Filter :- All Dropdowns (SOP Change)
 // ------------------------------------------------------------------------------------
 
-const {
-  projectNameDropdown
-} = projectModule();
+const { projectNameDropdown } = projectModule();
 
 const {
   projectActionItemPriorityForDropdown
 } = projectActionItemModule();
 
 const { requirementsByProjectModuleIdForDropdown } = requirementModule();
+const { activeEmployeesDropdown } = employeeModule();
+const { customerNameDropdown } = customerModule();
 
 // Quick Search
 watch(() => search.value.searchText, () => {
@@ -788,6 +801,8 @@ onBeforeUnmount(() => {
 onMounted(async () => {
   refreshProjectActionItemsList();
   projectNameDropdown.load();
+  customerNameDropdown.load();
+  activeEmployeesDropdown.load();
   if (search.value.projectIds.length > 0) requirementsByProjectModuleIdForDropdown.load('', search.value.projectIds);
   await projectActionItemPriorityForDropdown.load("Project Action Item Priority");
   

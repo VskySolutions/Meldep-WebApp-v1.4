@@ -56,7 +56,8 @@ namespace Vsky.Services.ProjectActionItem
             List<string> requirementIds,
             List<string> priorityIds,
             string title,
-            string assignedTo,
+            List<string> customerIds,
+            List<string> employeeIds,
             DateTime? dueDate,
             string sortBy,
             Dictionary<string, string> sorts,
@@ -83,18 +84,46 @@ namespace Vsky.Services.ProjectActionItem
                 query = query.Where(x => x.Title.ToLower().Contains(title));
             }
 
-            if (!string.IsNullOrWhiteSpace(assignedTo))
-            {
-                assignedTo = assignedTo.Trim().ToLower();
-                query = query.Where(x => x.Title.ToLower().Contains(assignedTo));
-            }
+            if (customerIds != null && customerIds.Any())
+                query = query.Where(x => customerIds.Contains(x.CustomerId));
+
+            if (employeeIds != null && employeeIds.Any())
+                query = query.Where(x => employeeIds.Contains(x.EmployeeId));
 
             if (dueDate != null)
-                query = query.Where(a => a.DueDate <= dueDate);
+                query = query.Where(a => a.DueDate == dueDate);
+
+            //if (!string.IsNullOrWhiteSpace(sortBy))
+            //{
+            //    var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+            //    query = query.OrderBy(orderBy);
+            //}
+            //else
+            //{
+            //    query = query.OrderByDescending(x => x.CreatedOnUtc);
+            //}
+
 
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
-                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+                string orderBy;
+                if (sortBy == "employee.person.fullName")
+                {
+                    orderBy = 
+                        $"{GetOrderBy("Employee.Person.FirstName")} {(descending ? "desc" : "asc")}," +
+                        $"{GetOrderBy("Employee.Person.LastName")} {(descending ? "desc" : "asc")}";
+                }
+                else if (sortBy == "customer.name")
+                {
+                    orderBy = 
+                        $"{GetOrderBy("Customer.Company.Name")} {(descending ? "desc" : "asc")}," +
+                        $"{GetOrderBy("Customer.Person.FirstName")} {(descending ? "desc" : "asc")}," +
+                        $"{GetOrderBy("Customer.Person.LastName")} {(descending ? "desc" : "asc")}";
+                }
+                else
+                {
+                    orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+                }
                 query = query.OrderBy(orderBy);
             }
             else
@@ -110,16 +139,61 @@ namespace Vsky.Services.ProjectActionItem
                        m.Requirement.Title.ToLower().Contains(SearchText.ToLower()) ||
                        m.Priority.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
                        m.Title.ToLower().Contains(SearchText.ToLower()) ||
-                       m.AssignedTo.ToLower().Contains(SearchText.ToLower()) ||
+                        (m.Customer.Company.Employee.Person.FirstName.Contains(SearchText.ToLower()) || m.Customer.Company.Employee.Person.LastName.Contains(SearchText.ToLower())) ||
+                        m.Customer.Company.Name.Contains(SearchText.ToLower()) ||
+                        (m.Employee.Person.FirstName.Contains(SearchText.ToLower()) || m.Employee.Person.LastName.Contains(SearchText.ToLower())) ||
                        m.Description.ToLower().Contains(SearchText.ToLower()) ||
                        m.DueDate == parsedDate.Date
                 );
             }
 
             // Apply multi-level dictionary sorting
+            //if (sorts != null && sorts.Count > 0)
+            //{
+            //    query = _commonService.ApplySorting(query, sorts);
+            //}
             if (sorts != null && sorts.Count > 0)
             {
-                query = _commonService.ApplySorting(query, sorts);
+                // Customer sorting
+                if (sorts.TryGetValue("customer.name", out var customerDirection))
+                {
+                    bool customerDesc = customerDirection == "desc";
+
+                    query = customerDesc
+                        ? query.OrderByDescending(x =>
+                            x.Customer.Company != null
+                                ? x.Customer.Company.Name
+                                : x.Customer.Person.FirstName + " " +
+                                  x.Customer.Person.LastName)
+                        : query.OrderBy(x =>
+                            x.Customer.Company != null
+                                ? x.Customer.Company.Name
+                                : x.Customer.Person.FirstName + " " +
+                                  x.Customer.Person.LastName);
+
+                    // Remove from generic sorting
+                    sorts.Remove("customer.name");
+                }
+
+                // Employee sorting
+                if (sorts.TryGetValue("employee.person.fullName", out var employeeDirection))
+                {
+                    bool employeeDesc = employeeDirection == "desc";
+
+                    query = employeeDesc
+                             ? query.OrderByDescending(x => x.Employee.Person.FirstName)
+                                 .ThenByDescending(x => x.Employee.Person.LastName)
+                             : query.OrderBy(x => x.Employee.Person.FirstName)
+                                 .ThenBy(x => x.Employee.Person.LastName);
+
+                    // Remove from generic sorting
+                    sorts.Remove("employee.person.fullName");
+                }
+
+                if (sorts.Any())
+                {
+                    query = _commonService.ApplySorting(query, sorts);
+                }
             }
 
             var notesQuery = _notesRepository.TableNoTracking.Where(n => !n.Deleted && n.Type == "ProjectActionItems");
@@ -131,7 +205,8 @@ namespace Vsky.Services.ProjectActionItem
                 PriorityId = x.PriorityId,
                 Title = x.Title,
                 Description = x.Description,
-                AssignedTo = x.AssignedTo,
+                CustomerId = x.CustomerId,
+                EmployeeId = x.EmployeeId,
                 DueDate = x.DueDate,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
@@ -149,6 +224,22 @@ namespace Vsky.Services.ProjectActionItem
                 {
                     Id = x.Priority.Id,
                     DropDownValue = x.Priority.DropDownValue
+                },
+                Employee = new Employee
+                {
+                    Id = x.Employee.Id,
+                    Person = new Person
+                    {
+                        Id = x.Employee.Person.Id,
+                        FullName = x.Employee.Person.FirstName + " " + x.Employee.Person.LastName
+                    }
+                },
+                Customer = new CompanyClients
+                {
+                    Id = x.Customer.Id,
+                    Name = x.Customer.Company != null ? x.Customer.Company.Name : string.Join(" ", x.Customer.Person.FirstName, x.Customer.Person.LastName).Trim(),
+                    PersonId = x.Customer.PersonId,
+                    CompanyId = x.Customer.CompanyId
                 },
                 CreatedBy = new ApplicationUser
                 {
@@ -195,7 +286,8 @@ namespace Vsky.Services.ProjectActionItem
                 PriorityId = x.PriorityId,
                 Title = x.Title,
                 Description = x.Description,
-                AssignedTo = x.AssignedTo,
+                EmployeeId = x.EmployeeId,
+                CustomerId = x.CustomerId,
                 DueDate = x.DueDate,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
@@ -213,6 +305,22 @@ namespace Vsky.Services.ProjectActionItem
                 {
                     Id = x.Priority.Id,
                     DropDownValue = x.Priority.DropDownValue
+                },
+                Employee = new Employee
+                {
+                    Id = x.Employee.Id,
+                    Person = new Person
+                    {
+                        Id = x.Employee.Person.Id,
+                        FullName = x.Employee.Person.FirstName + " " + x.Employee.Person.LastName
+                    }
+                },
+                Customer = new CompanyClients
+                {
+                    Id = x.Customer.Id,
+                    Name = x.Customer.Company != null ? x.Customer.Company.Name : string.Join(" ", x.Customer.Person.FirstName, x.Customer.Person.LastName).Trim(),
+                    PersonId = x.Customer.PersonId,
+                    CompanyId = x.Customer.CompanyId
                 },
                 CreatedBy = new ApplicationUser
                 {

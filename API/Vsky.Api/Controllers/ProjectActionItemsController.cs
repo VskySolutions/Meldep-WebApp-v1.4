@@ -74,7 +74,8 @@ namespace Vsky.Api.Controllers
                     searchModel.RequirementIds,
                     searchModel.PriorityIds,
                     searchModel.Title,
-                    searchModel.AssignedTo,
+                    searchModel.CustomerIds,
+                    searchModel.EmployeeIds,
                     searchModel.DueDate,
                     searchModel.SortBy,
                     searchModel.Sorts,
@@ -107,17 +108,6 @@ namespace Vsky.Api.Controllers
                 var entity = await _projectActionItemsService.GetProjectActionItemById(id);
                 if (entity == null)
                     return BadRequest(new BadRequestError("No project action item found with the specified id."));
-
-                //var model = new ProjectActionItems
-                //{
-                //    ProjectId = entity.ProjectId,
-                //    RequirementId = entity.RequirementId,
-                //    PriorityId = entity.PriorityId,
-                //    Title = entity.Title,
-                //    Description = entity.Description,
-                //    AssignedTo = entity.AssignedTo,
-                //    DueDate = entity.DueDate
-                //};
 
                 return Ok(entity);
             }
@@ -167,9 +157,10 @@ namespace Vsky.Api.Controllers
                         exists.ProjectId = model.ProjectId;
                         exists.RequirementId = model.RequirementId;
                         exists.PriorityId = model.PriorityId;
+                        exists.CustomerId = model.CustomerId;
+                        exists.EmployeeId = model.EmployeeId;
                         exists.Title = model.Title;
                         exists.Description = model.Description;
-                        exists.AssignedTo = model.AssignedTo;
                         exists.DueDate = model.DueDate;
 
                         exists.UpdatedOnUtc = GetDateTime;
@@ -190,9 +181,10 @@ namespace Vsky.Api.Controllers
                             ProjectId = model.ProjectId,
                             RequirementId = !string.IsNullOrEmpty(model.RequirementId) ? model.RequirementId : null,
                             PriorityId = !string.IsNullOrEmpty(model.PriorityId) ? model.PriorityId : null,
+                            CustomerId = !string.IsNullOrEmpty(model.CustomerId) ? model.CustomerId : null,
+                            EmployeeId = !string.IsNullOrEmpty(model.EmployeeId) ? model.EmployeeId : null,
                             Title = !string.IsNullOrEmpty(model.Title) ? model.Title : null,
                             Description = !string.IsNullOrEmpty(model.Description) ? model.Description : null,
-                            AssignedTo = !string.IsNullOrEmpty(model.AssignedTo) ? model.AssignedTo : null,
                             DueDate = model.DueDate,
 
                             CreatedOnUtc = GetDateTime,

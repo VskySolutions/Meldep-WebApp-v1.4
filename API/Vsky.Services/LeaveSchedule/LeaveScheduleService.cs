@@ -107,9 +107,15 @@ namespace Vsky.Services.LeaveSchedule
             return list;
         }
 
-        public async Task<LeaveSchedules> GetLeaveScheduleByDate(string SiteId, DateTime? Date)
+        public async Task<LeaveSchedules> GetLeaveScheduleByDate(string SiteId, DateTime? Date, string id = null)
         {
             var query = _leaveSchedulesRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.Date == Date.Value.Date);
+
+            if (!string.IsNullOrEmpty(id))
+            {
+                query = query.Where(x => x.Id != id);
+            }
+
             var item = await query.FirstOrDefaultAsync();
             return item;
         }

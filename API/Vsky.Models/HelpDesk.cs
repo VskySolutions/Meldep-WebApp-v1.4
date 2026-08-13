@@ -51,6 +51,7 @@ public class HelpDesk : BaseEntity
     public string Title { get; set; }
     public string Description { get; set; }
     public int AverageDurationInMinutes { get; set; }
+    public DateTime? DueDate { get; set; }
     public DateTime? CreatedOnUtc { get; set; }
     public string CreatedById { get; set; }
     public DateTime? UpdatedOnUtc { get; set; }

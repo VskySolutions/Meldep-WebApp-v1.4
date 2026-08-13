@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AngleSharp.Css;
 using AngleSharp.Dom;
 using AutoMapper;
 using Ganss.Xss;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.PowerBI.Api.Models;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
@@ -1231,6 +1233,29 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region UpdateDueDate
+        [HttpPut("due-date/{id}/{dueDate}")]
+        public async Task<IActionResult> UpdateDueDate(string id, string dueDate)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    //var endDate = dueDate.Replace("-", "/");
+                    //bool IsDueDateChanged = !string.IsNullOrEmpty(endDate) && DateTime.ParseExact(endDate, "MM/dd/yyyy", null) != dueDate;
+
+                    bool result = await UpdateHelpDeskDetails(id, dueDate, "dueDate");
+                    return NoContent();
+                }
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region AddorUpdateHelpDeskStatusComment
         //created for update HelpDesk Status Comment from list page
         [HttpPut("comment/{id}")]
@@ -1929,6 +1954,15 @@ namespace Vsky.Api.Controllers
                 case "company":
                     if (data is string companyId)
                         entity.CompanyId = companyId;
+                    break;
+
+                case "duedate":
+                    if (data is string dueDate)
+                    {
+                        var endDate = dueDate.Replace("-", "/");
+                        //bool IsDueDateChanged = !string.IsNullOrEmpty(endDate) && DateTime.ParseExact(endDate, "MM/dd/yyyy", null) != entity.DueDate;
+                        entity.DueDate = DateTime.ParseExact(endDate, "MM/dd/yyyy", null);
+                    }
                     break;
 
                 default:

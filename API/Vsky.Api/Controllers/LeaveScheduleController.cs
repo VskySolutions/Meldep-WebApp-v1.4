@@ -202,7 +202,7 @@ namespace Vsky.Api.Controllers
                     if (entity == null)
                         return BadRequest(new BadRequestError("No leave found with the specified id."));
 
-                    var exist = _leaveScheduleService.GetLeaveScheduleByDate(SiteId, model.Date);
+                    var exist = _leaveScheduleService.GetLeaveScheduleByDate(SiteId, model.Date, id);
                     if (exist.Result != null)
                         return BadRequest(new BadRequestError("Cann't add more than one leave on the same date"));
 

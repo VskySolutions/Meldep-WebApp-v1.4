@@ -19,6 +19,7 @@ using Vsky.Services.AzureBlobImage;
 using Vsky.Services.Common;
 using Vsky.Services.DropDowns;
 using Vsky.Services.DropDownTypes;
+using Vsky.Services.HelpDesks;
 using Vsky.Services.Messages;
 using Vsky.Services.Module;
 using Vsky.Services.Notifications;
@@ -61,6 +62,7 @@ namespace Vsky.Api.Controllers
         private readonly IAzureBlobImageServices _azureBlobImageServices;
         private readonly ITimeZoneService _timeZoneServices;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
+        private readonly IHelpDeskTopicService _helpDeskTopicService;
         #endregion
 
         #region Services initialization
@@ -87,7 +89,8 @@ namespace Vsky.Api.Controllers
              IMasterNotificationService masterNotificationService,
              IAzureBlobImageServices azureBlobImageServices,
             ITimeZoneService timeZoneServices,
-            IApplicationUserRoleService applicationUserRoleService
+            IApplicationUserRoleService applicationUserRoleService,
+            IHelpDeskTopicService helpDeskTopicService
         )
         {
             _globalVariable = globalVariable;
@@ -113,6 +116,7 @@ namespace Vsky.Api.Controllers
             _azureBlobImageServices = azureBlobImageServices;
             _timeZoneServices = timeZoneServices;
             _applicationUserRoleService = applicationUserRoleService;
+            _helpDeskTopicService = helpDeskTopicService;
         }
         #endregion
 
@@ -865,6 +869,7 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GenerateDropdown
         [HttpPut("generateDropdown/{id}")]
         public async Task<IActionResult> GenerateDropdown(string id)
         {
@@ -947,7 +952,9 @@ namespace Vsky.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        #endregion
 
+        #region GenerateMasterNotifications
         [HttpPut("generateMasterNotifications/{siteId}")]
         public async Task<IActionResult> GenerateMasterNotifications(string siteId)
         {
@@ -984,7 +991,9 @@ namespace Vsky.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        #endregion
 
+        #region GetSiteModifiedLogsById
         [HttpGet]
         public async Task<IActionResult> GetSiteModifiedLogsById(string subModuleId, string columnNames)
         {
@@ -1014,6 +1023,88 @@ namespace Vsky.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        #endregion
+
+        #region GenerateHelpDeskWorkspaceAndArea
+        [HttpPut("generateHelpDeskWorkspaceAndArea/{id}")]
+        public async Task<IActionResult> GenerateHelpDeskWorkspaceAndArea(string id)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    // Fetch the site entity by its ID
+                    var entity = await _siteService.GetById(id);
+                    var LoggedUserId = User.GetLoggedInUserId<string>();
+                    var GetDateTime = _siteService.GetDateTime(entity.TimeZone);
+
+                    // If no site is found with the given ID, return a bad request with an error message
+                    if (entity == null)
+                        return BadRequest(new BadRequestError("No site with the specified id."));
+
+                    var vskySite = await _siteService.GetBySiteName("Vsky Solutions");
+                    if (vskySite == null)
+                        return BadRequest(new BadRequestError("Vsky Solutions site not found."));
+
+                    var masterWorkspaceList = await _helpDeskTopicService.GetAllHelpDeskTopicListBySiteId(vskySite.Id);
+                    var masterAreaList = await _helpDeskTopicService.GetAllHelpDeskQuestions();
+
+                    var existingWorkspaceList = await _helpDeskTopicService.GetAllHelpDeskTopicListBySiteId(entity.Id);
+                    foreach (var masterWorkspace in masterWorkspaceList)
+                    {
+                        // Check workspace already exists
+                        var isWorkspaceExists = existingWorkspaceList.Any(x => x.Title == masterWorkspace.Title);
+
+                        // Skip existing workspace and its values
+                        if (isWorkspaceExists)
+                            continue;
+
+                        var helpDeskTopic = new HelpDeskTopic
+                        {
+                            SiteId = entity.Id,
+                            Title = masterWorkspace.Title,
+                            Description = masterWorkspace.Description,
+                            IsActive = masterWorkspace.IsActive,
+                            CreatedById = LoggedUserId,
+                            UpdatedById = LoggedUserId,
+                            CreatedOnUtc = GetDateTime,
+                            UpdatedOnUtc = GetDateTime
+                        };
+                        _helpDeskTopicService.InsertHelpDeskTopic(helpDeskTopic);
+
+                        var masterAreaValues = masterAreaList.Where(x => x.TopicId == masterWorkspace.Id).ToList();
+                        foreach (var masterAreaValue in masterAreaValues)
+                        {
+                            var helpDeskTopicQuestions = new HelpDeskTopicQuestions
+                            {
+                                TopicId = masterWorkspace.Id,
+                                Question = masterAreaValue.Question,
+                                Description = masterAreaValue.Description,
+                                IsActive = masterAreaValue.IsActive,
+                                CreatedById = LoggedUserId,
+                                UpdatedById = LoggedUserId,
+                                CreatedOnUtc = GetDateTime,
+                                UpdatedOnUtc = GetDateTime
+                            };
+                            _helpDeskTopicService.InsertHelpDeskQuestion(helpDeskTopicQuestions);
+                        }
+                    }
+
+                    entity.IsWorkspaceAreaGenerated = !entity.IsWorkspaceAreaGenerated;
+                    entity.UpdatedById = LoggedUserId;
+                    entity.UpdatedOnUtc = GetDateTime;
+                    _siteService.UpdateSite(entity);
+
+                    return NoContent();
+                }
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
 
         #region Private methhods 
         private string GenerateTicketPrefix(string siteName)

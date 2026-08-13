@@ -30,6 +30,10 @@ export default {
   updateAssignedTo (id, assignedToId) {
     return http.put(`/help-desk/assignedTo/${id}/${assignedToId}`).then(response => response.data);
   },
+  updateDueDate (id, dueDate) {
+    const endDate = dueDate.replace(/\//g, "-");
+    return http.put(`/help-desk/due-date/${id}/${endDate}`).then(response => response.data);
+  },
   addorUpdateHelpDeskStatusComment (id, model) {
     return http.put(`/help-desk/comment/${id}`, model).then(response => response.data);
   },

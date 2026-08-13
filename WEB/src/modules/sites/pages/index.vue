@@ -135,6 +135,9 @@
               <q-icon name="o_notification_add" class="cursor-pointer q-mr-sm" size="xs" @click="generateMasterNotifications(props.row.id)">
                 <q-tooltip>Generate Master Notifications</q-tooltip>
               </q-icon>
+              <q-icon name="o_playlist_add_check" class="cursor-pointer q-mr-sm" size="xs" @click="generateHelpDeskWorkspaceAndArea(props.row.id)">
+                <q-tooltip>Generate Helpdesk Workspace and Area</q-tooltip>
+              </q-icon>
               <q-icon v-if="props.row.isDropdownGenerated" name="o_manage_accounts" class="cursor-pointer q-mr-sm" size="xs" @click="$router.push({path: 'sites/site-menu-role-permissions', state: { siteId: props.row.id } } )">
                 <q-tooltip>Menu Permissions</q-tooltip>
                 <q-tooltip>{{ props.row.isDropdownGenerated ? '' : 'Please Generate Dropdown First' }}</q-tooltip>
@@ -315,6 +318,21 @@ const generateDropdown = (id) => {
   }).onOk(() => {
     siteService.generateDropdown(id).then(() => {
       notifySuccess({ message: "Dropdowns generated successfully." });
+      getSites({ pagination: pagination.value });
+    });
+  });
+};
+
+const generateHelpDeskWorkspaceAndArea = (id) => {
+  $q.dialog({
+    title: "Confirm",
+    message: "Do you want to generate Helpdesk Workspaces and Areas?",
+    ok: { label: "Yes", color: "primary" },
+    cancel: { label: "No", color: "negative" },
+    persistent: true
+  }).onOk(() => {
+    siteService.generateHelpDeskWorkspaceAndArea(id).then(() => {
+      notifySuccess({ message: "Helpdesk Workspaces and Areas generated successfully." });
       getSites({ pagination: pagination.value });
     });
   });

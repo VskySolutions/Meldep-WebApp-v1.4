@@ -334,12 +334,21 @@
                     </div>
                   </div>
                   <div class="col-12 col-sm-6 col-md-4">
+                    <div class="q-mb-xs">Due Date
+                      <div class="text-black">
+                        {{ model.dueDate }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-4">
                     <div class="q-mb-xs">Created Date
                       <div class="text-black">
                         {{ model.createdOnUtc }}
                       </div>
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-4">
                     <div class="q-mb-xs">Created By
                       <div class="text-black">
@@ -347,8 +356,6 @@
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-4">
                     <div class="q-mb-xs">Updated Date
                       <div class="text-black">
@@ -632,6 +639,7 @@ const model = ref({
   priorityId: "",
   sitePrefix: "",
   assignedToCount: "",
+  dueDate: "",
   company: {
     name: ""
   },

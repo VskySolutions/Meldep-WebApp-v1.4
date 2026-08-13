@@ -48,6 +48,14 @@ namespace Vsky.Services.HelpDesks
         Task<HelpDeskTopicQuestions> GetHelpDeskQuestionById(string id);
         #endregion
 
+        #region GetAllHelpDeskTopicListBySiteId
+        Task<List<HelpDeskTopic>> GetAllHelpDeskTopicListBySiteId(string SiteId);
+        #endregion
+
+        #region GetAllHelpDeskQuestions
+        Task<IList<HelpDeskTopicQuestions>> GetAllHelpDeskQuestions();
+        #endregion
+
         #region GetHelpDeskTopicByTitle
         Task<HelpDeskTopic> GetHelpDeskTopicByTitle(string SiteId, string title, string id = null);
         #endregion

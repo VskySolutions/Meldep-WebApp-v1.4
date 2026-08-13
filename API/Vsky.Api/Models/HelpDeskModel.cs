@@ -28,6 +28,7 @@ namespace Vsky.Api.Models
         public string Description { get; set; }
         public int AverageDurationInMinutes { get; set; }
         public string AverageDurationText { get; set; }
+        public DateTime? DueDate { get; set; }
 
         public List<IFormFile> HelpDeskFiles { get; set; }
         public List<string> ExistingFiles { get; set; }
@@ -75,6 +76,7 @@ namespace Vsky.Api.Models
         public string AssignedToId { get; set; }
         public DateTime? TicketFromDate { get; set; }
         public DateTime? TicketToDate { get; set; }
+        public DateTime? DueDate { get; set; }
         public List<string> EmployeeIds { get; set; }
         public List<string> EmployeeEmails { get; set; }
         public List<string> StatusIds { get; set; }

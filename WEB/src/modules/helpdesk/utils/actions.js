@@ -49,7 +49,27 @@ export const onSubmitAssignedTo = async (id, assignedToId, refreshHelpDeskList, 
       }
     );
   } catch (error) {
-    sendError("Error updating test case status", error);
+    sendError("Error updating Assigned To", error);
+  } finally {
+    activeRowId.value = id;
+  }
+};
+
+// Update DueDate
+export const onSubmitDueDate = async (id, dueDate, refreshHelpDeskList) => {
+  try {
+    return withRowLoader(
+      "dueDate",
+      id,
+      () => helpDeskService.updateDueDate(id, dueDate),
+      "Due Date updated successfully.",
+      "Failed to update due date.",
+      async () => {
+        refreshHelpDeskList();
+      }
+    );
+  } catch (error) {
+    sendError("Error updating due date", error);
   } finally {
     activeRowId.value = id;
   }
@@ -133,7 +153,7 @@ export const onSubmitHelpDeskStatusFormLoader = async (id, statusId, refreshHelp
       }
     );
   } catch (error) {
-    sendError("Error updating test case status", error);
+    sendError("Error updating status", error);
   } finally {
     activeRowId.value = id;
   }
@@ -153,7 +173,7 @@ export const onSubmitHelpDeskPriorityFormLoader = async (id, priorityId, refresh
       }
     );
   } catch (error) {
-    sendError("Error updating test case status", error);
+    sendError("Error updating priority", error);
   } finally {
     activeRowId.value = id;
   }
@@ -165,8 +185,8 @@ export const onSubmitAssignedToFormLoader = async (id, assignedToId, refreshHelp
     return withFormLoader(
       "assignedTo",
       () => helpDeskService.updateAssignedTo(id, assignedToId),
-      "Assignment updated successfully.",
-      "Failed to update assignment.",
+      "Assigned To updated successfully.",
+      "Failed to update Assigned To.",
       async () => {
         refreshHelpDeskList();
         refreshGetHelpDesk();
@@ -174,7 +194,27 @@ export const onSubmitAssignedToFormLoader = async (id, assignedToId, refreshHelp
       }
     );
   } catch (error) {
-    sendError("Error updating test case status", error);
+    sendError("Error updating Assigned To", error);
+  } finally {
+    activeRowId.value = id;
+  }
+};
+
+// Update HelpDesk DueDate
+export const onSubmitHelpDeskDueDateFormLoader = async (id, dueDate, refreshHelpDeskList, refreshGetHelpDesk) => {
+  try {
+    return withFormLoader(
+      "dueDate",
+      () => helpDeskService.updateDueDate(id, dueDate),
+      "Due date updated successfully.",
+      "Failed to update due date.",
+      async () => {
+        refreshGetHelpDesk();
+        refreshHelpDeskList();
+      }
+    );
+  } catch (error) {
+    sendError("Error updating due date", error);
   } finally {
     activeRowId.value = id;
   }

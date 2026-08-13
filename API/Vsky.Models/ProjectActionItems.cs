@@ -21,7 +21,8 @@ namespace Vsky.Models
         public string PriorityId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public string AssignedTo { get; set; }
+        public string CustomerId { get; set; }
+        public string EmployeeId { get; set; }
         public DateTime? DueDate { get; set; }
 
         public string CreatedById { get; set; }
@@ -37,6 +38,8 @@ namespace Vsky.Models
         public virtual Project Project { get; set; }
         public virtual Requirement Requirement { get; set; }
         public DropDown Priority { get; set; }
+        public CompanyClients Customer { get; set;  }
+        public Employee Employee { get; set;  }
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }
     }
@@ -48,7 +51,8 @@ namespace Vsky.Models
         public string PriorityId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public string AssignedTo { get; set; }
+        public string CustomerId { get; set; }
+        public string EmployeeId { get; set; }
         public DateTime? DueDate { get; set; }
         public bool Deleted { get; set; }
     }

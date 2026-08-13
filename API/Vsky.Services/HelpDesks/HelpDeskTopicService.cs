@@ -226,6 +226,24 @@ namespace Vsky.Services.HelpDesks
         }
         #endregion
 
+        #region GetAllHelpDeskTopicListBySiteId
+        public async Task<List<HelpDeskTopic>> GetAllHelpDeskTopicListBySiteId(string SiteId)
+        {
+            var query = _helpDeskTopicRepository.TableNoTracking.Where(x => !x.Deleted && x.IsActive && x.SiteId == SiteId);
+            var list = await query.ToListAsync();
+            return list;
+        }
+        #endregion
+
+        #region GetAllHelpDeskQuestions
+        public async Task<IList<HelpDeskTopicQuestions>> GetAllHelpDeskQuestions()
+        {
+            var query = _helpDeskTopicQuestionsRepository.TableNoTracking.Where(x => !x.Deleted && !x.HelpDeskTopic.Deleted);
+            var list = await query.OrderBy(x => x.HelpDeskTopic.Title).ToListAsync();
+            return list;
+        }
+        #endregion
+
         #region GetHelpDeskTopicByTitle
         // Title: GetHelpDeskTopicByTitle
         // Description: This method retrieves a help desk topic based on its title. It allows an optional exclusion of a  help desk topic by its ID, which can be useful for scenarios like checking for duplicates. while excluding a specific help desk topic. The method returns the first matching help desk topic or null if no match is found.
@@ -274,7 +292,6 @@ namespace Vsky.Services.HelpDesks
         }
         #endregion
 
-
         #region UpdateHelpDeskTopic
         // Title: UpdateHelpDeskTopic
         // Description: This method updates the specified help desk topic entity in the repository. It takes a help desk topic object as input and uses the repository's Update method to persist changes to the data source.
@@ -292,7 +309,6 @@ namespace Vsky.Services.HelpDesks
             _helpDeskTopicQuestionsRepository.Update(entity);
         }
         #endregion
-
 
         #region DeleteHelpDeskTopic
         // Title: DeleteHelpDeskTopic

@@ -54,6 +54,9 @@ export default {
   generateMasterNotifications (siteId) {
     return http.put(`/Sites/generateMasterNotifications/${siteId}`).then(response => response.data);
   },
+  generateHelpDeskWorkspaceAndArea (id) {
+    return http.put(`/Sites/generateHelpDeskWorkspaceAndArea/${id}`).then(response => response.data);
+  },
   getSiteModifiedLogs (id, columnNames) {
     return http.get(`/Sites/?subModuleId=${id}&columnNames=${columnNames}`).then(response => response.data);
   },

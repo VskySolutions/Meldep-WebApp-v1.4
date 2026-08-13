@@ -12,7 +12,7 @@ namespace Vsky.Services.LeaveSchedule
         Task<IList<LeaveSchedules>> GetAllLeaveEvents(string SiteId, DateTime? weekStartDate, DateTime? weekEndDate);
         Task<LeaveSchedules> GetLeaveEventById(string SiteId, string id);
         Task<LeaveSchedules> GetLeaveEventDetailsById(string id);
-        Task<LeaveSchedules> GetLeaveScheduleByDate(string SiteId, DateTime? Date);
+        Task<LeaveSchedules> GetLeaveScheduleByDate(string SiteId, DateTime? Date, string id = null);
         Task<List<LeaveSchedules>> GetEmployeeLeaveListForDashboard(string SiteId, DateTime GetDateTime);
 
         void InsertLeaveEvent(LeaveSchedules entity);

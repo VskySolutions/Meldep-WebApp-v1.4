@@ -51,16 +51,26 @@
                 </div>
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
-                <div class="col-12 col-sm-4 col-md-4">
-                  <label class="label q-mb-xs text-black">Assign To</label>
-                  <q-input
-                    v-model="model.assignedTo"
-                    outlined
-                    stack-label
-                    hide-bottom-space
-                    :dense="true"
+                <div class="col-12 col-sm-6 col-md-6">
+                  <formSingleSelectDropdown
+                    v-model="model.customerId"
+                    label="Customer"
+                    :required="false"
+                    :options="customerDropdownSingleSelect.list.value"
+                    :filter="customerDropdownSingleSelect.filter"
                   />
                 </div>
+                <div class="col-12 col-sm-6 col-md-6">                  
+                  <formSingleSelectDropdown
+                    v-model="model.employeeId"
+                    label="Employee"
+                    :required="false"
+                    :options="activeEmployeesDropdownSingleSelect.list.value"
+                    :filter="activeEmployeesDropdownSingleSelect.filter"
+                  />
+                </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-4 col-md-4">
                   <formSingleSelectDropdown
                     v-model="model.priorityId"
@@ -122,6 +132,8 @@ import projectActionItemsService from "modules/project-action-items/projectActio
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectActionItemModule from "src/modules/project-action-items/utils/dropdowns.js";
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
+import employeeModule from "src/modules/employee/utils/dropdowns.js";
+import customerModule from "src/modules/customer/utils/dropdowns.js";
 
 // Shared Inputs
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
@@ -189,7 +201,8 @@ const model = ref({
   requirementId: "",
   title: "",
   description: "",
-  assignedTo: "",
+  customerId: "",
+  employeeId: "",
   priorityId: "",
   dueDate: format(new Date(), "MM/dd/yyyy")
 });
@@ -236,6 +249,8 @@ const getProjectActionItemDetailsById = async () => {
 const { projectNameDropdownSingleSelect } = projectModule();
 const { projectActionItemPrioritySingleSelect } = projectActionItemModule();
 const { requirementByProjectModuleIdForDropdownSingleSelect } = requirementModule();
+const { customerDropdownSingleSelect } = customerModule();
+const { activeEmployeesDropdownSingleSelect } = employeeModule();
 
 function disableOption (option) {
   return option.text && option.text.toLowerCase() === "reopen";
@@ -274,7 +289,7 @@ watch(
   () => model.value.projectId,
   async (newValue) => {
     if (!isInitializing.value) {
-      model.value.requirementId = null;
+      model.value.requirementId = "";
     }
     if (!newValue) return;
 
@@ -288,13 +303,13 @@ watch(
 
 onMounted(async () => {
   await projectActionItemPrioritySingleSelect.load("Project Action Item Priority");
-  requirementByProjectModuleIdForDropdownSingleSelect.load();
+  requirementByProjectModuleIdForDropdownSingleSelect.load();  
+  customerDropdownSingleSelect.load();
+  activeEmployeesDropdownSingleSelect.load();
 
   // selected values
   await projectNameDropdownSingleSelect.load();
-
   const projectIds = searchStorage?.search?.projectIds || [];
-
   if (projectIds.length) {
     selectedProjectId =
       projectIds.find(id =>
@@ -309,7 +324,6 @@ onMounted(async () => {
   if (mediumPriority && props.id === "") {
     model.value.priorityId = mediumPriority;
   }
-
 });
 
 </script>

@@ -757,6 +757,27 @@
                       </div>
                     </div>
                     <div class="q-px-sm q-pb-sm">
+                      <div class="text-primary q-mb-xs">Due Date:</div>
+                      <div
+                        v-if="isRoleAdminOrSupport && !['Closed','Cancelled'].includes(model.statusText)"
+                        class="flex items-center common-q-td"
+                        :class="{ 'hoverable-cell' : model.id }"
+                        @click="activeEdit = { rowId: model.id, field: 'dueDate' }"
+                      >
+                        <quickEditDate
+                          :row-id="model.id"
+                          :model-value="model.dueDate"
+                          :editable="model.id"
+                          :show-history="false"
+                          :options="disableBeforeCreatedDate(model.createdOnUtc)"
+                          @submit="({ rowId, value }) => onSubmitHelpDeskDueDateFormLoader(rowId, value, refreshHelpDeskList, refreshGetHelpDesk)"
+                        />
+                      </div>
+                      <div v-else>                        
+                        <span>{{ model.dueDate ? model.dueDate : '-' }}</span>
+                      </div>
+                    </div>
+                    <div class="q-px-sm q-pb-sm">
                       <span class="text-primary q-mr-xs">Description:
                         <q-icon
                           name="o_fullscreen"
@@ -816,6 +837,7 @@ import addNote from "modules/common/components/addNote.vue";
 // Shared DataTable Views
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
 import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSelect.vue";
+import quickEditDate from "src/components/dataTable/_quickEditDate.vue";
 
 // Shared DataTable Features
 import useSiteTableState from "composables/dataTable/useSiteTableState.js";
@@ -843,6 +865,7 @@ import {
   onSubmitHelpDeskStatusFormLoader,
   onSubmitHelpDeskPriorityFormLoader,
   onSubmitAssignedToFormLoader,
+  onSubmitHelpDeskDueDateFormLoader,
   formLoading
 } from "src/modules/helpdesk/utils/actions.js";
 
@@ -934,6 +957,8 @@ const model = ref({
   assignedToId: "",
   priorityId: "",
   twilioEmailId: "",
+  createdOnUtc: "",
+  dueDate: "",
   employee: {
     person: {
       fullName: "",
@@ -1052,6 +1077,17 @@ const getHelpDesk = (id) => {
     loading.value = false;
   });
 };
+
+function disableBeforeCreatedDate(createdOnUtc) {
+  if (!createdOnUtc) {
+    return true;
+  }
+
+  const createdDate = new Date(createdOnUtc);
+  const currentDate = new Date();
+
+  return currentDate >= createdDate;
+}
 
 function onSaveComment(model, comment) {
   const trimmedComment = comment?.trim() ?? "";

@@ -11,7 +11,8 @@ namespace Vsky.Api.Models
         public List<string> RequirementIds { get; set; }
         public List<string> PriorityIds { get; set; }
         public string Title { get; set; }
-        public string AssignedTo { get; set; }
+        public List<string> CustomerIds { get; set; }
+        public List<string> EmployeeIds { get; set; }
         public DateTime? DueDate { get; set; }
     }
 }

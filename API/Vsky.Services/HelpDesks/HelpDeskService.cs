@@ -297,8 +297,7 @@ namespace Vsky.Services.HelpDesks
                 UpdatedOnUtc = x.UpdatedOnUtc,
                 UpdatedById = x.UpdatedById,
                 SiteId = x.SiteId,
-                //CreatedDateStr = x.CreatedOnUtc.ToString("MM/dd/yyyy hh:mm:ss"),
-                //UpdatedDateStr = x.UpdatedOnUtc.ToString("MM/dd/yyyy hh:mm tt"),
+                DueDate = x.DueDate,
                 Employee = new Employee
                 {
                     Id = x.Employee.Id,
@@ -484,8 +483,7 @@ namespace Vsky.Services.HelpDesks
                 ClosingComment = x.ClosingComment,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
-                //CreatedDateStr = x.CreatedOnUtc.ToString("MM/dd/yyyy hh:mm tt"),
-                //UpdatedDateStr = x.UpdatedOnUtc.ToString("MM/dd/yyyy hh:mm tt"),
+                DueDate = x.DueDate,
                 Employee = new Employee
                 {
                     Id = x.Employee.Id,
