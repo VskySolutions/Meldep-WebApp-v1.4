@@ -1380,7 +1380,7 @@
                                     </div>
                                 </q-popup-edit>
                                 </q-td>
-                                <q-td class="text-right" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 10px !important;" @click="LoadTaskActivities(props.row.id)">
+                                <q-td class="text-right" style="overflow-wrap: break-word; word-wrap: break-word; width: 10px !important;" @click="LoadTaskActivities(props.row.id)">
                                   <span v-if="!isPAChecked">{{ props.row.estimateTime }} / {{ props.row.totalActivityHours }}</span>
                                   <span v-else>{{ props.row.estimateTime }} / {{ props.row.totalCloseActivityHours }} / </span>
                                 </q-td>

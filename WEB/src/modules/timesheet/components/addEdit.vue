@@ -599,10 +599,7 @@ const getTimesheet = async () => {
       });
     }
     timesheetRows.value = rows;
-    // Calculate total hours
-    totalHours.value = rows.reduce((acc, row) => {
-      return acc + (parseFloat(row.hours) || 0);
-    }, 0);
+
   } catch (error) {
     console.error("Error loading Timesheet:", error);
   } finally {

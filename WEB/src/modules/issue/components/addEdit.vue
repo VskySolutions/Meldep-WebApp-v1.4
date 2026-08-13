@@ -342,12 +342,42 @@ watch(() => model.value.projectId, (newValue, oldValue) => {
   }
 }, { immediate: true });
 
+// watch(
+//   () => model.value.projectModuleId,
+//   (moduleIds) => {
+//     if (moduleIds == null) return;
+
+//     requirementByProjectModuleIdForDropdownSingleSelect.load(moduleIds);
+//   },
+//   { immediate: true }
+// );
+
+const normalize = (val) => {
+  if (Array.isArray(val)) {
+    return val.length > 0 ? val[0] : null;
+  }
+  return val ?? null;
+};
+
 watch(
   () => model.value.projectModuleId,
-  (moduleIds) => {
-    if (moduleIds == null) return;
+  async (newId, oldId) => {
+    const newVal = normalize(newId);
+    const oldVal = normalize(oldId);
 
-    requirementByProjectModuleIdForDropdownSingleSelect.load(moduleIds);
+    const isValid = newVal != null && newVal !== "";
+
+    // Clear Requirement only when the module actually changes
+    if (oldId !== undefined && oldId !== null && newVal !== oldVal) {
+      model.value.requirementId = null;
+    }
+
+    // Always load the Requirement dropdown
+    if (isValid) {
+      await requirementByProjectModuleIdForDropdownSingleSelect.load(newVal);
+    } else {
+      requirementByProjectModuleIdForDropdownSingleSelect.list.value = [];
+    }
   },
   { immediate: true }
 );

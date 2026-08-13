@@ -118,16 +118,18 @@
                   @focus="() => storePreviousHours(row, i)"
                 >
                 <template #hint>
-                  <span
-                    v-if="row.hours[i] && validateHours(row.hours[i]) === true && row.hours[i] !== '00:00'""
-                    class="text-caption text-primary"
-                  >
-                    {{ getHoursMinutesText(row.hours[i]) }}
-                  </span>
+                  <div class="full-width text-right">
+                    <span
+                      v-if="row.hours[i] && validateHours(row.hours[i]) === true && row.hours[i] !== '00:00'"
+                      class="text-caption text-primary"
+                    >
+                      {{ getHoursMinutesText(row.hours[i]) }}
+                    </span>
 
-                  <span v-else>
-                    hh:mm
-                  </span>
+                    <span v-else class="text-caption">
+                      hh:mm
+                    </span>
+                  </div>
                 </template>
                   <!-- + icon -->
                   <q-icon

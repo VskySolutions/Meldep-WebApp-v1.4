@@ -745,10 +745,6 @@ const getProjectTask = () => {
       editing: false,
       flag: "Edit"
     }));
-    // Calculate total hours
-    totalHours.value = TaskActivitiesRows.value.reduce((acc, row) => {
-      return acc + (parseFloat(row.estimateHours) || 0);
-    }, 0);
   }).finally(() => {
     loading.value = false;
   });
@@ -1173,15 +1169,18 @@ function formatEstimateTime(value) {
 }
 
 const totalHours = computed(() => {
-  const total = TaskActivitiesRows.value.reduce((sum, row) => {
-    if (!row.deleted) {
-      sum += parseFloat(row.estimateHours) || 0;
+  const totalMinutes = TaskActivitiesRows.value.reduce((sum, row) => {
+    if (!row.deleted && row.estimateHours) {
+      const [hours, minutes] = row.estimateHours.split(":").map(Number);
+      sum += (hours * 60) + minutes;
     }
     return sum;
   }, 0);
 
-  // Round to 2 decimal places without using toFixed()
-  return Math.round(total * 100) / 100;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 });
 
 function validateSortOrder (value) {
@@ -1469,24 +1468,25 @@ watch([prefix, fraction], () => {
 
 watch(
   () => model.value.projectModuleId,
-  async (newValue, oldValue) => {
-    getSortOrderByModuleId(newValue);
+  async (newId, oldId) => {
+    const newVal = normalize(newId);
+    const oldVal = normalize(oldId);
 
-    // Form opening / initial population.
-    // Keep the existing requirementId.
-    if (oldValue === undefined) {
-      if (!newValue) return;
-      await requirementByProjectModuleIdForDropdownSingleSelect.load(newValue);
-      return;
+    const isValid = newVal != null && newVal !== "";
+
+    getSortOrderByModuleId(newVal);
+
+    // Clear Requirement only when the module actually changes
+    if (oldId !== undefined && oldId !== null && newVal !== oldVal) {
+      model.value.requirementId = null;
     }
 
-    // User changed the module.
-    if (newValue !== oldValue) {
-      model.value.requirementId = "";
+    // Always load the Requirement dropdown
+    if (isValid) {
+      await requirementByProjectModuleIdForDropdownSingleSelect.load(newVal);
+    } else {
+      requirementByProjectModuleIdForDropdownSingleSelect.list.value = [];
     }
-
-    if (!newValue) return;
-    await requirementByProjectModuleIdForDropdownSingleSelect.load(newValue);
   },
   { immediate: true }
 );
