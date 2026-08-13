@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Vsky.Core;
 
 namespace Vsky.Models
@@ -80,6 +81,8 @@ namespace Vsky.Models
         public string ProjectWeeklyPlanDatesId { get; set; }
         public string ExpectedDescription { get; set; }
         public string ActualDescription { get; set; } = "";
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal ExpectedHours { get; set; }
 
         public string ExpectedDescriptionCreatedById { get; set; }
@@ -116,6 +119,8 @@ namespace Vsky.Models
     {
         public string ProjectWeeklyPlanDatesLineId { get; set; }
         public string EmployeeId { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal EstimatedHours { get; set; }
 
         public string CreatedById { get; set; }
@@ -139,6 +144,8 @@ namespace Vsky.Models
     {
         public string Id { get; set; }
         public string Description { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal ExpectedHours { get; set; }
 
         public List<SaveWeeklyLinesAssignTo> saveWeeklyLinesAssignTos { get; set; } = new List<SaveWeeklyLinesAssignTo>();
@@ -148,6 +155,8 @@ namespace Vsky.Models
         public string Id { get; set; }
         public string ProjectWeeklyPlanDatesLineId { get; set; }
         public string EmployeeId { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal EstimatedHours { get; set; }
     }
     public class LinkReqTaskIssueToDate
@@ -167,6 +176,8 @@ namespace Vsky.Models
     {
         public string EmployeeId { get; set; }
         public Employee Employee { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal TotalEstimatedHours { get; set; }
     }
     #endregion

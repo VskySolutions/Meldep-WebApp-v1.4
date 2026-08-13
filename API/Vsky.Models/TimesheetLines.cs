@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using Vsky.Core;
+using System.Text.Json.Serialization;
 
 namespace Vsky.Models;
 
@@ -16,6 +17,8 @@ public class TimesheetLines : BaseEntity
     public string ProjectActivityId { get; set; }
 
     public string Description { get; set; }
+
+    [JsonConverter(typeof(HoursConverter))]
     public decimal Hours { get; set; }
     public decimal BillableHours { get; set; }
     public string MeetingUId { get; set; }

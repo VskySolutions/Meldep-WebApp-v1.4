@@ -356,19 +356,24 @@ const editingRowrules = {
   }
 };
 
-// validation for hrs
+// validation for hrss
 function validateHours(value) {
-  const strValue = (value ?? "").toString().trim();
+  const strValue = String(value ?? "").trim();
   if (!strValue) {
     return "Hours are required.";
   }
-
+  // Hours only: 45
   if (/^\d{1,2}$/.test(strValue)) {
     const hours = parseInt(strValue, 10);
+
     return hours <= 99 ? true : "Please check hours.";
   }
-
+  // Hours with colon but no minutes: 45:
+  if (/^\d{1,2}:$/.test(strValue)) {
+    return true;
+  }
   const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+
   if (!match) {
     return "Invalid hours format.";
   }
@@ -376,17 +381,14 @@ function validateHours(value) {
   const hours = parseInt(match[1], 10);
   const minutes = parseInt(match[2], 10);
 
-  if (hours > 99) {
-    return "Maximum hours allowed is 99.";
-  }
-
   if (minutes > 59) {
-    return "Minutes cannot exceed 59.";
+    return "Minutes can't exceed 59.";
   }
 
   if (hours === 0 && minutes === 0) {
     return "Hours must be greater than 00:00.";
   }
+
   return true;
 }
 
@@ -403,11 +405,18 @@ function formatHoursValue(row) {
   }
 
   const parts = value.split(":");
+
   if (parts.length !== 2) return;
 
   let hours = parts[0];
   let minutes = parts[1];
-  if (minutes.length === 1) {
+
+  // If no minutes are entered (e.g. 45:), convert to 45:00
+  if (minutes === "") {
+    minutes = "00";
+  }
+  // If one minute digit is entered (e.g. 45:5), convert to 45:50
+  else if (minutes.length === 1) {
     minutes = minutes + "0";
   }
 
@@ -638,32 +647,31 @@ function getTimesheetAllowedDateRange(
 function getHoursMinutesText(value) {
   if (!value) return "";
 
-  value = value.trim();
+  const strValue = String(value).trim();
 
-  // Hours only
-  if (/^\d{1,2}$/.test(value)) {
-    const hrs = parseInt(value, 10);
-    return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
-  }
+  // Support: 45, 45:, 45:30, 45:3
+  const match = strValue.match(/^(\d{1,2})(?::(\d{0,2}))?$/);
 
-  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
   if (!match) return "";
 
-  const hrs = parseInt(match[1], 10);
-  let mins = parseInt(match[2], 10);
+  const hours = Number(match[1]);
+  const minutes = match[2] ? Number(match[2].padEnd(2, "0")) : 0;
 
-  if (match[2].length === 1) {
-    mins *= 10;
-  }
-
-  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+  if (hours > 99 || minutes > 59 || (hours === 0 && minutes === 0)) {
     return "";
   }
 
-  const hrText = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
-  const minText = mins > 0 ? `${mins} min` : "";
+  const result = [];
 
-  return [hrText, minText].filter(Boolean).join(" ");
+  if (hours > 0) {
+    result.push(`${hours} hr${hours > 1 ? "s" : ""}`);
+  }
+
+  if (minutes > 0) {
+    result.push(`${minutes} min`);
+  }
+
+  return result.join(" ");
 }
 
 async function onAddDailyPlanner () {

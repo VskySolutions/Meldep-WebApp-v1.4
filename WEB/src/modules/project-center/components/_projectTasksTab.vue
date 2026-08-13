@@ -149,30 +149,36 @@ const onViewTask = (id) => {
   });
 };
 
-function totalEstimateHours () {
-  // Iterate over all rows and sum up the `estimateHours` of their activities
-  const total = taskRows.value.reduce((sum, row) => {
-    if (row.activity && Array.isArray(row.activity)) {
-      return sum + row.activity.reduce((activitySum, activity) => {
-        return activitySum + (activity.estimateHours || 0);
-      }, 0); // Sum activity hours
-    }
-    return sum;
-  }, 0);
+function getTotalMinutes(lines = []) {
+  return lines.reduce((total, line) => {
+    const value = String(line.estimateHours ?? "").trim();
 
-  return parseFloat(total.toFixed(2)); // Round to 2 decimal places
+    if (!value) return total;
+
+    const [hours = 0, minutes = 0] = value.split(":").map(Number);
+
+    return total + hours * 60 + minutes;
+  }, 0);
 }
 
-function totalActivityHours (activities) {
-  if (!activities || activities.length === 0) {
-    return 0;
-  }
-  const total = activities.reduce((total, activity) => {
-    return total + (activity.estimateHours || 0);
-  }, 0);
+function formatTotalHours(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
 
-  const roundedTotal = parseFloat(total.toFixed(2));
-  return roundedTotal;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function totalActivityHours(activities = []) {
+  return formatTotalHours(getTotalMinutes(activities));
+}
+
+function totalEstimateHours() {
+  const totalMinutes = taskRows.value.reduce(
+    (total, row) => total + getTotalMinutes(row.activity),
+    0
+  );
+
+  return formatTotalHours(totalMinutes);
 }
 
 const onSubmitTaskStatus = async (id, statusId) => {

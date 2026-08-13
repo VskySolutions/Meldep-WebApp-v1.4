@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Vsky.Api.Converter
+namespace Vsky.Core
 {
     public class HoursConverter : JsonConverter<decimal>
     {
@@ -15,7 +15,7 @@ namespace Vsky.Api.Converter
             return int.Parse(parts[0]) + (int.Parse(parts[1]) / 60m);
         }
 
-      
+
         public static string ConvertDecimalHoursToTime(decimal value)
         {
             int hours = (int)Math.Floor(value);
@@ -30,14 +30,15 @@ namespace Vsky.Api.Converter
             return $"{hours:D2}:{minutes:D2}";
         }
 
-        public override decimal Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            return ConvertTimeToDecimalHours(reader.GetString());
-        }
 
-        public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(ConvertDecimalHoursToTime(value));
-        }
+        public override decimal Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                return ConvertTimeToDecimalHours(reader.GetString());
+            }
+
+            public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
+            {
+                writer.WriteStringValue(ConvertDecimalHoursToTime(value));
+            }
     }
 }

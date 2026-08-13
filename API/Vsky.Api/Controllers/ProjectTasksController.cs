@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
 using Vsky.Api.Models;
+using Vsky.Core;
 using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
 using Vsky.Services.Common;
@@ -985,6 +986,12 @@ namespace Vsky.Api.Controllers
                         model.RequirementId != "null"
                             ? model.RequirementId
                             : null;
+
+
+                    if (!string.IsNullOrWhiteSpace(model.EstimateTimeStr))
+                    {
+                        entity.EstimateTime = HoursConverter.ConvertTimeToDecimalHours(model.EstimateTimeStr);
+                    }
                     entity.CreatedById = LoggedUserId;
                     entity.UpdatedById = LoggedUserId;
                     entity.CreatedOnUtc = GetDateTime;
@@ -1319,6 +1326,11 @@ namespace Vsky.Api.Controllers
                             );
                     }
 
+                    if (!string.IsNullOrWhiteSpace(model.EstimateTimeStr))
+                    {
+                        entity.EstimateTime = HoursConverter.ConvertTimeToDecimalHours(model.EstimateTimeStr);
+                    }
+
                     entity.UpdatedById = LoggedUserId;
                     entity.UpdatedOnUtc = GetDateTime;
                     _taskService.UpdateProjectTask(entity);
@@ -1420,7 +1432,11 @@ namespace Vsky.Api.Controllers
                                 exisitingActivityData.ActivityStatusId = activity.ActivityStatusId != "undefined" ? activity.ActivityStatusId : activityStatus.Id;
                                 exisitingActivityData.Name = activity.Name;
                                 //exisitingActivityData.Description = activity.Description;
-                                exisitingActivityData.EstimateHours = activity.EstimateHours;
+                                if (!string.IsNullOrWhiteSpace(activity.EstimateHoursStr))
+                                {
+                                    exisitingActivityData.EstimateHours = HoursConverter.ConvertTimeToDecimalHours(activity.EstimateHoursStr);
+                                }
+                                //exisitingActivityData.EstimateHours = activity.EstimateHours;
 
                                 if (!string.IsNullOrEmpty(activity.Description))
                                 {
@@ -1456,7 +1472,7 @@ namespace Vsky.Api.Controllers
 
                                 projectActivity.Name = activity.Name;
                                 //projectActivity.Description = activity.Description;
-                                projectActivity.EstimateHours = activity.EstimateHours;
+                                // projectActivity.EstimateHours = activity.EstimateHours;
                                 projectActivity.Active = true;
 
                                 if (!string.IsNullOrEmpty(activity.Description))
@@ -1469,7 +1485,10 @@ namespace Vsky.Api.Controllers
                                             activity.Id
                                         );
                                 }
-
+                                if (!string.IsNullOrWhiteSpace(activity.EstimateHoursStr))
+                                {
+                                    projectActivity.EstimateHours = HoursConverter.ConvertTimeToDecimalHours(activity.EstimateHoursStr);
+                                }
                                 projectActivity.CreatedById = LoggedUserId;
                                 projectActivity.CreatedOnUtc = GetDateTime;
                                 projectActivity.UpdatedById = LoggedUserId;

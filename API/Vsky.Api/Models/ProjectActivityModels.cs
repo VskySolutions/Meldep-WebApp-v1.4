@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Http;
 using Vsky.Api.Framework.Models;
+using System.Text.Json.Serialization;
+using Vsky.Core;
 using Vsky.Models;
 
 namespace Vsky.Api.Models
@@ -26,6 +28,8 @@ namespace Vsky.Api.Models
         public string EndDateStr { get; set; }
         public string TargetMonthStr { get; set; }
         public string EstimateHoursStr { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal EstimateHours { get; set; }
         public bool Active { get; set; } = true;
         public bool Deleted { get; set; }

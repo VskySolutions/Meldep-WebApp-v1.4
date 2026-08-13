@@ -884,6 +884,7 @@ const getProjectActivities = (props) => {
   ActivityIds.value = storedActivityIds ? storedActivityIds.split(",") : [];
   projectActivitiesService.getAllProjectActivitiesForExpandCollapse(payload).then((resp) => {
     rows.value = resp.data;
+    console.log("Project Activities Response:", resp.data); // Log the response data for debugging
     rows.value = resp.data.map(project => {
       return {
         ...project,
@@ -1333,8 +1334,8 @@ function setDefaultsForMultiSelects () {
   localStorage.removeItem("selectedActivityIds");
 }
 
-function paginatedTotalHours (activities, pagination) {
-  if (!activities?.length || !pagination) return "0.00";
+function paginatedTotalHours(activities, pagination) {
+  if (!activities?.length || !pagination) return "00:00";
 
   const { page, rowsPerPage } = pagination;
 
@@ -1345,25 +1346,55 @@ function paginatedTotalHours (activities, pagination) {
 
   const pageRows = activities.slice(start, end);
 
-  const total = pageRows.reduce(
-    (sum, row) => sum + (Number(row.estimateHours) || 0),
-    0
-  );
+  let totalMinutes = 0;
 
-  return total.toFixed(2);
+  pageRows.forEach(row => {
+    if (row.estimateHours) {
+      const value = row.estimateHours.toString().trim();
+
+      if (/^\d{1,2}:\d{2}$/.test(value)) {
+        const [hours, minutes] = value.split(":");
+
+        totalMinutes +=
+          parseInt(hours, 10) * 60 +
+          parseInt(minutes, 10);
+      }
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
 const outerTotalHours = computed(() => {
-  const total = rows.value.reduce((projectSum, project) => {
-    const activityTotal = project.activities?.reduce(
-      (sum, act) => sum + (Number(act.estimateHours) || 0),
-      0
-    ) || 0;
+  let totalMinutes = 0;
 
-    return projectSum + activityTotal;
-  }, 0);
+  rows.value.forEach(project => {
+    project.activities?.forEach(act => {
+      if (act.estimateHours) {
+        const value = act.estimateHours.toString().trim();
 
-  return total.toFixed(2);
+        if (/^\d{1,2}:\d{2}$/.test(value)) {
+          const [hours, minutes] = value.split(":");
+
+          totalMinutes +=
+            parseInt(hours, 10) * 60 +
+            parseInt(minutes, 10);
+        }
+      }
+    });
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 });
 
 const stripHtml = (html) => {

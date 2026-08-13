@@ -103,13 +103,28 @@
                       v-model="model.estimateHours"
                       outlined
                       dense
-                      :rules="[validateHours]"
-                      hint="hh.mm"
+                      mask="##:##"
                       maxlength="5"
+                      :rules="[validateHours]"
                       :error="v$.estimateHours.$error"
                       :error-message="v$.estimateHours.$errors[0]?.$message"
-                      @blur="v$.estimateHours.$touch"
-                    />
+                      @blur="
+                        model.estimateHours = formatHoursValue(model.estimateHours);
+                        v$.estimateHours.$touch();
+                      "
+                    >
+                      <template #hint>
+                        <span
+                          v-if="model.estimateHours && validateHours(model.estimateHours) === true && model.estimateHours !== '00:00'""
+                          class="text-caption text-primary"
+                        >
+                          {{ getHoursMinutesText(model.estimateHours) }}
+                        </span>
+                        <span v-else>
+                          hh:mm
+                        </span>
+                      </template>
+                    </q-input>
                   </div>
                 </div>
               </div>
@@ -236,7 +251,6 @@ import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.j
 // ------------------------------------------------------------------------------------
 const $q = useQuasar();
 const { fonts, toolbar } = getEditorConfig($q);
-const { toPrice } = useFilters();
 const loading = ref(true);
 const processing = ref(false);
 
@@ -309,9 +323,9 @@ const rules = computed(() => ({
 
   estimateHours: {
     required: helpers.withMessage("Estimate Hours is required", required),
-    minValue: helpers.withMessage(
-      "Invalid Estimate Hours",
-      (value) => value >= 0
+    validHours: helpers.withMessage(
+      ({ $response }) => $response,
+      (value) => validateHours(value)
     )
   },
 
@@ -327,16 +341,28 @@ const rules = computed(() => ({
 
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 
-function validateHours (value) {
-  // Ensure value is treated as a string
-  const strValue = (value ?? "").toString().trim();
-  const regex = /^(?:\d{1,2}(?:\.\d{1,2})?)$/;
-  if (!strValue || (regex.test(strValue) && strValue.length <= 5)) {
-    return true; // Valid input
+function validateHours(value) {
+  const strValue = String(value ?? "").trim();
+
+  if (!strValue) return true;
+  if (/^\d{1,2}:?$/.test(strValue)) {
+    return true;
   }
-  return "Invalid hours format.";
+
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) return "Invalid hours format.";
+
+  return Number(match[2]) > 59
+    ? "Minutes can't exceed 59."
+    : true;
 }
 
+function formatHoursValue(value) {
+  if (!value) return value;
+  const [hours, minutes = "00"] = String(value).trim().split(":");
+  return `${hours.padStart(2, "0")}:${minutes.padEnd(2, "0")}`;
+}
 // ------------------------------------------------------------------------------------
 // Get Project Activity details
 // ------------------------------------------------------------------------------------
@@ -344,7 +370,7 @@ const getProjectActivity = () => {
   loading.value = true;
   activityService.getProjectActivity(props.id).then((resp) => {
     model.value = _.cloneDeep(resp);
-    model.value.estimateHours = toPrice(resp.estimateHours);
+    model.value.estimateHours = resp.estimateHours;
     model.value.description = resp.description ? resp.description : "";
     model.value.startDateStr = resp.startDate ? format(resp.startDate, "MM/dd/yyyy") : "";
     model.value.endDateStr = resp.endDate ? format(resp.endDate, "MM/dd/yyyy") : "";
@@ -354,6 +380,36 @@ const getProjectActivity = () => {
   });
 };
 
+function getHoursMinutesText(value) {
+  if (!value) return "";
+  const strValue = String(value).trim();
+
+  // 45 or 45:
+  if (/^\d{1,2}:?$/.test(strValue)) {
+    const hrs = Number(strValue.replace(":", ""));
+
+    return hrs > 0
+      ? `${hrs} hr${hrs > 1 ? "s" : ""}`
+      : "";
+  }
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) return "";
+  const hrs = Number(match[1]);
+  const mins = Number(match[2].padEnd(2, "0"));
+
+  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+  const result = [];
+
+  if (hrs > 0) {
+    result.push(`${hrs} hr${hrs > 1 ? "s" : ""}`);
+  }
+  if (mins > 0) {
+    result.push(`${mins} min`);
+  }
+  return result.join(" ");
+}
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Get All Dropdowns
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -552,11 +608,11 @@ const onSubmit = async () => {
     const formData = new FormData();
     const selectedOption = projectTaskActivityNameForDropdownSingleSelect.getLabelByValue(model.value.name);
     model.value.name = selectedOption ?? model.value.name;
-    const hoursValidation = validateHours(model.value.hours);
-    if (hoursValidation !== true) {
-      notifyError({ message: hoursValidation }); // Display error message
-      return; // Prevent save operation
-    }
+    // const hoursValidation = validateHours(model.value.estimateHours);
+    // if (hoursValidation !== true) {
+    //   notifyError({ message: hoursValidation }); // Display error message
+    //   return; // Prevent save operation
+    // }
     processing.value = true;
     if (await v$.value.$validate()) {
       // Append other fields
@@ -568,7 +624,7 @@ const onSubmit = async () => {
       formData.append("endDateStr", model.value.endDateStr);
       formData.append("assignedToId", model.value.assignedToId);
       formData.append("activityStatusId", model.value.activityStatusId);
-      formData.append("estimateHours", model.value.estimateHours);
+      formData.append("estimateHoursStr", model.value.estimateHours);
       formData.append("description", model.value.description);
 
       toRaw(model.value.projectTaskActivityFiles || []).forEach((file) => {
@@ -584,6 +640,7 @@ const onSubmit = async () => {
           formData.append("projectTaskActivityFiles", file);
         }
       });
+      console.log("Submitting form data:", formData);
       activityService.saveProjectActivity(props.id, formData).then((resp) => {
         notifySuccess({ message: "Project activity is saved successfully." });
         onDialogOK();

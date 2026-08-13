@@ -1405,14 +1405,29 @@ const refreshProjectTagsDropdown = () => {
   projectTagsDropdown.load();
 };
 
-function totalEstimateHours () {
-  const total = rows.value.reduce((total, row) => total + (row.totalTaskEstimateHours || 0), 0);
-  return total.toFixed(2);
+function getTotalHours(field) {
+  const totalMinutes = rows.value.reduce((sum, row) => {
+    const value = row[field] || "00:00";
+
+    const [hours, minutes] = value.split(":").map(Number);
+
+    return sum + (hours * 60) + minutes;
+  }, 0);
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
-function totalTaskActivityHours () {
-  const total = rows.value.reduce((total, row) => total + (row.totalActivityHours || 0), 0);
-  return total.toFixed(2);
+function totalEstimateHours() {
+  return getTotalHours("totalTaskEstimateHours");
+}
+
+function totalTaskActivityHours() {
+  return getTotalHours("totalActivityHours");
 }
 
 function getCountColor (total, completedCount) {

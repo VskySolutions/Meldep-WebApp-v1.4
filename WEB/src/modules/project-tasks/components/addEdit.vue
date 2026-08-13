@@ -155,12 +155,33 @@
                             v-model="model.estimateTime"
                             outlined
                             dense
-                            maxlength="7"
-                            :rules="[validateHours]"
+                            maxlength="6"
+                            mask="###:##"
+                            :rules="[validateEstimateTime]"
                             :error="v$.estimateTime.$error"
                             :error-message="v$.estimateTime.$errors[0]?.$message"
-                            @blur="v$.estimateTime.$touch"
-                          />
+                            @blur="
+                              model.estimateTime = formatEstimateTime(model.estimateTime);
+                              v$.estimateTime.$touch;
+                            "
+                          >
+                            <template #hint>
+                              <span
+                                 v-if="
+                                  model.estimateTime &&
+                                  validateEstimateTime(model.estimateTime) === true &&
+                                  model.estimateTime !== '000:00'
+                                "
+                                class="text-caption text-primary"
+                              >
+                                {{ getEstimateTimeText(model.estimateTime) }}
+                              </span>
+
+                              <span v-else>
+                                hhh:mm
+                              </span>
+                            </template>
+                          </q-input>
                         </div>
                       </div>
                       <div class="col-12 col-sm-6 col-md-3">
@@ -429,10 +450,25 @@
                                 v-model="props.row.estimateHours"
                                 outlined
                                 dense
+                                mask="##:##"
+                                maxlength="5"
+                                :rules="[validateHours]"
                                 :error="rowValidations[props.rowIndex]?.value?.estimateHours.$error"
                                 :error-message="rowValidations[props.rowIndex]?.value?.estimateHours.$errors[0]?.$message"
-                                @blur="rowValidations[props.rowIndex]?.value?.estimateHours.$touch"
-                              />
+                                @blur=" props.row.estimateHours = formatHoursValue(props.row.estimateHours); rowValidations[props.rowIndex]?.value?.estimateHours.$touch()"
+                              >
+                                <template #hint>
+                                  <span
+                                    v-if="props.row.estimateHours && validateHours(props.row.estimateHours) === true && props.row.estimateHours !== '00:00'""
+                                    class="text-caption text-primary"
+                                  >
+                                    {{ getHoursMinutesText(props.row.estimateHours) }}
+                                  </span>
+                                  <span v-else>
+                                    hh:mm
+                                  </span>
+                                </template>
+                              </q-input>
                             </q-td>
                             <q-td class="text-center" style="width: 5%;">
                               <q-icon name="o_delete" size="xs" class="cursor-pointer text-red" @click="deleteRow(props.rowIndex)">
@@ -718,6 +754,57 @@ const getProjectTask = () => {
   });
 };
 
+function getHoursMinutesText(value) {
+  if (!value) return "";
+  value = value.trim();
+  if (/^\d{1,2}:?$/.test(value)) {
+    const hrs = parseInt(value, 10);
+    return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  }
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) return "";
+  const hrs = parseInt(match[1], 10);
+  let mins = parseInt(match[2], 10);
+
+  if (match[2].length === 1) {
+    mins *= 10;
+  }
+
+  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+
+  const hrText = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  const minText = mins > 0 ? `${mins} min` : "";
+
+  return [hrText, minText].filter(Boolean).join(" ");
+}
+
+function getEstimateTimeText(value) {
+  if (!value) return "";
+  const match = String(value)
+    .trim()
+    .match(/^(\d{1,3}):(\d{1,2})$/);
+
+  if (!match) return "";
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+
+  if (hours > 999 || minutes > 59 || (hours === 0 && minutes === 0)) {
+    return "";
+  }
+  const parts = [];
+
+  if (hours > 0) {
+    parts.push(`${hours} hr${hours > 1 ? "s" : ""}`);
+  }
+
+  if (minutes > 0) {
+    parts.push(`${minutes} min`);
+  }
+  return parts.join(" ");
+}
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
@@ -756,7 +843,7 @@ const onAdd = () => {
     endDate: "",
     popupVisible: false,
     currentView: "Years",
-    estimateHours: "0",
+    estimateHours: "00:00",
     description: "",
     deleted: false
   });
@@ -843,6 +930,7 @@ function getAllTaskStatusesfilter (val, update, abort) {
     }
   });
 }
+
 
 // -------------------------------------------------------------------------------------------------------
 // Upload Image
@@ -1017,13 +1105,71 @@ const rules = {
 
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 
-function validateHours (value) {
-  const strValue = (value ?? "").toString().trim();
-  const regex = /^\d+(?:\.\d{1,2})?$/;
-  if (!strValue) return "Estimate Hours is required";
-  if (!regex.test(strValue)) return "Invalid hours format";
-  if (Number(strValue) <= 0) return "Hours must be greater than 0";
+function validateHours(value) {
+  const strValue = String(value ?? "").trim();
+  if (!strValue) return true;
+  if (/^\d{1,2}:?$/.test(strValue)) {
+    return true;
+  }
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) {
+    return "Invalid hours format.";
+  }
+  const minutes = parseInt(match[2], 10);
+  if (minutes > 59) {
+    return "Minutes can't exceed 59.";
+  }
   return true;
+}
+
+function validateEstimateTime(value) {
+  const strValue = String(value ?? "").trim();
+  if (!strValue) return true;
+
+  if (/^\d{1,3}:?$/.test(strValue)) {
+    return true;
+  }
+  const match = strValue.match(/^(\d{1,3}):(\d{1,2})$/);
+
+  if (!match) return "Invalid hours format.";
+
+  const minutes = Number(match[2]);
+
+  if (minutes > 59) {
+    return "Minutes can't exceed 59.";
+  }
+
+  return true;
+}
+
+function formatHoursValue(value) {
+  if (!value) return value;
+  value = String(value).trim();
+  if (!value.includes(":")) {
+    return `${value.padStart(2, "0")}:00`;
+  }
+  const parts = value.split(":");
+  if (parts.length !== 2) return value;
+  let [hours, minutes] = parts;
+  if (!minutes) {
+    minutes = "00";
+  } else if (minutes.length === 1) {
+    minutes += "0";
+  }
+
+  return `${hours.padStart(2, "0")}:${minutes}`;
+}
+
+function formatEstimateTime(value) {
+  if (!value) return value;
+  value = String(value).trim();
+  if (!value.includes(":")) {
+    return `${value.padStart(3, "0")}:00`;
+  }
+
+  const [hours, minutes = "00"] = value.split(":");
+
+  return `${hours.padStart(3, "0")}:${minutes.padEnd(2, "0")}`;
 }
 
 const totalHours = computed(() => {
@@ -1056,7 +1202,10 @@ const rowRules = {
   assignedToId: { required: helpers.withMessage("Activity Owner is required", required) },
   estimateHours: {
     required: helpers.withMessage("Estimate Hours is required", required),
-    minValue: helpers.withMessage("Invalid Estimate Hours", (value) => value >= 0)
+    validHours: helpers.withMessage(
+      ({ $response }) => $response,
+      (value) => validateHours(value)
+    )
   }
 };
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1157,7 +1306,7 @@ const onSubmit = async (isClose = 0) => {
         }
       }
       const formData = new FormData();
-      formData.append("estimateTime", model.value.estimateTime ? model.value.estimateTime : "00.00");
+      formData.append("estimateTimeStr", model.value.estimateTime ? model.value.estimateTime : "00.00");
       formData.append("projectId", model.value.projectId);
       formData.append("projectModuleId", model.value.projectModuleId);
       formData.append("areaId", model.value.areaId ? model.value.areaId : "");
@@ -1201,7 +1350,7 @@ const onSubmit = async (isClose = 0) => {
         formData.append(`projectActivities[${index}].assignedToId`, activity.assignedToId ? activity.assignedToId : "");
         formData.append(`projectActivities[${index}].activityStatusId`, activity.activityStatusId);
         formData.append(`projectActivities[${index}].description`, activity.description);
-        formData.append(`projectActivities[${index}].estimateHours`, activity.estimateHours);
+        formData.append(`projectActivities[${index}].estimateHoursStr`, activity.estimateHours);
         formData.append(`projectActivities[${index}].deleted`, activity.deleted);
       });
       toRaw(model.value.projectTaskFiles || []).forEach((file) => {

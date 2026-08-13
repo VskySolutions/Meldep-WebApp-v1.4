@@ -104,17 +104,39 @@
                 class="col text-center q-ml-sm"
               >
                 <q-input
-                  type="number"
-                  dense
                   v-model="row.hours[i]"
                   input-class="text-right"
+                  maxlength="5"
+                  mask="##:##"
+                  dense
                   :readonly="isActionDisabled(row, 'hours', i)"
-                  @blur="() => onHoursChange(row, i)"
+                   @blur="() => {
+                    formatHoursValue(row, i);
+                    onHoursChange(row, i);
+                  }"
+                  :rules="[validateHours]"
                   @focus="() => storePreviousHours(row, i)"
                 >
+                <template #hint>
+                  <span
+                    v-if="row.hours[i] && validateHours(row.hours[i]) === true && row.hours[i] !== '00:00'""
+                    class="text-caption text-primary"
+                  >
+                    {{ getHoursMinutesText(row.hours[i]) }}
+                  </span>
+
+                  <span v-else>
+                    hh:mm
+                  </span>
+                </template>
                   <!-- + icon -->
                   <q-icon
-                    v-if="row.hours[i] && Number(row.hours[i]) > 0 && !isActionDisabled(row, 'description', i)"
+                    v-if="
+                      row.hours[i] &&
+                      row.hours[i] !== '00:00' &&
+                      validateHours(row.hours[i]) === true &&
+                      !isActionDisabled(row, 'description', i)
+                    "
                     name="o_add_circle"
                     size="xs"
                     class="cursor-pointer q-mr-xs"
@@ -298,7 +320,7 @@ function mapTimesheetToEntryRows (data) {
         projectName: item.project?.name,
         projectModuleId: item.projectModule?.id,
         timesheetStatus: item.timesheetStatus ?? null,
-        hours: weekDates.value.map(() => 0), // initialize week
+        hours: weekDates.value.map(() => "00:00"),
         lineIds: weekDates.value.map(() => null),
         description: weekDates.value.map(() => ""),
         timesheetIds: weekDates.value.map(() => null),
@@ -347,6 +369,35 @@ const getTimesheet = async () => {
   // preview mapping
   mapToPreviewList(lines);
 };
+
+function getHoursMinutesText(value) {
+  if (!value) return "";
+
+  value = value.trim();
+  if (/^\d{1,2}:?$/.test(value)) {
+    const hrs = parseInt(value, 10);
+    return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  }
+
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) return "";
+
+  const hrs = parseInt(match[1], 10);
+  let mins = parseInt(match[2], 10);
+
+  if (match[2].length === 1) {
+    mins *= 10;
+  }
+
+  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+
+  const hrText = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  const minText = mins > 0 ? `${mins} min` : "";
+
+  return [hrText, minText].filter(Boolean).join(" ");
+}
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals
@@ -423,7 +474,7 @@ const isSunday = (dateStr) => {
   );
 };
 
-const validateTimesheetHours = () => {
+const validateWeeklyTimesheetHours = () => {
   // Validate only Monday to Friday (indexes 0-4)
   for (let i = 0; i < 5; i++) {
     const totalHours = getColumnTotal(i);
@@ -438,6 +489,45 @@ const validateTimesheetHours = () => {
 
   return true;
 };
+
+function validateHours(value) {
+  const strValue = String(value ?? "").trim();
+
+  if (!strValue) return true;
+  if (/^\d{1,2}:?$/.test(strValue)) {
+    return true;
+  }
+
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) return "Invalid hours format.";
+
+  return Number(match[2]) > 59
+    ? "Minutes can't exceed 59."
+    : true;
+}
+
+function formatHoursValue(row, index) {
+  if (!row.hours[index]) return;
+
+  let value = row.hours[index].trim();
+  if (!value.includes(":")) {
+    row.hours[index] = `${value.padStart(2, "0")}:00`;
+    return;
+  }
+
+  const parts = value.split(":");
+  if (parts.length !== 2) return;
+  let [hours, minutes] = parts;
+  if (!minutes) {
+    minutes = "00";
+  }
+  else if (minutes.length === 1) {
+    minutes += "0";
+  }
+
+  row.hours[index] = `${hours.padStart(2, "0")}:${minutes}`;
+}
 
 function getCurrentWeekEndSunday () {
   const today = new Date();
@@ -490,25 +580,39 @@ function roundToTwo (num) {
   return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 
-function getRowTotal (row) {
-  const total = row.hours.reduce((a, b) => a + (Number(b) || 0), 0);
-  return roundToTwo(total);
-}
+function calculateHoursTotal(hours) {
+  const totalMinutes = hours.reduce((total, value) => {
+    if (!value) return total;
 
-function getColumnTotal (index) {
-  // return entryRows.value.reduce((sum, r) => {
-  //   return sum + (Number(r.hours[index]) || 0);
-  // }, 0);
-  const total = entryRows.value.reduce((sum, r) => {
-    return sum + (Number(r.hours[index]) || 0);
+    const time = value.toString().trim();
+
+    if (time.includes(":")) {
+      const [hours, minutes] = time.split(":").map(Number);
+      return total + (hours || 0) * 60 + (minutes || 0);
+    }
+
+    return total + (Number(time) || 0) * 60;
   }, 0);
 
-  return roundToTwo(total);
+  return `${String(Math.floor(totalMinutes / 60)).padStart(2, "0")}:${String(
+    totalMinutes % 60
+  ).padStart(2, "0")}`;
+}
+
+function getRowTotal(row) {
+  return calculateHoursTotal(row.hours);
+}
+
+function getColumnTotal(index) {
+  return calculateHoursTotal(
+    entryRows.value.map(row => row.hours[index])
+  );
 }
 
 const getGrandTotal = computed(() => {
-  const total = entryRows.value.reduce((sum, r) => sum + getRowTotal(r), 0);
-  return roundToTwo(total);
+  return calculateHoursTotal(
+    entryRows.value.flatMap(row => row.hours)
+  );
 });
 
 const isActionDisabled = (row, action, dayIndex = null) => {
@@ -569,55 +673,91 @@ const debouncedSave = debounce((row, index) => {
 }, 500); // 500ms delay
 
 // stored previous hours
-function storePreviousHours (row, index) {
+function storePreviousHours(row, index) {
   if (!row._prevHours) {
     row._prevHours = {};
   }
 
-  row._prevHours[index] = Number(row.hours[index] || 0);
+  row._prevHours[index] = (row.hours[index] ?? "").trim();
 }
-
 // save data on change hours
+// function onHoursChange(row, index) {
+//   debugger;
+//   if (!row.taskId || !row.hours[index]) return;
+
+//   const raw = row.hours[index];
+//   const hours = Number(row.hours[index] || 0);
+//   const prev = row._prevHours?.[index] ?? 0;
+
+//   // ignore incomplete typing like "0."
+//   if (raw === "" || raw === null) return;
+
+//   // Negative value validation
+//   if (hours < 0 || raw.toString().startsWith("-")) {
+//     notifyWarning({ message: "Invalid hours format." });
+
+//     // restore previous value
+//     row.hours[index] = prev;
+//     return;
+//   }
+
+//   // if hours = 0 and already saved before
+//   if (hours === 0 && (row.lineIds[index] || row.timesheetIds[index])) {
+
+//     zwConfirmDelete(
+//       {
+//         data: `You entered 0 hours. This timesheet entry will be deleted.`
+//       },
+//       async () => {
+//         await deleteSingleEntry(row, index);
+//       },
+//       () => {
+//         // restore previous value
+//         row.hours[index] = prev;
+//       }
+//     );
+
+//     return;
+//   }
+
+//   // save
+//   if (hours > 0 && hours !== prev) {
+//     debouncedSave(row, index);
+//   }
+// }
+
 function onHoursChange(row, index) {
   if (!row.taskId || !row.hours[index]) return;
 
-  const raw = row.hours[index];
-  const hours = Number(row.hours[index] || 0);
-  const prev = row._prevHours?.[index] ?? 0;
+  const currentHours = row.hours[index]?.trim();
+  const previousHours = row._prevHours?.[index] ?? "";
 
-  // ignore incomplete typing like "0."
-  if (raw === "" || raw === null) return;
+  // Ignore empty input
+  if (currentHours === "" || currentHours == null) return;
 
-  // Negative value validation
-  if (hours < 0 || raw.toString().startsWith("-")) {
-    notifyWarning({ message: "Invalid hours format." });
-
-    // restore previous value
-    row.hours[index] = prev;
+  if (validateHours(currentHours) !== true) {
     return;
   }
 
-  // if hours = 0 and already saved before
-  if (hours === 0 && (row.lineIds[index] || row.timesheetIds[index])) {
-
+  // Delete if user enters 00:00 for an existing entry
+  if (currentHours === "00:00" && (row.lineIds[index] || row.timesheetIds[index])) {
     zwConfirmDelete(
       {
-        data: `You entered 0 hours. This timesheet entry will be deleted.`
+        data: "You entered 00:00 hours. This timesheet entry will be deleted."
       },
       async () => {
         await deleteSingleEntry(row, index);
       },
       () => {
-        // restore previous value
-        row.hours[index] = prev;
+        row.hours[index] = previousHours;
       }
     );
 
     return;
   }
 
-  // save
-  if (hours > 0 && hours !== prev) {
+  // Save only if the value changed
+  if (currentHours !== previousHours) {
     debouncedSave(row, index);
   }
 }
@@ -628,7 +768,7 @@ function rebuildPreview () {
 
   entryRows.value.forEach(row => {
     row.hours.forEach((h, i) => {
-      if (h > 0) {
+      if (h > "00:00") {
         list.push({
           id: row.lineIds[i] || `${row.id}-${i}`,
           date: formatDate(weekDates.value[i].date),
@@ -704,7 +844,7 @@ async function deleteSingleEntry (row, index) {
     await timesheetService.deleteWeeklyTimesheetById(timesheetId);
 
     // clear UI
-    row.hours[index] = 0;
+    row.hours[index] = "00:00";
     row.description[index] = "";
     row.lineIds[index] = null;
     row.timesheetIds[index] = null;
@@ -763,7 +903,7 @@ async function saveTimesheet (row, dayIndex, description) {
 }
 
 const submitForApproval = async () => {
-  if (!validateTimesheetHours()) {
+  if (!validateWeeklyTimesheetHours ()) {
     return;
   }
 

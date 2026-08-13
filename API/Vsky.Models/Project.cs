@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Vsky.Core;
 
 namespace Vsky.Models;
@@ -70,9 +71,11 @@ public class Project : BaseEntity
     public int TotalRequirementCount { get; set; }
 
     [NotMapped]
+    [JsonConverter(typeof(HoursConverter))]
     public decimal TotalTaskEstimateHours { get; set; }
 
     [NotMapped]
+    [JsonConverter(typeof(HoursConverter))]
     public decimal TotalActivityHours { get; set; }
 
     [NotMapped]

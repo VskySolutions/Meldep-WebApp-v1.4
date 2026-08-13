@@ -1868,9 +1868,20 @@
                                         dense
                                       />
                                     </div>
-                                    <q-input v-model="scope.value" outlined="" stack-label hide-bottom-space :dense="true" class="w-100 h-auto estimateHours assignto" :rules="[validatePositiveDecimal]" maxlength="5">
+                                    <q-input v-model="scope.value" outlined=""  mask="##:##" maxlength="5" stack-label hide-bottom-space :dense="true" class="w-100 h-auto estimateHours assignto" :rules="[validateHours]"  @blur="scope.value = formatHoursValue(scope.value);">
                                       <template #prepend>
                                         <q-icon name="o_schedule" size="xs" />
+                                      </template>
+                                      <template #hint>
+                                        <span
+                                          v-if="scope.value && validateHours(scope.value) === true && scope.value !== '00:00'""
+                                          class="text-caption text-primary"
+                                        >
+                                          {{ getHoursMinutesText(scope.value) }}
+                                        </span>
+                                        <span v-else>
+                                          hh:mm
+                                        </span>
                                       </template>
                                     </q-input>
                                     <div class="row justify-end q-gutter-sm q-mt-sm">
@@ -1894,7 +1905,7 @@
                                         label="Set"
                                         color="primary"
                                         dense
-                                        :disable="validatePositiveDecimal(scope.value) !== true"
+                                        :disable="validateHours(scope.value) !== true"
                                         @click="scope.set()"
                                       />
                                     </div>
@@ -2471,6 +2482,69 @@ const getAllProjectsModulesByProjectId = async (props) => {
   }
 };
 
+function getHoursMinutesText(value) {
+  if (!value) return "";
+  value = value.trim();
+  // Hours only: 45
+  if (/^\d{1,2}$/.test(value)) {
+    const hrs = parseInt(value, 10);
+    return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  }
+  // Hours with colon: 45:
+  if (/^\d{1,2}:$/.test(value)) {
+    const hrs = parseInt(value, 10);
+    return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  }
+
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) return "";
+
+  const hrs = parseInt(match[1], 10);
+  let mins = parseInt(match[2], 10);
+
+  if (match[2].length === 1) {
+    mins *= 10;
+  }
+
+  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+
+  const hrText = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  const minText = mins > 0 ? `${mins} min` : "";
+
+  return [hrText, minText].filter(Boolean).join(" ");
+}
+
+function formatHoursValue(value) {
+  if (!value) return value;
+
+  value = value.trim();
+
+  // Hours only: 45 -> 45:00
+  if (!value.includes(":")) {
+    return `${value.padStart(2, "0")}:00`;
+  }
+
+  const parts = value.split(":");
+
+  if (parts.length !== 2) return value;
+
+  let [hours, minutes] = parts;
+
+  // 45: -> 45:00
+  if (minutes === "") {
+    minutes = "00";
+  }
+  // 45:5 -> 45:50
+  else if (minutes.length === 1) {
+    minutes += "0";
+  }
+
+  return `${hours.padStart(2, "0")}:${minutes}`;
+}
+
 async function loadProjectModules (projectId) {
   selectedModule.value = null;
   selectedTask.value = null;
@@ -2909,10 +2983,18 @@ async function LoadTaskActivities (projectTaskId) {
 }
 
 const totalEstimateHours = computed(() => {
-  return filteredActivities.value.reduce((sum, row) => {
-    const hrs = Number(row.estimateHours) || 0;
-    return sum + hrs;
-  }, 0);
+  let totalMinutes = 0;
+  filteredActivities.value.forEach(row => {
+    const [hours, minutes] = String(row.estimateHours ?? '00:00')
+      .split(':')
+      .map(Number);
+
+    totalMinutes += (hours * 60) + minutes;
+  });
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 });
 
 const isDescriptionEmpty = (desc) => {
@@ -2940,7 +3022,7 @@ const onAddInlineTaskActivity = (selectedTaskId) => {
       activityName: null,
       projectId: selectedProjectId.value,
       projectModuleId: selectedModuleId.value,
-      estimateHours: 0.00,
+      estimateHours: "00:00",
       assignedToId: null,
       // targetMonthStr: activityTargetMonthStr.value,
       activityStatus: { dropDownValue: "New" },
@@ -4197,12 +4279,37 @@ const appliedTaskFiltersCount = computed(() => {
   return count;
 });
 
-function validatePositiveDecimal (value) {
-  const strValue = String(value).trim();
-  // Accepts 0, positive integers, and positive decimals
-  const regex = /^(0|[1-9]\d*)(\.\d+)?$/;
-  if (regex.test(strValue)) return true;
-  return "Please enter proper estimate hrs.";
+function validateHours(value) {
+  const strValue = (value ?? "").toString().trim();
+
+  if (strValue === "") {
+    return "Please enter estimate hrs.";
+  }
+
+  // Hours only: 45
+  if (/^\d{1,2}$/.test(strValue)) {
+    const hours = parseInt(strValue, 10);
+    return hours <= 99 ? true : "Please check hours.";
+  }
+
+  // Hours with colon: 45:
+  if (/^\d{1,2}:$/.test(strValue)) {
+    return true;
+  }
+
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) {
+    return "Invalid hours format.";
+  }
+
+  const minutes = parseInt(match[2], 10);
+
+  if (minutes > 59) {
+    return "Minutes can't exceed 59.";
+  }
+
+  return true;
 }
 
 // ------------------------------------------------------------------------------------

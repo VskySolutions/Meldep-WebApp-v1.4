@@ -1115,47 +1115,48 @@ function getGroupedActivities (activities) {
   return result;
 }
 
-function totalTimesheetHours () {
-  const total = rows.value.reduce(
-    (sum, row) => sum + (row.totalTimesheetEstHours || 0),
-    0
-  );
+function calculateTotalHours(items, field) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return "00:00";
+  }
 
-  return Number(total.toFixed(2));
-}
+  const totalMinutes = items.reduce((sum, item) => {
+    const value = item[field] || "00:00";
+    const [hours, minutes] = value.toString().split(":").map(Number);
 
-function totalTaskEstimateTimeHours () {
-  const total = rows.value.reduce(
-    (sum, row) => sum + (row.estimateTime || 0),
-    0
-  );
+    if (isNaN(hours) || isNaN(minutes)) {
+      return sum;
+    }
 
-  return Number(total.toFixed(2));
-}
-
-function totalEstimateHours () {
-  const total = rows.value.reduce((sum, row) => {
-    const activities = row.activity;
-    if (!Array.isArray(activities)) return sum;
-
-    return sum + activities.reduce(
-      (activitySum, activity) => activitySum + (activity.estimateHours || 0),
-      0
-    );
+    return sum + (hours * 60) + minutes;
   }, 0);
 
-  return Number(total.toFixed(2));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 }
 
-function totalActivityHours (activities) {
-  if (!Array.isArray(activities) || activities.length === 0) return 0;
+function totalActivityHours(activities) {
+  return calculateTotalHours(activities, "estimateHours");
+}
 
-  const total = activities.reduce(
-    (sum, activity) => sum + (activity.estimateHours || 0),
-    0
+function totalTimesheetHours() {
+  return calculateTotalHours(rows.value, "totalTimesheetEstHours");
+}
+
+function totalTaskEstimateTimeHours() {
+  return calculateTotalHours(rows.value, "estimateTime");
+}
+
+function totalEstimateHours() {
+  const activities = rows.value.flatMap(row =>
+    Array.isArray(row.activity) ? row.activity : []
   );
 
-  return Number(total.toFixed(2));
+  return calculateTotalHours(activities, "estimateHours");
 }
 
 const disableBeforeStartDate = (startDateStr) => {

@@ -230,10 +230,20 @@ const getProjectWeeklyTargetPlans = () => {
 };
 
 const getTotalExpectedHours = (lines = []) => {
-  return lines.reduce((total, line) => {
-    const hours = parseFloat(line.expectedHours);
-    return total + (isNaN(hours) ? 0 : hours);
-  }, 0).toFixed(2); // Optional: format to 2 decimal places
+  const totalMinutes = lines.reduce((total, line) => {
+    const value = String(line.expectedHours ?? "").trim();
+
+    if (!value) return total;
+
+    const [hours = 0, minutes = 0] = value.split(":").map(Number);
+
+    return total + (hours * 60) + minutes;
+  }, 0);
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 };
 
 // for static search

@@ -105,7 +105,7 @@
                             {{ props.row.name }}
                           </template>
                         </q-td>
-                        <q-td style="white-space: normal; overflow-wrap: break-word; width: 55%;">
+                        <q-td style="white-space: normal; overflow-wrap: break-word; width: 53%;">
                           <template v-if="!isPreviousTargetMonth">
                             <q-editor
                               v-model="props.row.description"
@@ -118,17 +118,32 @@
                             {{ props.row.description }}
                           </template>
                         </q-td>
-                        <q-td class="text-right" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 8%;">
+                        <q-td class="text-right" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">
                           <template v-if="!isPreviousTargetMonth">
                             <q-input
                               v-model="props.row.estimateHours"
                               outlined
                               dense
                               input-class="text-right"
+                              maxlength="5"
+                              mask="##:##"
+                              :rules="[validateHours]"
                               :error="rowValidations[props.rowIndex]?.value?.estimateHours.$error"
                               :error-message="rowValidations[props.rowIndex]?.value?.estimateHours.$errors[0]?.$message"
-                              @blur="rowValidations[props.rowIndex]?.value?.estimateHours.$touch"
-                            />
+                              @blur="props.row.estimateHours = formatHoursValue(props.row.estimateHours); rowValidations[props.rowIndex]?.value?.estimateHours.$touch"
+                            >
+                             <template #hint>
+                              <span
+                                v-if="props.row.estimateHours && validateHours(props.row.estimateHours) === true && props.row.estimateHours !== '00:00'""
+                                class="text-caption text-primary"
+                              >
+                                {{ getHoursMinutesText(props.row.estimateHours) }}
+                              </span>
+                              <span v-else>
+                                hh:mm
+                              </span>
+                            </template>
+                            </q-input>
                           </template>
                           <template v-else>
                             <div class="text-right">{{ props.row.estimateHours }}</div>
@@ -240,24 +255,71 @@ const getProjectActivityByTaskId = (targetMonth) => {
       flag: "Edit"
     }));
     // Calculate total hours
-    totalHours.value = TaskActivityRows.value.reduce((acc, row) => {
-      return acc + (parseFloat(row.estimateHours) || 0);
-    }, 0);
+    // totalHours.value = TaskActivityRows.value.reduce((acc, row) => {
+    //   return acc + (parseFloat(row.estimateHours) || 0);
+    // }, 0);
   }).finally(() => {
     loading.value = false;
   });
 };
 
-const totalHours = computed(() => {
-  const total = TaskActivityRows.value.reduce((sum, row) => {
-    if (!row.deleted) {
-      sum += parseFloat(row.estimateHours) || 0;
-    }
-    return sum;
-  }, 0);
+function getHoursMinutesText(value) {
+  if (!value) return "";
 
-  // Round to 2 decimal places without using toFixed()
-  return Math.round(total * 100) / 100;
+  value = String(value).trim();
+  if (/^\d{1,2}:?$/.test(value)) {
+    const hrs = parseInt(value, 10);
+
+    return hrs > 0
+      ? `${hrs} hr${hrs > 1 ? "s" : ""}`
+      : "";
+  }
+
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) return "";
+
+  const hrs = parseInt(match[1], 10);
+  let mins = parseInt(match[2], 10);
+
+  if (match[2].length === 1) {
+    mins *= 10;
+  }
+
+  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+
+  const hrText = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
+  const minText = mins > 0 ? `${mins} min` : "";
+
+  return [hrText, minText].filter(Boolean).join(" ");
+}
+
+const totalHours = computed(() => {
+  let totalMinutes = 0;
+
+  TaskActivityRows.value.forEach(row => {
+    if (!row.deleted && row.estimateHours) {
+      const value = row.estimateHours.toString().trim();
+
+      // Process only HH:MM format
+      if (/^\d{1,2}:\d{2}$/.test(value)) {
+        const [hours, minutes] = value.split(":");
+
+        totalMinutes +=
+          parseInt(hours, 10) * 60 +
+          parseInt(minutes, 10);
+      }
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 });
 
 const onAdd = () => {
@@ -267,7 +329,7 @@ const onAdd = () => {
     assignedToId: "",
     popupVisible: false,
     currentView: "Years",
-    estimateHours: "0",
+    estimateHours: "00:00",
     description: "",
     deleted: false
   });
@@ -307,11 +369,60 @@ const rowRules = {
   assignedToId: { required: helpers.withMessage("Activity Owner is required", required) },
   estimateHours: {
     required: helpers.withMessage("Est.Hrs is required", required),
-    minValue: helpers.withMessage("Invalid Estimate Hours", (value) => value >= 0)
+    validHours: helpers.withMessage(
+      ({ $response }) => $response,
+      (value) => validateHours(value)
+    )
   }
 };
 
 const rowValidations = ref([]);
+
+function validateHours(value) {
+  const strValue = String(value ?? "").trim();
+
+  if (!strValue) return true;
+  if (/^\d{1,2}:?$/.test(strValue)) {
+    return true;
+  }
+
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) {
+    return "Invalid hours format.";
+  }
+
+  const minutes = parseInt(match[2], 10);
+
+  if (minutes > 59) {
+    return "Minutes can't exceed 59.";
+  }
+
+  return true;
+}
+
+function formatHoursValue(value) {
+  if (!value) return value;
+
+  value = String(value).trim();
+  if (!value.includes(":")) {
+    return `${value.padStart(2, "0")}:00`;
+  }
+
+  const parts = value.split(":");
+
+  if (parts.length !== 2) return value;
+
+  let [hours, minutes] = parts;
+  if (!minutes) {
+    minutes = "00";
+  } else if (minutes.length === 1) {
+    minutes += "0";
+  }
+
+  return `${hours.padStart(2, "0")}:${minutes}`;
+}
+
 
 // Submit form
 const onSubmit = async () => {
@@ -355,16 +466,9 @@ const onSubmit = async () => {
       });
 
       const cleanedRows = TaskActivityRows.value.map(row => {
-        const trimmedHours = (row.estimateHours ?? "").toString().trim();
-        let parsedHours;
-        if (row.deleted === true) {
-          parsedHours = 0.0;
-        } else {
-          parsedHours = trimmedHours === "" ? null : parseFloat(trimmedHours);
-        }
         return {
           ...row,
-          estimateHours: parsedHours,
+          estimateHours: row.estimateHours,
           name: valueToTextMap[row.name] || row.name || "",
           description: row.description ?? "",
           assignedToId: row.assignedToId ?? "",

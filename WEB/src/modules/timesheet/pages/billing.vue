@@ -313,13 +313,15 @@ const getBillableTimesheets = (props) => {
 function getHoursMinutesText(value) {
   if (!value) return "";
 
-  // Hours only
-  if (/^\d{1,2}$/.test(value)) {
+  value = String(value).trim();
+
+  // 45 or 45:
+  if (/^\d{1,2}:?$/.test(value)) {
     const hrs = parseInt(value, 10);
     return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
   }
-
   const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+
   if (!match) return "";
 
   const hrs = parseInt(match[1], 10);
@@ -328,14 +330,11 @@ function getHoursMinutesText(value) {
   if (match[2].length === 1) {
     mins *= 10;
   }
-
   if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
     return "";
   }
-
   const hrText = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
   const minText = mins > 0 ? `${mins} min` : "";
-
   return [hrText, minText].filter(Boolean).join(" ");
 }
 
@@ -414,70 +413,29 @@ function onChangeBillableHrs(id, billableHrs, actualHours) {
   });
 }
 
-// validation for hrs
-// function validateHours (value) {
-//   // Ensure value is treated as a string
-//   const strValue = value.toString();
-//   const regex = /^(\d+(\.\d{1,2})?)?$/;
-//   if (!strValue || (regex.test(strValue) && strValue.length <= 5)) {
-//     return true; // Valid input
-//   }
-//   return "Invalid hours format.";
-// }
-
 function validateHours(value) {
-  if (!value || !value.trim()) {
+  value = String(value ?? "").trim();
+  if (!value) return true;
+  if (/^\d{1,2}:?$/.test(value)) {
     return true;
   }
 
-  if (/^\d{1,2}$/.test(value)) {
-    const hours = parseInt(value, 10);
-    return hours <= 99 ? true : "Please check hours.";
-  }
-
   const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
-  if (!match) {
-    return "Invalid hours format.";
-  }
 
-  const hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
+  if (!match) return "Invalid hours format.";
 
-  if (hours > 99) {
-    return "Maximum hours allowed is 99.";
-  }
-
-  if (minutes > 59) {
-    return "Minutes cannot exceed 59.";
-  }
-
-  return true;
+  return Number(match[2]) > 59
+    ? "Minutes can't exceed 59."
+    : true;
 }
 
 function formatHoursValue(value) {
-  // If empty, default to 00:00
-  if (!value || !value.trim()) {
-    return "00:00";
-  }
+  value = String(value ?? "").trim();
+  if (!value) return "00:00";
 
-  value = value.trim();
+  const [hours, minutes = "00"] = value.split(":");
 
-  if (!value.includes(":")) {
-    return `${value.padStart(2, "0")}:00`;
-  }
-
-  const parts = value.split(":");
-  if (parts.length !== 2) return value;
-
-  let [hours, minutes] = parts;
-
-  if (minutes.length === 1) {
-    minutes += "0";
-  }
-
-  hours = hours.padStart(2, "0");
-
-  return `${hours}:${minutes}`;
+  return `${hours.padStart(2, "0")}:${minutes.padEnd(2, "0")}`;
 }
 
 function disableBeforeStartDate (date) {

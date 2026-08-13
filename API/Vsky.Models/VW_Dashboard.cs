@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Vsky.Core;
 
 namespace Vsky.Models
@@ -136,6 +137,8 @@ namespace Vsky.Models
         public string TaskName { get; set; }
         public string TaskDescription { get; set; }
         public string ProjectTask_Tags { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal EstimateTime { get; set; }
         public DateTime? TaskMonth { get; set; }
         public DateTime? StartDate { get; set; }
@@ -144,7 +147,11 @@ namespace Vsky.Models
         public bool Active { get; set; }
         public decimal SortOrder { get; set; }
         public int TotalActivitiesCount { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal TotalActivityHours { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal TotalCloseActivityHours { get; set; }
         public int ActivityCloseCount { get; set; }
         public int ActivityCompletedCount { get; set; }
@@ -172,6 +179,8 @@ namespace Vsky.Models
         public string ActivityName { get; set; }
         public string ActivityOwner { get; set; }
         public string ActivityDescription { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal EstimateHours { get; set; }
         public bool Active { get; set; }
         public bool EmployeeStatus { get; set; }

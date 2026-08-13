@@ -234,16 +234,18 @@
                         :error="rowValidations[props.rowIndex]?.value?.hours.$error"
                         :error-message="rowValidations[props.rowIndex]?.value?.hours.$errors[0]?.$message"
                       >
-                       <template v-if="!props.row.hours" v-slot:hint>
-                        hh:mm
-                      </template>
+                        <template #hint>
+                          <span
+                            v-if="props.row.hours && validateHours(props.row.hours) === true && props.row.hours !== '00:00'""
+                            class="text-caption text-primary"
+                          >
+                            {{ getHoursMinutesText(props.row.hours) }}
+                          </span>
+                          <span v-else>
+                            hh:mm
+                          </span>
+                        </template>
                       </q-input>
-                      <div
-                        v-if="props.row.hours && validateHours(props.row.hours) === true"
-                        class="text-caption text-primary q-mt-xs"
-                      >
-                        {{ getHoursMinutesText(props.row.hours) }}
-                      </div>
                     </q-td>
                     <!-- <q-td style="width: 200px; max-width: 200px;">
                       <q-input
@@ -417,58 +419,35 @@ const editingRowrules = {
 };
 
 function validateHours(value) {
-  const strValue = (value ?? "").toString().trim();
-  if (!strValue) {
-    return "Hours are required.";
-  }
+  const strValue = String(value ?? "").trim();
 
-  if (/^\d{1,2}$/.test(strValue)) {
-    const hours = parseInt(strValue, 10);
-    return hours <= 99 ? true : "Please check hours.";
+  if (!strValue) return "Hours are required.";
+  if (/^\d{1,2}:?$/.test(strValue)) {
+    return true;
   }
 
   const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
-  if (!match) {
-    return "Invalid hours format.";
-  }
 
-  const hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
+  if (!match) return "Invalid hours format.";
 
-  if (minutes > 59) {
-    return "Minutes cannot exceed 59.";
-  }
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
 
+  if (minutes > 59) return "Minutes can't exceed 59.";
   if (hours === 0 && minutes === 0) {
     return "Hours must be greater than 00:00.";
   }
+
   return true;
 }
 
 function formatHoursValue(row) {
   if (!row.hours) return;
 
-  let value = row.hours.trim();
+  const value = row.hours.trim();
+  const [hours, minutes = "00"] = value.split(":");
 
-  // If only hours are entered (e.g. 2), convert to HH:00
-  if (!value.includes(":")) {
-    const hours = value.padStart(2, "0");
-    row.hours = `${hours}:00`;
-    return;
-  }
-
-  const parts = value.split(":");
-  if (parts.length !== 2) return;
-
-  let hours = parts[0];
-  let minutes = parts[1];
-  if (minutes.length === 1) {
-    minutes = minutes + "0";
-  }
-
-  hours = hours.padStart(2, "0");
-
-  row.hours = `${hours}:${minutes}`;
+  row.hours = `${hours.padStart(2, "0")}:${minutes.padEnd(2, "0")}`;
 }
 
 const totalHours = computed(() => {
@@ -807,14 +786,13 @@ function getHoursMinutesText(value) {
   if (!value) return "";
 
   value = value.trim();
-
-  // Hours only
-  if (/^\d{1,2}$/.test(value)) {
+  if (/^\d{1,2}:?$/.test(value)) {
     const hrs = parseInt(value, 10);
     return hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}` : "";
   }
 
   const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+
   if (!match) return "";
 
   const hrs = parseInt(match[1], 10);
@@ -833,7 +811,6 @@ function getHoursMinutesText(value) {
 
   return [hrText, minText].filter(Boolean).join(" ");
 }
-
 async function onAddTimesheet () {
   timesheetRows.value.push({
     id: uid(),

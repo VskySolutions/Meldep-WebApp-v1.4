@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
 using Vsky.Api.Models;
+using Vsky.Core;
 using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
 using Vsky.Services.Common;
@@ -404,6 +405,11 @@ namespace Vsky.Api.Controllers
                             );
                     }
 
+                    if (!string.IsNullOrWhiteSpace(model.EstimateHoursStr))
+                    {
+                        entity.EstimateHours = HoursConverter.ConvertTimeToDecimalHours(model.EstimateHoursStr);
+                    }
+
                     // Set the created by and created on properties
                     entity.CreatedById = LoggedUserId;
                     entity.UpdatedById = LoggedUserId;
@@ -714,6 +720,10 @@ namespace Vsky.Api.Controllers
                             );
                     }
 
+                    if (!string.IsNullOrWhiteSpace(model.EstimateHoursStr))
+                    {
+                        entity.EstimateHours = HoursConverter.ConvertTimeToDecimalHours(model.EstimateHoursStr);
+                    }
                     entity.UpdatedById = LoggedUserId;
                     entity.UpdatedOnUtc = GetDateTime;
                     _activityService.UpdateProjectActivity(entity);

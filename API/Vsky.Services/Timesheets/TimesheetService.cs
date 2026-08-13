@@ -666,7 +666,7 @@ namespace Vsky.Services.Timesheets
                                     t.TimesheetId,
                                     TimesheetLineId = t.Id,
                                     Date = x.TimesheetDate,
-                                    t.Hours,
+                                    Hours = HoursConverter.ConvertDecimalHoursToTime(t.Hours),
                                     t.Description,
                                     Project = t.Project.Name,
                                     Task = t.Task.Name,

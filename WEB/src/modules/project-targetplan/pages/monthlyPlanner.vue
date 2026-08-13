@@ -554,12 +554,25 @@
                                     outlined
                                     hide-bottom-space
                                     dense
-                                    :rules="[validateTaskEstimatedHours]"
+                                    :rules="[validateHours]"
+                                    mask="##:##"
                                     maxlength="5"
                                     class="full-width"
                                     @keyup="checkAddResourceFields(resourceModel.value)"
-                                  />
-
+                                    @blur="resourceModel.value.estimatedHours = formatHoursValue(resourceModel.value.estimatedHours);"
+                                  >
+                                    <template #hint>
+                                      <span
+                                        v-if="resourceModel.value.estimatedHours && validateHours(resourceModel.value.estimatedHours) === true && resourceModel.value.estimatedHours !== '00:00'""
+                                        class="text-caption text-primary"
+                                      >
+                                        {{ getHoursMinutesText(resourceModel.value.estimatedHours) }}
+                                      </span>
+                                      <span v-else>
+                                        hh:mm
+                                      </span>
+                                    </template>
+                                  </q-input>
                                   <div class="row justify-end q-gutter-sm q-mt-sm">
                                     <q-btn v-close-popup label="Cancel" color="grey" flat dense />
                                     <q-btn
@@ -1417,18 +1430,53 @@ const deleteMonthlyPlanDatesLine = (weeklyDatesLines, line, lineIndex) => {
   });
 };
 
-const validateTaskEstimatedHours = (value) => {
-  if (!value) return "Estimated hours are required."
+function validateHours(value) {
+  const strValue = String(value ?? "").trim();
 
-  const regex = /^\d{1,3}(\.\d{1,2})?$/
-  return regex.test(String(value)) ? true : "Invalid format"
+  if (!strValue) return true;
+
+  if (/^\d{1,2}:?$/.test(strValue)) {
+    return true;
+  }
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) {
+    return "Invalid hours format.";
+  }
+
+  return Number(match[2]) <= 59
+    ? true
+    : "Minutes can't exceed 59.";
 }
 
+function formatHoursValue(value) {
+  if (!value) return value;
+
+  const strValue = String(value).trim();
+  const [hours, minutes = "00"] = strValue.split(":");
+
+  return `${hours.padStart(2, "0")}:${minutes.padEnd(2, "0")}`;
+}
+
+
 const getTotalHoursForWeekSummary = (employees = []) => {
-  return employees.reduce((total, line) => {
-    const hours = parseFloat(line.totalEstimatedHours);
-    return total + (isNaN(hours) ? 0 : hours);
-  }, 0).toFixed(2); // Optional: format to 2 decimal places
+  let totalMinutes = 0;
+
+  employees.forEach(line => {
+    const value = (line.totalEstimatedHours ?? "").toString().trim();
+
+    if (/^\d{1,2}:\d{2}$/.test(value)) {
+      const [hours, minutes] = value.split(":").map(Number);
+      totalMinutes += (hours * 60) + minutes;
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 };
 
 const getResourceSummaryForWeekPlanById = async (weekPlan) => {
@@ -1463,7 +1511,7 @@ const checkAddResourceFields = (resource) => {
   const hasMissingData =
     !resource?.employeeId ||
     !resource?.estimatedHours ||
-    !isPositiveNumberOrDecimal(resource.estimatedHours);
+    validateHours(resource.estimatedHours) !== true;
   addResourceBtn.value = hasMissingData;
 };
 
@@ -1508,14 +1556,50 @@ const onDeleteResourceToLine = (weekPlan, line, resource, resourceIndex) => {
   });
 };
 
-const getTotalWeekLineExpectedHours = (line = []) => {
-  const totalWeekHours = line.projectWeeklyPlanDatesLinesAssignedTo.reduce((total, assignTo) => {
-    const hours = parseFloat(assignTo.estimatedHours);
-    return total + (isNaN(hours) ? 0 : hours);
-  }, 0).toFixed(2);
-  line.expectedHours = totalWeekHours;
+const getTotalWeekLineExpectedHours = (line = {}) => {
+  let totalMinutes = 0;
+
+  line.projectWeeklyPlanDatesLinesAssignedTo?.forEach(assignTo => {
+    const value = (assignTo.estimatedHours ?? "").toString().trim();
+
+    if (/^\d{1,2}:\d{2}$/.test(value)) {
+      const [hours, minutes] = value.split(":").map(Number);
+      totalMinutes += (hours * 60) + minutes;
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  line.expectedHours = `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
 };
 
+function getHoursMinutesText(value) {
+  if (!value) return "";
+  const strValue = String(value).trim();
+  const match = strValue.match(/^(\d{1,2})(?::(\d{0,2}))?$/);
+  if (!match) return "";
+  const hrs = Number(match[1]);
+  const mins = match[2]
+    ? Number(match[2].padEnd(2, "0"))
+    : 0;
+
+  if (hrs > 99 || mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+  const result = [];
+  if (hrs > 0) {
+    result.push(`${hrs} hr${hrs > 1 ? "s" : ""}`);
+  }
+
+  if (mins > 0) {
+    result.push(`${mins} min`);
+  }
+
+  return result.join(" ");
+}
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
 // --------------------------------------------------------------------------------------------------------------------------------------------------

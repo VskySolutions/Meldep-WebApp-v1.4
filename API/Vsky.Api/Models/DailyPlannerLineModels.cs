@@ -5,6 +5,7 @@ using Vsky.Api.Converter;
 using Vsky.Api.Framework.Models;
 using Vsky.Models;
 using System.Text.Json.Serialization;
+using Vsky.Core;
 
 namespace Vsky.Api.Models
 {

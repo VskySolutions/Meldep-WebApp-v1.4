@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
 using Vsky.Api.Models;
+using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
@@ -1899,8 +1900,23 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var List = await _context.EmployeeEstimatedHoursDropdownList.FromSqlRaw("EXEC GetAllEmployeesWithHoursForWeeklyMonthlyPlanning @ProjectId = {0}, @PlanTypeId = {1}, @WeekDate = {2}, @SiteId = {3}", projectId, planTypeId, weekDate, SiteId).ToListAsync();
-                return Ok(List);
+                var list = await _context.EmployeeEstimatedHoursDropdownList.FromSqlRaw("EXEC GetAllEmployeesWithHoursForWeeklyMonthlyPlanning @ProjectId = {0}, @PlanTypeId = {1}, @WeekDate = {2}, @SiteId = {3}", projectId, planTypeId, weekDate, SiteId).ToListAsync();
+
+                foreach (var item in list)
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(
+                        item.EmployeeName,
+                        @"^(.*)\(([\d.]+)\)$");
+
+                    if (match.Success)
+                    {
+                        var name = match.Groups[1].Value.Trim();
+                        var decimalHours = decimal.Parse(match.Groups[2].Value);
+
+                        item.EmployeeName = $"{name} ({HoursConverter.ConvertDecimalHoursToTime(decimalHours)})";
+                    }
+                }
+                return Ok(list);
             }
             catch (Exception ex)
             {

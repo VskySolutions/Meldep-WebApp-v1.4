@@ -2,9 +2,8 @@
 using System;
 using System.Collections.Generic;
 using Vsky.Api.Framework.Models;
-using System.ComponentModel.DataAnnotations.Schema;
-using Vsky.Api.Converter;
 using System.Text.Json.Serialization;
+using Vsky.Core;
 
 namespace Vsky.Api.Models
 {

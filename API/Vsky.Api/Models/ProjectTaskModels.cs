@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Http;
 using Vsky.Api.Framework.Models;
+using System.Text.Json.Serialization;
 using Vsky.Core;
 using Vsky.Models;
 
@@ -19,7 +20,10 @@ namespace Vsky.Api.Models
         public string Description { get; set; }
         public string StatusId { get; set; }
         public string PriorityId { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal EstimateTime { get; set; }
+        public String EstimateTimeStr { get; set; }
         public string Instructions { get; set; }
         public string StartDateStr { get; set; }
         public string EndDateStr { get; set; }
@@ -57,6 +61,8 @@ namespace Vsky.Api.Models
         public DateTime? TaskMonth { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public DateTime? UpdatedOnUtc { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal TotalTimesheetEstHours { get; set; }
 
         public virtual EmployeeModel AssignedTo { get; set; }

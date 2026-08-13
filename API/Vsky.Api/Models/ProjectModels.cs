@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Vsky.Api.Framework.Models;
+using System.Text.Json.Serialization;
+using Vsky.Core;
 using Vsky.Models;
 //using Vsky.Models.SwimLane;
 
@@ -60,7 +62,11 @@ namespace Vsky.Api.Models
         public int TotalIssueCount { get; set; }
         public int CompletedRequirementCount { get; set; }
         public int TotalRequirementCount { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal TotalTaskEstimateHours { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal TotalActivityHours { get; set; }
         public int TotalModuleCount { get; set; }
         public int TotalTasksCount { get; set; }

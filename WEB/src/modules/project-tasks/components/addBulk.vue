@@ -101,9 +101,35 @@
                       </q-td>
                       <q-td class="text-left" style="width: 140px; max-width: 140px;">
                         <q-input
-                          v-model="editingRow.estimateTime" outlined dense maxlength="7"
-                          :error="editingRowV$.estimateTime.$error" :error-message="editingRowV$.estimateTime.$errors[0]?.$message" @blur="editingRowV$.estimateTime.$touch"
-                        />
+                          v-model="editingRow.estimateTime"
+                          outlined dense
+                          maxlength="6"
+                          mask="###:##"
+                          :rules="[validateHours]"
+                          :error="editingRowV$.estimateTime.$error"
+                          :error-message="editingRowV$.estimateTime.$errors[0]?.$message"
+                          @blur="
+                            editingRow.estimateTime = formatHoursValue(editingRow.estimateTime);
+                            editingRowV$.estimateTime.$touch();
+                          "
+                        >
+                         <template #hint>
+                          <span
+                            v-if="
+                              editingRow.estimateTime &&
+                              validateHours(editingRow.estimateTime) === true &&
+                              editingRow.estimateTime !== '00:00'
+                            "
+                            class="text-caption text-primary"
+                          >
+                            {{ getHoursMinutesText(editingRow.estimateTime) }}
+                          </span>
+
+                          <span v-else>
+                            hh:mm
+                          </span>
+                        </template>
+                      </q-input>
                       </q-td>
                       <q-td style="white-space: normal; overflow-wrap: break-word; width: 400px;">
                         <q-editor
@@ -190,9 +216,38 @@
                       </q-td>
                       <q-td class="text-right" style="width: 20px; max-width: 20px;">
                         <q-input
-                          v-if="mode == 'edit' && editingRow && props.row.id === activeRowId" v-model="editingRow.estimateTime" outlined hide-bottom-space dense maxlength="7"
-                          :error="editingRowV$.estimateTime.$error" :error-message="editingRowV$.estimateTime.$errors[0]?.$message" @blur="editingRowV$.estimateTime.$touch"
-                        />
+                          v-if="mode == 'edit' && editingRow && props.row.id === activeRowId"
+                          v-model="editingRow.estimateTime"
+                          outlined
+                          hide-bottom-space
+                          dense
+                          maxlength="6"
+                          mask="###:##"
+                          :rules="[validateHours]"
+                          :error="editingRowV$.estimateTime.$error"
+                          :error-message="editingRowV$.estimateTime.$errors[0]?.$message"
+                          @blur="
+                            editingRow.estimateTime = formatHoursValue(editingRow.estimateTime);
+                            editingRowV$.estimateTime.$touch;
+                          "
+                        >
+                          <template #hint>
+                            <span
+                              v-if="
+                                editingRow.estimateTime &&
+                                validateHours(editingRow.estimateTime) === true &&
+                                editingRow.estimateTime !== '00:00'
+                              "
+                              class="text-caption text-primary"
+                            >
+                              {{ getHoursMinutesText(editingRow.estimateTime) }}
+                            </span>
+
+                            <span v-else>
+                              hh:mm
+                            </span>
+                          </template>
+                        </q-input>
                         <span v-else :class="props.row.deleted ? 'text-delete' : ''">{{ props.row.estimateTime }} </span>
                       </q-td>
                       <q-td class="text-left" style="white-space: normal; overflow-wrap: break-word; width: 400px;">
@@ -338,6 +393,31 @@ const getProjectTask = () => {
   });
 };
 
+function getHoursMinutesText(value) {
+  if (!value) return "";
+
+  const match = String(value).trim().match(/^(\d{1,3}):(\d{1,2})$/);
+  if (!match) return "";
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+
+  if (hours > 999 || minutes > 59 || (hours === 0 && minutes === 0)) {
+    return "";
+  }
+
+  const parts = [];
+
+  if (hours > 0) {
+    parts.push(`${hours} hr${hours > 1 ? "s" : ""}`);
+  }
+
+  if (minutes > 0) {
+    parts.push(`${minutes} min`);
+  }
+
+  return parts.join(" ");
+}
 // Add new row
 const allEditingRows = ref([]);
 let isSaveDialog = false;
@@ -372,7 +452,7 @@ function onAddConfirm () {
     endDateStr: props.endDate,
     statusId: newStatus ? newStatus.value : "", // Set default "New" status
     priorityId: lowPriority ? lowPriority.value : "",
-    estimateTime: "00.00",
+    estimateTime: "000:00",
     description: "",
     status: {
       dropDownValue: ""
@@ -443,11 +523,32 @@ function getPriority (value) {
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Validations
 // --------------------------------------------------------------------------------------------------------------------------------------------------
-const validateHours = (value) => {
-  const strValue = (value ?? "").toString().trim();
-  const regex = /^\d+(?:\.\d{1,2})?$/;
-  return !!strValue && regex.test(strValue) && Number(strValue) > 0;
-};
+function validateHours(value) {
+  const strValue = String(value ?? "").trim();
+  if (!strValue) {
+    return "Please enter estimate hrs.";
+  }
+  const match = strValue.match(/^(\d{1,3})(?::(\d{0,2}))?$/);
+
+  if (!match) {
+    return "Invalid hours format.";
+  }
+  const minutes = match[2];
+
+  if (minutes !== undefined && minutes !== "" && Number(minutes) > 59) {
+    return "Minutes can't exceed 59.";
+  }
+  return true;
+}
+
+function formatHoursValue(value) {
+  if (!value) return value;
+
+  const strValue = String(value).trim();
+  const [hours, minutes = "00"] = strValue.split(":");
+
+  return `${hours.padStart(3, "0")}:${minutes.padEnd(2, "0")}`;
+}
 // Multiple row validation
 const editingRowrules = {
   name: { required: helpers.withMessage("Task name is required", required) },
@@ -467,7 +568,10 @@ const editingRowrules = {
   priorityId: { required: helpers.withMessage("Priority is Required", required) },
   estimateTime: {
     required: helpers.withMessage("Estimate Hours is required", required),
-    validateHours: helpers.withMessage("Invalid Estimate Hours", validateHours)
+    validHours: helpers.withMessage(
+      ({ $response }) => $response,
+      (value) => validateHours(value)
+    )
   }
   // estimateHours: { required: helpers.withMessage("Required", required) }
   // dueDate: {
