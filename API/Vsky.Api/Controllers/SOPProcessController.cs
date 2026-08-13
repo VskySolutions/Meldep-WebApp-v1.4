@@ -207,7 +207,7 @@ namespace Vsky.Api.Controllers
                         model.Description?.Trim(),
                         StringComparison.Ordinal);
 
-                    bool shouldCreateVersion = (isDescriptionChanged && model.ActionType == "approve") || statusName == "Published";
+                    bool shouldCreateVersion = (isDescriptionChanged && (model.ActionType == "approve" || model.ActionType == "saveApproval")) || statusName == "Published";
 
                     if (shouldCreateVersion)
                     {
@@ -247,7 +247,7 @@ namespace Vsky.Api.Controllers
 
                         AddSOPProcessStatusLog(
                             sopProcess.Id,
-                            model.StatusId,
+                            model.ActionType == "saveApproval" ? lastStatus?.Status?.Id : model.StatusId,
                             loggedUserId,
                             currentDateTime);
                     }
@@ -275,7 +275,7 @@ namespace Vsky.Api.Controllers
 
                         _sOPProcessService.UpdateSOPProcess(entity);
 
-                        if (IsSOPProcessStatusChanged)
+                        if (IsSOPProcessStatusChanged && model.ActionType != "saveApproval")
                         {
                             AddSOPProcessStatusLog(
                                 entity.Id,

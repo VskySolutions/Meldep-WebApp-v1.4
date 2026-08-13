@@ -245,14 +245,22 @@
                 @cancel="activeEdit = { rowId: null, field: null }"
                 @submit="
                   ({ rowId, value }) =>
+                    onStatusChange(
+                      rowId,
+                      value,
+                      props.row
+                    )
+                "
+                @history="() => onSOPProcessStatusLog(props.row.id)"
+              />
+                <!-- @submit="
+                  ({ rowId, value }) =>
                     onSubmitSOPProcessStatus(
                       rowId,
                       value,
                       refreshSOPProcessList
                     )
-                "
-                @history="() => onSOPProcessStatusLog(props.row.id)"
-              />
+                " -->
             </q-td>
             <q-td class="hidden">
               <span>{{ truncateText(props.row.shortDescription) }}</span>
@@ -286,7 +294,7 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onSOPProcessView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon
+              <!-- <q-icon
                 v-if="canEdit(props.row) ||
                   (
                     canApprove() &&
@@ -306,10 +314,42 @@
                   {{
                     canApprove() &&
                     props.row.statusText?.toLowerCase() === 'submitted'
-                      ? 'Approve SOP Process'
+                      ? 'Review & Edit SOP Process'
                       : 'Edit'
                   }}
                 </q-tooltip>
+              </q-icon> -->
+              <q-icon
+                v-if="canEdit(props.row) ||
+                  (
+                    canApprove() &&
+                    props.row.statusText?.toLowerCase() === 'submitted'
+                  )
+                "
+                name="o_edit"
+                class="cursor-pointer q-mr-sm"
+                size="xs"
+                @click="onSOPProcessEdit(props.row.id, refreshSOPProcessList)">
+                <q-tooltip>
+                  {{
+                    canApprove() &&
+                    props.row.statusText?.toLowerCase() === 'submitted'
+                      ? 'Review & Edit SOP Process'
+                      : 'Edit'
+                  }}
+                </q-tooltip>
+              </q-icon>
+              <q-icon
+                v-if="
+                  canApprove() &&
+                  props.row.statusText?.toLowerCase() === 'submitted'
+                "
+                name="o_check_box"
+                class="cursor-pointer q-mr-sm"
+                size="xs"
+                @click="onApproveSOPProcess(props.row)"
+              >
+                <q-tooltip>Approve SOP Process</q-tooltip>
               </q-icon>
               <q-icon
                 v-if="canEdit(props.row)"
@@ -356,7 +396,7 @@
 import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
-import { getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
+import { zwConfirm, getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
 
 import sopProcessService from "../sopProcess.service";
 
@@ -428,8 +468,8 @@ const role =
 
 // permissions
 const canEdit = (row) =>
-  role === "both" && loggedUserId === row.createdBy?.id ||
-  (role === "editor" && loggedUserId === row.createdBy?.id);
+  role === "both" && loggedUserId === row.originalCreatedById ||
+  (role === "editor" && loggedUserId === row.originalCreatedById);
 
 const canApprove = () =>
   role === "both" ||
@@ -437,7 +477,7 @@ const canApprove = () =>
 
 const canDelete = (row) =>
   role === "both" ||
-  (role === "editor" && loggedUserId === row.createdBy?.id);
+  (role === "editor" && loggedUserId === row.originalCreatedById);
 
 const showManageDropdownOptions = ref(false);
 const { toDate } = useFilters();
@@ -518,6 +558,7 @@ const getAllSOPProcessList = (props) => {
         ...data
       };
     });
+
     pagination.value.page = page;
     pagination.value.rowsPerPage = rowsPerPage;
     pagination.value.sortBy = sortBy;
@@ -534,6 +575,99 @@ const getAllSOPProcessList = (props) => {
     searchLoader.value = false;
   });
 };
+
+const onApproveSOPProcess = (row) => {
+  const approvedStatus = sopProcessStatusDropdownSingleSelect.list.value.find(
+    status => status.text?.toLowerCase() === "approved"
+  );
+
+  if (!approvedStatus) {
+    return;
+  }
+
+  // Confirmation popup
+  zwConfirm(
+    {
+      title: "Confirmation",
+      message:`Are you sure you want to approve "${row.title}"?`,
+      okLabel: "Yes",
+      cancelLabel: "No"
+    },
+    () => {
+      onSubmitSOPProcessStatus(
+        row.id,
+        approvedStatus.value,
+        refreshSOPProcessList
+      );
+    }
+  );
+};
+
+const resetActiveEdit = () => {
+  activeEdit.value = { rowId: null, field: null };
+};
+
+const onStatusChange = (rowId, value, row) => {
+  const selectedStatus =
+    sopProcessStatusDropdownSingleSelect.list.value.find(
+      status => status.value === value
+    );
+
+  if (selectedStatus?.text?.toLowerCase() === "approved") {
+    resetActiveEdit();
+
+    zwConfirm(
+      {
+        title: "Confirmation",
+        message: `Are you sure you want to approve "${row.title}"?`,
+        okLabel: "Yes",
+        cancelLabel: "No"
+      },
+      () => {
+        onSubmitSOPProcessStatus(
+          rowId,
+          value,
+          refreshSOPProcessList
+        );
+
+        resetActiveEdit();
+      }
+    );
+
+    return;
+  }
+
+  onSubmitSOPProcessStatus(
+    rowId,
+    value,
+    refreshSOPProcessList
+  );
+
+  resetActiveEdit();
+};
+
+//   $q.dialog({
+//     title: "Approve SOP Process",
+//     message: `Are you sure you want to approve "${row.title}"?`,
+//     cancel: true,
+//     persistent: true,
+//     ok: {
+//       label: "Approve",
+//       color: "positive",
+//       noCaps: true
+//     },
+//     cancel: {
+//       label: "Cancel",
+//       flat: true,
+//       noCaps: true
+//     }
+//   }).onOk(() => {
+//     onSubmitSOPProcessStatus(
+//       row.id,
+//       approvedStatus.value,
+//       refreshSOPProcessList
+//     );
+//   });
 
 // function loadSopAssistant() {
 //   // Prevent loading the script multiple times

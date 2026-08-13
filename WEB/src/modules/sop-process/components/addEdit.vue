@@ -3,7 +3,15 @@
   <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" full-height persistent position="right" @hide="onDialogHide">
     <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 70vw !important;max-width: 70vw;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div class="text-h2 text-white">{{ props.id ? "Edit" : "Add" }} SOP Process</div>
+          <div class="text-h2 text-white">
+            {{
+              canApprove
+                ? "Review & Edit SOP Process"
+                : props.id
+                  ? "Edit SOP Process"
+                  : "Add SOP Process"
+            }}
+          </div>
         <q-btn icon="o_close" class="close" color="white" flat round dense @click="onDialogCancel()" />
       </q-card-section>
       <q-separator />
@@ -165,14 +173,33 @@
             @click="onDialogCancel()"
           />
           <!-- APPROVER BUTTON -->
-          <template v-if="canApprove">
+          <!-- <template v-if="canApprove">
             <q-btn
               color="positive"
-              label="Approve"
+              label="Save & Approve"
               class="actionBtn"
               :loading="processingSubmit"
               no-caps
-              @click="onSubmit('approve')"
+              @click="onConfirmApprove"
+            />
+          </template> -->
+          <template v-if="canApprove">
+            <q-btn
+              color="primary"
+              label="Save & Close"
+              class="actionBtn"
+              :loading="processingSave"
+              no-caps
+              @click="onSubmit('saveApproval')"
+            />
+
+            <q-btn
+              color="positive"
+              label="Save & Approve"
+              class="actionBtn"
+              :loading="processingSubmit"
+              no-caps
+              @click="onConfirmApprove"
             />
           </template>
           <!-- <template v-else-if="canAdd && (!props.id || canEditDraft)">
@@ -467,8 +494,20 @@ const sanitizeEditorHtml = (html) => {
     .trim();
 };
 
+const onConfirmApprove = () => {
+  zwConfirm({
+    title: "Save & Approve SOP Process",
+    message:
+      "Any changes made to this SOP Process will be saved and the process will be approved. Do you want to continue?",
+    okLabel: "Save & Approve",
+    cancelLabel: "Cancel"
+  }, () => {
+    onSubmit("approve");
+  });
+};
+
 const onSubmit = async (type) => {
-  if (type === "save") processingSave.value = true;
+  if (type === "save" || type === "saveApproval") processingSave.value = true;
   else processingSubmit.value = true;
 
   try {
@@ -514,7 +553,7 @@ const onSubmit = async (type) => {
     console.error("Error in submitting:", error);
     notifyError({ message: "An error occurred while saving." });
   } finally {
-    if (type === "save") processingSave.value = false;
+    if (type === "save" || type === "saveApproval") processingSave.value = false;
     else processingSubmit.value = false;
   }
 };

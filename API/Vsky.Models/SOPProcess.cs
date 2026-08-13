@@ -26,6 +26,8 @@ namespace Vsky.Models
         public string StatusId { get; set; }
         [NotMapped]
         public string StatusText { get; set; }
+        [NotMapped]
+        public string OriginalCreatedById { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public string CreatedById { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
