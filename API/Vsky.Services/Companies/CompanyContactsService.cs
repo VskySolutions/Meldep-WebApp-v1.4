@@ -270,7 +270,7 @@ namespace Vsky.Services.Companies
         #region GetAllContactListByCompanyIdForDropdown
         public async Task<List<CompanyContacts>> GetAllContactListByCompanyIdForDropdown(string SiteId, string companyId = null)
         {
-            var query = _companyContactsRepository.TableNoTracking.Where(x => !x.Deleted && x.Company.SiteId == SiteId && !x.Person.Deleted);
+            var query = _companyContactsRepository.TableNoTracking.Where(x => !x.Deleted && x.Company.SiteId == SiteId && !x.Company.Deleted && !x.Person.Deleted);
 
             if (!string.IsNullOrWhiteSpace(companyId))
             {

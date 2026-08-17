@@ -73,6 +73,19 @@
             </label>
 
           </div>
+          <div class="col-12 q-mb-sm">
+            <label class="label text-black">Explanation<span class="required">*</span></label>
+            <q-input
+              v-model="workFromHomeModel.message"
+              outlined
+              stack-label
+              hide-bottom-space
+              autogrow
+              :error="workFromHomeModelV$.message.$error"
+              :error-message="workFromHomeModelV$.message.$errors[0]?.$message"
+              @blur="workFromHomeModelV$.message.$touch"
+            />
+          </div>
           <div class="col-12">
             <label class="label q-mb-xs text-black">Permission By (Permission taken from / informed to the following person, and acknowledgement received)<span class="required">*</span></label>
             <q-select
@@ -215,6 +228,7 @@ const workFromHomeModel = ref({
   date: toDate(currentDate),
   timeInMinutes: "",
   wFHDurationId: "",
+  message: "",
   approverById: ""
 });
 
@@ -232,6 +246,7 @@ const workFromHomeModelRules = {
       }
     )
   },
+  message: { required: helpers.withMessage("Explanation is required", required) },
   approverById: { required: helpers.withMessage("Permission By is required", required) }
 };
 
@@ -302,7 +317,8 @@ const getMovementRegisterDetails = () => {
       if (!movementRegisterDetail) return;
       workFromHomeModel.value = {
         date: resp.date,
-        approverById: movementRegisterDetail.approverById
+        approverById: movementRegisterDetail.approverById,
+        message: movementRegisterDetail.message
       };
       if (movementRegisterDetail.wfhDurationId) {
         workFromHomeModel.value.timeInMinutes = Number(movementRegisterDetail.timeInMinutes);
@@ -354,7 +370,7 @@ async function submitWorkFromHome () {
       timeInMinutes: workFromHomeModel.value.timeInMinutes,
       wFHDurationId: workFromHomeModel.value.wFHDurationId || null,
       approverById: workFromHomeModel.value.approverById,
-      message: "Working From Home",
+      message: workFromHomeModel.value.message,
       Type: "Work From Home"
     };
     await movementRegisterService.saveMovementRegister(props.detailId, workFromHomePayload);

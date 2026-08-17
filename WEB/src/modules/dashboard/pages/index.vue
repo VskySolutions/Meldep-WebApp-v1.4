@@ -292,7 +292,7 @@
                           <div class="RichTextEditor" v-html="line.description" />
                         </q-td>
                         <q-td v-if="getTotalHoursByProject(props.row.timesheetLines).length > 1 && index === 0" :rowspan="getTotalHoursByProject(props.row.timesheetLines).length" class="text-center">
-                          <b>{{ getTotalHoursByProject(props.row.timesheetLines) .reduce((sum, l) => sum + parseFloat(l.totalHours), 0) .toFixed(2) }}</b>
+                          <b>{{ getTotalHoursAllProjects(props.row.timesheetLines) }}</b>
                         </q-td>
                         <q-td v-else-if="getTotalHoursByProject(props.row.timesheetLines).length === 1" class="text-center">
                           <b>{{ line.totalHours }}</b>
@@ -1413,6 +1413,22 @@ function getTotalHoursByProject(lines) {
         .padStart(2, "0")}`
     };
   });
+}
+
+function getTotalHoursAllProjects(lines) {
+  const projectTotals = getTotalHoursByProject(lines);
+
+  let totalMinutes = 0;
+
+  for (const project of projectTotals) {
+    const [hours, minutes] = project.totalHours.split(":").map(Number);
+    totalMinutes += (hours * 60) + minutes;
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
 // Fetch Time In / Time Out for a specific employee
