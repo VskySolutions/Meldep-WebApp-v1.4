@@ -163,12 +163,29 @@ const emit = defineEmits([
 
 const selectRef = ref(null);
 const localValue = ref(props.value);
+const originalValue = ref(props.value);
 
 watch(
   () => props.value,
   (v) => {
     localValue.value = v;
+    originalValue.value = v;
   }
+);
+
+watch(
+  () => props.activeEdit,
+  (activeEdit) => {
+    const isCurrentRow =
+      activeEdit?.rowId === props.rowId &&
+      activeEdit?.field === props.field;
+
+    if (isCurrentRow) {
+      originalValue.value = props.value;
+      localValue.value = props.value;
+    }
+  },
+  { deep: true }
 );
 
 const isEditing = computed(() => {
@@ -180,7 +197,7 @@ const isEditing = computed(() => {
 });
 
 function handleSubmit (val) {
-  // localValue.value = val;
+  localValue.value = val;
 
   emit("submit", {
     rowId: props.rowId,
@@ -195,6 +212,7 @@ function handleSubmit (val) {
 }
 
 function cancelEdit () {
+  localValue.value = originalValue.value;
   selectRef.value?.hidePopup();
   emit("cancel", props.field);
 }
