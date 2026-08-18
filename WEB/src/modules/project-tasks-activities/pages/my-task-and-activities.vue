@@ -62,7 +62,7 @@
                       />
                       <multiSelectDropdown
                         v-model="search.activityNameIds"
-                        label="Activity Name"
+                        label="Activity Type"
                         :options="projectTaskActivityNameDropdown.list.value"
                         :filter="projectTaskActivityNameDropdown.filter"
                       />
@@ -355,15 +355,30 @@
                       :props="activityProps"
                       :class="[
                         highlightedId == activityProps.row.id ? 'highlight' : '',
-                        (activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'open' &&
-                          activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'completed'|| activityProps.row.isDescription )
-                          ? 'bg-light-red'
-                          : ''
+                        activityProps.row.hasCurrentWeek ? 'current-week' : '',
+                        // (
+                        //   activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'open' &&
+                        //   activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'completed'
+                        // ) ||
+                        // activityProps.row.isDescription
+                        // ? 'bg-light-red'
+                        // : ''
+                        // activityProps.row.hasCurrentWeek
+                        //   ? 'current-week'
+                        //   : (
+                        //       (
+                        //         activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'open' &&
+                        //         activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'completed'
+                        //       ) ||
+                        //       activityProps.row.isDescription
+                        //     )
+                        //     ? 'bg-light-red'
+                        //     : ''
                       ]"
                     >
-                      <q-tooltip v-if="activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'open' || activityProps.row.isDescription ">
+                      <!-- <q-tooltip v-if="activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'open' || activityProps.row.isDescription ">
                         Please add activity details and open the task activity to start filling the timesheet and daily plan for this activity.
-                      </q-tooltip>
+                      </q-tooltip> -->
                       <!-- Active / Checkbox -->
                       <q-td class="text-center" style="width: 5%;">
                         <div
@@ -413,6 +428,7 @@
                             v-for="(d, idx) in activityProps.row.weekDates"
                             :key="idx"
                             class="hoverable-cell"
+                            :class="{ 'current-week': d.isCurrentWeek }"
                             style="cursor: pointer;"
                             @click="openPlan(d, activityProps.row.id)"
                           >
@@ -420,7 +436,7 @@
                           </span>
                         </div>
                       </q-td>
-                      <!-- Activity Name -->
+                      <!-- Activity Type -->
                       <q-td style="width: 10%;">
                         {{ activityProps.row.name }}
                         <q-icon
@@ -462,7 +478,7 @@
                       </q-td>
 
                       <!-- Estimate Hours -->
-                      <q-td style="width: 5%;" class="text-right">{{ activityProps.row.estimateHours }}</q-td>
+                      <q-td style="width: 5%;" class="text-right">{{ activityProps.row.task.estimateTime }}</q-td>
 
                       <!-- Actions -->
                       <q-td style="width: 5%;" class="text-center actions">
@@ -474,7 +490,8 @@
                           ]"
                           @click="handleDescriptionClick(activityProps.row)"
                         >
-                          <q-tooltip>{{ activityProps.row.isDescription ? 'Add Description' : 'Update Activity Description' }}</q-tooltip>
+                          <!-- <q-tooltip>{{ activityProps.row.isDescription ? 'Add Description' : 'Update Activity Description' }}</q-tooltip> -->
+                           <q-tooltip>Add Description</q-tooltip>
                           <q-popup-edit
                             v-model="activityProps.row.description"
                             anchor="center middle"
@@ -543,38 +560,44 @@
                           name="o_visibility"
                           class="cursor-pointer q-mr-sm"
                           size="xs"
-                          :class="activityProps.row.isDescription ? 'text-grey-5 cursor-not-allowed' : ''"
-                          @click="!activityProps.row.isDescription && onProjectTaskActivityView(activityProps.row.id)"
+                          @click="onProjectTaskActivityView(activityProps.row.id)"
                         >
                           <q-tooltip>
-                            {{ activityProps.row.isDescription ? 'Please Add Description First' : 'View' }}
+                            <!-- {{ activityProps.row.isDescription ? 'Please Add Description First' : 'View' }} -->
+                              View
                           </q-tooltip>
                         </q-icon>
                         <q-icon
                           name="o_edit"
                           class="cursor-pointer q-mr-sm"
                           size="xs"
-                          :class="activityProps.row.isDescription ? 'text-grey-5 cursor-not-allowed' : ''"
-                          @click="!activityProps.row.isDescription && onProjectTaskActivityEdit(activityProps.row.id, activityProps.row.project.id, activityProps.row.projectModule.id, activityProps.row.task.name, activityProps.row.project.name, activityProps.row.projectModule.name, true, refreshProjectTaskActivityList)"
+                          @click="onProjectTaskActivityEdit(activityProps.row.id, activityProps.row.project.id, activityProps.row.projectModule.id, activityProps.row.task.name, activityProps.row.project.name, activityProps.row.projectModule.name, true, refreshProjectTaskActivityList)"
                         >
-                          <q-tooltip>{{ activityProps.row.isDescription ? 'Please Add Description First' : 'Edit' }}</q-tooltip>
+                          <q-tooltip>
+                            <!-- {{ activityProps.row.isDescription ? 'Please Add Description First' : 'Edit' }} -->
+                              Edit
+                          </q-tooltip>
                         </q-icon>
                         <q-icon
                           name="o_timer"
                           class="cursor-pointer q-mr-sm ss"
                           size="xs"
-                          :class="activityProps.row.isDescription ? 'text-grey-5 cursor-not-allowed' : ''"
-                          @click="!activityProps.row.isDescription && onStartProjectTaskActivityTimer(activityProps.row, startNewTask)"
+                          @click="onStartProjectTaskActivityTimer(activityProps.row, startNewTask)"
                         >
-                          <q-tooltip>{{ activityProps.row.isDescription ? 'Please Add Description First' : 'Start Task Timer' }}</q-tooltip>
+                          <q-tooltip>
+                            <!-- {{ activityProps.row.isDescription ? 'Please Add Description First' : 'Start Task Timer' }} -->
+                              Start Task Timer
+                          </q-tooltip>
                         </q-icon>
                         <a
                           style="position: relative;"
                           class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
-                          :class="activityProps.row.isDescription ? 'text-grey-5 cursor-not-allowed' : ''"
-                          @click="!activityProps.row.isDescription && onNoteAdd(activityProps.row.id, 'project Activities', activityProps.row.project.id, activityProps.row.project.name, activityProps.row.name, '', refreshProjectTaskActivityList)"
+                          @click="onNoteAdd(activityProps.row.id, 'project Activities', activityProps.row.project.id, activityProps.row.project.name, activityProps.row.name, '', refreshProjectTaskActivityList)"
                         >
-                          <q-tooltip anchor="bottom middle" self="top middle">{{ activityProps.row.isDescription ? 'Please Add Description First' : 'Note' }}</q-tooltip>
+                          <q-tooltip anchor="bottom middle" self="top middle">
+                            <!-- {{ activityProps.row.isDescription ? 'Please Add Description First' : 'Note' }} -->
+                              Note
+                          </q-tooltip>
                           <q-icon name="o_assignment" />
                           <q-badge
                             v-if="activityProps.row.activitiesCount > 0"
@@ -596,14 +619,14 @@
                         <q-icon
                           :name="activityProps.row.active ? 'o_block' : 'o_check_circle_outline'"
                           :color="activityProps.row.active ? 'negative' : 'positive'" class="cursor-pointer"
-                          :class="activityProps.row.isDescription ? 'text-grey-5 cursor-not-allowed' : ''"
-                          @click="!activityProps.row.isDescription && onSubmitProjectTaskActivityStatus(activityProps.row, refreshProjectTaskActivityList)"
+                          @click="onSubmitProjectTaskActivityStatus(activityProps.row, refreshProjectTaskActivityList)"
                         >
                           <q-tooltip>
                             {{
-                              activityProps.row.isDescription
-                                ? 'Please Add Description First'
-                                : (activityProps.row.active ? 'Make Inactive' : 'Set Active')
+                              // activityProps.row.isDescription
+                              //   ? 'Please Add Description First'
+                              //   : (activityProps.row.active ? 'Make Inactive' : 'Set Active')
+                              activityProps.row.active ? 'Make Inactive' : 'Set Active'
                             }}
                           </q-tooltip>
                         </q-icon>
@@ -853,10 +876,11 @@ const columns = ref([
   { name: "task.name", label: "Task Name", field: "task.name", align: "left", sortable: true },
   { name: "weekDates", label: "Week", field: row => row.weekDates.join(", "), align: "center", sortable: false },
   { name: "task.status.dropDownValue", label: "Task Status", field: "task.status.dropDownValue", align: "left", sortable: true, style: "display: none", headerStyle: "display: none" },
-  { name: "name", label: "Activity Name", field: "name", align: "left", sortable: true },
+  { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
   { name: "assignedTo.person.firstname", label: "Activity Owner", field: "assignedTo.person.firstname", align: "left", sortable: true },
   { name: "activityStatus.dropDownValue", label: "Activity Status", field: "activityStatus.dropDownValue", align: "left", sortable: true },
-  { name: "estimateHours", label: "Est. Hrs", field: "estimateHours", align: "right", sortable: true }
+  { name: "task.estimateTime", label: "Task Est. Hrs", field: "task.estimateTime", align: "left", sortable: true }
+  // { name: "estimateHours", label: "Est. Hrs", field: "estimateHours", align: "right", sortable: true }
 ]);
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -889,15 +913,20 @@ const getProjectActivities = (props) => {
       return {
         ...project,
         activities: project.activities.map((activity, idx, arr) => {
+          console.log("activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList", activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList);
           const prevActivity = arr[idx - 1];
+          const hasCurrentWeek = false;
+          console.log("hasCurrentWeek", hasCurrentWeek);
           return {
             ...activity,
             description: activity.description || "",
             checkboxStatus: ActivityIds.value.includes(activity.id),
+            hasCurrentWeek: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList?.some(m => isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)) || false,
             weekDates: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList
               ? activity.task.projectWeeklyPlanDatesReqTaskIssueMappingList.map(m => ({
                 value: String(m.projectWeeklyPlanDates?.id),
                 text: toDate(m.projectWeeklyPlanDates?.weekDate) || null
+                // isCurrentWeek: isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)
               }))
               : [],
             showModuleName:
@@ -921,6 +950,7 @@ const getProjectActivities = (props) => {
         })
       };
     });
+    console.log("rows.value", rows.value);
     Object.assign(pagination.value, {
       page,
       rowsPerPage,
@@ -947,6 +977,29 @@ const getProjectActivities = (props) => {
     loading.value = false;
     searchLoader.value = false;
   });
+};
+
+const isCurrentWeek = (date) => {
+  if (!date) return false;
+
+  const weekDate = new Date(date);
+  weekDate.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Get next Sunday
+  const currentSunday = new Date(today);
+  const daysUntilSunday = 7 - today.getDay();
+
+  currentSunday.setDate(today.getDate() + daysUntilSunday);
+
+  // Current weekly plan ends on Saturday
+  const currentSaturday = new Date(currentSunday);
+  currentSaturday.setDate(currentSunday.getDate() + 6);
+  currentSaturday.setHours(23, 59, 59, 999);
+
+  return weekDate >= currentSunday && weekDate <= currentSaturday;
 };
 
 // ------------------------------------------------------------------------------------
@@ -1234,11 +1287,12 @@ const onSendDailyPlan = () => {
   if (!selectedActivities.length) return;
 
   const hasDisallowedStatus = selectedActivities.some(activity =>
-    activity.activityStatus.dropDownValue.toLowerCase() !== "open" || activity.isDescription
+    // activity.activityStatus.dropDownValue.toLowerCase() !== "open" || activity.isDescription
+    activity.activityStatus.dropDownValue.toLowerCase() !== "open"
   );
 
   if (hasDisallowedStatus) {
-    notifyWarning({ message: "Please add activity details and open the task activity before filling the daily plan." });
+    notifyWarning({ message: "Please open the task activity before filling the daily plan." });
     return;
   }
 
@@ -1262,11 +1316,12 @@ const onSendTimesheet = () => {
   if (!selectedActivities.length) return;
 
   const hasDisallowedStatus = selectedActivities.some(activity =>
-    activity.activityStatus.dropDownValue.toLowerCase() !== "open" || activity.isDescription
+    // activity.activityStatus.dropDownValue.toLowerCase() !== "open" || activity.isDescription
+    activity.activityStatus.dropDownValue.toLowerCase() !== "open"
   );
 
   if (hasDisallowedStatus) {
-    notifyWarning({ message: "Please add activity details and open the task activity before filling the timesheet." });
+    notifyWarning({ message: "Please open the task activity before filling the timesheet." });
     return;
   }
   $q.dialog({
@@ -1299,14 +1354,15 @@ const onSelectMultiOptions = () => {
 
   const missingDescriptionOrNotOpenCount = selectedActivities.filter(
     activity =>
-      activity.isDescription ||
+      // activity.isDescription ||
     activity.activityStatus?.dropDownValue?.toLowerCase() !== "open"
   ).length;
   if (selectedField.value === "Status" && missingDescriptionOrNotOpenCount > 0) {
     notifyWarning({
       message: `${missingDescriptionOrNotOpenCount} ${
         missingDescriptionOrNotOpenCount > 1 ? "activities" : "activity"
-      } missing description or not in Open status. Please add description and update status to Open.`
+      // } missing description or not in Open status. Please add description and update status to Open.`      
+      } not in Open status. Please update status to Open.`
     });
     selectedField.value = null;
     return;
@@ -1349,8 +1405,8 @@ function paginatedTotalHours(activities, pagination) {
   let totalMinutes = 0;
 
   pageRows.forEach(row => {
-    if (row.estimateHours) {
-      const value = row.estimateHours.toString().trim();
+    if (row.task.estimateTime) {
+      const value = row.task.estimateTime.toString().trim();
 
       if (/^\d{1,2}:\d{2}$/.test(value)) {
         const [hours, minutes] = value.split(":");
@@ -1375,8 +1431,8 @@ const outerTotalHours = computed(() => {
 
   rows.value.forEach(project => {
     project.activities?.forEach(act => {
-      if (act.estimateHours) {
-        const value = act.estimateHours.toString().trim();
+      if (act.task.estimateTime) {
+        const value = act.task.estimateTime.toString().trim();
 
         if (/^\d{1,2}:\d{2}$/.test(value)) {
           const [hours, minutes] = value.split(":");
@@ -1448,7 +1504,7 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
   ...mapFilterToLabel(search.value.assignedToIds, activeEmployeesDropdown.list, "Activity Owner"),
-  ...mapFilterToLabel(search.value.activityNameIds, projectTaskActivityNameDropdown.list, "Activity Name"),
+  ...mapFilterToLabel(search.value.activityNameIds, projectTaskActivityNameDropdown.list, "Activity Type"),
   ...mapFilterToLabel(search.value.activityStatusIds, projectTaskActivityStatusDropdown.list, "Activity Status"),
   ...mapFilterToLabel(search.value.statusIds, projectTaskStatusForDropdown.list, "Task Status"),
   ...(search.value.sprintWeekEndDate ? { "Sprint Week End Date": search.value.sprintWeekEndDate } : {})
@@ -1465,7 +1521,7 @@ function onClearFilters (key) {
     search.value.projectModuleIds = [];
   } else if (key === "Activity Owner") {
     search.value.assignedToIds = [];
-  } else if (key === "Activity Name") {
+  } else if (key === "Activity Type") {
     search.value.activityNameIds = [];
   } else if (key === "Activity Status") {
     search.value.activityStatusIds = [];
@@ -1483,7 +1539,7 @@ function getFilterCount (key) {
   case "Project Name": return search.value.projectIds?.length || 0;
   case "Project Module": return search.value.projectModuleIds?.length || 0;
   case "Activity Owner": return search.value.assignedToIds?.length || 0;
-  case "Activity Name": return search.value.activityNameIds?.length || 0;
+  case "Activity Type": return search.value.activityNameIds?.length || 0;
   case "Activity Status": return search.value.activityStatusIds?.length || 0;
   case "Task Status": return search.value.statusIds?.length || 0;
   default: return null; // For single-value filters like Year, Status
@@ -1497,8 +1553,8 @@ const isClose = computed(() => {
 
 const statusOptions = (row) => {
   return projectTaskActivityStatusDropdown.list.value.map(option => {
-    if (option.text === "Open" && row.isDescription) {
-      return { ...option, disable: true };
+    if (option.text === "Open") {
+      return { ...option, disable: false };
     }
     if (option.text === "New" && row.activityStatus.dropDownValue === "Open") {
       return { ...option, disable: true };
@@ -1626,5 +1682,8 @@ onMounted(async () => {
 
 .q-table__expanded-row .q-table thead tr {
   z-index: 1;
+}
+.current-week{
+  background-color: #e0f7fa !important;
 }
 </style>

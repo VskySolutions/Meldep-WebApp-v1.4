@@ -613,7 +613,7 @@ const model = ref({
 // Tab Task Activities
 const TaskActivitiesColumns = ref([
   { name: "assignedToId", label: "Activity Owner", field: "assignedToId", align: "left", sortable: false },
-  { name: "name", label: "Activity Name", field: "name", align: "left" },
+  { name: "name", label: "Activity Type", field: "name", align: "left" },
   { name: "description", label: "Description", field: "description", align: "left" },
   { name: "estimateHours", label: "Est.Hrs", field: "estimateHours", align: "left" }
 ]);
@@ -1197,7 +1197,7 @@ function validateSortOrder (value) {
 }
 
 const rowRules = {
-  name: { required: helpers.withMessage("Activity Name is required", required) },
+  name: { required: helpers.withMessage("Activity Type is required", required) },
   assignedToId: { required: helpers.withMessage("Activity Owner is required", required) },
   estimateHours: {
     required: helpers.withMessage("Estimate Hours is required", required),

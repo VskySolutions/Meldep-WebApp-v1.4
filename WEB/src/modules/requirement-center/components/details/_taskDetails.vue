@@ -404,7 +404,7 @@ const filesRows = ref([]);
 const taskActivityPagination = ref({ sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 const taskActivityColumns = ref([
   { name: "ActivityOwner", label: "Activity Owner", field: "ActivityOwner", align: "left", sortable: true },
-  { name: "name", label: "Activity Name", field: "name", align: "left", sortable: true },
+  { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
   { name: "EstimatedHrs", label: "Estimated Hrs.", field: "EstimatedHrs", align: "right", sortable: true },
   { name: "description", label: "Description", field: "description", align: "left", sortable: true }
 ]);

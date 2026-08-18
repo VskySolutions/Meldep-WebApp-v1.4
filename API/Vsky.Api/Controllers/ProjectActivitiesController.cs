@@ -387,7 +387,7 @@ namespace Vsky.Api.Controllers
                     entity.Id = Guid.NewGuid().ToString();
 
                     entity.SiteId = SiteId;
-                    entity.ActivityStatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Activity Status", "New");
+                    entity.ActivityStatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Activity Status", "Open");
                     // Set custom properties
                     if (model.StartDateStr != "" && model.StartDateStr != null)
                         entity.StartDate = DateTime.ParseExact(model.StartDateStr, "MM/dd/yyyy", null);
@@ -882,7 +882,7 @@ namespace Vsky.Api.Controllers
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
                 
                 var status = await _dropDownTypeService.GetDropDownTypeByType(SiteId, "Activity Status");
-                var activityStatus = await _dropDownService.GetDropDownByTypeAndValue(SiteId, status.Id, "New");
+                var activityStatus = await _dropDownService.GetDropDownByTypeAndValue(SiteId, status.Id, "Open");
 
                 foreach (var activity in model.ProjectActivityModel)
                 {
@@ -1141,7 +1141,7 @@ namespace Vsky.Api.Controllers
                         projectActivity.Name = model.ActivityName;
                         projectActivity.EstimateHours = model.EstimateHours;
                         projectActivity.AssignedToId = model.AssignedToId;
-                        projectActivity.ActivityStatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Activity Status", "New");
+                        projectActivity.ActivityStatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Activity Status", "Open");
 
                         projectActivity.Active = true;
                         projectActivity.CreatedById = LoggedUserId;

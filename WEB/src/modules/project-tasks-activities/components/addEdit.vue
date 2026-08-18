@@ -36,7 +36,7 @@
                 <div class="col-12 col-sm-6 col-md-4 col-lg-4 col-xxl-4">
                   <formSingleSelectDropdown
                     :readonly="isMyTaskActivity"
-                    label="Activity Name"
+                    label="Activity Type"
                     v-model="model.name"
                     :options="projectTaskActivityNameForDropdownSingleSelect.list.value"
                     :filter="projectTaskActivityNameForDropdownSingleSelect.filter"
@@ -318,7 +318,7 @@ const rules = computed(() => ({
   },
 
   name: {
-    required: helpers.withMessage("Activity name is required", required)
+    required: helpers.withMessage("Activity type is required", required)
   },
 
   estimateHours: {

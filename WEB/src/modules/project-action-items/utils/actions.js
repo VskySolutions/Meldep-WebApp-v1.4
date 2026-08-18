@@ -22,7 +22,6 @@ export const onSubmitProjectActionItemsDelete = async (
   refreshProjectActionItemsList
 ) => {
   activeRowId.value = id;
-  debugger;
 
   zwConfirmDelete(
     { data: `${title}` },

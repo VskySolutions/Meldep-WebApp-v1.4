@@ -1787,7 +1787,7 @@
                                     @save="newVal => onSaveInlineActivity('activityName', newVal, props.row)"
                                   >
                                     <div class="row justify-between items-center">
-                                      <div class="text-subtitle2 q-mb-sm">Activity Name</div>
+                                      <div class="text-subtitle2 q-mb-sm">Activity Type</div>
                                       <q-btn
                                         v-close-popup
                                         icon="o_close" size="sm"
@@ -3379,7 +3379,7 @@ const onAddBulkTaskActivity = (id) => {
     TaskName,
     ProjectName,
     ModuleName,
-    "Add Bulk Activities",
+    "Add/Edit Bulk Activities",
     refreshProjectTaskActivityList
   );
 };

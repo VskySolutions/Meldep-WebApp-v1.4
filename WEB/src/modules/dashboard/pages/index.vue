@@ -1065,7 +1065,7 @@ const activityColumns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true },
   { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true },
   { name: "task.name", label: "Task Name", field: "task.name", align: "left", sortable: true },
-  { name: "name", label: "Activity Name", field: "name", align: "left", sortable: true },
+  { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
   { name: "activityStatus.dropDownValue", label: "Activity Status", field: "activityStatus.dropDownValue", align: "left", sortable: true },
   { name: "estimateHours", label: "Est. Hrs", field: "estimateHours", align: "right", sortable: true }
 ]);

@@ -386,7 +386,7 @@ const taskActivityPagination = ref({ sortBy: "createdOnUtc", descending: true, r
 const taskActivityColumns = ref([
   // { name: "targetMonth", label: "Target Month", field: "targetMonth", align: "left", sortable: false },
   { name: "ActivityOwner", label: "Activity Owner", field: "ActivityOwner", align: "left", sortable: true },
-  { name: "name", label: "Activity Name", field: "name", align: "left", sortable: true },
+  { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
   // { name: "name", label: "Activity Status", field: "name", align: "left", sortable: true },
   { name: "EstimatedHrs", label: "Estimated Hrs.", field: "EstimatedHrs", align: "right", sortable: true },
   { name: "description", label: "Description", field: "description", align: "left", sortable: true }

@@ -34,7 +34,7 @@
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Activity Name</div>
+                <div class="q-mb-xs">Activity Type</div>
                 <div class="text-black">
                   {{ model.name ? model.name : "-" }}
                   <q-icon

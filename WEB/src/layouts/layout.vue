@@ -275,7 +275,7 @@
                     />
                   </div>
                   <div class="col-6 q-mb-sm">
-                    <label class="fw-bold q-mb-xs">Activity Name<span class="required text-red">*</span></label>
+                    <label class="fw-bold q-mb-xs">Activity Type<span class="required text-red">*</span></label>
                     <q-input
                       v-model="task.activityName"
                       outlined

@@ -382,6 +382,7 @@ namespace Vsky.Services.ProjectActivities
                     ProjectId = x.Task.ProjectId,
                     ProjectModuleId = x.Task.ProjectModuleId,
                     ProjectTaskNumber = x.Task != null ? x.Task.ProjectTaskNumber : 0,
+                    EstimateTime = x.Task.EstimateTime,
                     Status = new DropDown
                     {
                         Id = x.Task.Status.Id,

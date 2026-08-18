@@ -93,43 +93,43 @@ namespace Vsky.Services.ProjectActionItem
             if (dueDate != null)
                 query = query.Where(a => a.DueDate == dueDate);
 
-            //if (!string.IsNullOrWhiteSpace(sortBy))
-            //{
-            //    var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
-            //    query = query.OrderBy(orderBy);
-            //}
-            //else
-            //{
-            //    query = query.OrderByDescending(x => x.CreatedOnUtc);
-            //}
-
-
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
-                string orderBy;
-                if (sortBy == "employee.person.fullName")
-                {
-                    orderBy = 
-                        $"{GetOrderBy("Employee.Person.FirstName")} {(descending ? "desc" : "asc")}," +
-                        $"{GetOrderBy("Employee.Person.LastName")} {(descending ? "desc" : "asc")}";
-                }
-                else if (sortBy == "customer.name")
-                {
-                    orderBy = 
-                        $"{GetOrderBy("Customer.Company.Name")} {(descending ? "desc" : "asc")}," +
-                        $"{GetOrderBy("Customer.Person.FirstName")} {(descending ? "desc" : "asc")}," +
-                        $"{GetOrderBy("Customer.Person.LastName")} {(descending ? "desc" : "asc")}";
-                }
-                else
-                {
-                    orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
-                }
+                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
                 query = query.OrderBy(orderBy);
             }
             else
             {
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
             }
+
+
+            //if (!string.IsNullOrWhiteSpace(sortBy))
+            //{
+            //    string orderBy;
+            //    if (sortBy == "employee.person.fullName")
+            //    {
+            //        orderBy = 
+            //            $"{GetOrderBy("Employee.Person.FirstName")} {(descending ? "desc" : "asc")}," +
+            //            $"{GetOrderBy("Employee.Person.LastName")} {(descending ? "desc" : "asc")}";
+            //    }
+            //    else if (sortBy == "customer.name")
+            //    {
+            //        orderBy = 
+            //            $"{GetOrderBy("Customer.Company.Name")} {(descending ? "desc" : "asc")}," +
+            //            $"{GetOrderBy("Customer.Person.FirstName")} {(descending ? "desc" : "asc")}," +
+            //            $"{GetOrderBy("Customer.Person.LastName")} {(descending ? "desc" : "asc")}";
+            //    }
+            //    else
+            //    {
+            //        orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+            //    }
+            //    query = query.OrderBy(orderBy);
+            //}
+            //else
+            //{
+            //    query = query.OrderByDescending(x => x.CreatedOnUtc);
+            //}
 
             if (!string.IsNullOrEmpty(SearchText))
             {
@@ -148,53 +148,53 @@ namespace Vsky.Services.ProjectActionItem
             }
 
             // Apply multi-level dictionary sorting
-            //if (sorts != null && sorts.Count > 0)
-            //{
-            //    query = _commonService.ApplySorting(query, sorts);
-            //}
             if (sorts != null && sorts.Count > 0)
             {
-                // Customer sorting
-                if (sorts.TryGetValue("customer.name", out var customerDirection))
-                {
-                    bool customerDesc = customerDirection == "desc";
-
-                    query = customerDesc
-                        ? query.OrderByDescending(x =>
-                            x.Customer.Company != null
-                                ? x.Customer.Company.Name
-                                : x.Customer.Person.FirstName + " " +
-                                  x.Customer.Person.LastName)
-                        : query.OrderBy(x =>
-                            x.Customer.Company != null
-                                ? x.Customer.Company.Name
-                                : x.Customer.Person.FirstName + " " +
-                                  x.Customer.Person.LastName);
-
-                    // Remove from generic sorting
-                    sorts.Remove("customer.name");
-                }
-
-                // Employee sorting
-                if (sorts.TryGetValue("employee.person.fullName", out var employeeDirection))
-                {
-                    bool employeeDesc = employeeDirection == "desc";
-
-                    query = employeeDesc
-                             ? query.OrderByDescending(x => x.Employee.Person.FirstName)
-                                 .ThenByDescending(x => x.Employee.Person.LastName)
-                             : query.OrderBy(x => x.Employee.Person.FirstName)
-                                 .ThenBy(x => x.Employee.Person.LastName);
-
-                    // Remove from generic sorting
-                    sorts.Remove("employee.person.fullName");
-                }
-
-                if (sorts.Any())
-                {
-                    query = _commonService.ApplySorting(query, sorts);
-                }
+                query = _commonService.ApplySorting(query, sorts);
             }
+            //if (sorts != null && sorts.Count > 0)
+            //{
+            //    // Customer sorting
+            //    if (sorts.TryGetValue("customer.name", out var customerDirection))
+            //    {
+            //        bool customerDesc = customerDirection == "desc";
+
+            //        query = customerDesc
+            //            ? query.OrderByDescending(x =>
+            //                x.Customer.Company != null
+            //                    ? x.Customer.Company.Name
+            //                    : x.Customer.Person.FirstName + " " +
+            //                      x.Customer.Person.LastName)
+            //            : query.OrderBy(x =>
+            //                x.Customer.Company != null
+            //                    ? x.Customer.Company.Name
+            //                    : x.Customer.Person.FirstName + " " +
+            //                      x.Customer.Person.LastName);
+
+            //        // Remove from generic sorting
+            //        sorts.Remove("customer.name");
+            //    }
+
+            //    // Employee sorting
+            //    if (sorts.TryGetValue("employee.person.fullName", out var employeeDirection))
+            //    {
+            //        bool employeeDesc = employeeDirection == "desc";
+
+            //        query = employeeDesc
+            //                 ? query.OrderByDescending(x => x.Employee.Person.FirstName)
+            //                     .ThenByDescending(x => x.Employee.Person.LastName)
+            //                 : query.OrderBy(x => x.Employee.Person.FirstName)
+            //                     .ThenBy(x => x.Employee.Person.LastName);
+
+            //        // Remove from generic sorting
+            //        sorts.Remove("employee.person.fullName");
+            //    }
+
+            //    if (sorts.Any())
+            //    {
+            //        query = _commonService.ApplySorting(query, sorts);
+            //    }
+            //}
 
             var notesQuery = _notesRepository.TableNoTracking.Where(n => !n.Deleted && n.Type == "ProjectActionItems");
             query = query.Select(x => new ProjectActionItems

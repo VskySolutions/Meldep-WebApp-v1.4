@@ -2,7 +2,8 @@
   <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" persistent full-height position="right" @hide="onDialogHide">
     <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width:80vw !important; max-width: 100vw !important;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div class="text-h2 text-white">{{ props.pageHeading ? props.pageHeading : 'Edit Bulk Activities' }}</div>
+        <!-- <div class="text-h2 text-white">{{ props.pageHeading ? props.pageHeading : 'Edit Bulk Activities' }}</div> -->
+        <div class="text-h2 text-white">{{ props.pageHeading }}</div>
         <q-btn v-close-popup icon="o_close" class="close" color="white" flat round dense />
       </q-card-section>
       <q-separator />
@@ -230,7 +231,7 @@ const model = ref({
 // Tab Task Activities
 const TaskActivityColumns = ref([
   { name: "assignedToId", label: "Activity Owner", field: "assignedToId", align: "left", sortable: false },
-  { name: "name", label: "Activity Name", field: "name", align: "left" },
+  { name: "name", label: "Activity Type", field: "name", align: "left" },
   { name: "description", label: "Description", field: "description", align: "left" },
   { name: "estimateHours", label: "Est.Hrs", field: "estimateHours", align: "right" }
 ]);
@@ -365,7 +366,7 @@ const rules = {
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 
 const rowRules = {
-  name: { required: helpers.withMessage("Activity Name is required", required) },
+  name: { required: helpers.withMessage("Activity type is required", required) },
   assignedToId: { required: helpers.withMessage("Activity Owner is required", required) },
   estimateHours: {
     required: helpers.withMessage("Est.Hrs is required", required),

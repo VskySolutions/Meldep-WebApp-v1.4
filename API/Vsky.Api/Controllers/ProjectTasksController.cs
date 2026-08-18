@@ -1126,7 +1126,7 @@ namespace Vsky.Api.Controllers
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
                     var status = await _dropDownTypeService.GetDropDownTypeByType(SiteId, "Activity Status");
-                    var activityStatus = await _dropDownService.GetDropDownByTypeAndValue(SiteId, status.Id, "New");
+                    var activityStatus = await _dropDownService.GetDropDownByTypeAndValue(SiteId, status.Id, "Open");
 
                     if (model.ProjectActivities.Count() > 0)
                     {
@@ -1413,7 +1413,7 @@ namespace Vsky.Api.Controllers
                     if (model.ProjectActivities.Count() > 0)
                     {
                         var status = await _dropDownTypeService.GetDropDownTypeByType(SiteId, "Activity Status");
-                        var activityStatus = await _dropDownService.GetDropDownByTypeAndValue(SiteId, status.Id, "New");
+                        var activityStatus = await _dropDownService.GetDropDownByTypeAndValue(SiteId, status.Id, "Open");
 
                         foreach (var activity in model.ProjectActivities)
                         {

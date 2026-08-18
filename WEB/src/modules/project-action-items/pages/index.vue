@@ -262,10 +262,10 @@
                 <q-td v-if="selectedColumnNames.includes('title')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.title }}
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('customer.name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                <q-td v-if="selectedColumnNames.includes('customerId')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.customer.name }}
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('employee.person.fullName')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                <q-td v-if="selectedColumnNames.includes('employeeId')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.employee.person.fullName }}
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('dueDate')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
@@ -418,8 +418,8 @@ const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: true },
   { name: "title", label: "Title", field: "title", align: "left", sortable: true, default: true },
-  { name: "customer.name", label: "Customer", field: "customer.name", align: "left", sortable: true, default: true },
-  { name: "employee.person.fullName", label: "Employee", field: "employee.person.fullName", align: "left", sortable: true, default: true },
+  { name: "customerId", label: "Customer", field: "customerId", align: "left", sortable: true, default: true },
+  { name: "employeeId", label: "Employee", field: "employeeId", align: "left", sortable: true, default: true },
   { name: "dueDate", label: "Due Date", field: "dueDate", align: "left", sortable: true, default: true },
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
