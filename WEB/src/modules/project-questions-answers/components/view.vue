@@ -156,19 +156,12 @@ const getQuestionAnswersInDetailsById = async () => {
       editing: false,
       flag: "Edit"
     }));
-    console.log(changeLogRows.value);
   } finally {
     loading.value = false;
   }
 };
 
 // On page rendering
-// watch(() => props.id, async (newValue) => {
-//   if (newValue) {
-//     await getQuestionAnswersInDetailsById(newValue);
-//   }
-// }, { immediate: true });
-
 onMounted(() => {
   getQuestionAnswersInDetailsById();
 });

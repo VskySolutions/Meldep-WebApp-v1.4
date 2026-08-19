@@ -173,16 +173,6 @@
             @click="onDialogCancel()"
           />
           <!-- APPROVER BUTTON -->
-          <!-- <template v-if="canApprove">
-            <q-btn
-              color="positive"
-              label="Save & Approve"
-              class="actionBtn"
-              :loading="processingSubmit"
-              no-caps
-              @click="onConfirmApprove"
-            />
-          </template> -->
           <template v-if="canApprove">
             <q-btn
               color="primary"
