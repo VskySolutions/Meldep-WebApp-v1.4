@@ -105,6 +105,7 @@ namespace Vsky.Api.Models
         public List<string> CustomerIds { get; set; }
         public List<string> CompanyContactIds { get; set; }
         public List<string> AssignedToIds { get; set; }
+        public string RequirementId { get; set; }
         public DateTime? StartDateStr { get; set; }
         public DateTime? EndDateStr { get; set; }
         public string TargetMonthStr { get; set; }

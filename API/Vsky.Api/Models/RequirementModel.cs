@@ -88,6 +88,7 @@ namespace Vsky.Api.Models
 
         public List<string> ProjectIds { get; set; }
         public List<string> ProjectModuleIds { get; set; }
+        public List<string> RequirementIds { get; set; }
         public List<string> RequirementGroupIds { get; set; }
         public List<string> StatusIds { get; set; }
         public List<string> RequirementTypeIds { get; set; }
@@ -95,6 +96,8 @@ namespace Vsky.Api.Models
         public List<string> identifiedCustomerIds { get; set; }
         public List<string> identifiedEmployeeIds { get; set; }
         public List<string> RequirementTagIds { get; set; }
+        public string ProjectModuleId { get; set; }
+        public string filterRequirement{ get; set; }
 
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }

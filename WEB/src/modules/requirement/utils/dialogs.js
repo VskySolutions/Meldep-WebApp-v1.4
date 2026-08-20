@@ -20,16 +20,25 @@ export function onRequirementView (id) {
     .onDismiss(() => { activeRowId.value = id; });
 }
 
-export function onRequirementAdd (refresh) {
+export function onRequirementAdd (
+  projectId,
+  moduleId,
+  refresh
+) {
+  const componentProps = {};
+
+  if (projectId) componentProps.projectIdAttr = projectId;
+  if (moduleId) componentProps.moduleIdAttr = moduleId;
+
   $q.dialog({
     component: addEditRequirement,
-    componentProps: {}
-  }).onOk(() => {
-    refresh();
+    componentProps
   })
-    .onCancel(() => { })
-    .onDismiss(() => { });
+    .onOk(() => {
+      refresh && refresh();
+    });
 }
+
 
 export function onRequirementEdit (id, refresh) {
   activeRowId.value = id;

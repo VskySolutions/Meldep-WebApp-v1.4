@@ -13,6 +13,9 @@ export default {
   getAllProjectsModulesPlannerList (model) {
     return http.post("/all-project-planner/get-all-project-module-planner-list", model).then(response => response.data);
   },
+  getAllRequirementPlannerList (model) {
+    return http.post("/all-project-planner/get-all-requirement-planner-list", model).then(response => response.data);
+  },
   getAllProjectsTaskPlannerList (model) {
     return http.post("/all-project-planner/get-all-project-task-planner-list", model).then(response => response.data);
   },

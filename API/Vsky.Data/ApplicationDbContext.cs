@@ -3024,6 +3024,11 @@ namespace Vsky.Data
                 entity.ToView("VW_ProjectModulesList");
             });
 
+            builder.Entity<VW_Requirement>(entity =>
+            {
+                entity.ToView("VW_RequirementList");
+            });
+
             builder.Entity<VW_ProjectTask>(entity =>
             {
                 entity.ToView("VW_ProjectTaskList");

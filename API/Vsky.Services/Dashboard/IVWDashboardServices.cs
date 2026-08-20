@@ -71,7 +71,21 @@ namespace Vsky.Services.Dashboard
             int page = 1,
             int pageSize = int.MaxValue);
 
-        Task<IPagedList<VW_ProjectTask>> GetAllProjectTaskList(
+      Task<IPagedList<VW_Requirement>> GetAllRequirementList(
+           string SiteId,
+           string filterRequirement = "",
+           string LoggedUserId = "",
+           List<string> ProjectId = null,
+           List<string> ProjectModuleId = null,
+           List<string> RequirementIds = null,
+           List<string> RequirementStatusIds = null,
+           string SortBy = "",
+           bool Descending = false,
+           int page = 1,
+           int pageSize = int.MaxValue);
+
+        
+      Task<IPagedList<VW_ProjectTask>> GetAllProjectTaskList(
             string SiteId,
             bool isShowCloseStatus,
              string taskName,
@@ -80,6 +94,7 @@ namespace Vsky.Services.Dashboard
             List<string> ProjectId = null,
             List<string> ProjectSwimlaneId = null,
             List<string> ProjectModuleId = null,
+            List<string> RequirementId = null,
             List<string> StatusId = null,
             List<string> PriorityId = null,
             List<string> AssignedToId = null,

@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using SendGrid.Helpers.Mail;
 using AngleSharp.Dom;
+using Microsoft.PowerBI.Api.Models;
 
 namespace Vsky.Services.Dashboard
 {
@@ -24,6 +25,7 @@ namespace Vsky.Services.Dashboard
         private readonly IRepository<VW_ProjectTask> _vwProjectTaskRepository;
         private readonly IRepository<VW_EmployeeTaskActivitySummary> _vwEmployeeTaskActivitySummaryRepository;
         private readonly IRepository<VW_ProjectModules> _vwProjectModulesRepository;
+        private readonly IRepository<VW_Requirement> _vwRequirementRepository;
         private readonly IRepository<VW_ProjectTaskActivities> _vwProjectActivitiesRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IRepository<Tags> _tagsRepository;
@@ -38,6 +40,7 @@ namespace Vsky.Services.Dashboard
             IRepository<VW_ProjectTask> vwProjectTaskRepository,
             IRepository<VW_EmployeeTaskActivitySummary> vwEmployeeTaskActivitySummaryRepository,
             IRepository<VW_ProjectModules> vwProjectModulesRepository,
+            IRepository<VW_Requirement> vwRequirementRepository,
             IRepository<VW_ProjectTaskActivities> vwProjectActivitiesRepository,
             UserManager<ApplicationUser> userManager,
             IRepository<Tags> tagsRepository,
@@ -51,6 +54,7 @@ namespace Vsky.Services.Dashboard
             _vwProjectTaskRepository = vwProjectTaskRepository;
             _vwEmployeeTaskActivitySummaryRepository = vwEmployeeTaskActivitySummaryRepository;
             _vwProjectModulesRepository = vwProjectModulesRepository;
+            _vwRequirementRepository = vwRequirementRepository;
             _vwProjectActivitiesRepository = vwProjectActivitiesRepository;
             _userManager = userManager;
             _tagsRepository = tagsRepository;
@@ -399,6 +403,59 @@ namespace Vsky.Services.Dashboard
             return list;
         }
 
+        public async Task<IPagedList<VW_Requirement>> GetAllRequirementList(
+           string SiteId,
+           string filterRequirement = "",
+           string LoggedUserId = "",
+           List<string> ProjectId = null,
+           List<string> ProjectModuleId = null,
+           List<string> RequirementIds = null,
+           List<string> RequirementStatusIds = null,
+           string SortBy = "",
+           bool Descending = false,
+           int page = 1,
+           int pageSize = int.MaxValue)
+        {
+            var query = _vwRequirementRepository.TableNoTracking.Include(x => x.Project.ProjectUserMappings.Where(m => m.AspNetUserId == LoggedUserId)).Where(x => x.SiteId == SiteId);
+            bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId);
+            if (!IsAdmin)
+                query = query.Where(p => p.Project.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == LoggedUserId && (m.FullAccess || m.ViewOnly || m.Notes)));
+
+            if (ProjectId != null && ProjectId.Any())
+                query = query.Where(m => ProjectId.Contains(m.ProjectId));
+
+            if (ProjectModuleId != null && ProjectModuleId.Any())
+                query = query.Where(m => ProjectModuleId.Contains(m.ProjectModuleId));
+
+            if (RequirementIds != null && RequirementIds.Any())
+                query = query.Where(m => RequirementIds.Contains(m.Id));
+
+
+            if (!string.IsNullOrEmpty(filterRequirement))
+            {
+                query = query.Where(m =>
+                    m.Title.Contains(filterRequirement.ToLower()) ||
+                    m.ProjectName.Contains(filterRequirement.ToLower()));
+            }
+
+            if (RequirementStatusIds != null && RequirementStatusIds.Any())
+            {
+                query = query.Where(m => RequirementStatusIds.Contains(m.RequirementStatusId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(SortBy))
+            {
+                string Sort = SortBy + " " + (Descending ? "desc" : "asc");
+                query = query.OrderBy(Sort);
+            }
+            else
+                query = query.OrderBy(m => m.Title);
+
+            var list = new PagedList<VW_Requirement>(query, page, pageSize);
+            return list;
+        }
+
+
         public async Task<IPagedList<VW_ProjectTask>> GetAllProjectTaskList(
             string SiteId,
             bool isShowCloseStatus,
@@ -408,6 +465,7 @@ namespace Vsky.Services.Dashboard
             List<string> ProjectId = null,
             List<string> ProjectSwimlaneId = null,
             List<string> ProjectModuleId = null,
+            List<string> RequirementId = null,
             List<string> StatusId = null,
             List<string> PriorityId = null,
             List<string> AssignedToId = null,
@@ -440,6 +498,9 @@ namespace Vsky.Services.Dashboard
 
             if (ProjectModuleId != null && ProjectModuleId.Any())
                 query = query.Where(m => ProjectModuleId.Contains(m.ProjectModuleId));
+
+            if (RequirementId != null && RequirementId.Any())
+                query = query.Where(m => RequirementId.Contains(m.RequirementId));
 
             //if (StatusId != null && StatusId.Any())
             //    query = query.Where(m => StatusId.Contains(m.StatusId));

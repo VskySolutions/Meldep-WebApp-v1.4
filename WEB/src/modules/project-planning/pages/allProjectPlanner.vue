@@ -860,10 +860,9 @@
                         </template>
                         <template #body="props">
                           <q-tr :props="props" :class="['cursor-pointer', activeModuleRowId == props.row.id ? 'bg-green-2' : '']">
-                            <q-td class="highlight-text" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 40% !important;">
-
+                            <q-td class="highlight-text" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 40% !important;"  @click="loadRequirements(props.row.projectId, props.row.id)">
                               <div class="row items-center justify-between">
-                                <div class="col-9" @click="LoadTasks(props.row.projectId, props.row.id, 'module')">
+                                <div class="col-9">
                                   <div class="" v-html="props.row.name" />
                                   <q-badge v-if="props.row.projectModuleStatus" color="grey" rounded>
                                     {{ props.row.projectModuleStatus }}
@@ -877,16 +876,13 @@
                                     {{ props.row.totalDoneTaskCount + '/' + props.row.totalTaskCount }}
                                     <q-tooltip>Task Progress</q-tooltip>
                                   </q-badge> -->
+
                                   <q-badge class="q-ml-xs" color="grey" rounded>
-                                    {{
-                                      isTaskChecked
-                                        ? (props.row.taskCloseCount || 0)
-                                        : (props.row.totalTaskCount || 0)
-                                    }}
-                                    <q-tooltip>
-                                      {{ isTaskChecked ? 'Closed Tasks Count' : 'Total Tasks Count' }}
-                                    </q-tooltip>
+                                    {{ props.row.requirementCount }}
                                   </q-badge>
+                                  <q-tooltip>
+                                      Total Requirements Count
+                                  </q-tooltip>
                                 </div>
                                 <div>
                                   <q-btn
@@ -932,11 +928,261 @@
                     <div v-else class="text-grey text-caption q-pa-sm">Select a project to view modules</div>
                   </template>
 
-                  <!-- Task and Activities View -->
                   <template #after>
+                    <q-splitter
+                      v-model="requirementSplit"
+                     :limits="!requirementDrawerOpen ? [0, 0] : [10, 90]"
+                    >
+                      <template #before>
+                        <div v-if="requirementDrawerOpen && selectedModule">
+                          <q-toolbar
+                            class="bg-green-2 column q-pa-sm"
+                            style="align-items: start !important"
+                          >
+                            <div class="row items-center justify-between q-gutter-sm full-width q-mb-sm">
+                              <div>
+                                <h3 class="text-black q-mb-none">
+                                  Requirement for
+                                  <!-- <span v-if="storedModuleName && isProjectModule" class="text-primary fs-14">
+                                    {{ ProjectName + ' & ' + storedModuleName }}
+                                  </span> -->
+                                   <span v-if="storedModuleName" class="text-primary fs-14">
+                                    {{ ProjectName + ' & ' + storedModuleName }}
+                                  </span>
+                                </h3>
+                              </div>
+
+                              <div class="q-mb-sm">
+                                <q-btn
+                                  v-if="getProjectDetail(selectedProjectId)?.isEditable"
+                                  icon="o_add"
+                                  outline
+                                  size="sm"
+                                  no-caps
+                                  class="text-primary q-mr-xs"
+                                  style="padding: 3px 7px; min-height: 30px;"
+                                  @click="onAddRequirement"
+                                >
+                                  <q-tooltip>
+                                    Add Requirement
+                                  </q-tooltip>
+                                </q-btn>
+
+                                <q-btn
+                                  icon="o_menu"
+                                  outline
+                                  size="sm"
+                                  no-caps
+                                  class="text-primary"
+                                  style="padding: 3px 7px; min-height: 30px;"
+                                  @click="toggleRequirementDrawer"
+                                >
+                                  <q-tooltip>
+                                    Hide Requirements
+                                  </q-tooltip>
+                                </q-btn>
+                              </div>
+                            </div>
+                            <div class="row items-center q-mr-xs q-mb-sm">
+                              <div class="search-container position-relative">
+                                <searchFilterBar
+                                  v-model="searchRequirement.filterRequirement"
+                                  :loading="searchRequirementLoader"
+                                  :applied-filters="appliedRequirementFiltersCount"
+                                  class="search-bar"
+                                  @toggle-filter="
+                                    showRequirementsFilter =
+                                      !showRequirementsFilter
+                                  "
+                                />
+                                <q-menu
+                                  v-model="showRequirementsFilter"
+                                  anchor="bottom left"
+                                  self="top left"
+                                  persistent
+                                  no-parent-event
+                                  style="width: 500px;"
+                                >
+                                  <q-card class="q-pa-sm">
+                                    <multiSelectDropdown
+                                      v-model="searchRequirement.requirementIds"
+                                      label="Requirement"
+                                      :options="requirementsByProjectModuleIdForDropdown.list.value"
+                                      :filter="requirementsByProjectModuleIdForDropdown.filter"
+                                    />
+                                   <multiSelectDropdown
+                                      v-model="searchRequirement.statusIds"
+                                      label="Requirement Status"
+                                      :options="requirementStatusForDropdown.list.value"
+                                      :filter="requirementStatusForDropdown.filter"
+                                      :isShowAll="true"
+                                    />
+                                    <!-- Search and Clear Buttons -->
+                                    <div class="row justify-end q-gutter-sm q-mb-sm">
+                                      <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showRequirementsFilter = false; onRequirementSearch(); }" />
+                                      <q-btn style="width: 20%;" outline color="grey-4" label="Clear" class="text-grey-9 btnRounded" no-caps @click="onClearRequirement" />
+                                      <q-btn style="width: 20%;" outline color="negative" label="Close" class="btnRounded" no-caps @click="() => { showRequirementsFilter = false; }" />
+                                    </div>
+                                  </q-card>
+                                </q-menu>
+                              </div>
+                            </div>
+                          </q-toolbar>
+                          <q-table
+                            v-model:pagination="requirementPagination"
+                            :loading="requirementLoading"
+                            :rows="filteredRequirementRows"
+                            :columns="requirementColumns"
+                            row-key="id"
+                            separator="cell"
+                            binary-state-sort
+                            class="Custom-DataTable"
+                            no-data-label="No requirement available"
+                            :rows-per-page-options="[20, 50, 100, 200, 500]"
+                            table-style="max-height: 65vh"
+                            virtual-scroll
+                            @request="getAllRequirementsByProjectModuleId"
+                          >
+                            <template #header="props">
+                              <q-tr
+                                :props="props"
+                                class="bg-primary text-white"
+                              >
+                                <q-th
+                                  v-for="col in props.cols"
+                                  :key="col.name"
+                                  :props="props"
+                                >
+                                  {{ col.label }}
+                                </q-th>
+                              </q-tr>
+                            </template>
+                            <template #body="props">
+                              <q-tr
+                                :props="props"
+                                :class="[
+                                  'cursor-pointer',
+                                  activeRequirementRowId == props.row.id
+                                    ? 'bg-green-2'
+                                    : ''
+                                ]"
+                              >
+                                <q-td
+                                  class="highlight-text"
+                                  style="
+                                    overflow-wrap: break-word;
+                                    word-wrap: break-word;
+                                    white-space: normal !important;
+                                    width: 60% !important;
+                                  "
+                                >
+                                  <div
+                                    class="row items-center justify-between"
+                                    @click="
+                                      LoadTasks(
+                                        props.row.projectId,
+                                        props.row.projectModuleId,
+                                        props.row.id
+                                      )
+                                    "
+                                  >
+                                    <div class="col-9">
+                                      <div v-html="props.row.title" />
+                                      <div class="row items-center q-gutter-xs q-mt-xs">
+                                        <q-badge
+                                          v-if="props.row.requirementStatus"
+                                          color="grey"
+                                          rounded
+                                        >
+                                          {{ props.row.requirementStatus }}
+                                        </q-badge>
+
+                                        <q-badge
+                                          v-if="props.row.editingStatus"
+                                          color="grey"
+                                          rounded
+                                        >
+                                          {{ props.row.editingStatus }}
+                                        </q-badge>
+                                        <q-badge class="q-ml-xs" color="grey" rounded>
+                                          {{
+                                            isTaskChecked
+                                              ? (props.row.taskCloseCount || 0)
+                                              : (props.row.totalTaskCount || 0)
+                                          }}
+                                          <q-tooltip>
+                                            {{ isTaskChecked ? 'Closed Tasks Count' : 'Total Tasks Count' }}
+                                          </q-tooltip>
+                                        </q-badge>
+                                      </div>
+                                    </div>
+                                    <div>
+                                    <q-btn
+                                      v-if="isProject" icon="o_more_vert" flat dense no-caps class="text-primary q-ml-sm" size="sm" style="padding: 0px 3px;min-height: 25px;border: 1px solid #757575;border-radius: 5px;"
+                                    >
+                                        <q-menu>
+                                          <q-list style="min-width: 200px">
+                                            <q-item
+                                              v-ripple
+                                              clickable
+                                              @click="onRequirementView(props.row.id)"
+                                            >
+                                              <q-item-section avatar>
+                                                <q-icon
+                                                  name="o_visibility"
+                                                  size="xs"
+                                                />
+                                              </q-item-section>
+                                              <q-item-section>
+                                                View Requirement
+                                              </q-item-section>
+                                            </q-item>
+                                            <q-item
+                                              v-if="getProjectDetail(selectedProjectId)?.isEditable"
+                                              v-ripple
+                                              clickable
+                                              @click="onRequirementEdit(props.row.id, refreshRequirementList)"
+                                            >
+                                              <q-item-section avatar>
+                                                <q-icon
+                                                  name="o_edit"
+                                                  size="xs"
+                                                />
+                                              </q-item-section>
+                                              <q-item-section>
+                                                Edit Requirement
+                                              </q-item-section>
+                                            </q-item>
+                                            <q-item
+                                              v-if="getProjectDetail(selectedProjectId)?.isEditable"
+                                              v-ripple clickable
+                                              @click="onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.title, true)"
+                                            >
+                                              <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
+                                              <q-item-section>Convert into Task</q-item-section>
+                                            </q-item>
+                                            <q-item v-if="props.row.isEditable" v-ripple clickable @click="onDeleteRequirement(props.row)">
+                                              <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
+                                              <q-item-section class="text-negative">Delete</q-item-section>
+                                            </q-item>
+                                          </q-list>
+                                        </q-menu>
+                                      </q-btn>
+                                    </div>
+                                  </div>
+                                </q-td>
+                              </q-tr>
+                            </template>
+                          </q-table>
+                        </div>
+                        <div v-else class="text-grey text-caption q-pa-sm">
+                          Select a module to view requirements
+                        </div>
+                      </template>
+                     <template #after>
                     <q-splitter v-model="ActivitySplit" class="">
                       <template #before>
-                        <div v-if="selectedModule">
+                        <div v-if="selectedRequirement">
                           <q-toolbar class="bg-green-2 column q-pa-sm" style="align-items:start !important">
                             <!-- First line: title + actions -->
                             <div class="row items-center justify-between q-gutter-sm full-width q-mb-sm">
@@ -944,15 +1190,15 @@
                               <div>
                                 <h3 class="text-black q-mb-none">
                                   Task for
-                                  <span v-if="storedModuleName && isProjectModule" class="text-primary" style="font-size: 14px;">
-                                    {{ ProjectName + ' & ' + storedModuleName }}
+                                  <span v-if="storedRequirementName && isRequirement" class="text-primary" style="font-size: 14px;">
+                                    {{ storedRequirementName }}
                                   </span>
                                 </h3>
                               </div>
                               <div class="q-mb-sm">
                                 <!-- </q-toolbar-title> -->
-                                <q-btn v-if="selectedModuleId && getProjectDetail(selectedProjectId)?.isEditable" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddProjectTask(selectedProjectId)" />
-                                <q-btn v-if="selectedModuleId && getProjectDetail(selectedProjectId)?.isEditable" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTask">
+                                <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddProjectTask(selectedProjectId)" />
+                                <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTask">
                                   <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
                                   <q-tooltip>Add Bulk Tasks</q-tooltip>
                                 </q-btn>
@@ -1593,7 +1839,7 @@
                             </template>
                           </q-table>
                         </div>
-                        <div v-else class="text-grey text-caption q-pa-sm">Select a module to view tasks</div>
+                        <div v-else class="text-grey text-caption q-pa-sm">Select a requirement to view tasks</div>
                       </template>
                       <template #after>
                         <div v-if="selectedTask">
@@ -1987,6 +2233,8 @@
                         <div v-else class="text-grey text-caption q-pa-sm">Select a task to view activities</div>
                       </template>
                     </q-splitter>
+                    </template>
+                    </q-splitter>
                   </template>
                 </q-splitter>
               </template>
@@ -2013,9 +2261,12 @@ import TagEditor from "src/modules/project-tasks/components/_taskTagEditor.vue";
 
 import projectModulesService from "modules/project-modules/projectModules.service";
 
+import requirementsService from "modules/requirement/requirement.service";
+
 import taskService from "modules/project-tasks/projectTasks.service";
 
 import activitiesService from "modules/project-tasks-activities/projectTasksActivities.service";
+import editProjectTask from "modules/project-tasks/components/addEdit.vue";
 
 // SOP Change :- Shared DataTable Views
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
@@ -2029,6 +2280,7 @@ import companyContactsModule from "src/modules/company-contacts/utils/dropdowns.
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 import projectTaskModule from "src/modules/project-tasks/utils/dropdowns.js";
 import tagModule from "src/modules/tags/utils/dropdowns.js";
 
@@ -2055,6 +2307,14 @@ import {
   onProjectModuleCopy,
   onProjectModuleMoveAsProject
 } from "src/modules/project-modules/utils/dialogs.js";
+
+// Shared Requirement Dialogs
+import {
+  initRequirementDialogs,
+  onRequirementAdd,
+  onRequirementEdit,
+  onRequirementView
+} from "src/modules/requirement/utils/dialogs.js";
 
 // Shared Common Dialogs
 import {
@@ -2100,20 +2360,25 @@ const currentSiteId = computed(() => user.siteId);
 const loading = ref(true);
 const leftDrawerOpen = ref(true);
 const middleDrawerOpen = ref(true);
+const requirementDrawerOpen = ref(true);
 const customerSplit = ref(22);
 const mainSplit = ref(20);
 const ActivitySplit = ref(55);
+const requirementSplit = ref(35);
 
 const selectedModule = ref(null);
+const selectedRequirement = ref(null);
 const selectedCustomer = ref(null);
 const selectedProject = ref(null);
 const selectedTask = ref(null);
 
 const showFilter = ref(false);
 const showModulesFilter = ref(false);
+const showRequirementsFilter = ref(false);
 const showTasksFilter = ref(false);
 const searchProjectLoader = ref(false);
 const searchProjectModuleLoader = ref(false);
+const searchRequirementLoader = ref(false);
 const searchProjectTaskLoader = ref(false);
 const searchProjectActivityLoader = ref(false);
 
@@ -2126,11 +2391,13 @@ let ModuleEndDate;
 const defaultOutlookState = {
   isProject: true,
   isProjectModule: false,
+  isRequirement: false,
   isProjectTask: false,
   isProjectActivity: false,
 
   projectId: null,
   projectModuleId: null,
+  requirementId: null,
   projectTaskId: null,
 
   projectName: "",
@@ -2143,6 +2410,7 @@ const defaultOutlookState = {
 
   customerSplit: 22,
   mainSplit: 20,
+  requirementSplit: 35,
   ActivitySplit: 55
 };
 
@@ -2161,14 +2429,17 @@ const filterLocalStorage = getOutlookState();
 const expandedRowId = ref(filterLocalStorage ? filterLocalStorage.expandedRowId : null);
 const projectId = ref(filterLocalStorage?.projectId || "");
 const projectModuleId = ref(filterLocalStorage?.projectModuleId || "");
+const requirementId = ref(filterLocalStorage?.requirementId || "");
 const projectTaskId = ref(filterLocalStorage?.projectTaskId || "");
 
 const storedProjectName = ref(filterLocalStorage?.projectName || "");
 const storedModuleName = ref(filterLocalStorage?.moduleName || "");
+const storedRequirementName = ref(filterLocalStorage?.requirementName || "");
 const storedTaskName = ref(filterLocalStorage?.taskName || "");
 
 const isProject = ref(filterLocalStorage?.isProject ?? true);
 const isProjectModule = ref(filterLocalStorage?.isProjectModule ?? false);
+const isRequirement = ref(filterLocalStorage?.isRequirement ?? false);
 const isProjectTask = ref(filterLocalStorage?.isProjectTask ?? false);
 const isProjectActivity = ref(filterLocalStorage?.isProjectActivity ?? false);
 
@@ -2197,6 +2468,7 @@ const selectedSortOrderByTask = ref(
 );
 const selectedProjectId = ref(projectId.value || null);
 const selectedModuleId = ref(projectModuleId.value || null);
+const selectedRequirementId = ref(requirementId.value || null);
 const selectedTaskId = ref(projectTaskId.value || null);
 
 const routeProjectId = history.state?.projectId;
@@ -2321,6 +2593,10 @@ const refreshProjectModulesList = () => {
   getAllProjectsModulesByProjectId({ pagination: projectModulesPagination.value });
 };
 
+const refreshRequirementList = () => {
+  getAllRequirementsByProjectModuleId({ pagination: requirementPagination.value });
+};
+
 const refreshProjectTaskList = () => {
   getTaskListByModuleId({ pagination: projectTasksPagination.value });
 };
@@ -2340,6 +2616,7 @@ const refreshProjectTaskTagsDropdown = () => {
 // Search records as per parameters
 const onSearch = () => {
   ProjectModuleRows.value = [];
+  requirementRows.value = [];
   projectActivities.value = [];
   projectTasks.value = [];
   selectedProjectId.value = null;
@@ -2547,10 +2824,10 @@ function formatHoursValue(value) {
 
 async function loadProjectModules (projectId) {
   selectedModule.value = null;
-  selectedTask.value = null;
+  selectedRequirement.value = null;
 
   selectedModuleId.value = null;
-  selectedTaskId.value = null;
+  selectedRequirementId.value = null;
 
   projectTasks.value = [];
   projectActivities.value = [];
@@ -2621,6 +2898,197 @@ const onClearModule = () => {
   onModuleSearch();
 };
 
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+// Requirement List
+// --------------------------------------------------------------------------------------------------------------------------------------------------\
+const requirementRows = ref([]);
+const filteredRequirementRows = ref([]);
+const requirementColumns = ref([
+  { name: "name", label: "Requirement", field: "name", align: "left", sortable: true }
+]);
+
+const {
+  search: searchRequirement,
+  pagination: requirementPagination,
+  activeRowId: activeRequirementRowId,
+
+  saveDataTableState: saveRequirementTableState
+} = useSiteTableState({
+  storageKey: "projects-AllProjectPlanner",
+  siteId: currentSiteId,
+
+  tableKey: "dataTable-Requirements",
+
+  defaultSearch: {
+    projectModuleIds: [],
+    requirementStatusIds: [],
+    filterRequirement: "",
+    projectId: projectId.value
+  },
+
+  defaultPagination: {
+    sortBy: "title",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  },
+
+  defaultSorts: {
+    selectedSortByRequirement: "",
+    selectedSortOrderByRequirement: true
+  }
+});
+
+const getAllRequirementsByProjectModuleId = async (props) => {
+  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+  loading.value = true;
+  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...searchRequirement.value };
+
+  try {
+    saveRequirementTableState({
+      search: searchRequirement.value,
+
+      pagination: {
+        ...requirementPagination.value,
+        page,
+        rowsPerPage,
+        sortBy,
+        descending
+        },
+
+      activeRowId: activeRequirementRowId.value,
+
+      // sorts: {
+      //   selectedSortByRequirement: selectedSortByRequirement.value,
+      //   selectedSortOrderByRequirement: selectedSortOrderByRequirement.value
+      // }
+    });
+    const resp = await allProjectPlannerService.getAllRequirementPlannerList(payload);
+    requirementRows.value = resp.data.map(requirement => {
+      const hasFullAccess = requirement?.project?.projectUserMappings[0]?.fullAccess ?? false;
+      return {
+        ...requirement,
+        isViewOnly: requirement?.project?.projectUserMappings[0]?.viewOnly ?? false,
+        isNotes: requirement?.project?.projectUserMappings[0]?.notes ?? false,
+        isEditable: role === "admin" || hasFullAccess
+      };
+    });
+    filteredRequirementRows.value = requirementRows.value; // Set initial value to all rows
+    requirementPagination.value = {
+      ...requirementPagination.value,
+
+      page,
+      rowsPerPage,
+      sortBy,
+      descending,
+      rowsNumber: resp.total
+    };
+    searchProjectModuleLoader.value = false;
+  } catch (error) {
+    console.error("Error fetching modules:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+async function loadRequirements(projectId, moduleId) {
+  selectedRequirement.value = null;
+  selectedTask.value = null;
+
+  selectedRequirementId.value = null;
+  selectedTaskId.value = null;
+
+  projectTasks.value = [];
+  projectActivities.value = [];
+  filteredActivities.value = [];
+
+  if (showRequirementsFilter.value === true) {
+    showRequirementsFilter.value = false;
+  }
+
+  if (showTasksFilter.value === true) {
+    showTasksFilter.value = false;
+  }
+
+  requirementsByProjectModuleIdForDropdown.load(moduleId);
+
+  isRequirement.value = true;
+  if (projectId && moduleId) {
+    activeModuleRowId.value = moduleId;
+
+    ModuleName = ProjectModuleRows.value.find(item => item.id === moduleId)?.name;
+    ModuleStartDate = ProjectModuleRows.value.find(item => item.id === moduleId)?.startDate;
+    ModuleEndDate = ProjectModuleRows.value.find(item => item.id === moduleId)?.endDate;
+
+    storedModuleName.value = ModuleName;
+
+    ProjectName = rows.value.find(item => item.id === projectId)?.name;
+    storedProjectName.value = ProjectName;
+    searchRequirement.value.projectModuleId = moduleId;
+    searchRequirement.value.projectId = projectId;
+
+    selectedModuleId.value = moduleId;
+    selectedModule.value = ProjectModuleRows.value.find(
+      item => item.id === selectedModuleId.value
+    );
+
+    selectedProjectId.value = projectId;
+  }
+
+  selectedProjectId.value = projectId;
+
+  const updated = {
+    ...getOutlookState(),
+    isProject: isProject.value,
+    isProjectModule: isProjectModule.value,
+    isRequirement: isRequirement.value,
+    isProjectTask: isProjectTask.value,
+    // isProjectActivity: isProjectActivity.value,
+    projectId: selectedProjectId.value,
+    projectModuleId: selectedModuleId.value,
+    requirementId: selectedRequirementId.value,
+    projectTaskId: selectedTaskId.value,
+    moduleName: ModuleName,
+    expandedRowId: expandedRowId.value
+  };
+
+  saveOutlookState(updated);
+
+  try {
+    await refreshRequirementList();
+  } catch (error) {
+    console.error("Error loading requirements:", error);
+  }
+}
+
+console.log(storedModuleName.value);
+
+function onSortByRequirement (SortBy, order) {
+  requirementPagination.value.sortBy = selectedSortByRequirement.value;
+  requirementPagination.value.descending = selectedSortOrderByRequirement.value;
+  refreshRequirementList();
+  const updated = {
+    ...getOutlookState(),
+    selectedSortByRequirement: selectedSortByRequirement.value,
+    selectedSortOrderByRequirement: selectedSortOrderByRequirement.value
+  };
+  saveOutlookState(updated);
+}
+
+const onRequirementSearch = () => {
+  filteredRequirementRows.value = [];
+  requirementRows.value = [];
+  projectTasks.value = [];
+  projectActivities.value = [];
+  refreshRequirementList();
+};
+
+const onClearRequirement = () => {
+  searchRequirement.value.requirementIds = [];
+  searchRequirement.value.statusIds = [];
+  onRequirementSearch();
+};
+
 //  --------------------------------------------------------------------------------------------------------------------------------------------------
 // Project Module Task List
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2655,7 +3123,8 @@ const {
     filterTask: "",
     isShowCloseStatus: false,
     projectId: projectId.value,
-    projectModuleId: projectModuleId.value
+    projectModuleId: projectModuleId.value,
+    requirementId: requirementId.value
   },
 
   defaultPagination: {
@@ -2758,56 +3227,86 @@ const getTaskListByModuleId = async (props) => {
   }
 };
 
-async function LoadTasks (projectId, moduleId, type) {
+async function LoadTasks(projectId, moduleId, requirementId) {
   if (showModulesFilter.value === true) {
     showModulesFilter.value = false;
   }
+
   if (showTasksFilter.value === true) {
     showTasksFilter.value = false;
   }
   isProjectTask.value = true;
   projectActivities.value = [];
   filteredActivities.value = [];
-  if (moduleId && projectId) {
-    activeModuleRowId.value = moduleId;
-    ModuleName = ProjectModuleRows.value.find(item => item.id === moduleId)?.name;
-    ModuleStartDate = ProjectModuleRows.value.find(item => item.id === moduleId)?.startDate;
-    ModuleEndDate = ProjectModuleRows.value.find(item => item.id === moduleId)?.endDate;
-    storedModuleName.value = ModuleName;
-    ProjectName = rows.value.find(item => item.id === projectId)?.name;
+  if (requirementId && moduleId && projectId) {
+    activeRequirementRowId.value = requirementId;
+    const module = ProjectModuleRows.value.find(
+      item => item.id === moduleId
+    );
+
+    ModuleName = module?.name || "";
+    ModuleStartDate = module?.startDate;
+    ModuleEndDate = module?.endDate;
+    const project = rows.value.find(
+      item => item.id === projectId
+    );
+
+    ProjectName = project?.name || "";
     storedProjectName.value = ProjectName;
     searchProjectTask.value.projectModuleId = moduleId;
     searchProjectTask.value.projectId = projectId;
-    selectedModuleId.value = moduleId;
-    selectedModule.value = ProjectModuleRows.value.find(item => item.id === selectedModuleId.value);
+    searchProjectTask.value.requirementId = requirementId;
     selectedProjectId.value = projectId;
-  } else if (projectId) {
-    ModuleName = "";
-    ProjectName = rows.value.find(item => item.id === projectId)?.name;
-    storedProjectName.value = ProjectName;
+    selectedModuleId.value = moduleId;
+    selectedRequirementId.value = requirementId;
+
+    selectedModule.value = module;
+    selectedRequirement.value = requirementRows.value.find(
+      item => item.id === requirementId
+    );
+    storedRequirementName.value =
+      selectedRequirement.value?.title;
+
+    // Save state
+    const updated = {
+      ...getOutlookState(),
+      isProject: isProject.value,
+      isProjectModule: isProjectModule.value,
+      isRequirement: isRequirement.value,
+      isProjectTask: isProjectTask.value,
+      isProjectActivity: isProjectActivity.value,
+
+      projectId: projectId,
+      projectModuleId: moduleId,
+      requirementId: requirementId,
+      projectTaskId: selectedTaskId.value,
+      moduleName: ModuleName,
+      expandedRowId: expandedRowId.value
+    };
+    saveOutlookState(updated);
+    try {
+      await refreshProjectTaskList();
+    } catch (error) {
+      console.error("Error loading tasks:", error);
+    }
+
+  } else {
+
+    // Clear Tasks if any required ID is missing
+    projectTasks.value = [];
+    projectActivities.value = [];
+    filteredActivities.value = [];
+
+    activeRequirementRowId.value = null;
+
+    selectedRequirementId.value = null;
+    selectedRequirement.value = null;
+
+    storedRequirementName.value = "";
+
+    searchProjectTask.value.projectId = "";
     searchProjectTask.value.projectModuleId = "";
-    searchProjectTask.value.projectId = projectId;
-  }
-  selectedProjectId.value = projectId;
-
-  const updated = {
-    ...getOutlookState(),
-    isProject: isProject.value,
-    isProjectModule: isProjectModule.value,
-    isProjectTask: isProjectTask.value,
-    isProjectActivity: isProjectActivity.value,
-    projectId: selectedProjectId.value,
-    projectModuleId: selectedModuleId.value,
-    projectTaskId: selectedTaskId.value,
-    moduleName: ModuleName,
-    expandedRowId: expandedRowId.value
-  };
-  saveOutlookState(updated);
-
-  try {
-    await refreshProjectTaskList();
-  } catch (error) {
-    console.error("Error loading tasks:", error);
+    searchProjectTask.value.requirementId = "";
   }
 }
 
@@ -2867,6 +3366,7 @@ const {
     isShowCompleteStatus: false,
     projectId: projectId.value,
     projectModuleId: projectModuleId.value,
+    requirementId: requirementId.value,
     projectTaskId: projectTaskId.value
   },
 
@@ -2964,6 +3464,7 @@ async function LoadTaskActivities (projectTaskId) {
         ...getOutlookState(),
         isProject: isProject.value,
         isProjectModule: isProjectModule.value,
+        isRequirement: isRequirement.value,
         isProjectTask: isProjectTask.value,
         isProjectActivity: isProjectActivity.value,
         projectId: selectedProjectId.value,
@@ -3098,6 +3599,7 @@ const prevState = ref({
   selectedCustomer: null,
   selectedProject: null,
   selectedModule: null,
+  selectedRequirement: null,
   selectedTask: null
 });
 
@@ -3269,6 +3771,67 @@ const onDeleteModule = async (item) => {
     }
   } catch (error) {
     console.error("Error checking module:", error);
+  } finally {
+    activeRowId.value = null;
+  }
+};
+
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+// Requirement Popups
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+const onAddRequirement= () => {
+   const projectId = searchRequirement.value?.projectId;
+  const moduleId = selectedModuleId.value;
+
+  onRequirementAdd(
+    projectId,
+    moduleId,
+    refreshRequirementList
+  );
+};
+
+const onConvertToTask = (id, projectId, projectModuleId, title, isRequirementConverted) => {
+  activeRowId.value = id;
+  // Collect created task numbers from related mappings
+  const taskNumbers = [];
+  rows.value.filter(row => id === row.id).forEach(req => {
+    if (req.projectTaskRelatedMappings?.length) {
+      req.projectTaskRelatedMappings.forEach(mapping => {
+        if (mapping.projectTaskNumber) {
+          taskNumbers.push(mapping.projectTaskNumber);
+        }
+      });
+    }
+  });
+  $q.dialog({
+    component: editProjectTask,
+    componentProps: { requirementId: id, projectIdAttr: projectId, moduleIdAttr: projectModuleId, name: title, isRequirementConverted, taskNumbers }
+  }).onOk(() => {
+    refreshRequirementList();
+  }).onCancel(() => {
+  }).onDismiss(() => {
+    activeRowId.value = id;
+  });
+};
+
+const onDeleteRequirement = async (item) => {
+  activeRowId.value = item.id;
+  try {
+    zwConfirmDelete(
+      {
+        data: `${item.title}, ${item.projectName ?? ""}`
+      },
+      () => {
+        requirementsService.deleteRequirement(item.id).then(() => {
+          notifySuccess({
+            message: "Requirement deleted successfully."
+          });
+          refreshRequirementList();
+        });
+      }
+    );
+  } catch (error) {
+    console.error("Error deleting requirement:", error);
   } finally {
     activeRowId.value = null;
   }
@@ -3643,6 +4206,7 @@ function leftDrawer () {
   prevState.value.selectedCustomer = selectedCustomer.value;
   prevState.value.selectedProject = selectedProject.value;
   prevState.value.selectedModule = selectedModule.value;
+  prevState.value.selectedRequirement = selectedRequirement.value;
   prevState.value.selectedTask = selectedTask.value;
 
   leftDrawerOpen.value = false;
@@ -3654,22 +4218,28 @@ function toggleLeftDrawer () {
     prevState.value.selectedCustomer = selectedCustomer.value;
     prevState.value.selectedProject = selectedProject.value;
     prevState.value.selectedModule = selectedModule.value;
+    prevState.value.selectedRequirement = selectedRequirement.value;
     prevState.value.selectedTask = selectedTask.value;
 
     leftDrawerOpen.value = false;
     middleDrawerOpen.value = false;
+    requirementDrawerOpen.value = false;
     customerSplit.value = 0;
     mainSplit.value = 0;
+    requirementSplit.value = 0;
   } else {
     // Reopen and restore previous state
     leftDrawerOpen.value = true;
     middleDrawerOpen.value = true;
+    requirementDrawerOpen.value = true;
     customerSplit.value = 20; // reset to default
     mainSplit.value = 30;
+    requirementSplit.value = 35;
 
     selectedCustomer.value = prevState.value.selectedCustomer;
     selectedProject.value = prevState.value.selectedProject;
     selectedModule.value = prevState.value.selectedModule;
+    selectedRequirement.value = prevState.value.selectedRequirement;
     selectedTask.value = prevState.value.selectedTask;
   }
 }
@@ -3679,6 +4249,7 @@ function toggleMiddleDrawer () {
     prevState.value.selectedCustomer = selectedCustomer.value;
     prevState.value.selectedProject = selectedProject.value;
     prevState.value.selectedModule = selectedModule.value;
+    prevState.value.selectedRequirement = selectedRequirement.value;
     prevState.value.selectedTask = selectedTask.value;
 
     leftDrawerOpen.value = false;
@@ -3690,12 +4261,50 @@ function toggleMiddleDrawer () {
     selectedCustomer.value = prevState.value.selectedCustomer;
     selectedProject.value = prevState.value.selectedProject;
     selectedModule.value = prevState.value.selectedModule;
+    selectedRequirement.value = prevState.value.selectedRequirement;
     selectedTask.value = prevState.value.selectedTask;
     customerSplit.value = 20;
     mainSplit.value = 30;
   }
 }
 
+function toggleRequirementDrawer () {
+  if (requirementDrawerOpen.value) {
+    // Save current state before closing
+    prevState.value.selectedCustomer = selectedCustomer.value;
+    prevState.value.selectedProject = selectedProject.value;
+    prevState.value.selectedModule = selectedModule.value;
+    prevState.value.selectedRequirement = selectedRequirement.value;
+    prevState.value.selectedTask = selectedTask.value;
+
+    // Hide Project + Project Module + Requirement
+    leftDrawerOpen.value = false;
+    middleDrawerOpen.value = false;
+    requirementDrawerOpen.value = false;
+
+    // Hide all three sections
+    customerSplit.value = 0;
+    mainSplit.value = 0;
+    requirementSplit.value = 0;
+  } else {
+    // Reopen Project + Project Module + Requirement
+    leftDrawerOpen.value = true;
+    middleDrawerOpen.value = true;
+    requirementDrawerOpen.value = true;
+
+    // Restore previous selections
+    selectedCustomer.value = prevState.value.selectedCustomer;
+    selectedProject.value = prevState.value.selectedProject;
+    selectedModule.value = prevState.value.selectedModule;
+    selectedRequirement.value = prevState.value.selectedRequirement;
+    selectedTask.value = prevState.value.selectedTask;
+
+    // Restore widths
+    customerSplit.value = 20;
+    mainSplit.value = 30;
+    requirementSplit.value = 35;
+  }
+}
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // GET Status Color
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3925,6 +4534,7 @@ function getDropDown (typeName, currentStatusLabel = null) {
 
 initProjectDialogs(activeRowId);
 initProjectModuleDialogs(activeRowId);
+initRequirementDialogs(activeRowId);
 initCommonDialogs(activeRowId);
 initProjectTaskDialogs(activeRowId);
 initProjectTaskActivityDialogs(activeRowId);
@@ -3982,6 +4592,9 @@ async function runSequentially () {
 
     mainSplit.value =
       savedState?.mainSplit ?? 20;
+
+    requirementSplit.value =
+       savedState?.RequirementSplit ?? 35;
 
     ActivitySplit.value =
       savedState?.ActivitySplit ?? 55;
@@ -4048,11 +4661,40 @@ async function runSequentially () {
           item => item.id === restoredModuleId
         ) || null;
 
-      await LoadTasks(
+      await loadRequirements(
         restoredProjectId,
-        restoredModuleId
+        restoredModuleId,
       );
     }
+
+    // --------------------------------------------------------------------------
+    // Restore Requirement
+    // --------------------------------------------------------------------------
+    const restoredRequirementId =
+    savedState?.requirementId || null;
+
+    if (
+      restoredProjectId &&
+      restoredModuleId &&
+      restoredRequirementId
+    ) {
+
+      selectedRequirementId.value = restoredRequirementId;
+      activeRequirementRowId.value = restoredRequirementId;
+
+      selectedRequirement.value =
+        requirementRows.value.find(
+          item => item.id === restoredRequirementId
+        ) || null;
+
+      // Load Tasks under the restored Requirement
+      await LoadTasks(
+        restoredProjectId,
+        restoredModuleId,
+        restoredRequirementId
+      );
+    }
+
 
     // --------------------------------------------------------------------------
     // Restore Task
@@ -4112,6 +4754,9 @@ async function runSequentially () {
     isProjectModule.value =
       savedState?.isProjectModule ?? false;
 
+    isRequirement.value =
+      savedState?.isRequirement ?? false;
+
     isProjectTask.value =
       savedState?.isProjectTask ?? false;
 
@@ -4141,11 +4786,13 @@ async function runSequentially () {
 
       isProject: isProject.value,
       isProjectModule: isProjectModule.value,
+      isRequirement: isRequirement.value,
       isProjectTask: isProjectTask.value,
       isProjectActivity: isProjectActivity.value,
 
       projectId: selectedProjectId.value,
       projectModuleId: selectedModuleId.value,
+      requirementId: selectedRequirementId.value,
       projectTaskId: selectedTaskId.value,
 
       // projectName: storedProjectName.value,
@@ -4157,9 +4804,11 @@ async function runSequentially () {
 
       leftDrawerOpen: leftDrawerOpen.value,
       middleDrawerOpen: middleDrawerOpen.value,
+      requirementDrawerOpen: requirementDrawerOpen.value,
 
       customerSplit: customerSplit.value,
       mainSplit: mainSplit.value,
+      requirementSplit: requirementSplit.value,
       ActivitySplit: ActivitySplit.value,
     });
   } catch (error) {
@@ -4198,17 +4847,20 @@ function clearSearchModelsData () {
   selectedCustomer.value = null;
   selectedProject.value = null;
   selectedModule.value = null;
+  selectedRequirement.value = null;
   selectedTask.value = null;
 
   searchProjectModule.value.projectId = "";
   searchProjectTask.value.projectId = "";
   searchProjectTask.value.projectModuleId = "";
+  searchRequirement.value.requirementId = "";
   searchProjectActivity.value.projectId = "";
   searchProjectActivity.value.projectModuleId = "";
   searchProjectActivity.value.projectTaskId = "";
 
   isProject.value = true;
   isProjectModule.value = false;
+  isRequirement.value = false;
   isProjectTask.value = false;
   isProjectActivity.value = false;
 
@@ -4257,6 +4909,19 @@ const appliedModuleFiltersCount = computed(() => {
   if (filters.projectModuleStatusIds && filters.projectModuleStatusIds.length > 0) count++;
   if (filters.filterModule && filters.filterModule.trim() !== "") count++;
   if (filters.isShowCloseStatus) count++;
+  // Add more fields as needed
+
+  return count;
+});
+
+// Applied Requirement Filters Count
+const appliedRequirementFiltersCount = computed(() => {
+  let count = 0;
+  const filters = searchRequirement.value;
+
+  if (filters.requirementIds && filters.requirementIds.length > 0) count++;
+  if (filters.statusIds && filters.statusIds.length > 0) count++;
+  if (filters.filterRequirement && filters.filterRequirement.trim() !== "") count++;
   // Add more fields as needed
 
   return count;
@@ -4328,6 +4993,7 @@ const { activeEmployeesDropdown } = employeeModule();
 const { customerNameDropdown } = customerModule();
 const { companyContactNameDropdown } = companyContactsModule();
 const { projectModulesByProjectIdForDropdown, projectModuleStatusForDropdown } = projectModuleOfProjectModule();
+const { requirementStatusForDropdown, requirementsByProjectModuleIdForDropdown } = requirementModule();
 const { projectTaskPrioritiesForDropdown, projectTaskStatusForDropdown, projectTaskTagsDropdown } = projectTaskModule();
 const { tagsDropdown } = tagModule();
 
@@ -4373,7 +5039,9 @@ onMounted(async () => {
      projectModulesByProjectIdForDropdown.load(false, false, selectedProjectId.value);
      projectCharterEmployeesWithWeeklyPlanHoursForDropdown.load(selectedProjectId.value);
   }
+
   projectModuleStatusForDropdown.load("WO Status");
+  requirementStatusForDropdown.load("Requirement Status");
 
   projectTaskStatusForDropdown.load("Task Status");
   projectTaskPrioritiesForDropdown.load("Task Priorities");
@@ -4419,6 +5087,11 @@ watch(() => searchProjectModule.value.filterModule, () => {
   refreshProjectModulesList();
 });
 
+watch(() => searchRequirement.value.filterModule, () => {
+  if (searchRequirement.value.filterModule) searchRequirementLoader.value = true;
+  refreshRequirementList();
+});
+
 watch(() => searchProjectTask.value.filterTask, () => {
   if (searchProjectTask.value.filterTask) searchProjectTaskLoader.value = true;
   refreshProjectTaskList();
@@ -4433,18 +5106,22 @@ watch(
   [
     leftDrawerOpen,
     middleDrawerOpen,
+    requirementDrawerOpen,
     customerSplit,
     mainSplit,
-    ActivitySplit
+    ActivitySplit,
+    requirementSplit
   ],
   () => {
     saveOutlookState({
       ...getOutlookState(),
       leftDrawerOpen: leftDrawerOpen.value,
       middleDrawerOpen: middleDrawerOpen.value,
+      requirementDrawerOpen: requirementDrawerOpen.value,
       customerSplit: customerSplit.value,
       mainSplit: mainSplit.value,
-      ActivitySplit: ActivitySplit.value
+      ActivitySplit: ActivitySplit.value,
+      requirementSplit: requirementSplit.value
     });
   },
   {

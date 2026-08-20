@@ -108,11 +108,29 @@ namespace Vsky.Models
         public int SortOrder { get; set; }
         public string Color { get; set; }
         public string ProjectModuleStatus { get; set; }
+        public int RequirementCount { get; set; }
+        public virtual VW_Project Project { get; set; }
+
+    }
+
+    public class VW_Requirement : BaseEntity
+    {
+        public string SiteId { get; set; }
+        public string ProjectId { get; set; }
+        public string ProjectModuleId { get; set; }
+        public string RequirementStatusId { get; set; }
+        public int ProjectYear { get; set; }
+        public string ProjectName { get; set; }
+        public string ProjectModuleName { get; set; }
+        public string Title { get; set; }
+        public string RequirementStatus { get; set; }
+        public string EditingStatus { get; set; }
         public int TotalTaskCount { get; set; }
         public int TaskCloseCount { get; set; }
         public int TotalDoneTaskCount { get; set; }
-        public virtual VW_Project Project { get; set; }
 
+        public virtual VW_Project Project { get; set; }
+        public virtual VW_ProjectModules ProjectModule { get; set; }
     }
 
     public class VW_ProjectTask : BaseEntity
@@ -124,6 +142,7 @@ namespace Vsky.Models
         //public string ProjectSwimlaneId { get; set; }
         //public string ProjectSwimLaneName { get; set; }
         public string ProjectModuleId { get; set; }
+        public string RequirementId { get; set; }
         public string ProjectListName { get; set; }
         public string StatusId { get; set; }
         public string Status { get; set; }

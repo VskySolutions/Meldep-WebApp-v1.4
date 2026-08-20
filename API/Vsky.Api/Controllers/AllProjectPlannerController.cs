@@ -10,6 +10,7 @@ using Vsky.Services.DropDowns;
 using Vsky.Services.Dashboard;
 using Vsky.Models;
 using Vsky.Services.DropDownTypes;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Vsky.Api.Controllers
 {
@@ -156,6 +157,52 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region v
+        // Title: GetAllRequirementPlannerList
+        [HttpPost("get-all-requirement-planner-list")]
+        public async Task<IActionResult> GetAllRequirementPlannerList(RequirementSearchModel searchModel)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+
+                var projectIdList = new List<string>();
+                var projectModuleIdList = new List<string>();
+
+                if (!string.IsNullOrEmpty(searchModel.ProjectId))
+                    projectIdList.Add(searchModel.ProjectId);
+
+                if (!string.IsNullOrEmpty(searchModel.ProjectModuleId))
+                    projectModuleIdList.Add(searchModel.ProjectModuleId);
+
+
+              var list = await _vWDashboardServices.GetAllRequirementList(
+                        SiteId: SiteId,
+                        filterRequirement: searchModel.filterRequirement,
+                        LoggedUserId: LoggedUserId,
+                        ProjectId: projectIdList,
+                        ProjectModuleId: projectModuleIdList,
+                        RequirementIds: searchModel.RequirementIds,
+                        RequirementStatusIds: searchModel.StatusIds,
+                        SortBy: searchModel.SortBy,
+                        Descending: searchModel.Descending,
+                        page: searchModel.Page,
+                        pageSize: searchModel.PageSize
+              );
+                return Ok(new
+                {
+                    Data = list,
+                    Total = list.TotalCount
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region GetAllProjectsModulesPlannerList
         // Title: GetAllProjectsModulesPlannerList
         [HttpPost("get-all-project-module-planner-list")]
@@ -197,6 +244,7 @@ namespace Vsky.Api.Controllers
                 var projectIdList = new List<string>();
                 var projectSwimlaneIdList = new List<string>();
                 var projectModuleIdList = new List<string>();
+                var requirementIdList = new List<string>();
 
                 if (!string.IsNullOrEmpty(searchModel.ProjectId))
                     projectIdList.Add(searchModel.ProjectId);
@@ -207,6 +255,9 @@ namespace Vsky.Api.Controllers
                 if (!string.IsNullOrEmpty(searchModel.ProjectModuleId))
                     projectModuleIdList.Add(searchModel.ProjectModuleId);
 
+                if (!string.IsNullOrEmpty(searchModel.RequirementId))
+                    requirementIdList.Add(searchModel.RequirementId);
+
                 var list =await _vWDashboardServices.GetAllProjectTaskList(
                     SiteId: SiteId, 
                     isShowCloseStatus:searchModel.isShowCloseStatus, 
@@ -216,6 +267,7 @@ namespace Vsky.Api.Controllers
                     ProjectId: projectIdList, 
                     ProjectSwimlaneId: projectSwimlaneIdList, 
                     ProjectModuleId: projectModuleIdList,
+                    RequirementId: requirementIdList,
                     StatusId:searchModel.StatusIds,
                     PriorityId:searchModel.PriorityIds,
                     AssignedToId: searchModel.AssignedToIds,

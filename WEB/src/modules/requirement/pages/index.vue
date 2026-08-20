@@ -266,7 +266,7 @@
                   label="Create Requirement"
                   no-caps
                   class="text-primary btnRounded"
-                  @click="onRequirementAdd(refreshRequirementList)"
+                  @click="onRequirementAdd(null, null, refreshRequirementList)"
                 />
                 <q-btn
                   icon="o_checklist"
