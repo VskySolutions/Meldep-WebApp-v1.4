@@ -1097,7 +1097,6 @@ namespace Vsky.Api.Controllers
         }
         #endregion        
 
-
         #region All Project Planner -> AddProjectActivity
         // Title: Add Project Activity
         [HttpPost("add-single-activity")]
@@ -1127,8 +1126,12 @@ namespace Vsky.Api.Controllers
                     }
                     else
                     {
+                        //Activity Type
+                        var type = await _dropDownTypeService.GetDropDownTypeByType(SiteId, "Project Activities");
+                        var activityType = await _dropDownService.GetDropDownByTypeAndValue(SiteId, type.Id, "Engineering");
+
                         //Check if the project activity already exists
-                        var alreadyExist = await _activityService.GetProjectActivityByDetails(model.ActivityName, model.TaskId, model.AssignedToId, null);
+                        var alreadyExist = await _activityService.GetProjectActivityByDetails(activityType.DropDownValue, model.TaskId, model.AssignedToId, null);
                         if (alreadyExist != null)
                             return BadRequest(new BadRequestError("Activity name already exists, try with another."));
 
@@ -1138,7 +1141,7 @@ namespace Vsky.Api.Controllers
                         projectActivity.ProjectId = model.ProjectId;
                         projectActivity.ProjectModuleId = model.ProjectModuleId;
                         projectActivity.TaskId = model.TaskId;
-                        projectActivity.Name = model.ActivityName;
+                        projectActivity.Name = activityType.DropDownValue;
                         projectActivity.EstimateHours = model.EstimateHours;
                         projectActivity.AssignedToId = model.AssignedToId;
                         projectActivity.ActivityStatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Activity Status", "Open");
@@ -1150,6 +1153,57 @@ namespace Vsky.Api.Controllers
                         projectActivity.UpdatedOnUtc = GetDateTime;
                         _activityService.InsertProjectActivity(projectActivity);
                     }
+
+                    return NoContent();
+                }
+                // Return model state errors if the model state is not valid
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region My Task & Activity -> Add Activity Type
+        // Title: Add Activity Type
+        [HttpPost("add-activity-type")]
+        public async Task<IActionResult> AddActivityType(ProjectActivityModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var LoggedUserId = User.GetLoggedInUserId<string>();
+                    var SiteId = _globalVariable.SiteId;
+                    var SiteData = await _siteService.GetById(SiteId);
+                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                    //Check if the project activity already exists
+                    var alreadyExist = await _activityService.GetProjectActivityByDetails(model.ActivityName, model.TaskId, model.AssignedToId, null);
+                    if (alreadyExist != null)
+                        return BadRequest(new BadRequestError("Activity name already exists, try with another."));
+
+                    var activityName = await _dropDownService.GetDropDownById(model.ActivityName);
+
+                    // Map the project activity model to the project activity entity
+                    ProjectActivity projectActivity = new ProjectActivity();
+                    projectActivity.SiteId = SiteId;
+                    projectActivity.ProjectId = model.ProjectId;
+                    projectActivity.ProjectModuleId = model.ProjectModuleId;
+                    projectActivity.TaskId = model.TaskId;
+                    projectActivity.Name = activityName.DropDownValue;
+                    projectActivity.EstimateHours = model.EstimateHours;
+                    projectActivity.AssignedToId = model.AssignedToId;
+                    projectActivity.ActivityStatusId = model.ActivityStatusId;
+
+                    projectActivity.Active = true;
+                    projectActivity.CreatedById = LoggedUserId;
+                    projectActivity.CreatedOnUtc = GetDateTime;
+                    projectActivity.UpdatedById = LoggedUserId;
+                    projectActivity.UpdatedOnUtc = GetDateTime;
+                    _activityService.InsertProjectActivity(projectActivity);
 
                     return NoContent();
                 }

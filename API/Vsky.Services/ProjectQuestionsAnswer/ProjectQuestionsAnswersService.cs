@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
@@ -140,6 +141,111 @@ namespace Vsky.Services.ProjectQuestionsAnswer
             return new PagedList<ProjectQuestionsAnswers>(result, page, pageSize);
         }
 
+        #endregion
+
+        #region GetAllProjectQuestionAndAnswersForDashboard
+        public IPagedList<ProjectQuestionsAnswers> GetAllProjectQuestionAndAnswersForDashboard(
+          string SiteId,
+          string projectId,
+          string sortBy,
+          bool descending,
+          int page = 1,
+          int pageSize = int.MaxValue
+      )
+        {
+            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsTemplate && x.Project.Active && x.SiteId == SiteId && x.ProjectId == projectId);
+
+            //sorting
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+
+                query = query.OrderBy(orderBy);
+            }
+            else
+            {
+                query = query.OrderBy(x => x.CreatedOnUtc);
+            }
+
+            query = query.Select(x => new ProjectQuestionsAnswers
+            {
+                Id = x.Id,
+                ProjectId = x.ProjectId,
+                RequirementId = x.RequirementId,
+                Title = x.Title,
+                Description = x.Description,
+                Project = new Project
+                {
+                    Id = x.Project.Id,
+                    Name = x.Project.Name
+                },
+                Requirement = new Requirement
+                {
+                    Id = x.Requirement.Id,
+                    Title = x.Requirement.Title
+                }
+            });
+            var list = new PagedList<ProjectQuestionsAnswers>(query, page, pageSize);
+            return list;
+        }
+
+        #endregion
+
+        #region GetProjectQAByRequirementId
+        public async Task<List<ProjectQuestionsAnswers>> GetProjectQAByRequirementId(
+            string siteId,
+            string searchText,
+            string requirementId,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue
+        )
+        {
+            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                searchText = searchText.ToLower();
+                var isDate = DateTime.TryParse(searchText, out var parsedDate);
+
+                query = query.Where(m => 
+                        (m.Project != null && m.Project.Name.ToLower().Contains(searchText))
+                     || (m.Requirement != null && m.Requirement.Title.ToLower().Contains(searchText))
+                     || (m.Title != null && m.Title.ToLower().Contains(searchText))
+                     || (m.Description != null && m.Description.ToLower().Contains(searchText))
+                 );
+            }
+
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+                query = query.OrderBy(orderBy);
+            }
+            else
+            {
+                query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
+            query = query.Select(x => new ProjectQuestionsAnswers
+            {
+                Id = x.Id,
+                ProjectId = x.ProjectId,
+                Title = x.Title,
+                Description = x.Description,
+                Project = new Project
+                {
+                    Id = x.Project.Id,
+                    Name = x.Project.Name,
+                    StartDate = x.Project.StartDate,
+                    GoLiveDate = x.Project.GoLiveDate
+                }
+            });
+
+            var list = await query.ToListAsync();
+            return list;
+        }
         #endregion
 
         #region Get By Id

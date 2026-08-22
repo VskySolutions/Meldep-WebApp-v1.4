@@ -235,14 +235,14 @@
                 </q-item-section>
               </q-item>
 
-              <q-item>
+              <!-- <q-item>
                 <q-item-section>
                   <div class="text-caption text-grey">
                     Activity Hrs
                   </div>
                   <div class="q-mb-sm">{{ totalEstimateHours() }}</div>
                 </q-item-section>
-              </q-item>
+              </q-item> -->
 
               <q-item>
                 <q-item-section>
@@ -318,10 +318,10 @@
                   </q-tooltip>
                 </q-icon>
               </q-td>
-              <q-td style="width: 10%;" class="text-right">{{ props.row.estimateHours }}</q-td>
+              <!-- <q-td style="width: 10%;" class="text-right">{{ props.row.estimateHours }}</q-td> -->
               <q-td class="RichTextEditor"><div style="display: block; max-width: 500px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" v-html="props.row.description" /></q-td>
             </q-tr>
-            <q-tr v-if="props.pageIndex === projectActivities.length - 1">
+            <q-tr class="hidden" v-if="props.pageIndex === projectActivities.length - 1">
               <q-td colspan="2" class="text-right font-bold"><b>Total Hours:</b></q-td>
               <q-td class="text-right"><b>{{ totalEstimateHours() }}</b></q-td>
               <q-td />
@@ -405,7 +405,7 @@ const taskActivityPagination = ref({ sortBy: "createdOnUtc", descending: true, r
 const taskActivityColumns = ref([
   { name: "ActivityOwner", label: "Activity Owner", field: "ActivityOwner", align: "left", sortable: true },
   { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
-  { name: "EstimatedHrs", label: "Estimated Hrs.", field: "EstimatedHrs", align: "right", sortable: true },
+  // { name: "EstimatedHrs", label: "Estimated Hrs.", field: "EstimatedHrs", align: "right", sortable: true },
   { name: "description", label: "Description", field: "description", align: "left", sortable: true }
 ]);
 const filePagination = ref({ sortBy: "", descending: true, rowsPerPage: 20, page: 1 });

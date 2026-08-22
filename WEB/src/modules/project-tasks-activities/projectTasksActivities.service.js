@@ -29,6 +29,9 @@ export default {
   saveProjectActivityFiles (model) {
     return http.post("/project-activities/add-activity-files", model, { headers: { "Content-Type": "multipart/form-data" } }).then(response => response.data);
   },
+  saveActivityType (model) {
+    return http.post("/project-activities/add-activity-type", model).then(response => response.data);
+  },
   updateTaskActivityStatus (model) {
     return http.put("/project-activities/updateTaskActivityStatus", model).then(response => response.data);
   },

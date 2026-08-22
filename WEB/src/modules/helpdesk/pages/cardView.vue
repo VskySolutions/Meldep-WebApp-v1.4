@@ -475,7 +475,10 @@
               </div>
               <div class="col-xxl-3 col-xl-4 col-lg-4 col-md-5 col-sm-6 col-xs-12 TicketAttributes ticket-details q-pl-sm">
                 <div class="box-shadow">
-                  <div class="text-white bg-primary q-mb-sm q-pa-sm"><q-icon name="o_edit_attributes" size="sm" /> Ticket Attributes</div>
+                  <div class="text-white bg-primary q-mb-sm q-pa-sm">
+                    <q-icon name="o_edit_attributes" size="sm" />
+                    Ticket Attributes
+                  </div>
                   <div v-if="model.displayTicketNo" class="q-pb-md text-grey-10">
                     <div class="q-px-sm q-pb-sm">
                       <span class="text-primary q-mr-xs">Ticket No.:</span>
@@ -503,17 +506,105 @@
                         </q-icon>
                       </div>
                     </div>
-                    <div class="q-px-sm q-pb-sm">
+                    <!-- <div class="q-px-sm q-pb-sm">
                       <span class="text-primary q-mr-xs">Title:</span>
                       <span>{{ model.title }}</span>
+                    </div> -->                    
+                    <div class="q-px-sm q-pb-sm">
+                      <span class="text-primary q-mr-xs">Title:</span>
+                      <div
+                        v-if="isStatusDisabled(model.statusId) !== 'New' && isStatusDisabled(model.statusId) !== 'Open'"
+                        class="text-black"
+                      >
+                        {{ model.title }}
+                      </div>
+                      <div v-else>
+                        <q-input
+                          v-model="model.title"
+                          outlined
+                          stack-label
+                          hide-bottom-space
+                          :dense="true"
+                          maxlength="128"
+                          @focus="startEditingTitle"
+                          @blur="onChangeTitle(model.id, model.title)"
+                        />
+                      </div>
                     </div>
                     <div class="q-px-sm q-pb-sm">
                       <span class="text-primary q-mr-xs">Workspace:</span>
+                      <div
+                        v-if="isStatusDisabled(model.statusId) !== 'New' && isStatusDisabled(model.statusId) !== 'Open'"
+                        class="text-black"
+                      >
                       <span>{{ model.helpDeskTopic.title }}</span>
+                      </div>
+                      <div v-else class="text-black">
+                        <q-select
+                          v-model="model.topicId"
+                          outlined
+                          stack-label
+                          use-input
+                          hide-bottom-space
+                          :dense="true"
+                          :options="topicList"
+                          option-value="value"
+                          option-label="text"
+                          emit-value
+                          map-options
+                          :loading="formLoading.topic"
+                          @filter="getAllHelpDeskTopicListForFilter"
+                          @update:model-value="onChangeHelpDeskWorkspace(model.id, model.topicId)"
+                        >
+                          <template #option="{ itemProps, opt }">
+                            <q-item v-bind="itemProps">
+                              <q-item-section>
+                                <div class="row q-col-gutter-x-md items-center">
+                                  <span>{{ opt.text }}</span>
+                                </div>
+                              </q-item-section>
+                            </q-item>
+                          </template>
+                        </q-select>
+                      </div>
                     </div>
                     <div class="q-px-sm q-pb-sm">
                       <span class="text-primary q-mr-xs">Menu:</span>
-                      <span>{{ model.helpDeskTopicQuestions.question }}</span>
+                      <!-- <span>{{ model.helpDeskTopicQuestions.question }}</span> -->
+                      <div
+                        v-if="isStatusDisabled(model.statusId) !== 'New' && isStatusDisabled(model.statusId) !== 'Open'"
+                        class="text-black"
+                      >
+                        <span>{{ model.helpDeskTopicQuestions.question }}</span>
+                      </div>
+                      <div v-else class="text-black">
+                        <q-select
+                          v-model="model.questionId"
+                          outlined
+                          stack-label
+                          use-input
+                          hide-bottom-space
+                          :dense="true"
+                          :options="questionList"
+                          option-value="value"
+                          option-label="text"
+                          emit-value
+                          map-options
+                          :loading="formLoading.question"
+                          @filter="getAllHelpDeskTopicQuestionsListForFilter"
+                          @update:model-value="onChangeHelpDeskMenu(model.id, model.questionId)"
+                        >
+                          <template #option="{ itemProps, opt }">
+                            <q-item v-bind="itemProps">
+                              <q-item-section>
+                                <div class="row q-col-gutter-x-md items-center">
+                                  <span>{{ opt.text }}</span>
+                                </div>
+                              </q-item-section>
+                            </q-item>
+                          </template>
+                        </q-select>
+                      </div>
                     </div>
                     <div class="q-px-sm q-pb-sm">
                       <span class="text-primary q-mr-xs">Category:</span>
@@ -904,6 +995,7 @@ const helpDeskTopics = ref([]);
 const replyText = ref("");
 const prefixRef = ref("");
 const isSearchTriggered = ref(false);
+const originalTitle = ref("");
 
 // ----------------------------------------------------------------------------------------------------------------
 // local storage values
@@ -959,6 +1051,8 @@ const model = ref({
   twilioEmailId: "",
   createdOnUtc: "",
   dueDate: "",
+  topicId: "",
+  questionId: "",
   employee: {
     person: {
       fullName: "",
@@ -1067,12 +1161,16 @@ const onHelpDeskSelect = async (helpDesk) => {
   emailSubject.value = helpDesk.title || null;
 };
 
-const getHelpDesk = (id) => {
+const getHelpDesk = async (id) => {
   loading.value = true;
   helpDeskService.getHelpDesk(id).then((resp) => {
     model.value = _.cloneDeep(resp);
     const validateAssignedToId = model.value?.assignedToId ?? "";
     isAssignedToCurrentUser.value = validateAssignedToId === currentUserId;
+    // Load questions for selected workspace
+    if (model.value.topicId) {
+      getAllHelpDeskTopicQuestionsListForDropdown(model.value.topicId);
+    }
   }).finally(() => {
     loading.value = false;
   });
@@ -1343,6 +1441,57 @@ function getAllHelpDeskCompanyListForFilter (val, update, abort) {
   });
 }
 
+// Get all topic list for dropdown
+const topicList = ref([]);
+const topicFilter = ref([]);
+function getAllHelpDeskTopicListForDropdown () {
+  helpDeskService.getAllHelpDeskTopicListForDropdown().then((resp) => {
+    const responseData = resp.map((item) => ({ text: item.text, value: item.value }));
+    topicList.value = responseData;
+    topicFilter.value = responseData;
+  });
+}
+
+// Search project for dropdown
+function getAllHelpDeskTopicListForFilter (val, update, abort) {
+  update(() => {
+    const needle = val ? val.toLowerCase() : "";
+    if (needle === "") {
+      topicList.value = topicFilter.value;
+    } else {
+      topicList.value = topicFilter.value.filter(v => v.text.toLowerCase().includes(needle));
+    }
+  });
+}
+
+// Get all question List for dropdown
+const questionList = ref([]);
+const questionFilter = ref([]);
+function getAllHelpDeskTopicQuestionsListForDropdown (topicId) {
+  if (!topicId) {
+    questionList.value = [];
+    questionFilter.value = [];
+    return;
+  }
+  helpDeskService.getAllHelpDeskTopicQuestionsListForDropdown(topicId).then((resp) => {
+    const responseData = resp.map((item) => ({ text: item.text, value: item.value }));
+    questionList.value = responseData;
+    questionFilter.value = responseData;
+  });
+}
+
+// Search project module for dropdown
+function getAllHelpDeskTopicQuestionsListForFilter (val, update, abort) {
+  update(() => {
+    const needle = val ? val.toLowerCase() : "";
+    if (needle === "") {
+      questionList.value = questionFilter.value;
+    } else {
+      questionList.value = questionFilter.value.filter(v => v.text.toLowerCase().includes(needle));
+    }
+  });
+}
+
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Ticket Attributes Dropdowns (GET)
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1577,6 +1726,50 @@ function isStatusDisabled (statusId) {
   return status;
 }
 
+const startEditingTitle = () => {
+  originalTitle.value = model.title;
+};
+
+// change Title
+const onChangeTitle = async (id, title) => {
+  const newTitle = title?.trim();
+  if (!newTitle) {
+    return;
+  }
+  if (newTitle === originalTitle.value?.trim()) {
+    return;
+  }
+  return withFormLoader(
+    "Title",
+    () => helpDeskService.updateHelpDeskTitle(id, title),
+    "Title updated successfully."
+  );
+  originalTitle.value = newTitle;
+};
+
+// change Workspace
+const onChangeHelpDeskWorkspace = async (id, topicId) => {
+  // Clear selected menu when workspace changes
+  model.value.questionId = "";
+
+  // Load menus/questions for selected workspace
+  await getAllHelpDeskTopicQuestionsListForDropdown(topicId);
+  return withFormLoader(
+    "Workspace",
+    () => helpDeskService.updateHelpDeskWorkspace(id, topicId),
+    "Workspace updated successfully."
+  );
+};
+
+// change Menu
+const onChangeHelpDeskMenu = async (id, questionId) => {
+  return withFormLoader(
+    "Menu",
+    () => helpDeskService.updateHelpDeskMenu(id, questionId),
+    "Menu updated successfully."
+  );
+};
+
 // ----------------------------
 // Save static search into localstorage.
 // ----------------------------
@@ -1664,6 +1857,7 @@ onMounted(async () => {
   getAllHelpDeskTopicList();
   getHelpDeskCompanyDropdown();
   getAllCustomerListForDropdown();
+  getAllHelpDeskTopicListForDropdown();
 });
 
 </script>

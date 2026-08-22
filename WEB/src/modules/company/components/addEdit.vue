@@ -626,8 +626,6 @@ const getCompany = () => {
     // model.value.createdDateStr = resp.comapnyCreatedDate ? toDate(resp.comapnyCreatedDate) : "";
     model.value.employeeId = resp.employee.id;
     model.value.description = resp.description ? resp.description : "";
-    console.log("model.value", model.value);
-    console.log("model.value.stateProvinceId", model.value.stateProvinceId);
     rows.value = resp.companyContacts.map(contact => ({
       ...contact,
       editing: false,

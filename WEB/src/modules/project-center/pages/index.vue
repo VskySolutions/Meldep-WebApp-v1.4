@@ -36,6 +36,8 @@
               <q-tab v-if="role === 'admin'" name="13_tab" label="Infra Services" class="q-px-lg" />
               <q-tab name="14_tab" label="Notes" class="q-px-lg" />
               <q-tab name="15_tab" label="Files" class="q-px-lg" />
+              <q-tab name="16_tab" label="Questions Answers" class="q-px-lg" />
+              <q-tab name="17_tab" label="Action Items" class="q-px-lg" />
             </q-tabs>
             <q-separator />
             <q-tab-panels v-model="tab" animated class="flex justify-center">
@@ -373,6 +375,12 @@
               <q-tab-panel name="15_tab" class="items-center q-pa-md q-mx-auto">
                 <projectFiles :project-id="projectId" />
               </q-tab-panel>
+              <q-tab-panel name="16_tab" class="items-center q-pa-md q-mx-auto">
+                <projectQandATab :project-id="projectId" />
+              </q-tab-panel>
+              <q-tab-panel name="17_tab" class="items-center q-pa-md q-mx-auto">
+                <projectActionItemsTab :project-id="projectId" />
+              </q-tab-panel>
             </q-tab-panels>
           </q-card>
         </div>
@@ -399,6 +407,8 @@ import projectFiles from "modules/project-center/components/_filesTab.vue";
 import projectTestPlans from "modules/project-center/components/_testPlansTab.vue";
 import projectTestCases from "modules/project-center/components/_testCasesTab.vue";
 import AccountServicesTab from "modules/infra-account/components/_accountServicesTab.vue";
+import projectQandATab from "modules/project-center/components/_projectQ&ATab.vue";
+import projectActionItemsTab from "modules/project-center/components/_projectActionItemsTab.vue";
 
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 import issueModule from "src/modules/issue/utils/dropdowns.js";

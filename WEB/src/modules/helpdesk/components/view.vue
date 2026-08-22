@@ -28,10 +28,24 @@
                     </div>
                   </div>
                   <div class="col-12 col-sm-4 col-md-4">
-                    <div class="q-mb-xs">Title
-                    </div>
-                    <div v-if="model.title" class="text-black">
+                    <div class="q-mb-xs">Title</div>
+                    <div
+                      v-if="isDisabled(model.statusId) !== 'New' && isDisabled(model.statusId) !== 'Open'"
+                      class="text-black"
+                    >
                       {{ model.title }}
+                    </div>
+                    <div v-else>
+                      <q-input
+                        v-model="model.title"
+                        outlined
+                        stack-label
+                        hide-bottom-space
+                        :dense="true"
+                        maxlength="128"
+                        @focus="startEditingTitle"
+                        @blur="onChangeTitle(model.id, model.title)"
+                      />
                     </div>
                   </div>
                   <div class="col-12 col-sm-4 col-md-4">
@@ -125,15 +139,83 @@
                   <div class="col-12 col-sm-4 col-md-4">
                     <div class="q-mb-xs">Workspace
                     </div>
-                    <div class="text-black">
+                    <!-- <div class="text-black">
                       {{ model.helpDeskTopic?.title }}
+                    </div> -->
+                    <div
+                      v-if="isDisabled(model.statusId) !== 'New' && isDisabled(model.statusId) !== 'Open'"
+                      class="text-black"
+                    >
+                      {{ model.helpDeskTopic?.title }}
+                    </div>
+                    <div v-else class="text-black">
+                      <q-select
+                        v-model="model.topicId"
+                        outlined
+                        stack-label
+                        use-input
+                        hide-bottom-space
+                        :dense="true"
+                        :options="topicList"
+                        option-value="value"
+                        option-label="text"
+                        emit-value
+                        map-options
+                        :loading="formLoading.topic"
+                        @filter="getAllHelpDeskTopicListForFilter"
+                        @update:model-value="onChangeHelpDeskWorkspace(model.id, model.topicId)"
+                      >
+                        <template #option="{ itemProps, opt }">
+                          <q-item v-bind="itemProps">
+                            <q-item-section>
+                              <div class="row q-col-gutter-x-md items-center">
+                                <span>{{ opt.text }}</span>
+                              </div>
+                            </q-item-section>
+                          </q-item>
+                        </template>
+                      </q-select>
                     </div>
                   </div>
                   <div class="col-12 col-sm-4 col-md-4">
                     <div class="q-mb-xs">Menu
                     </div>
-                    <div class="text-black">
+                    <!-- <div class="text-black">
                       {{ model.helpDeskTopicQuestions?.question }}
+                    </div> -->
+                    <div
+                      v-if="isDisabled(model.statusId) !== 'New' && isDisabled(model.statusId) !== 'Open'"
+                      class="text-black"
+                    >
+                      {{ model.helpDeskTopicQuestions?.question }}
+                    </div>
+                    <div v-else class="text-black">
+                      <q-select
+                        v-model="model.questionId"
+                        outlined
+                        stack-label
+                        use-input
+                        hide-bottom-space
+                        :dense="true"
+                        :options="questionList"
+                        option-value="value"
+                        option-label="text"
+                        emit-value
+                        map-options
+                        :loading="formLoading.question"
+                        @filter="getAllHelpDeskTopicQuestionsListForFilter"
+                        @update:model-value="onChangeHelpDeskMenu(model.id, model.questionId)"
+                      >
+                        <template #option="{ itemProps, opt }">
+                          <q-item v-bind="itemProps">
+                            <q-item-section>
+                              <div class="row q-col-gutter-x-md items-center">
+                                <span>{{ opt.text }}</span>
+                              </div>
+                            </q-item-section>
+                          </q-item>
+                        </template>
+                      </q-select>
                     </div>
                   </div>
                   <div class="col-12 col-sm-6 col-md-2">
@@ -315,13 +397,32 @@
                     <!-- </div> -->
                   </div>
                 </div>
-                <div v-if="model.description" class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12 col-sm-12 col-md-12">
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-10 col-sm-12 col-md-10">
                     <div class="q-mb-xs flex items-center">
                       Description
                     </div>
-                    <div class="text-black RichTextEditor">
+                    <div
+                      v-if="isDisabled(model.statusId) !== 'New' && isDisabled(model.statusId) !== 'Open'"
+                      class="text-black RichTextEditor"
+                    >
                       <p v-if="model.description" v-html="model.description" />
+                    </div>
+                    <div
+                      v-else
+                      class="text-black col-10 col-sm-12 col-md-10"
+                    >
+                      <div class="form-group">
+                        <q-editor
+                          v-model="model.description"
+                          :dense="$q.screen.lt.md"
+                          :toolbar="toolbar"
+                          :fonts="fonts"
+                          class="q-pa-sm"
+                          @focus="startEditingDescription"
+                          @blur="onChangeDescription(model.id, model.description)"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -585,6 +686,7 @@ import emailReplies from "modules/helpdesk/components/_emailReplies.vue";
 import siteStatusLog from "modules/sites/components/_siteModifiedLogs.vue";
 import viewPerson from "modules/person/components/view.vue";
 import addNotes from "modules/common/components/_addNoteTimelineView.vue";
+import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
 // Define emits
 defineEmits([...useDialogPluginComponent.emits]);
@@ -627,7 +729,10 @@ const emailKey = ref(0);
 const showReplyEditor = ref(false);
 const replyText = ref("");
 const showSystemEmails = ref(false);
+const originalTitle = ref("");
+const originalDescription = ref("");
 // const isCompanyReadonly = ref(false);
+const { fonts, toolbar } = getEditorConfig($q);
 
 // Define model values
 const model = ref({
@@ -640,6 +745,8 @@ const model = ref({
   sitePrefix: "",
   assignedToCount: "",
   dueDate: "",
+  topicId: "",
+  questionId: "",
   company: {
     name: ""
   },
@@ -747,6 +854,11 @@ const onReplyToggle = () => {
   }
 };
 
+// function getQuestions (topicId) {
+//   model.value.questionId = "";
+//   getAllHelpDeskTopicQuestionsListForDropdown(topicId);
+// }
+
 const priorityList = ref([]);
 const priorityListOptions = ref([]);
 function getHelpDeskPriority (typeName) {
@@ -793,6 +905,57 @@ function getAllCustomerListForFilter (val, update, abort) {
       customerList.value = customerListOptions.value;
     } else {
       customerList.value = customerListOptions.value.filter(v => v.text.toLowerCase().includes(needle));
+    }
+  });
+}
+
+// Get all topic list for dropdown
+const topicList = ref([]);
+const topicFilter = ref([]);
+function getAllHelpDeskTopicListForDropdown () {
+  helpDeskService.getAllHelpDeskTopicListForDropdown().then((resp) => {
+    const responseData = resp.map((item) => ({ text: item.text, value: item.value }));
+    topicList.value = responseData;
+    topicFilter.value = responseData;
+  });
+}
+
+// Search project for dropdown
+function getAllHelpDeskTopicListForFilter (val, update, abort) {
+  update(() => {
+    const needle = val ? val.toLowerCase() : "";
+    if (needle === "") {
+      topicList.value = topicFilter.value;
+    } else {
+      topicList.value = topicFilter.value.filter(v => v.text.toLowerCase().includes(needle));
+    }
+  });
+}
+
+// Get all question List for dropdown
+const questionList = ref([]);
+const questionFilter = ref([]);
+function getAllHelpDeskTopicQuestionsListForDropdown (topicId) {
+  if (!topicId) {
+    questionList.value = [];
+    questionFilter.value = [];
+    return;
+  }
+  helpDeskService.getAllHelpDeskTopicQuestionsListForDropdown(topicId).then((resp) => {
+    const responseData = resp.map((item) => ({ text: item.text, value: item.value }));
+    questionList.value = responseData;
+    questionFilter.value = responseData;
+  });
+}
+
+// Search project module for dropdown
+function getAllHelpDeskTopicQuestionsListForFilter (val, update, abort) {
+  update(() => {
+    const needle = val ? val.toLowerCase() : "";
+    if (needle === "") {
+      questionList.value = questionFilter.value;
+    } else {
+      questionList.value = questionFilter.value.filter(v => v.text.toLowerCase().includes(needle));
     }
   });
 }
@@ -899,6 +1062,106 @@ const onChangeCompanyClient = (id, companyId) => {
   );
 };
 
+const startEditingTitle = () => {
+  originalTitle.value = model.title;
+};
+
+// change Title
+const onChangeTitle = async (id, title) => {
+  const newTitle = title?.trim();
+  if (!newTitle) {
+    return;
+  }
+  if (newTitle === originalTitle.value?.trim()) {
+    return;
+  }
+  return withFormLoader(
+    "Title",
+    () => helpDeskService.updateHelpDeskTitle(id, title),
+    "Title updated successfully."
+  );
+  originalTitle.value = newTitle;
+};
+
+const startEditingDescription = () => {
+  originalDescription.value = model.description;
+};
+
+const cleanDescription = (html) => {
+  if (!html) {
+    return "";
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+
+  // Remove Word-generated elements
+  doc.querySelectorAll("meta, style, link, xml, title").forEach((el) => {
+    el.remove();
+  });
+
+  // Remove Word-specific classes
+  doc.querySelectorAll("[class]").forEach((el) => {
+    el.removeAttribute("class");
+  });
+
+  // Remove unnecessary attributes
+  doc.querySelectorAll("*").forEach((el) => {
+    [...el.attributes].forEach((attr) => {
+      if (
+        attr.name.startsWith("mso-") ||
+        attr.name === "style" ||
+        attr.name === "lang"
+      ) {
+        el.removeAttribute(attr.name);
+      }
+    });
+  });
+
+  return doc.body.innerHTML.trim();
+};
+
+// change Description
+const onChangeDescription = async (id, description) => {
+  const cleanedDescription = cleanDescription(description);
+  if (!cleanedDescription) {
+    return;
+  }
+  if (cleanedDescription === originalDescription.value) {
+    return;
+  }
+  await withFormLoader(
+    "Description",
+    () => helpDeskService.updateHelpDeskDescription(id, cleanedDescription),
+    "Description updated successfully."
+  );
+  originalDescription.value = cleanedDescription;
+  model.value.description = cleanedDescription;
+};
+
+// change Workspace
+const onChangeHelpDeskWorkspace = async (id, topicId) => {
+  // Clear selected menu when workspace changes
+  model.value.questionId = "";
+
+  // Load menus/questions for selected workspace
+  await getAllHelpDeskTopicQuestionsListForDropdown(topicId);
+  return withFormLoader(
+    "Workspace",
+    () => helpDeskService.updateHelpDeskWorkspace(id, topicId),
+    "Workspace updated successfully."
+  );
+};
+
+// change Menu
+const onChangeHelpDeskMenu = async (id, questionId) => {
+  return withFormLoader(
+    "Menu",
+    () => helpDeskService.updateHelpDeskMenu(id, questionId),
+    "Menu updated successfully."
+  );
+};
+
 // ===========================================================
 // Status Flow
 // ===========================================================
@@ -955,33 +1218,6 @@ function resolveStatusText (statusId) {
     ?.text ?? null;
 }
 
-// options disable/enable
-// function getVisibleStatusOptions (row) {
-//   const currentStatusText =
-//     row.statusText || resolveStatusText(row.statusId);
-
-//   if (!currentStatusText) return true;
-//   // const effectiveRole = resolveRoleForRow(row);
-//   let effectiveRole = logUserRole;
-//   if (
-//     logUserRole === "assignedEmployee" &&
-//   row.assignedToId !== loginUserEmployeeId
-//   ) {
-//     effectiveRole = "admin";
-//   }
-
-//   const allowed =
-//     STATUS_TRANSITIONS?.[effectiveRole]?.[currentStatusText] ?? [];
-
-//   // Always allow current status
-//   return allHelpDeskStatuses.value.filter(option => {
-//     // Always show current status
-//     if (option.text === currentStatusText) return true;
-
-//     // Show only allowed transitions
-//     return allowed.includes(option.text);
-//   });
-// }
 function getVisibleStatusOptions (row) {
   const currentStatusText =
     row.statusText || resolveStatusText(row.statusId);
@@ -1072,7 +1308,7 @@ function getStatusColor (statusText) {
 // ===========================================================
 
 // get help desk details
-const getHelpDesk = () => {
+const getHelpDesk = async () => {
   loading.value = true;
   helpDeskService.getHelpDesk(props.id).then((resp) => {
     model.value = _.cloneDeep(resp);
@@ -1080,6 +1316,10 @@ const getHelpDesk = () => {
       ...item,
       editing: false
     }));
+    // Load questions for selected workspace
+    if (model.value.topicId) {
+      getAllHelpDeskTopicQuestionsListForDropdown(model.value.topicId);
+    }
   }).finally(() => {
     loading.value = false;
   });
@@ -1250,12 +1490,16 @@ watch(helpDeskId, (val) => {
 
 // ======================================================================
 // On page rendering
+// ======================================================================
+
 onMounted(() => {
   getHelpDesk();
   getHelpDeskStatus("HelpDesk Status");
   // getAllNoteByTypeAndRecord();
   getHelpDeskPriority("HelpDesk Priority");
   getAllCustomerListForDropdown();
+  getAllHelpDeskTopicListForDropdown();
+  getAllHelpDeskTopicQuestionsListForDropdown();
   tab.value = props.defaultTab; // set active tab
   const propps = { pagination: filesPagination.value };
   getAllFilesByHelpDeskId(propps);

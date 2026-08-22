@@ -390,14 +390,14 @@
                       >
                         <template #header="props">
                           <q-tr :props="props" class="bg-primary text-white">
-                            <q-th v-for="col in props.cols" :key="col.name" class="text-start">{{ col.label }}<span v-if="['name', 'assignedToId', 'estimateHours'].includes(col.name)" class="required">*</span>
+                            <q-th v-for="col in props.cols" :key="col.name" class="text-start">{{ col.label }}<span v-if="['assignedToId'].includes(col.name)" class="required">*</span>
                             </q-th>
                             <q-th class="text-center">Actions</q-th>
                           </q-tr>
                         </template>
                         <template #body="props">
                           <q-tr :class="props.row.deleted ? 'hidden' : ''">
-                            <q-td style="width: 10%;">
+                            <q-td style="width: 100%;">
                               <formSingleSelectDropdown
                                 v-model="props.row.assignedToId"
                                 :options="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value"
@@ -406,13 +406,11 @@
                                 :error-message="rowValidations[props.rowIndex]?.value?.assignedToId.$errors[0]?.$message"
                               />
                             </q-td>
-                            <q-td style="width: 10%;">
+                            <q-td style="width: 10%;" class="hidden">
                               <formSingleSelectDropdown
                                 v-model="props.row.name"
                                 :options="projectTaskActivityNameForDropdownSingleSelect.list.value"
                                 :filter="projectTaskActivityNameForDropdownSingleSelect.filter"
-                                :error="rowValidations[props.rowIndex]?.value?.name.$error"
-                                :error-message="rowValidations[props.rowIndex]?.value?.name.$errors[0]?.$message"
                               >
                                 <template #option="{ itemProps, opt }">
                                   <q-item v-bind="itemProps">
@@ -436,7 +434,7 @@
                                 </template>
                               </formSingleSelectDropdown>
                             </q-td>
-                            <q-td style="white-space: normal; overflow-wrap: break-word; width: 40%;">
+                            <q-td style="white-space: normal; overflow-wrap: break-word; width: 40%;" class="hidden">
                               <q-editor
                               v-model="props.row.description"
                               :dense="$q.screen.lt.md"
@@ -445,7 +443,7 @@
                               class="relative-position"
                               />
                             </q-td>
-                            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 8%;">
+                            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 8%;" class="hidden">
                               <q-input
                                 v-model="props.row.estimateHours"
                                 outlined
@@ -453,13 +451,10 @@
                                 mask="##:##"
                                 maxlength="5"
                                 :rules="[validateHours]"
-                                :error="rowValidations[props.rowIndex]?.value?.estimateHours.$error"
-                                :error-message="rowValidations[props.rowIndex]?.value?.estimateHours.$errors[0]?.$message"
-                                @blur=" props.row.estimateHours = formatHoursValue(props.row.estimateHours); rowValidations[props.rowIndex]?.value?.estimateHours.$touch()"
                               >
                                 <template #hint>
                                   <span
-                                    v-if="props.row.estimateHours && validateHours(props.row.estimateHours) === true && props.row.estimateHours !== '00:00'""
+                                    v-if="props.row.estimateHours && validateHours(props.row.estimateHours) === true && props.row.estimateHours !== '00:00'"
                                     class="text-caption text-primary"
                                   >
                                     {{ getHoursMinutesText(props.row.estimateHours) }}
@@ -476,8 +471,8 @@
                               </q-icon>
                             </q-td>
                           </q-tr>
-                          <q-tr v-if="props.pageIndex === TaskActivitiesRows.length - 1">
-                            <q-td colspan="3" class="text-right font-bold"><b>Total Hours:</b></q-td>
+                          <q-tr class="hidden" v-if="props.pageIndex === TaskActivitiesRows.length - 1">
+                            <q-td colspan="1" class="text-right font-bold"><b>Total Hours:</b></q-td>
                             <q-td class="text-right"><b>{{ totalHours }}</b></q-td>
                             <q-td />
                           </q-tr>
@@ -506,7 +501,7 @@ import { uid, useDialogPluginComponent, useQuasar } from "quasar";
 import { ref, watch, computed, onMounted, toRaw } from "vue";
 import { isDate } from "validators/zw_validators.js";
 import { required, helpers, minLength, maxLength } from "@vuelidate/validators";
-import { notifySuccess, getLocalStorage, notifyError, notifyWarning, zwConfirm } from "assets/utils";
+import { notifySuccess, notifyError, notifyWarning, zwConfirm } from "assets/utils";
 import useVuelidate from "@vuelidate/core";
 import _ from "lodash";
 import useFilters from "composables/useFilters";
@@ -612,10 +607,10 @@ const model = ref({
 
 // Tab Task Activities
 const TaskActivitiesColumns = ref([
-  { name: "assignedToId", label: "Activity Owner", field: "assignedToId", align: "left", sortable: false },
-  { name: "name", label: "Activity Type", field: "name", align: "left" },
-  { name: "description", label: "Description", field: "description", align: "left" },
-  { name: "estimateHours", label: "Est.Hrs", field: "estimateHours", align: "left" }
+  { name: "assignedToId", label: "Activity Owner", field: "assignedToId", align: "left", sortable: false }
+  // { name: "name", label: "Activity Type", field: "name", align: "left" },
+  // { name: "description", label: "Description", field: "description", align: "left" },
+  // { name: "estimateHours", label: "Est.Hrs", field: "estimateHours", align: "left" }
 ]);
 
 // ==================================================================================
@@ -1138,23 +1133,23 @@ function validateEstimateTime(value) {
   return true;
 }
 
-function formatHoursValue(value) {
-  if (!value) return value;
-  value = String(value).trim();
-  if (!value.includes(":")) {
-    return `${value.padStart(2, "0")}:00`;
-  }
-  const parts = value.split(":");
-  if (parts.length !== 2) return value;
-  let [hours, minutes] = parts;
-  if (!minutes) {
-    minutes = "00";
-  } else if (minutes.length === 1) {
-    minutes += "0";
-  }
+// function formatHoursValue(value) {
+//   if (!value) return value;
+//   value = String(value).trim();
+//   if (!value.includes(":")) {
+//     return `${value.padStart(2, "0")}:00`;
+//   }
+//   const parts = value.split(":");
+//   if (parts.length !== 2) return value;
+//   let [hours, minutes] = parts;
+//   if (!minutes) {
+//     minutes = "00";
+//   } else if (minutes.length === 1) {
+//     minutes += "0";
+//   }
 
-  return `${hours.padStart(2, "0")}:${minutes}`;
-}
+//   return `${hours.padStart(2, "0")}:${minutes}`;
+// }
 
 function formatEstimateTime(value) {
   if (!value) return value;
@@ -1197,15 +1192,15 @@ function validateSortOrder (value) {
 }
 
 const rowRules = {
-  name: { required: helpers.withMessage("Activity Type is required", required) },
+  // name: { required: helpers.withMessage("Activity Type is required", required) },
   assignedToId: { required: helpers.withMessage("Activity Owner is required", required) },
-  estimateHours: {
-    required: helpers.withMessage("Estimate Hours is required", required),
-    validHours: helpers.withMessage(
-      ({ $response }) => $response,
-      (value) => validateHours(value)
-    )
-  }
+  // estimateHours: {
+  //   required: helpers.withMessage("Estimate Hours is required", required),
+  //   validHours: helpers.withMessage(
+  //     ({ $response }) => $response,
+  //     (value) => validateHours(value)
+  //   )
+  // }
 };
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On Save & Next or Save & Close

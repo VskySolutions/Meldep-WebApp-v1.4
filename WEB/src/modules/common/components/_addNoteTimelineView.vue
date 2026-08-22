@@ -12,7 +12,7 @@
         <q-timeline-entry
           v-for="note in group"
           :key="note.id"
-          :subtitle="`${formatTime(note.createdOnUtc)} • ${note.user?.person?.fullName || ''}`"
+          :subtitle="`${note.createdOnUtc} • ${note.user?.person?.fullName || ''}`"
           :side="user.userId === note.createdById ? 'right' : 'left'"
           color="primary"
           :icon="done_all"
@@ -272,10 +272,10 @@ const startEditing = (notes) => {
 };
 
 // time format
-function formatTime (dateStr) {
-  const options = { weekday: "long", hour: "2-digit", minute: "2-digit", hour12: true };
-  return new Date(dateStr).toLocaleTimeString(undefined, options);
-}
+// function formatTime (dateStr) {
+//   const options = { weekday: "long", hour: "2-digit", minute: "2-digit", hour12: true };
+//   return new Date(dateStr).toLocaleTimeString(undefined, options);
+// }
 
 // save notes
 const sendNote = async (note = null) => {

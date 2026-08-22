@@ -1,23 +1,25 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
 using Vsky.Api.Models;
-using Vsky.Services.Common;
-using Vsky.Services.ProjectModules;
-using Vsky.Services.Sites;
-using Vsky.Services.ProjectTasks;
-using Vsky.Services.Issues;
-using Vsky.Services.ProjectActivities;
-using System.Threading.Tasks;
-using Vsky.Api.ApiErrors;
-using Vsky.Services.Note;
-using Vsky.Services.TestPlans;
 using Vsky.Core;
 using Vsky.Models;
-using Vsky.Services.TestCases;
+using Vsky.Services.Common;
+using Vsky.Services.Issues;
+using Vsky.Services.Note;
+using Vsky.Services.ProjectActionItem;
+using Vsky.Services.ProjectActivities;
+using Vsky.Services.ProjectModules;
+using Vsky.Services.ProjectQuestionsAnswer;
+using Vsky.Services.ProjectTasks;
 using Vsky.Services.Requirements;
+using Vsky.Services.Sites;
+using Vsky.Services.TestCases;
+using Vsky.Services.TestPlans;
 
 namespace Vsky.Api.Controllers
 {
@@ -38,6 +40,8 @@ namespace Vsky.Api.Controllers
         private readonly ITestCaseService _testCaseService;
         private readonly IRequirementGroupService _requirementGroupService;
         private readonly IRequirementService _requirementService;
+        private readonly IProjectQuestionsAnswersService _projectQuestionsAnswersService;
+        private readonly IProjectActionItemsService _projectActionItemsService;
 
         public ProjectDashboardController(
             GlobalVariable globalVariable,
@@ -52,7 +56,9 @@ namespace Vsky.Api.Controllers
             ITestPlanService testPlanService,
             ITestCaseService testCaseService,
             IRequirementGroupService requirementGroupService,
-            IRequirementService requirementService
+            IRequirementService requirementService,
+            IProjectQuestionsAnswersService projectQuestionsAnswersService,
+            IProjectActionItemsService projectActionItemsService
             )
         {
             _globalVariable = globalVariable;
@@ -68,6 +74,8 @@ namespace Vsky.Api.Controllers
             _testCaseService = testCaseService;
             _requirementGroupService = requirementGroupService;
             _requirementService = requirementService;
+            _projectQuestionsAnswersService = projectQuestionsAnswersService;
+            _projectActionItemsService = projectActionItemsService;
         }
 
         #region projectModule
@@ -296,6 +304,74 @@ namespace Vsky.Api.Controllers
                 var model = new RequirementListModel
                 {
                     Data = _mapper.Map<IList<RequirementModel>>(list),
+                    Total = list.TotalCount
+                };
+
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetAllProjectQuestionAndAnswers
+        [HttpPost("projectQuestionAndAnswersList")]
+        public IActionResult GetAllProjectQuestionAndAnswersForDashboard(ProjectQuestionsAnswersSearchModel searchModel)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+
+                var list = _projectQuestionsAnswersService.GetAllProjectQuestionAndAnswersForDashboard
+                (
+                    SiteId,
+                    searchModel.ProjectId,
+                    searchModel.SortBy,
+                    searchModel.Descending,
+                    searchModel.Page,
+                    searchModel.PageSize
+                );
+
+                var model = new ProjectQuestionsAnswersList
+                {
+                    ProjectQuestionsAnswerList = list,
+                    Total = list.TotalCount
+                };
+
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetAllProjectActionItems
+        [HttpPost("projectActionItemsList")]
+        public IActionResult GetAllProjectActionItemsForDashboard(ProjectActionItemsSearchModel searchModel)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+
+                var list = _projectActionItemsService.GetAllProjectActionItemsForDashboard
+                (
+                    SiteId,
+                    searchModel.ProjectId,
+                    searchModel.SortBy,
+                    searchModel.Descending,
+                    searchModel.Page,
+                    searchModel.PageSize
+                );
+
+                var model = new ProjectActionItemsList
+                {
+                    ProjectActionItemList = list,
                     Total = list.TotalCount
                 };
 

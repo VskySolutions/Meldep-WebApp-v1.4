@@ -63,6 +63,7 @@
                       <multiSelectDropdown
                         v-model="search.activityNameIds"
                         label="Activity Type"
+                        class="hidden"
                         :options="projectTaskActivityNameDropdown.list.value"
                         :filter="projectTaskActivityNameDropdown.filter"
                       />
@@ -363,17 +364,17 @@
                         // activityProps.row.isDescription
                         // ? 'bg-light-red'
                         // : ''
-                        // activityProps.row.hasCurrentWeek
-                        //   ? 'current-week'
-                        //   : (
-                        //       (
-                        //         activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'open' &&
-                        //         activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'completed'
-                        //       ) ||
-                        //       activityProps.row.isDescription
-                        //     )
-                        //     ? 'bg-light-red'
-                        //     : ''
+                        activityProps.row.hasCurrentWeek
+                          ? 'current-week'
+                          : (
+                              (
+                                activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'open' &&
+                                activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'completed'
+                              ) ||
+                              activityProps.row.isDescription
+                            )
+                            ? 'bg-light-red'
+                            : ''
                       ]"
                     >
                       <!-- <q-tooltip v-if="activityProps.row.activityStatus?.dropDownValue?.toLowerCase() !== 'open' || activityProps.row.isDescription ">
@@ -437,7 +438,7 @@
                         </div>
                       </q-td>
                       <!-- Activity Type -->
-                      <q-td style="width: 10%;">
+                      <!-- <q-td style="width: 10%;">
                         {{ activityProps.row.name }}
                         <q-icon
                           v-if="activityProps.row.activityNameDescription"
@@ -449,6 +450,25 @@
                             <div v-html="activityProps.row.activityNameDescription" />
                           </q-tooltip>
                         </q-icon>
+                      </q-td> -->
+                      <q-td
+                        class="common-q-td hidden"
+                        :class="{ 'hoverable-cell' : true }"
+                        @click="activeEdit = { rowId: activityProps.row.id, field: 'name' }"
+                        style="width: 10%;"
+                      >
+                        <quickEditSingleSelect
+                          field="name"
+                          :row-id="activityProps.row.id"
+                          :value="activityProps.row.id"
+                          :editable="true"
+                          :display-value="activityProps.row.name"
+                          :options="projectTaskActivityNameForDropdownSingleSelect.list.value"
+                          :active-edit="activeEdit"
+                          :show-history="false"
+                          @cancel="activeEdit = { rowId: null, field: null }"
+                          @submit="({ rowId, value }) => onSubmitActivityType(activityProps.row, value, refreshProjectTaskActivityList)"
+                        />
                       </q-td>
 
                       <!-- Assigned To -->
@@ -478,12 +498,16 @@
                       </q-td>
 
                       <!-- Estimate Hours -->
-                      <q-td style="width: 5%;" class="text-right">{{ activityProps.row.task.estimateTime }}</q-td>
+                      <q-td style="width: 5%;" class="text-right">
+                        <span v-if="activityProps.row.showTaskNameAndIcons">
+                          {{ activityProps.row.task.estimateTime }}
+                        </span>
+                      </q-td>
 
                       <!-- Actions -->
                       <q-td style="width: 5%;" class="text-center actions">
                         <q-icon
-                          :name="activityProps.row.isDescription ? 'o_lock' : 'o_article'"
+                          name="o_article"
                           size="xs"
                           :class="[
                             'cursor-pointer q-mr-sm'
@@ -650,7 +674,7 @@
                   </template>
                   <template #bottom-row>
                     <q-tr class="bg-grey-2 text-black">
-                      <q-td colspan="8" class="text-right text-weight-bold">
+                      <q-td colspan="7" class="text-right text-weight-bold">
                         Total Hours:
                       </q-td>
 
@@ -738,6 +762,9 @@ import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSorti
 // Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
 
+// Shared DataTable Views
+import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSelect.vue";
+
 // Shared Project Dialogs
 import {
   initProjectDialogs,
@@ -774,7 +801,8 @@ import {
   initProjectTaskActivityActions,
   onSubmitProjectTaskActivityDelete,
   onSubmitProjectTaskActivityStatus,
-  onStartProjectTaskActivityTimer
+  onStartProjectTaskActivityTimer,
+  onSubmitActivityType
 } from "src/modules/project-tasks-activities/utils/actions.js";
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -799,6 +827,7 @@ const selectedField = ref(null);
 const showSortDialog = ref(false);
 const activeScope = ref(null);
 const processing = ref(false);
+const activeEdit = ref({ rowId: null, field: null });
 
 function openPlan (d, rowId) {
   selectedDate.value = d.text || "";
@@ -876,7 +905,7 @@ const columns = ref([
   { name: "task.name", label: "Task Name", field: "task.name", align: "left", sortable: true },
   { name: "weekDates", label: "Week", field: row => row.weekDates.join(", "), align: "center", sortable: false },
   { name: "task.status.dropDownValue", label: "Task Status", field: "task.status.dropDownValue", align: "left", sortable: true, style: "display: none", headerStyle: "display: none" },
-  { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
+  // { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
   { name: "assignedTo.person.firstname", label: "Activity Owner", field: "assignedTo.person.firstname", align: "left", sortable: true },
   { name: "activityStatus.dropDownValue", label: "Activity Status", field: "activityStatus.dropDownValue", align: "left", sortable: true },
   { name: "task.estimateTime", label: "Task Est. Hrs", field: "task.estimateTime", align: "left", sortable: true }
@@ -908,25 +937,38 @@ const getProjectActivities = (props) => {
   ActivityIds.value = storedActivityIds ? storedActivityIds.split(",") : [];
   projectActivitiesService.getAllProjectActivitiesForExpandCollapse(payload).then((resp) => {
     rows.value = resp.data;
-    console.log("Project Activities Response:", resp.data); // Log the response data for debugging
+    // console.log("Project Activities Response:", resp.data); // Log the response data for debugging
     rows.value = resp.data.map(project => {
       return {
         ...project,
         activities: project.activities.map((activity, idx, arr) => {
-          console.log("activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList", activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList);
           const prevActivity = arr[idx - 1];
           const hasCurrentWeek = false;
-          console.log("hasCurrentWeek", hasCurrentWeek);
+          // const taskWeeklyPlanMappings =
+          //   activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList || [];
+
+          // const requirementWeeklyPlanMappings =
+          //   activity.task?.requirement
+          //     ?.projectWeeklyPlanDatesReqTaskIssueMappingList || [];
+
+          // const hasCurrentWeek =
+          //   taskWeeklyPlanMappings.some(m =>
+          //     isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)
+          //   ) ||
+          //   requirementWeeklyPlanMappings.some(m =>
+          //     isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)
+          //   );
+          
           return {
             ...activity,
             description: activity.description || "",
             checkboxStatus: ActivityIds.value.includes(activity.id),
+            // hasCurrentWeek,
             hasCurrentWeek: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList?.some(m => isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)) || false,
             weekDates: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList
               ? activity.task.projectWeeklyPlanDatesReqTaskIssueMappingList.map(m => ({
                 value: String(m.projectWeeklyPlanDates?.id),
                 text: toDate(m.projectWeeklyPlanDates?.weekDate) || null
-                // isCurrentWeek: isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)
               }))
               : [],
             showModuleName:
@@ -950,7 +992,6 @@ const getProjectActivities = (props) => {
         })
       };
     });
-    console.log("rows.value", rows.value);
     Object.assign(pagination.value, {
       page,
       rowsPerPage,
@@ -1070,7 +1111,7 @@ const isSunday = (dateStr) => {
 // ------------------------------------------------------------------------------------
 const { projectNameDropdown } = projectModule();
 const {
-  // projectTaskActivityActiveInActiveDropdown,
+  projectTaskActivityNameForDropdownSingleSelect,
   projectTaskActivityNameDropdown,
   projectTaskActivityStatusDropdown
 } = projectTasksActivities();
@@ -1390,67 +1431,149 @@ function setDefaultsForMultiSelects () {
   localStorage.removeItem("selectedActivityIds");
 }
 
-function paginatedTotalHours(activities, pagination) {
-  if (!activities?.length || !pagination) return "00:00";
+// function paginatedTotalHours(activities, pagination) {
+//   if (!activities?.length || !pagination) return "00:00";
 
-  const { page, rowsPerPage } = pagination;
+//   const { page, rowsPerPage } = pagination;
+
+//   const start = (page - 1) * rowsPerPage;
+//   const end = rowsPerPage === 0
+//     ? activities.length
+//     : start + rowsPerPage;
+
+//   const pageRows = activities.slice(start, end);
+
+//   let totalMinutes = 0;
+
+//   pageRows.forEach(row => {
+//     if (row.task.estimateTime) {
+//       const value = row.task.estimateTime.toString().trim();
+
+//       if (/^\d{1,2}:\d{2}$/.test(value)) {
+//         const [hours, minutes] = value.split(":");
+
+//         totalMinutes +=
+//           parseInt(hours, 10) * 60 +
+//           parseInt(minutes, 10);
+//       }
+//     }
+//   });
+//   const hours = Math.floor(totalMinutes / 60);
+//   const minutes = totalMinutes % 60;
+
+//   return `${hours.toString().padStart(2, "0")}:${minutes
+//     .toString()
+//     .padStart(2, "0")}`;
+// }
+function paginatedTotalHours(activities, pagination) {
+  if (!activities?.length || !pagination) {
+    return "00:00";
+  }
+
+  const page = Number(pagination.page) || 1;
+  const rowsPerPage = Number(pagination.rowsPerPage);
 
   const start = (page - 1) * rowsPerPage;
-  const end = rowsPerPage === 0
-    ? activities.length
-    : start + rowsPerPage;
 
-  const pageRows = activities.slice(start, end);
+  const pageRows =
+    rowsPerPage === 0
+      ? activities
+      : activities.slice(start, start + rowsPerPage);
+
+  // Get unique tasks from current page
+  const uniqueTasks = new Map();
+
+  pageRows.forEach(activity => {
+    const task = activity?.task;
+
+    if (!task) return;
+
+    // Use task.id as the unique task identifier
+    if (!uniqueTasks.has(task.id)) {
+      uniqueTasks.set(task.id, task);
+    }
+  });
 
   let totalMinutes = 0;
 
-  pageRows.forEach(row => {
-    if (row.task.estimateTime) {
-      const value = row.task.estimateTime.toString().trim();
+  uniqueTasks.forEach(task => {
+    const estimateTime = String(task.estimateTime ?? "").trim();
 
-      if (/^\d{1,2}:\d{2}$/.test(value)) {
-        const [hours, minutes] = value.split(":");
+    if (!estimateTime) return;
 
-        totalMinutes +=
-          parseInt(hours, 10) * 60 +
-          parseInt(minutes, 10);
-      }
+    // HH:mm
+    if (/^\d{1,3}:\d{2}$/.test(estimateTime)) {
+      const [hours, minutes] = estimateTime.split(":").map(Number);
+
+      totalMinutes += (hours * 60) + minutes;
     }
   });
 
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  return `${hours.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")}`;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
+// const outerTotalHours = computed(() => {
+//   let totalMinutes = 0;
+
+//   rows.value.forEach(project => {
+//     project.activities?.forEach(act => {
+//       if (act.task.estimateTime) {
+//         const value = act.task.estimateTime.toString().trim();
+
+//         if (/^\d{1,2}:\d{2}$/.test(value)) {
+//           const [hours, minutes] = value.split(":");
+
+//           totalMinutes +=
+//             parseInt(hours, 10) * 60 +
+//             parseInt(minutes, 10);
+//         }
+//       }
+//     });
+//   });
+
+//   const hours = Math.floor(totalMinutes / 60);
+//   const minutes = totalMinutes % 60;
+
+//   return `${hours.toString().padStart(2, "0")}:${minutes
+//     .toString()
+//     .padStart(2, "0")}`;
+// });
 const outerTotalHours = computed(() => {
   let totalMinutes = 0;
+  const uniqueTasks = new Map();
 
   rows.value.forEach(project => {
-    project.activities?.forEach(act => {
-      if (act.task.estimateTime) {
-        const value = act.task.estimateTime.toString().trim();
+    project.activities?.forEach(activity => {
+      const task = activity?.task;
 
-        if (/^\d{1,2}:\d{2}$/.test(value)) {
-          const [hours, minutes] = value.split(":");
+      if (!task) return;
 
-          totalMinutes +=
-            parseInt(hours, 10) * 60 +
-            parseInt(minutes, 10);
-        }
+      // Count each task only once
+      if (!uniqueTasks.has(task.id)) {
+        uniqueTasks.set(task.id, task);
       }
     });
+  });
+
+  uniqueTasks.forEach(task => {
+    const value = String(task.estimateTime ?? "").trim();
+
+    if (!/^\d{1,3}:\d{2}$/.test(value)) {
+      return;
+    }
+
+    const [hours, minutes] = value.split(":").map(Number);
+
+    totalMinutes += (hours * 60) + minutes;
   });
 
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  return `${hours.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")}`;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 });
 
 const stripHtml = (html) => {
@@ -1647,8 +1770,8 @@ onMounted(async () => {
   activeEmployeesDropdown.load(user.siteId);
   projectTaskActivityNameDropdown.load("Project Activities");
   // projectTaskActivityStatusDropdown.load("Activity Status");
-  projectTaskStatusForDropdown.load("Task Status");
-
+  projectTaskStatusForDropdown.load("Task Status");  
+  projectTaskActivityNameForDropdownSingleSelect.load("Project Activities");
   // Get Active/InActive and Set default to Active
   // await projectTaskActivityActiveInActiveDropdown.load("Project Active Status");
   // const activeValue = await projectTaskActivityActiveInActiveDropdown.getValueByLabel("Active");

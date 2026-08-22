@@ -1,6 +1,7 @@
 import { useQuasar } from "quasar";
 import { notifySuccess, zwConfirmDelete } from "assets/utils";
 import projectActivitiesService from "modules/project-tasks-activities/projectTasksActivities.service";
+import { name } from "src/validators/zw_validators";
 
 let $q;
 let activeRowId;
@@ -71,6 +72,34 @@ export const onSubmitProjectTaskActivityStatus = async (row, refreshProjectTaskA
       });
     }
   });
+};
+
+// -------------------------------------------------------------
+// Update Activity Type
+// -------------------------------------------------------------
+
+export const onSubmitActivityType = async (row, value, refreshProjectTaskActivityList) => {
+  const payload = {
+    // row,
+    projectId: row.projectId,
+    projectModuleId: row.projectModuleId,
+    taskId: row.taskId,
+    activityName: value,
+    assignedToId: row.assignedToId,
+    activityStatusId: row.activityStatusId
+  };
+  try {
+    await projectActivitiesService.saveActivityType(payload);
+    notifySuccess({
+      message: `Activity type has been changed successfully.`
+    });
+    refreshProjectTaskActivityList();
+  } catch (error) {
+    $q.notify({
+      type: "negative",
+      message: `Failed to change the activity type.`
+    });
+  }
 };
 
 // -------------------------------------------------------------

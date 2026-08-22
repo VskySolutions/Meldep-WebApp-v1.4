@@ -1926,7 +1926,7 @@
                                     @update:model-value="onSelectCheckbox(props.row.id, $event)"
                                   />
                                 </q-td> -->
-                                <q-td style="width: 0% !important;">
+                                <q-td style="width: 50% !important;">
                                   <q-tooltip v-if="props.row.activityOwner">
                                     <div>
                                       <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
@@ -2000,7 +2000,7 @@
                                     </div>
                                   </q-popup-edit>
                                 </q-td>
-                                <q-td style="width: 5% !important;">
+                                <q-td class="hidden" style="width: 5% !important;">
                                   <span v-if="props.row.activityName" class="q-mr-md row inline items-center no-wrap" style="font-size: 12px;">
                                     <span>
                                     {{ projectActivityList.find(e => e.value === props.row.activityName)?.text || props.row.activityName }}
@@ -2097,7 +2097,7 @@
                                     </div>
                                   </q-popup-edit>
                                 </q-td>
-                                <q-td style="width: 0% !important;" class="text-right">
+                                <q-td style="width: 0% !important;" class="text-right hidden">
                                   <span class="" style="font-size: 12px;">{{ props.row.estimateHours }}</span>
                                   <q-popup-edit
                                     v-slot="scope" v-model="props.row.estimateHours" class="small-popup-title" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 270px;"
@@ -2222,7 +2222,7 @@
                                   </q-btn>
                                 </q-td>
                               </q-tr>
-                              <q-tr v-if="props.pageIndex === projectActivities.length - 1">
+                              <q-tr class="hidden" v-if="props.pageIndex === projectActivities.length - 1">
                                 <q-td colspan="2" class="text-right font-bold"><b>Total Hours:</b></q-td>
                                 <q-td class="text-right">{{ totalEstimateHours }}</q-td>
                                 <q-td />
@@ -3345,9 +3345,9 @@ function onSortByTask (SortBy, order) {
 const filteredActivities = ref([]);
 const projectActivities = ref([]);
 const projectActivityColumns = ref([
-  { name: "activityOwner", label: "Owner", field: "activityOwner", align: "left", sortable: true },
-  { name: "activityName", label: "Name", field: "activityName", align: "left", sortable: true },
-  { name: "estimateHours", label: "Est. Hrs.", field: "estimateHours", align: "left", sortable: true, headerClasses: "text-right" }
+  { name: "activityOwner", label: "Owner", field: "activityOwner", align: "left", sortable: true }
+  // { name: "activityName", label: "Name", field: "activityName", align: "left", sortable: true },
+  // { name: "estimateHours", label: "Est. Hrs.", field: "estimateHours", align: "left", sortable: true, headerClasses: "text-right" }
 ]);
 
 const {
@@ -3546,7 +3546,7 @@ function onSaveInlineActivity (type, value, row) {
   } else if (type === "estimateHours") {
     row.estimateHours = value;
   }
-  if (isEmpty(row.activityName) || isEmpty(row.assignedToId)) {
+  if (isEmpty(row.assignedToId)) {
     // notifyError({ message: "Please check required fields: Activity Name and Owner are required." });
   } else {
     activitiesService.addProjectActivity(row).then(resp => {

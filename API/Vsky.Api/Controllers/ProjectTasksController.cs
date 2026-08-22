@@ -1412,52 +1412,66 @@ namespace Vsky.Api.Controllers
                     // Task Activity
                     if (model.ProjectActivities.Count() > 0)
                     {
+                        // Activity Status
                         var status = await _dropDownTypeService.GetDropDownTypeByType(SiteId, "Activity Status");
                         var activityStatus = await _dropDownService.GetDropDownByTypeAndValue(SiteId, status.Id, "Open");
 
+                        //Activity Type
+                        var type = await _dropDownTypeService.GetDropDownTypeByType(SiteId, "Project Activities");
+                        var activityType = await _dropDownService.GetDropDownByTypeAndValue(SiteId, type.Id, "Engineering");
+
                         foreach (var activity in model.ProjectActivities)
                         {
-                            var exisitingActivityData = await _activityService.GetById(activity.Id);
-                            if (exisitingActivityData != null)
+                            var existingActivityData = await _activityService.GetById(activity.Id);
+                            if (existingActivityData != null)
                             {
-                                var existsActivity = await _activityService.GetProjectActivityByDetails(activity.Name, entity.Id, activity.AssignedToId, null, activity.Id);
-                                if (existsActivity != null)
-                                    continue;
+                                //var existsActivity = await _activityService.GetProjectActivityByDetails(activity.Name, entity.Id, activity.AssignedToId, null, activity.Id);
+                                //if (existsActivity != null)
+                                //    continue;
 
-                                exisitingActivityData.ProjectId = model.ProjectId;
-                                exisitingActivityData.ProjectModuleId = model.ProjectModuleId;
-                                exisitingActivityData.TaskId = entity.Id;
-                                exisitingActivityData.AssignedToId = !string.IsNullOrEmpty(activity.AssignedToId) && activity.AssignedToId != "undefined" ? activity.AssignedToId : null;
+                                existingActivityData.ProjectId = model.ProjectId;
+                                existingActivityData.ProjectModuleId = model.ProjectModuleId;
+                                existingActivityData.TaskId = entity.Id;
+                                existingActivityData.AssignedToId = !string.IsNullOrEmpty(activity.AssignedToId) && activity.AssignedToId != "undefined" ? activity.AssignedToId : null;
 
-                                exisitingActivityData.ActivityStatusId = activity.ActivityStatusId != "undefined" ? activity.ActivityStatusId : activityStatus.Id;
-                                exisitingActivityData.Name = activity.Name;
+                                existingActivityData.ActivityStatusId = activity.ActivityStatusId != "undefined" ? activity.ActivityStatusId : activityStatus.Id;
+                                //existingActivityData.Name = activity.Name;
+
+                                // Update Activity Type
+                                existingActivityData.Name =
+                                    !string.IsNullOrEmpty(activity.Name) &&
+                                    activity.Name != "undefined"
+                                        ? activity.Name
+                                        : existingActivityData.Name;
+
                                 //exisitingActivityData.Description = activity.Description;
                                 if (!string.IsNullOrWhiteSpace(activity.EstimateHoursStr))
                                 {
-                                    exisitingActivityData.EstimateHours = HoursConverter.ConvertTimeToDecimalHours(activity.EstimateHoursStr);
+                                    existingActivityData.EstimateHours = HoursConverter.ConvertTimeToDecimalHours(activity.EstimateHoursStr);
                                 }
                                 //exisitingActivityData.EstimateHours = activity.EstimateHours;
 
                                 if (!string.IsNullOrEmpty(activity.Description))
                                 {
-                                    exisitingActivityData.Description = await _azureBlobImageServices
+                                    existingActivityData.Description = await _azureBlobImageServices
                                         .ProcessHtmlAndManageImagesAsync(
                                             activity.Description,
                                             SiteData.Name,
                                             "project-tasks-activities",
                                             activity.Id,
-                                            exisitingActivityData.Description
+                                            existingActivityData.Description
                                         );
                                 }
 
-                                exisitingActivityData.UpdatedById = LoggedUserId;
-                                exisitingActivityData.UpdatedOnUtc = GetDateTime;
-                                exisitingActivityData.Deleted = activity.Deleted;
-                                _activityService.UpdateProjectActivity(exisitingActivityData);
+                                existingActivityData.UpdatedById = LoggedUserId;
+                                existingActivityData.UpdatedOnUtc = GetDateTime;
+                                existingActivityData.Deleted = activity.Deleted;
+                                _activityService.UpdateProjectActivity(existingActivityData);
                             }
                             else
                             {
-                                var existsActivity = await _activityService.GetProjectActivityByDetails(activity.Name, entity.Id, activity.AssignedToId, null);
+                                // Check if this employee already has an Engineering activity
+                                var existsActivity = await _activityService.GetProjectActivityByDetails(activityType.DropDownValue, entity.Id, activity.AssignedToId, null);
                                 if (existsActivity != null)
                                     continue;
 
@@ -1470,9 +1484,7 @@ namespace Vsky.Api.Controllers
                                 projectActivity.AssignedToId = activity.AssignedToId;
                                 projectActivity.ActivityStatusId = activityStatus.Id;
 
-                                projectActivity.Name = activity.Name;
-                                //projectActivity.Description = activity.Description;
-                                // projectActivity.EstimateHours = activity.EstimateHours;
+                                projectActivity.Name = activityType.DropDownValue;
                                 projectActivity.Active = true;
 
                                 if (!string.IsNullOrEmpty(activity.Description))

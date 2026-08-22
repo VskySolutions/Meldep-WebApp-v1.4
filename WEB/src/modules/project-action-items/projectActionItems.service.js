@@ -4,6 +4,9 @@ export default {
   getAllProjectActionItems (model) {
     return http.post("/project-action-items/list", model).then(response => response.data);
   },
+  getAllProjectActionItemsForDashboard (model) {
+    return http.post("/project-dashboard/projectActionItemsList", model).then(response => response.data);
+  },
   getProjectActionItemById (id) {
     return http.get(`/project-action-items/${id}`).then(response => response.data);
   },

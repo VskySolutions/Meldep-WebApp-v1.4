@@ -9,6 +9,34 @@
         align="left"
         inline-label
       >
+        <q-tab name="qAndA">
+          <div class="row items-center no-wrap">
+            Q&A
+            <q-badge
+              rounded
+              color="grey-3"
+              text-color="black"
+              class="q-ml-xs"
+            >
+              {{ props.projectQACount }}
+            </q-badge>
+          </div>
+        </q-tab>
+        
+        <q-tab name="actionItems">
+          <div class="row items-center no-wrap">
+            Action Items
+            <q-badge
+              rounded
+              color="grey-3"
+              text-color="black"
+              class="q-ml-xs"
+            >
+              {{ props.projectActionItemsCount }}
+            </q-badge>
+          </div>
+        </q-tab>
+
         <q-tab name="tasks">
           <div class="row items-center no-wrap">
             Tasks
@@ -81,6 +109,26 @@
           animated
           keep-alive
         >
+          <q-tab-panel name="qAndA" class="q-pa-none">
+            <ProjectQAList
+              :requirement-id="requirementId"
+              :project-id="projectId"
+              :active-tab="leftTab"
+              @select="selectedQA = $event"
+              @count="projectQACount = $event"
+            />
+          </q-tab-panel>
+          
+          <q-tab-panel name="actionItems" class="q-pa-none">
+            <ProjectActionItemsList
+              :requirement-id="requirementId"
+              :project-id="projectId"
+              :active-tab="leftTab"
+              @select="selectedActionItems = $event"
+              @count="projectActionItemsCount = $event"
+            />
+          </q-tab-panel>
+
           <q-tab-panel name="tasks" class="q-pa-none">
             <TaskList
               :requirement-id="requirementId"
@@ -192,6 +240,8 @@ import TimesheetList from './list/_timesheetList.vue';
 // import WeeklyPlanList from './list/_weeklyPlanList.vue';
 import TestCaseList from './list/_testCaseList.vue';
 import IssueList from './list/_issueList.vue';
+import ProjectQAList from './list/_projectQAList.vue';
+import ProjectActionItemsList from "./list/_projectActionItemsList.vue";
 
 import TaskDetails from './details/_taskDetails.vue';
 import TimesheetDetails from './details/_timesheetDetails.vue';
@@ -218,14 +268,24 @@ const props = defineProps({
   timesheetCount: {
     type: Number,
     default: 0
+  },
+  projectQACount: {
+    type: Number,
+    default: 0
+  },
+  projectActionItemsCount: {
+    type: Number,
+    default: 0
   }
 });
 
-const leftTab = ref('tasks');
+const leftTab = ref('qAndA');
 const selectedTask = ref(null);
 const selectedTestCase = ref(null);
 const selectedIssue = ref(null);
 const selectedGroup = ref(null);
+const selectedQA = ref(null);
+const selectedActionItems = ref(null);
 const timesheetSearchModel = ref({});
 
 const onSelectGroup = group => {

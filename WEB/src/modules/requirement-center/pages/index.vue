@@ -182,6 +182,8 @@
           :test-case-count="counts.testCaseCount"
           :issue-count="counts.issueCount"
           :timesheet-count="counts.timesheetCount"
+          :projectQA-count="counts.projectQACount"
+          :projectActionItems-count="counts.projectActionItemsCount"
         />
       </q-tab-panel>
     </q-tab-panels>
@@ -229,7 +231,9 @@ const counts = ref({
   taskCount: 0,
   testCaseCount: 0,
   issueCount: 0,
-  timesheetCount: 0
+  timesheetCount: 0,
+  projectQACount: 0,
+  projectActionItemsCount: 0
 });
 
 const onDashboardLoaded = (data) => {

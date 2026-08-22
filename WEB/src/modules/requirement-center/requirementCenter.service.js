@@ -16,6 +16,12 @@ export default {
   getGroupedTimesheetsByRequirementId (model) {
     return http.post("/requirement-dashboard/timesheet-groups", model).then(response => response.data);
   },
+  getProjectQAByRequirementId (model) {
+    return http.post("/requirement-dashboard/project-QA", model).then(response => response.data);
+  },
+  getProjectActionItemsByRequirementId (model) {
+    return http.post("/requirement-dashboard/project-action-items", model).then(response => response.data);
+  },
   getTimesheetDetails(searchModel) {
     return http
       .post("/requirement-dashboard/timesheet-details", searchModel)

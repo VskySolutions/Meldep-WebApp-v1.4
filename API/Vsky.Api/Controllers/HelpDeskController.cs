@@ -1241,10 +1241,87 @@ namespace Vsky.Api.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    //var endDate = dueDate.Replace("-", "/");
-                    //bool IsDueDateChanged = !string.IsNullOrEmpty(endDate) && DateTime.ParseExact(endDate, "MM/dd/yyyy", null) != dueDate;
-
                     bool result = await UpdateHelpDeskDetails(id, dueDate, "dueDate");
+                    return NoContent();
+                }
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region UpdateTitle
+        [HttpPut("title/{id}/{title}")]
+        public async Task<IActionResult> UpdateTitle(string id, string title)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    bool result = await UpdateHelpDeskDetails(id, title, "title");
+                    return NoContent();
+                }
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region UpdateDescription
+        [HttpPut("description/{id}")]
+        public async Task<IActionResult> UpdateDescription(string id, [FromBody] string description)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    bool result = await UpdateHelpDeskDetails(id, description, "description");
+                    return NoContent();
+                }
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region UpdateWorkspace
+        [HttpPut("workspace/{id}/{topicId}")]
+        public async Task<IActionResult> UpdateWorkspace(string id, string topicId)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    bool result = await UpdateHelpDeskDetails(id, topicId, "workspace");
+                    return NoContent();
+                }
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region UpdateMenu
+        [HttpPut("menu/{id}/{questionId}")]
+        public async Task<IActionResult> UpdateMenu(string id, string questionId)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    bool result = await UpdateHelpDeskDetails(id, questionId, "menu");
                     return NoContent();
                 }
                 return ModelStateError(ModelState);
@@ -1963,6 +2040,26 @@ namespace Vsky.Api.Controllers
                         //bool IsDueDateChanged = !string.IsNullOrEmpty(endDate) && DateTime.ParseExact(endDate, "MM/dd/yyyy", null) != entity.DueDate;
                         entity.DueDate = DateTime.ParseExact(endDate, "MM/dd/yyyy", null);
                     }
+                    break;
+
+                case "title":
+                    if (data is string title)
+                        entity.Title = title;
+                    break;
+
+                case "description":
+                    if (data is string description)
+                        entity.Description = description;
+                    break;
+
+                case "workspace":
+                    if (data is string topicId)
+                        entity.TopicId = topicId;
+                    break;
+
+                case "menu":
+                    if (data is string questionId)
+                        entity.QuestionId = questionId;
                     break;
 
                 default:

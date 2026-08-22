@@ -657,11 +657,12 @@
                   v-if="selectedColumnNames.includes('estimateTime')"
                   class="text-end"
                 >
-                  <span
+                  <!-- <span
                     :class="props.row.totalActivityHours > props.row.totalTaskEstimateHours ? 'text-red' : ''"
-                  >
-                    {{ props.row.totalActivityHours }}
-                  </span> / {{ props.row.totalTaskEstimateHours }}
+                  > -->
+                  <span>
+                    <!-- {{ props.row.totalActivityHours }} / -->
+                  </span>{{ props.row.totalTaskEstimateHours }}
                 </q-td>
                 <!-- SOP Change -->
                 <q-td
@@ -1049,7 +1050,9 @@
                   <b>Total Hours:</b>
                 </q-td>
                 <q-td class="text-right">
-                  <b>{{ totalTaskActivityHours() }} / {{ totalEstimateHours() }}</b>
+                  <b>
+                    <!-- {{ totalTaskActivityHours() }} / -->
+                     {{ totalEstimateHours() }}</b>
                 </q-td>
                 <q-td
                   v-for="(col, idx) in computedColumns.slice(computedColumns.findIndex(c => c.name === 'estimateTime'))"
@@ -1198,7 +1201,7 @@ const columns = ref([
   { name: "projectCategoryId", label: "Category", field: "projectCategoryId", align: "center", sortable: true, default: false },
   { name: "totalRequirementCount", label: "Req.", field: "totalRequirementCount", align: "right", sortable: false, default: true, tooltip: "Project Requirements With Status Summary" },
   { name: "totalTaskCount", label: "Tasks", field: "totalTaskCount", align: "right", sortable: false, default: true, tooltip: "Project Tasks With Status Summary" },
-  { name: "estimateTime", label: "Est. Hrs", field: "estimateTime", align: "right", sortable: false, default: true, tooltip: "(Sum of Activity Hours of All Tasks) / (Sum of Est. Hrs of All Tasks)" },
+  { name: "estimateTime", label: "Est. Hrs", field: "estimateTime", align: "right", sortable: false, default: true, tooltip: "Sum of Est. Hrs of All Tasks" },
   { name: "totalIssueCount", label: "Issues", field: "totalIssueCount", align: "right", sortable: false, default: true, tooltip: "Project Issue With Status Summary" },
   { name: "projectTags", label: "Tags", field: row => row.projectTags, align: "left", sortable: false, default: false, tooltip: "Project Tags" }
 ]);

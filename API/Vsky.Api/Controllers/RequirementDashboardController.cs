@@ -1,21 +1,23 @@
-﻿using System.Collections.Generic;
-using System;
-using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using Vsky.Api.Extensions;
-using Vsky.Api.Models;
-using System.Threading.Tasks;
-using Vsky.Models;
-using Vsky.Services.TestCases;
-using Vsky.Services.Issues;
-using Vsky.Services.ProjectTasks;
-using Vsky.Services.Timesheets;
-using MailKit.Search;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Org.BouncyCastle.Utilities;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing.Printing;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
+using AutoMapper;
+using MailKit.Search;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Utilities;
+using Vsky.Api.Extensions;
+using Vsky.Api.Models;
+using Vsky.Models;
+using Vsky.Services.Issues;
+using Vsky.Services.ProjectActionItem;
+using Vsky.Services.ProjectQuestionsAnswer;
+using Vsky.Services.ProjectTasks;
+using Vsky.Services.TestCases;
+using Vsky.Services.Timesheets;
 
 namespace Vsky.Api.Controllers
 {
@@ -29,6 +31,8 @@ namespace Vsky.Api.Controllers
         private readonly IIssueService _issueService;
         private readonly IProjectTaskService _taskService;
         private readonly ITimesheetLinesService _timesheetLinesService;
+        private readonly IProjectQuestionsAnswersService _projectQuestionsAnswerService;
+        private readonly IProjectActionItemsService _projectActionItemsService;
 
         public RequirementDashboardController(
             GlobalVariable globalVariable,
@@ -36,7 +40,9 @@ namespace Vsky.Api.Controllers
             ITestCaseService testCaseService,
             IIssueService issueService,
             IProjectTaskService taskService,
-            ITimesheetLinesService timesheetLinesService
+            ITimesheetLinesService timesheetLinesService,
+            IProjectQuestionsAnswersService projectQuestionsAnswersService,
+            IProjectActionItemsService projectActionItemsService
             )
         {
             _globalVariable = globalVariable;
@@ -45,6 +51,8 @@ namespace Vsky.Api.Controllers
             _issueService = issueService;
             _taskService = taskService;
             _timesheetLinesService = timesheetLinesService;
+            _projectQuestionsAnswerService = projectQuestionsAnswersService;
+            _projectActionItemsService = projectActionItemsService;
         }
 
         #region GetTestCasesByRequirementId        
@@ -245,6 +253,74 @@ namespace Vsky.Api.Controllers
             return Ok(model);
         }
         #endregion
+        #endregion
+
+        #region GetProjectQAByRequirementId
+        [HttpPost("project-QA")]
+        public async Task<IActionResult> GetProjectQAByRequirementId(ProjectQuestionsAnswersSearchModel searchModel)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var siteId = _globalVariable.SiteId;
+
+                var list = await _projectQuestionsAnswerService.GetProjectQAByRequirementId(
+                    siteId,
+                    searchModel.SearchText,
+                    searchModel.RequirementId,
+                    searchModel.SortBy,
+                    searchModel.Sorts,
+                    searchModel.Descending,
+                    searchModel.Page,
+                    searchModel.PageSize
+                );
+
+                var model = new ProjectQuestionsAnswersList
+                {
+                    ProjectQuestionsAnswerList = list
+                };
+
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetProjectActionItemsByRequirementId
+        [HttpPost("project-action-items")]
+        public async Task<IActionResult> GetProjectActionItemsByRequirementId(ProjectActionItemsSearchModel searchModel)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var siteId = _globalVariable.SiteId;
+
+                var list = await _projectActionItemsService.GetProjectActionItemsByRequirementId(
+                    siteId,
+                    searchModel.SearchText,
+                    searchModel.RequirementId,
+                    searchModel.SortBy,
+                    searchModel.Sorts,
+                    searchModel.Descending,
+                    searchModel.Page,
+                    searchModel.PageSize
+                );
+
+                var model = new ProjectActionItemsList
+                {
+                    ProjectActionItemList = list
+                };
+
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
         #endregion
     }
 }

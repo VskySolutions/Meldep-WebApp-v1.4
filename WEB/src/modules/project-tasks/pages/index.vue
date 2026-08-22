@@ -574,9 +574,10 @@
                 <q-td
                   v-if="selectedColumnNames.includes('estimateTime')"
                   class="text-right"
-                  :class="props.row.totalActivityHours > props.row.estimateTime ? 'text-red' : ''"
+                  :class="props.row.totalTimesheetEstHours > props.row.estimateTime ? 'text-red' : ''"
                 >
-                  {{ props.row.totalActivityHours }} / {{ props.row.estimateTime }} /
+                  <!-- {{ props.row.totalActivityHours }} / -->
+                  {{ props.row.estimateTime }} /
                   <span
                     class="cursor-pointer hoverable-cell"
                     @click="onHandleProjectTaskLevelTimeSheetView(props.row.id)"
@@ -786,7 +787,8 @@
 
                 <!-- Totals in the estimateTime column -->
                 <q-td class="text-right text-bold">
-                  {{ totalEstimateHours() }} / {{ totalTaskEstimateTimeHours() }} / {{ totalTimesheetHours() }}
+                  <!-- {{ totalEstimateHours() }} /  -->
+                  {{ totalTaskEstimateTimeHours() }} / {{ totalTimesheetHours() }}
                 </q-td>
                 <q-td
                   v-for="(col, idx) in computedColumns.slice(computedColumns.findIndex(c => c.name === 'estimateTime'))"
@@ -1210,7 +1212,7 @@ const columns = ref([
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true, default: true },
   { name: "assignedTo", label: "Task Owner", field: "assignedTo", align: "right", sortable: true, default: true },
   { name: "assignedTo.id", label: "Assigned To", field: "assignedTo.id", align: "right", sortable: true, default: true },
-  { name: "estimateTime", label: "Task Hrs", field: "estimateTime", align: "right", sortable: false, default: true, tooltip: "(Sum Of Activity hours) / Task Est. Hrs / Timesheet Hrs" },
+  { name: "estimateTime", label: "Task Hrs", field: "estimateTime", align: "right", sortable: false, default: true, tooltip: "Task Est. Hrs / Timesheet Hrs" },
   { name: "type.dropDownValue", label: "Type", field: "type.dropDownValue", align: "left", sortable: true, default: false },
   { name: "taskTags", label: "Tags", field: row => row.taskTags, align: "left", sortable: false, default: false },
   { name: "sortOrder", label: "SortOrder", field: "sortOrder", align: "left", sortable: true, default: false },

@@ -49,9 +49,29 @@
                   </q-icon>
                 </div>
               </div>
-              <div class="col-12 col-sm-6 col-md-6">
+              <div class="col-12 col-sm-6 col-md-6 hidden">
                 <div class="q-mb-xs">Estimate Hrs</div>
                 <div class="text-black">{{ model.estimateHours ? model.estimateHours : "-" }}</div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Activity Owner</div>
+                <div class="text-black">
+                  {{ model.assignedTo.person.firstName ? model.assignedTo.person.firstName +" "+ model.assignedTo.person.lastName : "-" }}
+                </div>
+              </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Activity Status</div>
+                <div class="text-black">
+                  {{ model.activityStatus.dropDownValue ? model.activityStatus.dropDownValue : "-" }}
+                </div>
+              </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-sm-12 col-md-12">
+                <div class="q-mb-xs">Activity Details</div>
+                <div class="text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
@@ -80,26 +100,6 @@
                 <div class="text-black">
                   {{ model.updatedOnUtc ? model.updatedOnUtc : "-" }}
                 </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Activity Owner</div>
-                <div class="text-black">
-                  {{ model.assignedTo.person.firstName ? model.assignedTo.person.firstName +" "+ model.assignedTo.person.lastName : "-" }}
-                </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Activity Status</div>
-                <div class="text-black">
-                  {{ model.activityStatus.dropDownValue ? model.activityStatus.dropDownValue : "-" }}
-                </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-12 col-md-12">
-                <div class="q-mb-xs">Activity Details</div>
-                <div class="text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
               </div>
             </div>
           </fieldset>

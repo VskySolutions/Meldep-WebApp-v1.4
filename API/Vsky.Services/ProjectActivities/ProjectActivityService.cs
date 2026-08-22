@@ -365,7 +365,6 @@ namespace Vsky.Services.ProjectActivities
             // Project only necessary fields
             query = query.Select(x => new ProjectActivity
             {
-
                 Id = x.Id,
                 Name = x.Name,
                 DueDate = x.DueDate,
@@ -373,6 +372,9 @@ namespace Vsky.Services.ProjectActivities
                 AssignedToId = x.AssignedToId,
                 ProjectId = x.ProjectId,
                 ProjectModuleId = x.ProjectModuleId,
+                TaskId = x.TaskId,
+                ActivityStatusId = x.ActivityStatusId,
+                CreatedOnUtc = x.CreatedOnUtc,
                 IsDescription = IsDescriptionEmpty(x.Description),
                 Active = x.Active,
                 Task = new ProjectTask
@@ -396,7 +398,20 @@ namespace Vsky.Services.ProjectActivities
                             Id = p.ProjectWeeklyPlanDates.Id,
                             WeekDate = p.ProjectWeeklyPlanDates.WeekDate
                         }
-                    }).ToList()
+                    }).ToList(),
+                    //Requirement = new Requirement
+                    //{
+                    //    Id = x.Task.Requirement.Id,
+                    //    ProjectWeeklyPlanDatesReqTaskIssueMappingList = x.Task.Requirement.ProjectWeeklyPlanDatesReqTaskIssueMappingList.Where(p => !p.Deleted && p.ProjectWeeklyPlanDates.PlanType.DropDownValue.ToLower() == "weekly").Select(p => new ProjectWeeklyPlanDatesReqTaskIssueMapping
+                    //    {
+                    //        Id = p.Id,
+                    //        ProjectWeeklyPlanDates = new ProjectWeeklyPlanDates
+                    //        {
+                    //            Id = p.ProjectWeeklyPlanDates.Id,
+                    //            WeekDate = p.ProjectWeeklyPlanDates.WeekDate
+                    //        }
+                    //    }).ToList(),
+                    //}
                 },
                 Project = new Project
                 {
@@ -443,6 +458,17 @@ namespace Vsky.Services.ProjectActivities
 
             var list = await query.ToListAsync();
 
+            // For the same Task + Assigned User, keep only the latest created activity
+            list = list
+                .GroupBy(x => new
+                {
+                    x.TaskId,
+                    x.AssignedToId
+                })
+                .Select(g => g
+                    .OrderByDescending(x => x.CreatedOnUtc)
+                    .First())
+                .ToList();
 
             // Group backend data by project (return full activity objects)
             var groupedResult = list

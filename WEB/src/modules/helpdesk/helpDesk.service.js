@@ -43,6 +43,18 @@ export default {
   updateHelpDeskPriority (id, priorityId) {
     return http.put(`/help-desk/priority/${id}/${priorityId}`).then(response => response.data);
   },
+  updateHelpDeskTitle (id, title) {
+    return http.put(`/help-desk/title/${id}/${title}`).then(response => response.data);
+  },
+  updateHelpDeskDescription (id, description) {
+    return http.put(`/help-desk/description/${id}`, description, { headers: { "Content-Type": "application/json" } }).then(response => response.data);
+  },
+  updateHelpDeskWorkspace (id, topicId) {
+    return http.put(`/help-desk/workspace/${id}/${topicId}`).then(response => response.data);
+  },
+  updateHelpDeskMenu (id, questionId) {
+    return http.put(`/help-desk/menu/${id}/${questionId}`).then(response => response.data);
+  },
   saveHelpDesk (id, model) {
     if (id) {
       return http.put(`/help-desk/${id}`, model, { headers: { "Content-Type": "multipart/form-data" } }).then(response => response.data);

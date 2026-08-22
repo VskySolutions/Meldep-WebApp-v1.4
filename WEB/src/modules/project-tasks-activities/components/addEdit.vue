@@ -22,7 +22,7 @@
                 </q-breadcrumbs>
               </legend>
               <div class="row q-col-gutter-x-md q-mb-sm">
-                <div class="col-12 col-sm-6 col-md-4 col-lg-4 col-xxl-4">
+                <div class="col-12 col-sm-6 col-md-5 col-lg-5 col-xxl-5">
                   <formSingleSelectDropdown
                     v-model="model.assignedToId"
                     label="Activity Owner"
@@ -35,9 +35,9 @@
                 </div>
                 <div class="col-12 col-sm-6 col-md-4 col-lg-4 col-xxl-4">
                   <formSingleSelectDropdown
-                    :readonly="isMyTaskActivity"
                     label="Activity Type"
                     v-model="model.name"
+                    :readonly="true"
                     :options="projectTaskActivityNameForDropdownSingleSelect.list.value"
                     :filter="projectTaskActivityNameForDropdownSingleSelect.filter"
                     :error="v$.name.$error"
@@ -64,7 +64,7 @@
                     </template>
                   </formSingleSelectDropdown>
                 </div>
-                <div class="col-12 col-sm-6 col-md-2 col-lg-2 col-xxl-3">
+                <div class="col-12 col-sm-6 col-md-3 col-lg-3 col-xxl-3">
                   <label class="label q-mb-xs text-black">Activity Status<span class="required">*</span></label>
                   <div>
                     <q-select
@@ -96,7 +96,7 @@
                     </q-select>
                   </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-2 col-lg-2 col-xxl-3">
+                <div class="col-12 col-sm-6 col-md-2 col-lg-2 col-xxl-3 hidden">
                   <label class="label q-mb-xs text-black">Estimate Hours<span class="required">*</span></label>
                   <div>
                     <q-input
@@ -106,12 +106,6 @@
                       mask="##:##"
                       maxlength="5"
                       :rules="[validateHours]"
-                      :error="v$.estimateHours.$error"
-                      :error-message="v$.estimateHours.$errors[0]?.$message"
-                      @blur="
-                        model.estimateHours = formatHoursValue(model.estimateHours);
-                        v$.estimateHours.$touch();
-                      "
                     >
                       <template #hint>
                         <span
@@ -321,13 +315,13 @@ const rules = computed(() => ({
     required: helpers.withMessage("Activity type is required", required)
   },
 
-  estimateHours: {
-    required: helpers.withMessage("Estimate Hours is required", required),
-    validHours: helpers.withMessage(
-      ({ $response }) => $response,
-      (value) => validateHours(value)
-    )
-  },
+  // estimateHours: {
+  //   required: helpers.withMessage("Estimate Hours is required", required),
+  //   validHours: helpers.withMessage(
+  //     ({ $response }) => $response,
+  //     (value) => validateHours(value)
+  //   )
+  // },
 
   description: isMyTaskActivity
     ? {
@@ -358,11 +352,11 @@ function validateHours(value) {
     : true;
 }
 
-function formatHoursValue(value) {
-  if (!value) return value;
-  const [hours, minutes = "00"] = String(value).trim().split(":");
-  return `${hours.padStart(2, "0")}:${minutes.padEnd(2, "0")}`;
-}
+// function formatHoursValue(value) {
+//   if (!value) return value;
+//   const [hours, minutes = "00"] = String(value).trim().split(":");
+//   return `${hours.padStart(2, "0")}:${minutes.padEnd(2, "0")}`;
+// }
 // ------------------------------------------------------------------------------------
 // Get Project Activity details
 // ------------------------------------------------------------------------------------

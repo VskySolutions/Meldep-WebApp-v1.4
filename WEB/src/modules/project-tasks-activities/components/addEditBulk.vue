@@ -50,7 +50,7 @@
                             'text-right': col.name === 'estimateHours',
                             'text-start': col.name !== 'estimateHours'
                           }"
-                        >{{ col.label }}<span v-if="['name', 'assignedToId', 'estimateHours'].includes(col.name) && !isPreviousTargetMonth" class="required">*</span>
+                        >{{ col.label }}<span v-if="['assignedToId'].includes(col.name) && !isPreviousTargetMonth" class="required">*</span>
                         </q-th>
                         <q-th v-if="!isPreviousTargetMonth" class="text-center">Actions</q-th>
                       </q-tr>
@@ -71,14 +71,12 @@
                             {{ props.row.assignedTo.person.firstName + " " + props.row.assignedTo.person.lastName }}
                           </template>
                         </q-td>
-                        <q-td style="width: 10%;">
+                        <q-td style="width: 10%;" class="hidden">
                           <template v-if="!isPreviousTargetMonth">
                             <formSingleSelectDropdown
                               v-model="props.row.name"
                               :options="projectTaskActivityNameForDropdownSingleSelect.list.value"
                               :filter="projectTaskActivityNameForDropdownSingleSelect.filter"
-                              :error="rowValidations[props.rowIndex]?.value?.name.$error"
-                              :error-message="rowValidations[props.rowIndex]?.value?.name.$errors[0]?.$message"
                             >
                             <template #option="{ itemProps, opt }">
                               <q-item v-bind="itemProps">
@@ -106,7 +104,7 @@
                             {{ props.row.name }}
                           </template>
                         </q-td>
-                        <q-td style="white-space: normal; overflow-wrap: break-word; width: 53%;">
+                        <q-td style="white-space: normal; overflow-wrap: break-word; width: 53%;" class="hidden">
                           <template v-if="!isPreviousTargetMonth">
                             <q-editor
                               v-model="props.row.description"
@@ -119,7 +117,7 @@
                             {{ props.row.description }}
                           </template>
                         </q-td>
-                        <q-td class="text-right" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">
+                        <q-td class="text-right hidden" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">
                           <template v-if="!isPreviousTargetMonth">
                             <q-input
                               v-model="props.row.estimateHours"
@@ -129,9 +127,6 @@
                               maxlength="5"
                               mask="##:##"
                               :rules="[validateHours]"
-                              :error="rowValidations[props.rowIndex]?.value?.estimateHours.$error"
-                              :error-message="rowValidations[props.rowIndex]?.value?.estimateHours.$errors[0]?.$message"
-                              @blur="props.row.estimateHours = formatHoursValue(props.row.estimateHours); rowValidations[props.rowIndex]?.value?.estimateHours.$touch"
                             >
                              <template #hint>
                               <span
@@ -156,7 +151,7 @@
                           </q-icon>
                         </q-td>
                       </q-tr>
-                      <q-tr v-if="props.pageIndex === TaskActivityRows.length - 1">
+                      <q-tr class="hidden" v-if="props.pageIndex === TaskActivityRows.length - 1">
                         <q-td colspan="3" class="text-right font-bold"><b>Total Hours:</b></q-td>
                         <q-td class="text-right"><b>{{ totalHours }}</b></q-td>
                         <q-td />
@@ -230,10 +225,10 @@ const model = ref({
 
 // Tab Task Activities
 const TaskActivityColumns = ref([
-  { name: "assignedToId", label: "Activity Owner", field: "assignedToId", align: "left", sortable: false },
-  { name: "name", label: "Activity Type", field: "name", align: "left" },
-  { name: "description", label: "Description", field: "description", align: "left" },
-  { name: "estimateHours", label: "Est.Hrs", field: "estimateHours", align: "right" }
+  { name: "assignedToId", label: "Activity Owner", field: "assignedToId", align: "left", sortable: false }
+  // { name: "name", label: "Activity Type", field: "name", align: "left" },
+  // { name: "description", label: "Description", field: "description", align: "left" },
+  // { name: "estimateHours", label: "Est.Hrs", field: "estimateHours", align: "right" }
 ]);
 
 // get project details on edit mode
@@ -366,15 +361,15 @@ const rules = {
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 
 const rowRules = {
-  name: { required: helpers.withMessage("Activity type is required", required) },
+  // name: { required: helpers.withMessage("Activity type is required", required) },
   assignedToId: { required: helpers.withMessage("Activity Owner is required", required) },
-  estimateHours: {
-    required: helpers.withMessage("Est.Hrs is required", required),
-    validHours: helpers.withMessage(
-      ({ $response }) => $response,
-      (value) => validateHours(value)
-    )
-  }
+  // estimateHours: {
+  //   required: helpers.withMessage("Est.Hrs is required", required),
+  //   validHours: helpers.withMessage(
+  //     ({ $response }) => $response,
+  //     (value) => validateHours(value)
+  //   )
+  // }
 };
 
 const rowValidations = ref([]);
@@ -402,27 +397,27 @@ function validateHours(value) {
   return true;
 }
 
-function formatHoursValue(value) {
-  if (!value) return value;
+// function formatHoursValue(value) {
+//   if (!value) return value;
 
-  value = String(value).trim();
-  if (!value.includes(":")) {
-    return `${value.padStart(2, "0")}:00`;
-  }
+//   value = String(value).trim();
+//   if (!value.includes(":")) {
+//     return `${value.padStart(2, "0")}:00`;
+//   }
 
-  const parts = value.split(":");
+//   const parts = value.split(":");
 
-  if (parts.length !== 2) return value;
+//   if (parts.length !== 2) return value;
 
-  let [hours, minutes] = parts;
-  if (!minutes) {
-    minutes = "00";
-  } else if (minutes.length === 1) {
-    minutes += "0";
-  }
+//   let [hours, minutes] = parts;
+//   if (!minutes) {
+//     minutes = "00";
+//   } else if (minutes.length === 1) {
+//     minutes += "0";
+//   }
 
-  return `${hours.padStart(2, "0")}:${minutes}`;
-}
+//   return `${hours.padStart(2, "0")}:${minutes}`;
+// }
 
 
 // Submit form

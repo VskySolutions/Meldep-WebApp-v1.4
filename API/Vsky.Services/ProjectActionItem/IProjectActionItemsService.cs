@@ -31,6 +31,30 @@ namespace Vsky.Services.ProjectActionItem
         );
         #endregion
 
+        #region GetAllProjectActionItemsForDashboard
+        IPagedList<ProjectActionItems> GetAllProjectActionItemsForDashboard(
+            string SiteId,
+            string projectId,
+            string sortBy,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue
+        );
+        #endregion
+
+        #region GetProjectActionItemsByRequirementId
+        Task<List<ProjectActionItems>> GetProjectActionItemsByRequirementId(
+            string siteId,
+            string searchText,
+            string requirementId,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue
+        );
+        #endregion
+
         #region GetProjectActionItemById
         Task<ProjectActionItems> GetProjectActionItemById(string id);
         #endregion

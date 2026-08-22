@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Text;
 using System.Threading.Tasks;
+using MailKit.Search;
 using Microsoft.AspNetCore.Identity;
-using System.Linq.Dynamic.Core;
+using Microsoft.EntityFrameworkCore;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.ApplicationUserRoles;
 using Vsky.Services.Common;
-using Microsoft.EntityFrameworkCore;
 
 namespace Vsky.Services.ProjectActionItem
 {
@@ -261,6 +262,163 @@ namespace Vsky.Services.ProjectActionItem
             });
 
             var list = new PagedList<ProjectActionItems>(query, page, pageSize);
+            return list;
+        }
+        #endregion
+
+        #region GetAllProjectActionItemsForDashboard
+        public IPagedList<ProjectActionItems> GetAllProjectActionItemsForDashboard(
+          string SiteId,
+          string projectId,
+          string sortBy,
+          bool descending,
+          int page = 1,
+          int pageSize = int.MaxValue
+      )
+        {
+            var query = _projectActionItemsRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsTemplate && x.Project.Active && x.SiteId == SiteId && x.ProjectId == projectId);
+
+            //sorting
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+
+                query = query.OrderBy(orderBy);
+            }
+            else
+            {
+                query = query.OrderBy(x => x.CreatedOnUtc);
+            }
+
+            query = query.Select(x => new ProjectActionItems
+            {
+                Id = x.Id,
+                ProjectId = x.ProjectId,
+                RequirementId = x.RequirementId,
+                PriorityId = x.PriorityId,
+                DueDate = x.DueDate,
+                CustomerId = x.CustomerId,
+                EmployeeId = x.EmployeeId,
+                Title = x.Title,
+                Description = x.Description,
+                Project = new Project
+                {
+                    Id = x.Project.Id,
+                    Name = x.Project.Name
+                },
+                Requirement = new Requirement
+                {
+                    Id = x.Requirement.Id,
+                    Title = x.Requirement.Title
+                },
+                Priority = new DropDown
+                {
+                    Id = x.Priority.Id,
+                    DropDownValue = x.Priority.DropDownValue
+                },
+                Employee = new Employee
+                {
+                    Id = x.Employee.Id,
+                    Person = new Person
+                    {
+                        Id = x.Employee.Person.Id,
+                        FullName = x.Employee.Person.FirstName + " " + x.Employee.Person.LastName
+                    }
+                },
+                Customer = new CompanyClients
+                {
+                    Id = x.Customer.Id,
+                    Name = x.Customer.Company != null ? x.Customer.Company.Name : string.Join(" ", x.Customer.Person.FirstName, x.Customer.Person.LastName).Trim()
+                },
+            });
+            var list = new PagedList<ProjectActionItems>(query, page, pageSize);
+            return list;
+        }
+
+        #endregion
+
+        #region GetProjectActionItemsByRequirementId
+        public async Task<List<ProjectActionItems>> GetProjectActionItemsByRequirementId(
+            string siteId,
+            string searchText,
+            string requirementId,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue
+        )
+        {
+            var query = _projectActionItemsRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                searchText = searchText.ToLower();
+                var isDate = DateTime.TryParse(searchText, out var parsedDate);
+
+                query = query.Where(m =>
+                        (m.Project != null && m.Project.Name.ToLower().Contains(searchText))
+                     || (m.Requirement != null && m.Requirement.Title.ToLower().Contains(searchText))
+                     || (m.Title != null && m.Title.ToLower().Contains(searchText))
+                     || (m.Description != null && m.Description.ToLower().Contains(searchText))
+                     || (m.Priority != null && m.Priority.DropDownValue.ToLower().Contains(searchText))
+                     || (m.Customer.Company.Employee.Person.FirstName.ToLower().Contains(searchText) || m.Customer.Company.Employee.Person.LastName.ToLower().Contains(searchText))
+                     || m.Customer.Company.Name.Contains(searchText) 
+                     || (m.Employee.Person.FirstName.Contains(searchText) || m.Employee.Person.LastName.Contains(searchText))
+                 );
+            }
+
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+                query = query.OrderBy(orderBy);
+            }
+            else
+            {
+                query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
+            query = query.Select(x => new ProjectActionItems
+            {
+                Id = x.Id,
+                ProjectId = x.ProjectId,
+                PriorityId = x.PriorityId,
+                Title = x.Title,
+                CustomerId = x.CustomerId,
+                EmployeeId = x.EmployeeId,
+                DueDate = x.DueDate,
+                Description = x.Description,
+                Project = new Project
+                {
+                    Id = x.Project.Id,
+                    Name = x.Project.Name,
+                    StartDate = x.Project.StartDate,
+                    GoLiveDate = x.Project.GoLiveDate
+                },
+                Priority = new DropDown
+                {
+                    Id = x.Priority.Id,
+                    DropDownValue = x.Priority.DropDownValue
+                },
+                Employee = new Employee
+                {
+                    Id = x.Employee.Id,
+                    Person = new Person
+                    {
+                        Id = x.Employee.Person.Id,
+                        FullName = x.Employee.Person.FirstName + " " + x.Employee.Person.LastName
+                    }
+                },
+                Customer = new CompanyClients
+                {
+                    Id = x.Customer.Id,
+                    Name = x.Customer.Company != null ? x.Customer.Company.Name : string.Join(" ", x.Customer.Person.FirstName, x.Customer.Person.LastName).Trim(),
+                    PersonId = x.Customer.PersonId,
+                    CompanyId = x.Customer.CompanyId
+                }
+            });
+
+            var list = await query.ToListAsync();
             return list;
         }
         #endregion

@@ -5,6 +5,10 @@ export default {
     return http.post("/project-questions-answers/list", model).then(response => response.data);
   },
 
+  getAllProjectQuestionAndAnswersForDashboard (model) {
+    return http.post("/project-dashboard/projectQuestionAndAnswersList", model).then(response => response.data);
+  },
+
   getQuestionAnswersInDetailsById (id) {
     return http.get(`/project-questions-answers/details/${id}`).then(response => response.data);
   },

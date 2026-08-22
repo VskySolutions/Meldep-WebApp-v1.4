@@ -47,7 +47,8 @@
           <q-td style="width: 5%;">{{ toDate(propsTask.row.startDate) }}</q-td>
           <q-td style="width: 5%;">{{ toDate(propsTask.row.endDate) }}</q-td>
           <q-td style="width: 5%;">{{ propsTask.row.priority.dropDownValue }}</q-td>
-          <q-td class="text-right" style="width: 5%;">{{ propsTask.row.totalActivityHours }}</q-td>
+          <!-- <q-td class="text-right" style="width: 5%;">{{ propsTask.row.totalActivityHours }}</q-td> -->
+          <q-td class="text-right" style="width: 5%;">{{ propsTask.row.estimateTime }}</q-td>
           <q-td style="width: 5%;">
             <q-select
               v-model="propsTask.row.status.id" outlined stack-label hide-bottom-space :dense="true"
@@ -96,7 +97,8 @@ const columnsTask = ref([
   { name: "startDate", label: "Start Date", field: "startDate", align: "left", sortable: true },
   { name: "endDate", label: "End Date", field: "endDate", align: "left", sortable: true },
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true },
-  { name: "estimateTime", label: "Activity Hrs", field: "estimateTime", align: "left", sortable: true, headerStyle: "width: 90px" },
+  // { name: "estimateTime", label: "Activity Hrs", field: "estimateTime", align: "left", sortable: true, headerStyle: "width: 90px" },
+  { name: "estimateTime", label: "Est. Hrs", field: "estimateTime", align: "left", sortable: true, headerStyle: "width: 90px" },
   { name: "status.dropDownValue", label: "Status", field: "status.dropDownValue", align: "left", sortable: true }
 ]);
 
@@ -172,11 +174,24 @@ function totalActivityHours(activities = []) {
   return formatTotalHours(getTotalMinutes(activities));
 }
 
+// function totalEstimateHours() {
+//   const totalMinutes = taskRows.value.reduce(
+//     (total, row) => total + getTotalMinutes(row.activity),
+//     0
+//   );
+
+//   return formatTotalHours(totalMinutes);
+// }
 function totalEstimateHours() {
-  const totalMinutes = taskRows.value.reduce(
-    (total, row) => total + getTotalMinutes(row.activity),
-    0
-  );
+  const totalMinutes = taskRows.value.reduce((total, row) => {
+    const value = String(row.estimateTime ?? "").trim();
+
+    if (!value) return total;
+
+    const [hours = 0, minutes = 0] = value.split(":").map(Number);
+
+    return total + hours * 60 + minutes;
+  }, 0);
 
   return formatTotalHours(totalMinutes);
 }

@@ -388,7 +388,7 @@ const isFilesValid = ref(true);
 const defaultRoles = [ "Project Manager", "Project Coordinator", "Project Lead" ];
 const hasSavedDefaultRoles = ref(false);
 
-console.log(tab.value, "tab.value");
+// console.log(tab.value, "tab.value");
 const rows = ref([]);
 const rowCounter = ref(0);
 const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1 });

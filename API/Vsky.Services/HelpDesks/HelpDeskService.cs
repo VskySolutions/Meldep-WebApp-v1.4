@@ -484,6 +484,8 @@ namespace Vsky.Services.HelpDesks
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
                 DueDate = x.DueDate,
+                TopicId = x.TopicId,
+                QuestionId = x.QuestionId,
                 Employee = new Employee
                 {
                     Id = x.Employee.Id,

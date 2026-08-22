@@ -55,7 +55,21 @@
       </q-card-section>
     </q-card>
   </div>
-  <div class="row q-col-gutter-md q-mt-md">
+  <div class="row q-col-gutter-md q-mt-md">    
+    <div class="col-12 col-md-6">
+      <ProjectQACard
+        :requirement-id="props.requirementId"
+        @summary="updateProjectQASummary"
+      />
+    </div>
+
+    <div class="col-12 col-md-6">
+      <ProjectActionItemsCard
+        :requirement-id="props.requirementId"
+        @summary="updateProjectActionItemsSummary"
+      />
+    </div>
+    
     <div class="col-12 col-md-6">
       <TaskCard
         :requirement-id="props.requirementId"
@@ -109,6 +123,8 @@ import TimesheetCard from "./cards/_timesheetCard.vue";
 // import WeeklyPlanCard from "./cards/_weeklyPlanCard.vue";
 import TestCaseCard from "./cards/_testCaseCard.vue";
 import IssueCard from "./cards/_issueCard.vue";
+import ProjectQACard from './cards/_projectQ&ACard.vue';
+import ProjectActionItemsCard from "./cards/_projectActionItemsCard.vue";
 
 const emit = defineEmits(["loaded"]);
 
@@ -142,6 +158,14 @@ const testCaseSummary = reactive({
 
 const issueSummary = reactive({
   open: 0
+});
+
+const projectQASummary = reactive({
+  total: 0
+});
+
+const projectActionItemsSummary = reactive({
+  total: 0
 });
 
 const emitSummary = () => {
@@ -184,6 +208,16 @@ const updateTestCaseSummary = (summary) => {
 const updateIssueSummary = (summary) => {
   issueSummary.total = summary.total;
   issueSummary.open = summary.open;
+  emitSummary();
+}
+
+const updateProjectQASummary = (summary) => {
+  projectQASummary.total = summary.total;
+  emitSummary();
+}
+
+const updateProjectActionItemsSummary = (summary) => {
+  projectActionItemsSummary.total = summary.total;
   emitSummary();
 }
 </script>
