@@ -12,7 +12,7 @@
               <q-breadcrumbs-el label="Project Action Items" />
             </q-breadcrumbs>
           </div>
-          <div class="col-12 col-md-4">
+          <div class="col-12 col-md-3">
             <div class="row items-center">
               <span v-if="Object.keys(appliedFilters).length > 0" class="text-grey-10 text-caption" style="font-weight: 600;">Filters On :</span>
               <q-chip v-for="(value, key) in appliedFilters" :key="key" class="bg-grey-3 text-grey-10 text-caption q-mr-xs filter-chip">
@@ -21,7 +21,7 @@
               </q-chip>
             </div>
           </div>
-          <div class="col-12 col-md-5">
+          <div class="col-12 col-md-6">
             <div class="row items-center justify-end no-wrap">
               <div class="row items-center q-mr-xs">
                 <div class="search-container position-relative">
@@ -123,7 +123,7 @@
                   label="Create Project Action Item"
                   no-caps
                   class="text-primary btnRounded"
-                  @click="onProjectActionItemsAdd(refreshProjectActionItemsList)"
+                  @click="onProjectActionItemsAdd(search.projectIds?.[0], search.requirementIds?.[0], refreshProjectActionItemsList)"
                 />
                  <!-- Reset Column Width -->
                 <q-btn
@@ -805,7 +805,7 @@ onMounted(async () => {
   activeEmployeesDropdown.load();
   if (search.value.projectIds.length > 0) requirementsByProjectModuleIdForDropdown.load('', search.value.projectIds);
   await projectActionItemPriorityForDropdown.load("Project Action Item Priority");
-  
+
   // const setPriority = projectActionItemPriorityForDropdown.getValuesByLabels(["Medium"]);
   // if (setPriority.length && !search.value.priorityIds?.length) {
   //   search.value.priorityIds = setPriority;

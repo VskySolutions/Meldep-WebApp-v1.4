@@ -357,7 +357,7 @@
                           type="textarea"
                           hide-bottom-space
                           :dense="true"
-                          maxlength="128"
+                          maxlength="500"
                         />
                       </div>
                     </q-td>
@@ -389,7 +389,9 @@
                         v-else :class="props.row.deleted ? 'text-delete' : ''"
                         style="white-space: normal; word-break: break-word;"
                       >
-                        {{ props.row.filePath }}
+                        <a :href="props.row.filePath" target="_blank" class="text-bluee">
+                          {{ props.row.filePath }}
+                         </a>
                       </span>
                     </q-td>
                     <q-td class="text-left" style="width: 25%;">
@@ -420,7 +422,7 @@
                         type="textarea"
                         hide-bottom-space
                         :dense="true"
-                        maxlength="128"
+                        maxlength="500"
                       />
                       <span
                         v-else :class="props.row.deleted ? 'text-delete' : ''"

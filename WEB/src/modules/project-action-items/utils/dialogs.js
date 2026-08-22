@@ -20,10 +20,17 @@ export function onProjectActionItemsView (id) {
     .onDismiss(() => { activeRowId.value = id; });
 }
 
-export function onProjectActionItemsAdd (refresh) {
+export function onProjectActionItemsAdd (
+  projectId,
+  requirementId,
+  refresh
+) {
+  const componentProps = {};
+  if (projectId) componentProps.projectIdAttr = projectId;
+  if (requirementId) componentProps.requirementIdAttr = requirementId;
   $q.dialog({
     component: addEditProjectActionItems,
-    componentProps: {}
+    componentProps
   }).onOk(() => {
     refresh();
   })

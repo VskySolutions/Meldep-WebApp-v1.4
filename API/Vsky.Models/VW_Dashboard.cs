@@ -125,6 +125,7 @@ namespace Vsky.Models
         public string Title { get; set; }
         public string RequirementStatus { get; set; }
         public string EditingStatus { get; set; }
+        public DateTime CreatedOnUtc { get; set; }
         public int TotalTaskCount { get; set; }
         public int TaskCloseCount { get; set; }
         public int TotalDoneTaskCount { get; set; }

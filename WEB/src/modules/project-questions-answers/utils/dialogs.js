@@ -20,10 +20,17 @@ export function onQuestionAnswersView (id) {
     .onDismiss(() => { activeRowId.value = id; });
 }
 
-export function onQuestionAnswersAdd (refresh) {
+export function onQuestionAnswersAdd (
+  projectId,
+  requirementId,
+  refresh
+) {
+  const componentProps = {};
+  if (projectId) componentProps.projectIdAttr = projectId;
+  if (requirementId) componentProps.requirementIdAttr = requirementId;
   $q.dialog({
     component: addEditQuestionAnswers,
-    componentProps: {}
+    componentProps
   }).onOk(() => {
     refresh();
   })

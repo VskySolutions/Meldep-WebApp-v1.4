@@ -60,7 +60,7 @@
                     :filter="customerDropdownSingleSelect.filter"
                   />
                 </div>
-                <div class="col-12 col-sm-6 col-md-6">                  
+                <div class="col-12 col-sm-6 col-md-6">
                   <formSingleSelectDropdown
                     v-model="model.employeeId"
                     label="Employee"
@@ -151,7 +151,8 @@ import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 const props = defineProps({
   id: { type: String, default: "" },
   projectIdAttr: { type: String, default: "" },
-  projectIdValue: { type: String, default: "" }
+  projectIdValue: { type: String, default: "" },
+  requirementIdAttr: { type: String, default: "" }
 });
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -183,22 +184,14 @@ const { getTableState } = useSiteTableState({
   siteId: currentSiteId
 });
 
-const searchStorage = getTableState();
-
-let selectedProjectId = null;
-
 // ----------------------------------------------------------------------------------------------------------------
 // Define model
 // ----------------------------------------------------------------------------------------------------------------
 
 const model = ref({
   id: "",
-   projectId:
-    props.projectIdAttr ||
-    props.projectIdValue ||
-    selectedProjectId ||
-    null,
-  requirementId: "",
+  projectId: props.projectIdAttr || props.projectIdValue || null,
+  requirementId: props.requirementIdAttr || "",
   title: "",
   description: "",
   customerId: "",
@@ -230,7 +223,7 @@ const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 const getProjectActionItemDetailsById = async () => {
   loading.value = true;
   isInitializing.value = true;
-  try {    
+  try {
     const resp = await projectActionItemsService.getProjectActionItemDetailsById(props.id);
     model.value = _.cloneDeep(resp);
     await requirementByProjectModuleIdForDropdownSingleSelect.load("", model.value.projectId);
@@ -303,26 +296,32 @@ watch(
 
 onMounted(async () => {
   await projectActionItemPrioritySingleSelect.load("Project Action Item Priority");
-  requirementByProjectModuleIdForDropdownSingleSelect.load();  
+  requirementByProjectModuleIdForDropdownSingleSelect.load();
   customerDropdownSingleSelect.load();
   activeEmployeesDropdownSingleSelect.load();
 
   // selected values
   await projectNameDropdownSingleSelect.load();
-  const projectIds = searchStorage?.search?.projectIds || [];
-  if (projectIds.length) {
-    selectedProjectId =
-      projectIds.find(id =>
-        projectNameDropdownSingleSelect.list.value.some(x => x.value === id)
-      ) || null;
+  // const projectIds = searchStorage?.search?.projectIds || [];
+  // if (projectIds.length) {
+  //   selectedProjectId =
+  //     projectIds.find(id =>
+  //       projectNameDropdownSingleSelect.list.value.some(x => x.value === id)
+  //     ) || null;
 
-    model.value.projectId = selectedProjectId;
+  //   model.value.projectId = selectedProjectId;
+  // }
+  if (model.value.projectId) {
+    await requirementByProjectModuleIdForDropdownSingleSelect.load("", model.value.projectId);
   }
-  
   // Set "Medium" Priority as the default if it exists
   const mediumPriority = await projectActionItemPrioritySingleSelect.getValueByLabel("Medium");
   if (mediumPriority && props.id === "") {
     model.value.priorityId = mediumPriority;
+  }
+
+   if (props.requirementIdAttr) {
+    model.value.requirementId = props.requirementIdAttr;
   }
 });
 

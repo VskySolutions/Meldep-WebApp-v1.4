@@ -33,7 +33,7 @@
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">
-                  <div class="text-black">Title<span class="required">*</span></div>
+                  <div class="text-black">Question<span class="required">*</span></div>
                   <q-input
                     v-model="model.title"
                     outlined
@@ -48,7 +48,7 @@
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-12 col-md-12 col-lg-12">
-                  <div class="text-black"><label>Description</label></div>
+                  <div class="text-black"><label>Answer</label></div>
                   <div class="form-group">
                     <q-editor
                       v-model="model.description"
@@ -235,11 +235,14 @@ const props = defineProps({
     type: String,
     default: ""
   },
+  projectIdAttr: { type: String, default: "" },
+  requirementIdAttr: { type: String, default: "" },
   showResponseLog: {
     type: Boolean,
     default: false
   }
 });
+
 
 const $emit = defineEmits(["hide", "ok"]);
 const authStore = useAuthStore();
@@ -289,8 +292,8 @@ const pagination = ref({
 const model = ref({
   id: "",
   title: "",
-  projectId: "",
-  requirementId: "",
+  projectId: props.projectIdAttr || props.projectIdValue || null,
+  requirementId: props.requirementIdAttr || "",
   description: ""
 });
 
@@ -299,7 +302,7 @@ const model = ref({
 // ----------------------------------------------------------------------------------------------------------------
 
 const logColumns = ref([
-  { name: "description", label: "Description", field: "description", align: "left", sortable: true },
+  { name: "description", label: "Answer", field: "description", align: "left", sortable: true },
   { name: "createdBy.person.fullname", label: "Created By", field: "createdBy.person.fullname", align: "left", sortable: true },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true }
 ]);
@@ -350,7 +353,7 @@ const rules = {
   requirementId: {
     required: helpers.withMessage("Requirement is required", required)
   },
-  title: { required: helpers.withMessage("Title is required", required), maxLength: maxLength(500) }
+  title: { required: helpers.withMessage("Question is required", required), maxLength: maxLength(500) }
 };
 
 // Validate rules
@@ -446,6 +449,7 @@ function onDeleteLog(item) {
 
   activeRowId.value = item.id;
 }
+
 // ----------------------------------------------------------------------------------------------------------------
 // Response Change Log - Validation Rules
 // ----------------------------------------------------------------------------------------------------------------
@@ -461,7 +465,7 @@ function hasImage(html = "") {
 }
 
 const requiredEditor = helpers.withMessage(
-  "Description is required",
+  "Answer is required",
   (value) => {
     if (!value) return false;
 
@@ -495,7 +499,7 @@ async function onSave() {
   );
 
   if (duplicate) {
-    notifyError({ message: "Duplicate description." });
+    notifyError({ message: "Duplicate Answer." });
     return;
   }
 
@@ -623,7 +627,10 @@ onMounted(async () => {
   await projectNameDropdownSingleSelect.load();
 
   if (model.value.projectId) {
-    requirementByProjectModuleIdForDropdownSingleSelect.load("", model.value.projectId);
+    await requirementByProjectModuleIdForDropdownSingleSelect.load("", model.value.projectId);
+  }
+  if (props.requirementIdAttr) {
+    model.value.requirementId = props.requirementIdAttr;
   }
 });
 

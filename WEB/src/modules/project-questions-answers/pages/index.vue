@@ -36,7 +36,7 @@
                     <q-card class="q-pa-sm">
                       <div class="row items-center q-mb-sm">
                         <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                          <label class="Cutomlabel q-mt-sm fs-13">Title</label>
+                          <label class="Cutomlabel q-mt-sm fs-13">Question</label>
                         </div>
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
                           <q-input v-model="search.title" fill-input class="q-mx-sm w-100 h-auto" :dense="true" />
@@ -70,7 +70,7 @@
                 :selected-field="selectedField"
               /> -->
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Question Answers" no-caps class="text-primary btnRounded q-mr-xs" @click="onQuestionAnswersAdd(refreshQuestionsAnswersList)" />
+                <q-btn icon="o_add" outline label="Add Question Answers" no-caps class="text-primary btnRounded q-mr-xs" @click="onQuestionAnswersAdd(search.projectIds?.[0], search.requirementIds?.[0], refreshQuestionsAnswersList)" />
                 <!-- <q-btn
                   v-if="role === 'admin'"
                   icon="o_playlist_add"
@@ -231,6 +231,9 @@
                 <q-td v-if="selectedColumnNames.includes('title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.title }}
                 </q-td>
+                <q-td v-if="selectedColumnNames.includes('description')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  <div v-html="props.row.description" />
+                </q-td>
                 <q-td
                   v-if="selectedColumnNames.includes('createdBy.person.firstName')"
                   class="common-q-td"
@@ -362,6 +365,8 @@ const showSortDialog = ref(false);
 
 const siteId = computed(() => authStore.user?.siteId);
 const highlightedId = computed(() => activeRowId.value);
+const selectedProjectId = ref(history.state?.projectId);
+const selectedProjectModuleId = ref(history.state?.projectModuleId);
 
 // Table variables
 const tableRef = ref();
@@ -370,7 +375,8 @@ const shownProjects = new Set();
 const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: true },
-  { name: "title", label: "Title", field: "title", align: "left", sortable: true, default: true },
+  { name: "title", label: "Question", field: "title", align: "left", sortable: true, default: true },
+  { name: "description", label: "Answer", field: "description", align: "left", sortable: true, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: false },
   { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: true },
@@ -398,6 +404,7 @@ const {
   sorts,
   resizeWidths,
   selectedColumnNames,
+  getTableState,
   saveDataTableState,
   saveResizableWidthState,
   saveColumnsState
@@ -425,6 +432,18 @@ const handleDocumentClick = (event) => {
     });
   }
 };
+
+const tableState = getTableState();
+
+if (selectedProjectId.value) {
+  tableState.search.projectIds = [selectedProjectId.value];
+  tableState.search.projectModuleIds = [selectedProjectModuleId.value];
+
+  // Optional: persist the new state
+  saveDataTableState({
+    search: tableState.search
+  });
+}
 
 // Get/Map project list to table
 const getAllQuestionAnswers = async ({ pagination: p }) => {
@@ -585,7 +604,7 @@ const mapFilterToLabel = (ids, list, label) => {
 };
 
 const appliedFilters = computed(() => ({
-  ...(search.value.title ? { "Title": search.value.title } : {}),
+  ...(search.value.title ? { "Question": search.value.title } : {}),
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement")
 }));
@@ -599,7 +618,7 @@ function getFilterCount (key) {
 }
 
 function onClearFilters (key) {
-  if (key === "Title") {
+  if (key === "Question") {
     search.value.title = "";
   } else if (key === "Project Name") {
     search.value.projectIds = [];

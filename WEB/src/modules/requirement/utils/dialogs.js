@@ -23,7 +23,8 @@ export function onRequirementView (id) {
 export function onRequirementAdd (
   projectId,
   moduleId,
-  refresh
+  refresh,
+  refreshProjectModulesList
 ) {
   const componentProps = {};
 
@@ -36,6 +37,7 @@ export function onRequirementAdd (
   })
     .onOk(() => {
       refresh && refresh();
+      refreshProjectModulesList && refreshProjectModulesList();
     });
 }
 

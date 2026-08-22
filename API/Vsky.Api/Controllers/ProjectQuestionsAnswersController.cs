@@ -170,7 +170,7 @@ namespace Vsky.Api.Controllers
                     //Check if the project questions answer already exists
                     var exists = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByTitle(SiteId, model.ProjectId, model.Title, id);
                     if (exists != null)
-                        return BadRequest(new BadRequestError("project questions answer title already exists, try with another."));
+                        return BadRequest(new BadRequestError("Question already exists, try with another."));
 
                     entity.Title = model.Title;
                     entity.ProjectId = model.ProjectId;

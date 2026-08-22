@@ -100,6 +100,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
             {
                 Id = x.Id,
                 Title = x.Title,
+                Description = x.Description,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
 

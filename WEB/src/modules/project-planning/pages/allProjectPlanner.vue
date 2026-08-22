@@ -1002,6 +1002,7 @@
                                   persistent
                                   no-parent-event
                                   style="width: 500px;"
+                                  @click-outside="showRequirementsFilter = false"
                                 >
                                   <q-card class="q-pa-sm">
                                     <multiSelectDropdown
@@ -1025,6 +1026,99 @@
                                     </div>
                                   </q-card>
                                 </q-menu>
+                              </div>
+                              <div class="q-ml-sm">
+                                <!-- Replace your current sort menu with this -->
+                                <q-btn icon="o_swap_vert" dense outline round no-caps class="text-primary btnRounded" size="sm">
+                                  <q-tooltip>
+                                    Sorted: By
+                                    {{ selectedSortByRequirement === 'title'
+                                          ? 'Title'
+                                          : selectedSortByRequirement === 'requirementStatus'
+                                            ? ' Status'
+                                            : selectedSortByRequirement === 'createdOnUtc'
+                                              ? ' Created Date'
+                                              : selectedSortByRequirement
+                                    }} ({{ selectedSortOrderByRequirement ? 'Descending' : 'Ascending' }})</q-tooltip>
+                                  <q-menu>
+                                    <q-list style="min-width: 200px">
+                                      <q-separator />
+                                      <q-item-label header class="q-py-xs" style="font-size: 0.75rem;font-weight:500;">Sort By</q-item-label>
+                                      <q-item>
+                                        <q-item-section>
+                                          <q-radio
+                                            v-model="selectedSortByRequirement"
+                                            style="font-size:13px"
+                                            size="xs"
+                                            val="title"
+                                            label="Title"
+                                            checked-icon="o_task_alt"
+                                            dense
+                                            @update:model-value="val => onSortByRequirement(val, false)"
+                                          />
+                                        </q-item-section>
+                                      </q-item>
+                                      <q-item>
+                                        <q-item-section>
+                                          <q-radio
+                                            v-model="selectedSortByRequirement"
+                                            style="font-size:13px"
+                                            size="xs"
+                                            val="requirementStatus"
+                                            label="Status"
+                                            checked-icon="o_task_alt"
+                                            dense
+                                            @update:model-value="val => onSortByRequirement(val, false)"
+                                          />
+                                        </q-item-section>
+                                      </q-item>
+                                      <q-item>
+                                        <q-item-section>
+                                          <q-radio
+                                            v-model="selectedSortByRequirement"
+                                            style="font-size:13px"
+                                            size="xs"
+                                            val="createdOnUtc"
+                                            label="Created Date"
+                                            checked-icon="o_task_alt"
+                                            dense
+                                            @update:model-value="val => onSortByRequirement(val, false)"
+                                          />
+                                        </q-item-section>
+                                      </q-item>
+                                      <q-separator />
+                                      <q-item-label header class="q-py-xs " style="font-size: 0.75rem;font-weight:500;">Sort Order</q-item-label>
+                                      <q-item>
+                                        <q-item-section>
+                                          <q-radio
+                                            v-model="selectedSortOrderByRequirement"
+                                            style="font-size:13px"
+                                            size="xs"
+                                            :val="false"
+                                            label="Ascending"
+                                            checked-icon="o_task_alt"
+                                            dense
+                                            @update:model-value="val => onSortByRequirement(val, true)"
+                                          />
+                                        </q-item-section>
+                                      </q-item>
+                                      <q-item>
+                                        <q-item-section>
+                                          <q-radio
+                                            v-model="selectedSortOrderByRequirement"
+                                            style="font-size:13px"
+                                            size="xs"
+                                            :val="true"
+                                            label="Descending"
+                                            checked-icon="o_task_alt"
+                                            dense
+                                            @update:model-value="val => onSortByRequirement(val, true)"
+                                          />
+                                        </q-item-section>
+                                      </q-item>
+                                    </q-list>
+                                  </q-menu>
+                                </q-btn>
                               </div>
                             </div>
                           </q-toolbar>
@@ -2407,6 +2501,7 @@ const defaultOutlookState = {
 
   leftDrawerOpen: true,
   middleDrawerOpen: true,
+  requirementDrawerOpen: true,
 
   customerSplit: 22,
   mainSplit: 20,
@@ -2457,6 +2552,14 @@ const selectedSortByModule = ref(
 
 const selectedSortOrderByModule = ref(
   filterLocalStorage?.selectedSortOrderByModule ?? false
+);
+
+const selectedSortByRequirement = ref(
+  filterLocalStorage?.selectedSortByRequirement || "title"
+);
+
+const selectedSortOrderByRequirement = ref(
+  filterLocalStorage?.selectedSortOrderByRequirement ?? false
 );
 
 const selectedSortByTask = ref(
@@ -2593,8 +2696,10 @@ const refreshProjectModulesList = () => {
   getAllProjectsModulesByProjectId({ pagination: projectModulesPagination.value });
 };
 
-const refreshRequirementList = () => {
-  getAllRequirementsByProjectModuleId({ pagination: requirementPagination.value });
+const refreshRequirementList = async () => {
+  await getAllRequirementsByProjectModuleId({
+    pagination: requirementPagination.value
+  });
 };
 
 const refreshProjectTaskList = () => {
@@ -2829,6 +2934,8 @@ async function loadProjectModules (projectId) {
   selectedModuleId.value = null;
   selectedRequirementId.value = null;
 
+  requirementRows.value = [];
+  filteredRequirementRows.value = [];
   projectTasks.value = [];
   projectActivities.value = [];
   filteredActivities.value = [];
@@ -2886,7 +2993,9 @@ function onSortByModule (SortBy, order) {
 }
 
 const onModuleSearch = () => {
+  filteredRequirementRows.value = [];
   filteredTaskRows.value = [];
+  filteredActivities.value = [];
   projectTasks.value = [];
   projectActivities.value = [];
   refreshProjectModulesList();
@@ -2904,7 +3013,7 @@ const onClearModule = () => {
 const requirementRows = ref([]);
 const filteredRequirementRows = ref([]);
 const requirementColumns = ref([
-  { name: "name", label: "Requirement", field: "name", align: "left", sortable: true }
+  { name: "title", label: "Requirement", field: "title", align: "left", sortable: true }
 ]);
 
 const {
@@ -2920,7 +3029,7 @@ const {
   tableKey: "dataTable-Requirements",
 
   defaultSearch: {
-    projectModuleIds: [],
+    requirementIds: [],
     requirementStatusIds: [],
     filterRequirement: "",
     projectId: projectId.value
@@ -2958,10 +3067,10 @@ const getAllRequirementsByProjectModuleId = async (props) => {
 
       activeRowId: activeRequirementRowId.value,
 
-      // sorts: {
-      //   selectedSortByRequirement: selectedSortByRequirement.value,
-      //   selectedSortOrderByRequirement: selectedSortOrderByRequirement.value
-      // }
+      sorts: {
+        selectedSortByRequirement: selectedSortByRequirement.value,
+        selectedSortOrderByRequirement: selectedSortOrderByRequirement.value
+      }
     });
     const resp = await allProjectPlannerService.getAllRequirementPlannerList(payload);
     requirementRows.value = resp.data.map(requirement => {
@@ -2983,7 +3092,7 @@ const getAllRequirementsByProjectModuleId = async (props) => {
       descending,
       rowsNumber: resp.total
     };
-    searchProjectModuleLoader.value = false;
+    searchRequirementLoader.value = false;
   } catch (error) {
     console.error("Error fetching modules:", error);
   } finally {
@@ -3009,7 +3118,6 @@ async function loadRequirements(projectId, moduleId) {
   if (showTasksFilter.value === true) {
     showTasksFilter.value = false;
   }
-
   requirementsByProjectModuleIdForDropdown.load(moduleId);
 
   isRequirement.value = true;
@@ -3043,7 +3151,6 @@ async function loadRequirements(projectId, moduleId) {
     isProjectModule: isProjectModule.value,
     isRequirement: isRequirement.value,
     isProjectTask: isProjectTask.value,
-    // isProjectActivity: isProjectActivity.value,
     projectId: selectedProjectId.value,
     projectModuleId: selectedModuleId.value,
     requirementId: selectedRequirementId.value,
@@ -3076,8 +3183,8 @@ function onSortByRequirement (SortBy, order) {
 }
 
 const onRequirementSearch = () => {
-  filteredRequirementRows.value = [];
-  requirementRows.value = [];
+  filteredTaskRows.value = [];
+  filteredActivities.value = [];
   projectTasks.value = [];
   projectActivities.value = [];
   refreshRequirementList();
@@ -3231,7 +3338,9 @@ async function LoadTasks(projectId, moduleId, requirementId) {
   if (showModulesFilter.value === true) {
     showModulesFilter.value = false;
   }
-
+  if (showRequirementsFilter.value === true) {
+    showRequirementsFilter.value = false;
+  }
   if (showTasksFilter.value === true) {
     showTasksFilter.value = false;
   }
@@ -3261,6 +3370,7 @@ async function LoadTasks(projectId, moduleId, requirementId) {
     selectedRequirementId.value = requirementId;
 
     selectedModule.value = module;
+
     selectedRequirement.value = requirementRows.value.find(
       item => item.id === requirementId
     );
@@ -3289,24 +3399,6 @@ async function LoadTasks(projectId, moduleId, requirementId) {
     } catch (error) {
       console.error("Error loading tasks:", error);
     }
-
-  } else {
-
-    // Clear Tasks if any required ID is missing
-    projectTasks.value = [];
-    projectActivities.value = [];
-    filteredActivities.value = [];
-
-    activeRequirementRowId.value = null;
-
-    selectedRequirementId.value = null;
-    selectedRequirement.value = null;
-
-    storedRequirementName.value = "";
-
-    searchProjectTask.value.projectId = "";
-    searchProjectTask.value.projectModuleId = "";
-    searchProjectTask.value.requirementId = "";
   }
 }
 
@@ -3780,13 +3872,14 @@ const onDeleteModule = async (item) => {
 // Requirement Popups
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 const onAddRequirement= () => {
-   const projectId = searchRequirement.value?.projectId;
+  const projectId = searchRequirement.value?.projectId;
   const moduleId = selectedModuleId.value;
 
   onRequirementAdd(
     projectId,
     moduleId,
-    refreshRequirementList
+    refreshRequirementList,
+    refreshProjectModulesList
   );
 };
 
@@ -4587,6 +4680,9 @@ async function runSequentially () {
     middleDrawerOpen.value =
       savedState?.middleDrawerOpen ?? true;
 
+    requirementDrawerOpen.value =
+      savedState?.requirementDrawerOpen ?? true;
+
     customerSplit.value =
       savedState?.customerSplit ?? 22;
 
@@ -4594,7 +4690,7 @@ async function runSequentially () {
       savedState?.mainSplit ?? 20;
 
     requirementSplit.value =
-       savedState?.RequirementSplit ?? 35;
+       savedState?.requirementSplit ?? 35;
 
     ActivitySplit.value =
       savedState?.ActivitySplit ?? 55;
@@ -4678,7 +4774,6 @@ async function runSequentially () {
       restoredModuleId &&
       restoredRequirementId
     ) {
-
       selectedRequirementId.value = restoredRequirementId;
       activeRequirementRowId.value = restoredRequirementId;
 
@@ -4694,7 +4789,6 @@ async function runSequentially () {
         restoredRequirementId
       );
     }
-
 
     // --------------------------------------------------------------------------
     // Restore Task
@@ -4741,6 +4835,10 @@ async function runSequentially () {
 
     storedModuleName.value =
       savedState?.moduleName || "";
+
+    storedRequirementName.value =
+      savedState?.title  || "";
+
 
     storedTaskName.value =
       savedState?.taskName || "";
@@ -4867,18 +4965,22 @@ function clearSearchModelsData () {
   storedProjectName.value = "";
   storedModuleName.value = "";
   storedTaskName.value = "";
+  storedRequirementName.value = "";
 
   selectedTaskId.value = null;
   selectedProjectId.value = null;
   selectedModuleId.value = null;
+  selectedRequirementId.value = null;
 
   ProjectName = "";
   ModuleName = "";
   TaskName = "";
+  Requirement = "";
 
   activeRowId.value = null;
   activeModuleRowId.value = null;
   activeTaskRowId.value = null;
+  activeRequirementId.value = null;
 }
 
 const appliedProjectFiltersCount = computed(() => {
@@ -4922,10 +5024,10 @@ const appliedRequirementFiltersCount = computed(() => {
   if (filters.requirementIds && filters.requirementIds.length > 0) count++;
   if (filters.statusIds && filters.statusIds.length > 0) count++;
   if (filters.filterRequirement && filters.filterRequirement.trim() !== "") count++;
-  // Add more fields as needed
 
   return count;
 });
+
 
 // Applied Task Filters Count
 const appliedTaskFiltersCount = computed(() => {
@@ -5087,8 +5189,8 @@ watch(() => searchProjectModule.value.filterModule, () => {
   refreshProjectModulesList();
 });
 
-watch(() => searchRequirement.value.filterModule, () => {
-  if (searchRequirement.value.filterModule) searchRequirementLoader.value = true;
+watch(() => searchRequirement.value.filterRequirement, () => {
+  if (searchRequirement.value.filterRequirement) searchRequirementLoader.value = true;
   refreshRequirementList();
 });
 
