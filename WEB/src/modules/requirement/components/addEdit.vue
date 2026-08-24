@@ -50,7 +50,7 @@
                     label="Project Module"
                     :class="readonlyProjectModule !== '' ? 'edit_tasks' : ''"
                     :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement' && readonlyProjectModule != ''"
-                    :disable="!model.projectId"
+                    :disable="(model.projectId?.length || 0) === 0"
                     :options="projectModulesByProjectIdForDropdownSingleSelect.list.value"
                     :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
                     :error="v$.projectModuleId.$error"
@@ -1151,11 +1151,23 @@ watch(() => props.id, (newValue) => {
   }
 }, { immediate: true });
 
-watch(() => model.value.projectId, (newValue, oldValue) => {
-  if (newValue) {
-    projectModulesByProjectIdForDropdownSingleSelect.load(false, false, model.value.projectId);
-  }
-}, { immediate: true });
+watch(
+  () => model.value.projectId,
+  (projectId) => {
+    if ((projectId?.length || 0) > 0) {
+      projectModulesByProjectIdForDropdownSingleSelect.load(
+        false,
+        false,
+        projectId
+      );
+    } else {
+      model.value.projectModuleId = null;
+      projectModulesByProjectIdForDropdownSingleSelect.list.value = [];
+      v$.value.projectModuleId.$reset();
+    }
+  },
+  { immediate: true }
+);
 
 // ----------------------------------------------------------------------------------------------------------------
 // On page load

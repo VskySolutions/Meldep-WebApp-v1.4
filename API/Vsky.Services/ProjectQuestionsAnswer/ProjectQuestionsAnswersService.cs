@@ -136,7 +136,8 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                         FullName = (x.UpdatedBy.Person.FirstName ?? "") + " " +
                        (x.UpdatedBy.Person.LastName ?? "")
                     }
-                }
+                },
+                LastAnswer = x.ProjectQuestionsAnswersResponseLog.Where(p => !p.Deleted).OrderByDescending(p => p.CreatedOnUtc).Select(p => p.Description).FirstOrDefault(),
             });
 
             return new PagedList<ProjectQuestionsAnswers>(result, page, pageSize);

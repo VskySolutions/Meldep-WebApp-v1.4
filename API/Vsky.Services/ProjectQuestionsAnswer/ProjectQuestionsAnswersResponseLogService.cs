@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using SendGrid.Helpers.Mail;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.Common;
@@ -34,6 +35,32 @@ namespace Vsky.Services.ProjectQuestionsAnswer
 
             var item = await query.FirstOrDefaultAsync();
             return item;
+        }
+
+        public List<ProjectQuestionsAnswersResponseLog> GetAllResponseLogsByQuestionAnswersId(string projectQuestionsAnswersId)
+        {
+            var query = _projectQuestionsAnswersResponseLogRepository.TableNoTracking
+                .Where(x => x.ProjectQuestionsAnswersId == projectQuestionsAnswersId && !x.Deleted)
+                .OrderByDescending(x => x.CreatedOnUtc)
+                .Select(x => new ProjectQuestionsAnswersResponseLog
+                {
+                    Id = x.Id,
+                    ProjectQuestionsAnswersId = x.ProjectQuestionsAnswersId,
+                    Description = x.Description,
+                    CreatedOnUtc = x.CreatedOnUtc,
+                    CreatedBy = new ApplicationUser
+                    {
+                        Id = x.CreatedBy.Id,
+                        Person = new Person
+                        {
+                            Id = x.CreatedBy.Person.Id,
+                            FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+                        }
+                    },
+                })
+                .ToList();
+
+            return query;
         }
         #endregion
 

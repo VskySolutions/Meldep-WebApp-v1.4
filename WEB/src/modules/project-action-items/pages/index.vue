@@ -259,7 +259,7 @@
                     {{ props.row.requirement?.title }}
                   </span>
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('title')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                <q-td v-if="selectedColumnNames.includes('title')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" @click="onProjectActionItemsView(props.row.id)">
                   {{ props.row.title }}
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('customerId')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">

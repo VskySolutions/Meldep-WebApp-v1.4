@@ -115,6 +115,20 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        [HttpGet("response-logs/{id}")]
+        public async Task<IActionResult> GetAllResponseLogsByQuestionAnswersId(string id)
+        {
+            try
+            {
+                var list = _projectQuestionsAnswersResponseLogService.GetAllResponseLogsByQuestionAnswersId(id);
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         #region CreateProjectQuestionsAnswer
         // Title: CreateProjectQuestionsAnswer
         // Description: This endpoint handles the creation of a new Project Questions Answer. It sets the creation details, and inserts the Project Questions Answer into the database. 

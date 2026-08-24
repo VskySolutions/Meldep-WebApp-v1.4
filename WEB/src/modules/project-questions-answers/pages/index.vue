@@ -228,11 +228,21 @@
                     </div>
                   </div>
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                <q-td v-if="selectedColumnNames.includes('title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" class="cursor-pointer" @click="onQuestionAnswersView(props.row.id)">
                   {{ props.row.title }}
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('description')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                  <div v-html="props.row.description" />
+                <q-td v-if="selectedColumnNames.includes('lastAnswer')" class="common-q-td hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                  <span
+                    @click="onAnswerTimelineView(
+                    props.row.id,
+                    `${props.row.project.name} : ${props.row.title}`
+                    )"
+                  >
+                  {{ truncateText(props.row.lastAnswer) }}
+                  <q-tooltip>
+                    View Answers
+                  </q-tooltip>
+                </span>
                 </q-td>
                 <q-td
                   v-if="selectedColumnNames.includes('createdBy.person.firstName')"
@@ -330,6 +340,7 @@ import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 import {
   initQuestionsAnswersDialogs,
   onQuestionAnswersView,
+  onAnswerTimelineView,
   onQuestionAnswersAdd,
   onQuestionAnswersEdit
 } from "src/modules/project-questions-answers/utils/dialogs.js";
@@ -376,7 +387,7 @@ const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: true },
   { name: "title", label: "Question", field: "title", align: "left", sortable: true, default: true },
-  { name: "description", label: "Answer", field: "description", align: "left", sortable: true, default: true },
+  { name: "lastAnswer", label: "Answer", field: "lastAnswer", align: "left", sortable: true, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: false },
   { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: true },
@@ -496,6 +507,15 @@ function setActiveRowIdInLocalStorage(id) {
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
+// truncate text after 60 characters
+const truncateText = (htmlText, limit = 60) => {
+  const plainText = htmlText?.replace(/<[^>]*>/g, '')?.replace(/&nbsp;/g, ' ') || ''
+
+  return plainText.length > limit
+    ? plainText.substring(0, limit) + '...'
+    : plainText
+}
+
 const refreshQuestionsAnswersList = () => {
   getAllQuestionAnswers({ pagination: pagination.value });
 };

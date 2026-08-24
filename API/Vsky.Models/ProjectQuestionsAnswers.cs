@@ -50,6 +50,7 @@ namespace Vsky.Models
         public bool Deleted { get; set; }
         [NotMapped]
         public string Flag { get; set; }
+        
 
         public virtual ProjectQuestionsAnswers ProjectQuestionsAnswers { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }

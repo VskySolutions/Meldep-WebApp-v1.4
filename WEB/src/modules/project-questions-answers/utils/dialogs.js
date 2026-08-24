@@ -1,6 +1,8 @@
 import { useQuasar } from "quasar";
 import addEditQuestionAnswers from "modules/project-questions-answers/components/addEdit.vue";
 import viewQuestionAnswers from "modules/project-questions-answers/components/view.vue";
+import viewAnswerTimeLineView from "modules/project-questions-answers/components/_answer_timeline_view.vue";
+
 
 let $q;
 let activeRowId;
@@ -53,4 +55,16 @@ export function onQuestionAnswersEdit(id, refresh, showResponseLog = false) {
     })
     .onCancel(() => {})
     .onDismiss(() => {});
+}
+
+export function onAnswerTimelineView(id, label) {
+  activeRowId.value = id;
+  $q.dialog({
+    component: viewAnswerTimeLineView,
+    componentProps: { id, label}
+  })
+    .onOk(() => {
+    })
+    .onCancel(() => { activeRowId.value = id; })
+    .onDismiss(() => { activeRowId.value = id; });
 }
