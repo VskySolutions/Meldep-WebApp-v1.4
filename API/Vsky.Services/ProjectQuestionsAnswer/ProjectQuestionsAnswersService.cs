@@ -197,6 +197,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
             string siteId,
             string searchText,
             string requirementId,
+            string title,
             string sortBy,
             Dictionary<string, string> sorts,
             bool descending,
@@ -205,6 +206,9 @@ namespace Vsky.Services.ProjectQuestionsAnswer
         )
         {
             var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+
+            if (!string.IsNullOrEmpty(title))
+                query = query.Where(x => x.Title.ToLower().Contains(title));
 
             if (!string.IsNullOrWhiteSpace(searchText))
             {
@@ -241,7 +245,8 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                     Name = x.Project.Name,
                     StartDate = x.Project.StartDate,
                     GoLiveDate = x.Project.GoLiveDate
-                }
+                },
+                LastAnswer = x.ProjectQuestionsAnswersResponseLog.Where(p => !p.Deleted).OrderByDescending(p => p.CreatedOnUtc).Select(p => p.Description).FirstOrDefault(),
             });
 
             var list = await query.ToListAsync();
@@ -303,6 +308,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                        (x.UpdatedBy.Person.LastName ?? "")
                     }
                 },
+                LastAnswer = x.ProjectQuestionsAnswersResponseLog.Where(p => !p.Deleted).OrderByDescending(p => p.CreatedOnUtc).Select(p => p.Description).FirstOrDefault(),
                 ProjectQuestionsAnswersResponseLog = x.ProjectQuestionsAnswersResponseLog.Where(p => !p.Deleted)
                 .OrderByDescending(p => p.CreatedOnUtc)
                 .Select(p => new ProjectQuestionsAnswersResponseLog
@@ -334,6 +340,53 @@ namespace Vsky.Services.ProjectQuestionsAnswer
             return item;
         }
 
+        #endregion
+
+        #region GetAllQuestionAnswersByQuestionId
+        public List<ProjectQuestionsAnswers> GetAllQuestionAnswersByQuestionId(string SiteId, string questionId, bool latestOnTop)
+        {
+            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.Id == questionId);
+
+            query = latestOnTop
+                    ? query.OrderByDescending(x => x.CreatedOnUtc) // latest first
+                    : query.OrderBy(x => x.CreatedOnUtc); // oldest first
+
+            return query.Select(x => new ProjectQuestionsAnswers
+            {
+                Id = x.Id,
+                Description = x.Description,
+                CreatedById = x.CreatedById,
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedById = x.UpdatedById,
+                UpdatedOnUtc = x.UpdatedOnUtc,
+                ProjectQuestionsAnswersResponseLog = x.ProjectQuestionsAnswersResponseLog
+                    .Where(d => !d.Deleted)
+                    .OrderByDescending(d => d.CreatedOnUtc)
+                    .Select(p => new ProjectQuestionsAnswersResponseLog
+                {
+                    Id = p.Id,
+                    Description = p.Description,
+                    CreatedOnUtc = p.CreatedOnUtc,
+                    CreatedBy = new ApplicationUser
+                    {
+                        Id = p.CreatedBy.Id,
+                        Person = new Person
+                        {
+                            Id = p.CreatedBy.PersonId,
+                            FullName = p.CreatedBy.Person.FirstName + " " + p.CreatedBy.Person.LastName
+                        }
+                    },
+                }).ToList(),
+                CreatedBy = new ApplicationUser
+                {
+                    Id = x.CreatedBy.Id,
+                    Person = new Person
+                    {
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+                    }
+                },
+            }).ToList();
+        }
         #endregion
 
         #region GetProjectQuestionsAnswerByTitle

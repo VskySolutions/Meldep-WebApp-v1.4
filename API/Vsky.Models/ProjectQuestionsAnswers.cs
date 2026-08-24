@@ -10,6 +10,12 @@ namespace Vsky.Models
         public virtual ICollection<ProjectQuestionsAnswers> ProjectQuestionsAnswerList { get; set; } = new List<ProjectQuestionsAnswers>();
         public int Total { get; set; }
     }
+    public class ProjectQuestionsAnswersResponseLogList
+    {
+        public virtual ICollection<ProjectQuestionsAnswersResponseLog> ProjectQuestionsAnswersResponseLogLists { get; set; } = new List<ProjectQuestionsAnswersResponseLog>();
+        public int Total { get; set; }
+    }
+
     public class ProjectQuestionsAnswers : BaseEntity
     {
         public string SiteId { get; set; }
@@ -22,6 +28,9 @@ namespace Vsky.Models
         public string UpdatedById { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
         public bool Deleted { get; set; }
+
+        [NotMapped] 
+        public string LastAnswer { get; set; }
 
         public virtual Site Site { get; set; }
         public virtual Project Project { get; set; }

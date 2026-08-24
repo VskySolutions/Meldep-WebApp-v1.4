@@ -16,45 +16,63 @@
             <q-card class="q-pa-sm">
               <div class="row items-center q-mb-sm">
                 <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                  <label class="Cutomlabel q-mt-sm fs-13">Task Number</label>
+                  <label class="Cutomlabel q-mt-sm fs-13">Title</label>
                 </div>
                 <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
-                  <q-input v-model="search.projectTaskNumber" fill-input class="q-mx-sm w-100 h-auto" :dense="true" />
+                  <q-input
+                    v-model="search.title"
+                    fill-input
+                    class="q-mx-sm w-100 h-auto"
+                    :dense="true"
+                  />
                 </div>
               </div>
               <multiSelectDropdown
-                v-model="search.projectTaskIds"
-                label="Task Names"
-                :options="projectTasksByProjectIdAndModuleIdForDropdown.list.value"
-                :filter="projectTasksByProjectIdAndModuleIdForDropdown.filter"
+                v-model="search.customerIds"
+                label="Customer"
+                :options="customerNameDropdown.list.value"
+                :filter="customerNameDropdown.filter"
               />
               <multiSelectDropdown
-                v-model="search.activityOwners"
-                label="Activity Owners"
+                v-model="search.employeeIds"
+                label="Employee"
                 :options="activeEmployeesDropdown.list.value"
                 :filter="activeEmployeesDropdown.filter"
               />
               <multiSelectDropdown
-                v-model="search.statusIds"
-                label="Task Status"
-                :options="projectTaskStatusListWithDisables"
-                :filter="getProjectTaskStatusFilter"
-                :isShowAll="true"
-              />
-              <multiSelectDropdown
                 v-model="search.priorityIds"
-                label="Task Priority"
-                :options="projectTaskPrioritiesForDropdown.list.value"
-                :filter="projectTaskPrioritiesForDropdown.filter"
+                label="Priority"
+                :options="projectActionItemPriorityForDropdown.list.value"
+                :filter="projectActionItemPriorityForDropdown.filter"
                 :isShowAll="true"
               />
-              <multiSelectDropdown
-                v-model="search.taskTagsIds"
-                label="Task Tags"
-                :options="projectTaskTagsDropdown.list.value"
-                :filter="projectTaskTagsDropdown.filter"
-                :show-bg-color="true"
-              />
+              <div class="row items-center q-mb-sm">
+                <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                  <label class="Cutomlabel q-mt-sm fs-13">Due Date</label>
+                </div>
+                <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                  <div class="input-group q-ml-sm w-100 h-auto">
+                    <q-input
+                      v-model="search.dueDate"
+                      fill-input
+                      dense
+                      mask="##/##/####"
+                    >
+                      <template #append>
+                        <q-icon name="o_calendar_month" class="cursor-pointer">
+                          <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
+                            <q-date
+                              v-model="search.dueDate"
+                              mask="MM/DD/YYYY"
+                              @update:model-value="() => $refs.qDateProxy.hide()"
+                            />
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+                    </q-input>
+                  </div>
+                </div>
+              </div>
               <!-- Search and Clear Buttons -->
               <div class="row justify-end q-gutter-sm q-mb-sm">
                 <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showFilter = false; onSearch(); }" />
@@ -66,14 +84,13 @@
         </div>
       </div>
     </q-card-section>
-
     <q-separator />
 
     <q-table
       v-model:pagination="pagination"
       flat
       :loading="loading"
-      :rows="filteredTasks"
+      :rows="filteredItems"
       :columns="columns"
       row-key="id"
       separator="cell"
@@ -104,54 +121,37 @@
         <q-tr
           :props="props"
           class="cursor-pointer"
-          :class="{ 'bg-blue-1': selectedTask === props.row.id }"
+          :class="{ 'bg-blue-1': selectedActionItems === props.row.id }"
           @click="
-            selectedTask = props.row.id;
+            selectedActionItems = props.row.id;
             emit('select', props.row);
           "
         >
           <q-td class="q-pa-none">
             <div class="column q-gutter-xs" style="white-space: normal; word-break: break-word;">
               <div class="row items-center justify-between">
-                <div class="text-caption text-weight-bold text-black">
-                  #{{ props.row.projectTaskNumber }}
-                </div>
-                <div>
-                  <q-badge
-                    rounded
-                    class="q-mr-xs"
-                    :style="{
-                      backgroundColor: props.row.priorityBgColor,
-                      color: props.row.priorityTextColor
-                    }"
-                  >
-                    {{ props.row.priorityName }}
-                    <q-tooltip>Priority</q-tooltip>
-                  </q-badge>
-                  <q-badge
-                    rounded
-                    :style="{
-                      backgroundColor: props.row.statusBgColor,
-                      color: props.row.statusTextColor
-                    }"
-                  >
-                    {{ props.row.statusName }}
-                  </q-badge>
-                </div>
               </div>
-
               <div class="text-black text-weight-medium">
-                {{ props.row.name }}
+                {{ props.row.title }}
               </div>
-
-              <div class="text-caption text-grey-7">
-                {{ props.row.projectName }}
+              <!-- <div class="text-caption text-grey-7">
+                {{ props.row.project.name }}
+              </div> -->
+              <div class="text-black text-weight-medium">
+                <q-badge
+                  rounded
+                  class="q-mr-xs"
+                  :style="{
+                    backgroundColor: props.row.priorityBgColor,
+                    color: props.row.priorityTextColor
+                  }"
+                >
+                  {{ props.row.priorityName }}
+                  <q-tooltip>Priority</q-tooltip>
+                </q-badge>
               </div>
-
               <div class="text-caption text-grey-7">
-                <strong>Assigned To:</strong>
-                {{ props.row.owner }}
-                •
+                <strong>Due Date:</strong>
                 {{ props.row.dueDate }}
               </div>
             </div>
@@ -166,13 +166,14 @@
 <script setup>
 import { computed, ref, watch, onMounted } from "vue";
 import { useAuthStore } from "stores/auth";
+import useFilters from "composables/useFilters";
 
-import commonService from "services/common.service";
 import requirementCenterService from "src/modules/requirement-center/requirementCenter.service";
 
-// Shared Dropdowns
-import projectTaskModule from "src/modules/project-tasks/utils/dropdowns.js";
+// SOP Change :- Shared Dropdowns
+import projectActionItemModule from "src/modules/project-action-items/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
+import customerModule from "src/modules/customer/utils/dropdowns.js";
 
 // Shared DataTable Views
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
@@ -199,41 +200,36 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const loading = ref(false);
 const searchLoader = ref(false);
-const selectedTask = ref(null);
-const tasks = ref([]);
+const selectedActionItems = ref(null);
+const rows = ref([]);
 const showFilter = ref(false);
 const siteId = computed(() => authStore.user?.siteId);
+const { toDate } = useFilters();
 
 const columns = [
   {
-    name: "task",
-    label: "Tasks",
-    field: "projectTaskNumber",
+    name: "Action Items",
+    label: "Action Items",
+    field: "title",
     align: "left",
-    sortable: true
+    sortable: false
   }
 ];
 
-const getTasksByRequirementId = async ({ pagination: p }) => {
-  loading.value = true;
-
-  const { page, rowsPerPage, sortBy, descending } = p;
-
-  // sanitize task number
-  const taskNumber = (search.value.projectTaskNumber || "").replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "");
-  search.value.projectTaskNumber = taskNumber || "0";
-
+const getProjectActionItemsByRequirementId = async ({ pagination: p }) => {
+  const { page, rowsPerPage, sortBy, descending } = p;  
+  search.value.dueDate = search.value.dueDate
+    ? toDate(search.value.dueDate)
+    : null;
   const payload = {
-    requirementId: props.requirementId,
     searchText: search.value.searchText,
-    projectTaskNumber: search.value.projectTaskNumber,
-    projectTaskIds: search.value.projectTaskIds,
-    activityOwners: search.value.activityOwners,
-    statusIds: search.value.statusIds,
+    requirementId: props.requirementId,
+    title: search.value.title,
     priorityIds: search.value.priorityIds,
-    tagIds: search.value.taskTagsIds,
+    customerIds: search.value.customerIds,
+    employeeIds: search.value.employeeIds,
+    dueDate: search.value.dueDate,
     sortBy: sortBy,
-    sorts: sorts.value,
     descending: descending,
     page: page,
     pageSize: rowsPerPage
@@ -241,25 +237,19 @@ const getTasksByRequirementId = async ({ pagination: p }) => {
 
   try {
     loading.value = true;
+    const resp = await requirementCenterService.getProjectActionItemsByRequirementId(payload);
 
-    const resp = await requirementCenterService.getTasksByRequirementId(payload);
-    tasks.value = resp.map(item => ({
+    rows.value = resp.projectActionItemList.map(item => ({
       ...item,
-      owner: item.assignedTo?.person?.fullName ?? '-',
-      projectName: item.project?.name ?? "-",
-      statusName: item.status?.dropDownValue ?? '-',
-      dueDate: item.endDate ?? '-',
-      statusTextColor: item.status?.color ?? '-',
-      statusBgColor: item.status?.bgColor ?? '-',
       priorityName: item.priority?.dropDownValue ?? '-',
       priorityTextColor: item.priority?.color ?? '#000',
       priorityBgColor: item.priority?.bgColor ?? '#e0e0e0'
     }));
 
-    if (tasks.value.length) {
-      selectedTask.value = tasks.value[0].id;
-      emit("select", tasks.value[0]);
-    }
+    if (rows.value.length > 0) {
+      selectedActionItems.value = rows.value[0].id;
+      emit("select", rows.value[0]);
+    }    
     Object.assign(pagination.value, {
       page,
       rowsPerPage,
@@ -275,7 +265,7 @@ const getTasksByRequirementId = async ({ pagination: p }) => {
     });
   } catch (err) {
     console.error(err);
-    notifyError({ message: "Failed to load Tasks" });
+    notifyError({ message: "Failed to load Project action items" });
   } finally {
     loading.value = false;
     searchLoader.value = false;
@@ -286,8 +276,8 @@ const getTasksByRequirementId = async ({ pagination: p }) => {
 // DataTable:- List -> Custom functions & Calculate Column Totals
 // ----------------------------------------------------------------------------------------------------------------
 
-const refreshProjectTaskList = () => {
-  getTasksByRequirementId({ pagination: pagination.value });
+const refreshProjectActionItemsList = () => {
+  getProjectActionItemsByRequirementId({ pagination: pagination.value });
 };
 
 const {
@@ -297,18 +287,15 @@ const {
   sorts,
   saveDataTableState
 } = useSiteTableState({
-  storageKey: "requirement-Center-Tasks-List",
+  storageKey: "requirement-Center-Project-Action-Items-List",
   siteId,
   defaultSearch: {
     searchText: "",
-    projectTaskNumber: 0,
-    projectTaskIds: [],
-    activityOwners: user?.employeeId
-      ? [user.employeeId]
-      : [],
-    statusIds: [],
+    title: "",
+    employeeIds: [],
+    customerIds: [],
     priorityIds: [],
-    taskTagsIds: []
+    dueDate: ""
   },
 
   defaultPagination: {
@@ -319,62 +306,23 @@ const {
   }
 });
 
-const filteredTasks = computed(() => {
-  if (!search.value) return tasks.value;
+const filteredItems = computed(() => {
+  if (!search.value) return rows.value;
 
-  return tasks.value.filter(task =>
-    JSON.stringify(task)
+  return rows.value.filter(item =>
+    JSON.stringify(item)
       .toLowerCase()
       .includes((search.value.quickSearch ?? '').toLowerCase())
   );
 });
 
-// Get all project task status List
-const projectTaskStatusFilters = ref([]);
-const projectTaskStatusListWithDisables = ref([]);
-
-const getProjectTaskStatusForDropdown = (typeName, taskStatusLabel = null, projectStatusLabel = null) => {
-  commonService.getDropDown(typeName).then((resp) => {
-    const lockedStatuses = ["Cancelled", "Completed", "On Hold"];
-    const responseData = resp.map((item) => {
-      const label = item.dropdownValue;
-      let shouldDisable = false;
-
-      if (lockedStatuses.includes(projectStatusLabel) && taskStatusLabel === "New") {
-        shouldDisable = label === "Open";
-      }
-      if (projectStatusLabel === "New") { shouldDisable = label === "Open"; }
-
-      return {
-        text: item.dropdownValue,
-        value: item.id,
-        disable: shouldDisable
-      };
-    });
-
-    projectTaskStatusListWithDisables.value = responseData.map(item => ({ ...item, disable: false }));
-    projectTaskStatusFilters.value = projectTaskStatusListWithDisables.value;
-  });
-};
-
-const getProjectTaskStatusFilter = (val, update, abort) => {
-  update(() => {
-    const needle = val ? val.toLowerCase() : "";
-    if (needle === "") {
-      projectTaskStatusListWithDisables.value = projectTaskStatusFilters.value;
-    } else {
-      projectTaskStatusListWithDisables.value = projectTaskStatusFilters.value.filter(v => v.text.toLowerCase().includes(needle));
-    }
-  });
-};
-
 // Clear search
 const onClear = () => {
-  search.value.projectTaskNumber = "";
-  search.value.projectTaskIds = [];
-  search.value.statusIds = [];
   search.value.priorityIds = [];
-  search.value.taskTagsIds = [];
+  search.value.customerIds = [];
+  search.value.employeeIds = [];
+  search.value.title = "";
+  search.value.dueDate = "";
 
   saveDataTableState({
     search: search.value
@@ -399,25 +347,28 @@ const mapFilterToLabel = (ids, list, label) => {
 };
 
 const appliedFilters = computed(() => ({
-  ...(search.value.projectTaskNumber > 0 ? { "Task Number": search.value.projectTaskNumber } : {}),
-  ...mapFilterToLabel(search.value.projectTaskIds, projectTasksByProjectIdAndModuleIdForDropdown.list, "Project Task"),
-  ...mapFilterToLabel(search.value.activityOwners, activeEmployeesDropdown.list, "Activity Owner"),
-  ...mapFilterToLabel(search.value.statusIds, projectTaskStatusListWithDisables, "Task Status"),
-  ...mapFilterToLabel(search.value.priorityIds, projectTaskPrioritiesForDropdown.list, "Task Priority"),
-  ...mapFilterToLabel(search.value.taskTagsIds, projectTaskTagsDropdown.list, "Task Tags")
+  ...mapFilterToLabel(search.value.priorityIds, projectActionItemPriorityForDropdown.list, "Priority"),
+  ...mapFilterToLabel(search.value.customerIds, customerNameDropdown.list, "Customer"),
+  ...mapFilterToLabel(search.value.employeeIds, activeEmployeesDropdown.list, "Employee"),
+  ...(search.value.title ? { "Title": search.value.title } : {}),
+  ...(search.value.dueDate ? { "Due Date": search.value.dueDate } : {})
 }));
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
 // ----------------------------------------------------------------------------------------------------------------
 
 // Search records as per parameters
-const onSearch = () => { refreshProjectTaskList(); };
+const onSearch = () => { refreshProjectActionItemsList(); };
 
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Initialization Of All DropDowns
 // ----------------------------------------------------------------------------------------------------------------
-const { projectTasksByProjectIdAndModuleIdForDropdown, projectTaskPrioritiesForDropdown, projectTaskTagsDropdown } = projectTaskModule();
+const {
+  projectActionItemPriorityForDropdown
+} = projectActionItemModule();
+
 const { activeEmployeesDropdown } = employeeModule();
+const { customerNameDropdown } = customerModule();
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load
@@ -426,7 +377,7 @@ const { activeEmployeesDropdown } = employeeModule();
 watch(
   () => props.requirementId,
   async () => {
-    await getTasksByRequirementId({
+    await getProjectActionItemsByRequirementId({
       pagination: pagination.value
     });
   },
@@ -437,7 +388,7 @@ watch(
   () => search.value.searchText,
   () => {
     searchLoader.value = true;
-    refreshProjectTaskList();
+    refreshProjectActionItemsList();
   }
 );
 
@@ -450,9 +401,7 @@ watch(
 
 onMounted(async () => {
   activeEmployeesDropdown.load(user.siteId);
-  projectTasksByProjectIdAndModuleIdForDropdown.load(false, props.projectId);
-  getProjectTaskStatusForDropdown("Task Status");
-  projectTaskPrioritiesForDropdown.load("Task Priorities");
-  projectTaskTagsDropdown.load();
+  projectActionItemPriorityForDropdown.load("Project Action Item Priority");
+  customerNameDropdown.load();
 });
 </script>

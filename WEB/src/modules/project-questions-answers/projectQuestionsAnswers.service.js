@@ -9,6 +9,10 @@ export default {
     return http.post("/project-dashboard/projectQuestionAndAnswersList", model).then(response => response.data);
   },
 
+  getAllQuestionAnswersByQuestionId (id, latestOnTop) {
+    return http.get(`/project-questions-answers/questions-answers-log/?questionId=${id}&latestOnTop=${latestOnTop}`).then(response => response.data);
+  },
+
   getQuestionAnswersInDetailsById (id) {
     return http.get(`/project-questions-answers/details/${id}`).then(response => response.data);
   },

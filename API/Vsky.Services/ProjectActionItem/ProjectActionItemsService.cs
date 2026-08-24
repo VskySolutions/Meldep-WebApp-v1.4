@@ -342,6 +342,11 @@ namespace Vsky.Services.ProjectActionItem
             string siteId,
             string searchText,
             string requirementId,
+            string title,
+            List<string> customerIds,
+            List<string> employeeIds,
+            List<string> priorityIds,
+            DateTime? dueDate,
             string sortBy,
             Dictionary<string, string> sorts,
             bool descending,
@@ -350,6 +355,24 @@ namespace Vsky.Services.ProjectActionItem
         )
         {
             var query = _projectActionItemsRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == siteId && m.RequirementId == requirementId);
+
+            if (priorityIds != null && priorityIds.Any())
+                query = query.Where(x => priorityIds.Contains(x.PriorityId));
+
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                title = title.Trim().ToLower();
+                query = query.Where(x => x.Title.ToLower().Contains(title));
+            }
+
+            if (customerIds != null && customerIds.Any())
+                query = query.Where(x => customerIds.Contains(x.CustomerId));
+
+            if (employeeIds != null && employeeIds.Any())
+                query = query.Where(x => employeeIds.Contains(x.EmployeeId));
+
+            if (dueDate != null)
+                query = query.Where(a => a.DueDate == dueDate);
 
             if (!string.IsNullOrWhiteSpace(searchText))
             {
@@ -398,7 +421,9 @@ namespace Vsky.Services.ProjectActionItem
                 Priority = new DropDown
                 {
                     Id = x.Priority.Id,
-                    DropDownValue = x.Priority.DropDownValue
+                    DropDownValue = x.Priority.DropDownValue,
+                    BgColor = x.Priority.BgColor,
+                    Color = x.Priority.Color
                 },
                 Employee = new Employee
                 {

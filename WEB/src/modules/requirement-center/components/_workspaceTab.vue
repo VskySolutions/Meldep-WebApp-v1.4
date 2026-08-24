@@ -11,7 +11,7 @@
       >
         <q-tab name="qAndA">
           <div class="row items-center no-wrap">
-            Q&A
+            Project Questions Answers 
             <q-badge
               rounded
               color="grey-3"
@@ -102,7 +102,7 @@
     <div class="row q-col-gutter-md">
 
       <!-- Left List -->
-      <div class="col-12 col-md-4">
+      <div class="col-12 col-md-5">
 
         <q-tab-panels
           v-model="leftTab"
@@ -180,13 +180,27 @@
       </div>
 
       <!-- Right Details -->
-      <div class="col-12 col-md-8">
+      <div class="col-12 col-md-7">
 
         <q-tab-panels
           v-model="leftTab"
           animated
           keep-alive
         >
+          <q-tab-panel name="qAndA" class="q-pa-none">
+            <ProjectQADetails
+              v-if="selectedQA"
+              :id="selectedQA.id"
+            />
+          </q-tab-panel>
+          
+          <q-tab-panel name="actionItems" class="q-pa-none">
+            <ProjectActionItems
+              v-if="selectedActionItems"
+              :id="selectedActionItems.id"
+            />
+          </q-tab-panel>
+
           <q-tab-panel name="tasks" class="q-pa-none">
             <TaskDetails
               v-if="selectedTask"
@@ -249,6 +263,8 @@ import TimesheetDetails from './details/_timesheetDetails.vue';
 // import WeeklyPlanDetails from './details/_weeklyPlanDetails.vue';
 import TestCaseDetails from './details/_testCaseDetails.vue';
 import IssueDetails from './details/_issueDetails.vue';
+import ProjectQADetails from './details/_projectQ&ADetails.vue';
+import ProjectActionItems from './details/_projectActionItemsDetails.vue';
 
 const props = defineProps({
   requirementId: String,

@@ -91,6 +91,30 @@ namespace Vsky.Api.Controllers
             }
         }
 
+        #region GetAllQuestionAnswersByQuestionId
+        [HttpGet("questions-answers-log")]
+        public async Task<IActionResult> GetAllQuestionAnswersByQuestionId(string questionId, bool latestOnTop = false)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var list = _projectQuestionsAnswerService.GetAllQuestionAnswersByQuestionId(SiteId, questionId, latestOnTop);
+
+                var model = new ProjectQuestionsAnswersList
+                {
+                    ProjectQuestionsAnswerList = list
+                };
+
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region CreateProjectQuestionsAnswer
         // Title: CreateProjectQuestionsAnswer
         // Description: This endpoint handles the creation of a new Project Questions Answer. It sets the creation details, and inserts the Project Questions Answer into the database. 

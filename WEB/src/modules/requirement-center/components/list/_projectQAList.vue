@@ -19,6 +19,7 @@
                 label="Project Name"
                 :options="projectNameDropdown.list.value"
                 :filter="projectNameDropdown.filter"
+                class="hidden"
               />
               <multiSelectDropdown
                 v-model="search.requirementIds"
@@ -26,10 +27,11 @@
                 :disable="!search.projectIds"
                 :options="requirementsByProjectModuleIdForDropdown.list.value"
                 :filter="requirementsByProjectModuleIdForDropdown.filter"
+                class="hidden"
               />
               <div class="row items-center q-mb-sm">
                 <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                  <label class="Cutomlabel q-mt-sm fs-13">Title</label>
+                  <label class="Cutomlabel q-mt-sm fs-13">Question</label>
                 </div>
                 <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
                   <q-input v-model="search.title" fill-input class="q-mx-sm w-100 h-auto" :dense="true" />
@@ -94,10 +96,6 @@
               <div class="text-black text-weight-medium">
                 {{ props.row.title }}
               </div>
-
-              <div class="text-caption text-grey-7">
-                <p v-html="props.row.description" />
-              </div>
             </div>
           </q-td>
         </q-tr>
@@ -139,7 +137,6 @@ const props = defineProps({
 });
 
 const authStore = useAuthStore();
-const user = authStore.user;
 const loading = ref(false);
 const searchLoader = ref(false);
 const selectedQA = ref(null);
@@ -150,7 +147,7 @@ const siteId = computed(() => authStore.user?.siteId);
 const columns = [
   {
     name: "qAndA",
-    label: "Questions Answers",
+    label: "Questions",
     field: "title",
     align: "left",
     sortable: true
@@ -178,7 +175,7 @@ const getProjectQAByRequirementId = async ({ pagination: p }) => {
     loading.value = true;
 
     const resp = await requirementCenterService.getProjectQAByRequirementId(payload);
-    qAndA.value = resp.projectQuestionsAnswerList;
+    qAndA.value = resp.projectQuestionsAnswerList || [];
 
     if (qAndA.value.length) {
       selectedQA.value = qAndA.value[0].id;
@@ -285,7 +282,7 @@ const mapFilterToLabel = (ids, list, label) => {
 };
 
 const appliedFilters = computed(() => ({
-  ...(search.value.title ? { "Title": search.value.title } : {}),
+  ...(search.value.title ? { "Question": search.value.title } : {}),
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
 }));

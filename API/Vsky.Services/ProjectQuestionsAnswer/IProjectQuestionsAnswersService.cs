@@ -33,12 +33,15 @@ namespace Vsky.Services.ProjectQuestionsAnswer
             string siteId,
             string searchText,
             string requirementId,
+            string title,
             string sortBy,
             Dictionary<string, string> sorts,
             bool descending,
             int page = 1,
             int pageSize = int.MaxValue
         );
+
+        List<ProjectQuestionsAnswers> GetAllQuestionAnswersByQuestionId(string SiteId, string questionId, bool latestOnTop = false);
 
         Task<ProjectQuestionsAnswers> GetProjectQuestionsAnswerById(string Id);
         Task<Vsky.Models.ProjectQuestionsAnswers> GetProjectQuestionsAnswerByIdInDetail(string siteId, string Id);

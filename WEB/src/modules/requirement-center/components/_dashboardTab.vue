@@ -173,7 +173,9 @@ const emitSummary = () => {
     taskCount: taskSummary.total,
     timesheetCount: timesheetSummary.totalHours,
     testCaseCount: testCaseSummary.total,
-    issueCount: issueSummary.total
+    issueCount: issueSummary.total,
+    projectQACount: projectQASummary.total,
+    projectActionItemsCount: projectActionItemsSummary.total
   })
 }
 

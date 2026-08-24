@@ -80,7 +80,7 @@
           </q-td>
 
           <q-td style="width:60%;">
-            <p v-html="props.row.description" />
+            <p v-html="props.row.lastAnswer ? props.row.lastAnswer : props.row.description" />
           </q-td>
 
         </q-tr>
@@ -126,6 +126,7 @@ const getProjectQAByRequirementId = async ({ pagination: p }) => {
     loading.value = true;
     const resp = await requirementCenterService.getProjectQAByRequirementId(payload);
     rows.value = resp.projectQuestionsAnswerList || [];
+    console.log("rows.value", rows.value);
     if (rows.value.length > 0) {
       projectId.value = rows.value[0].project?.id || '';
     } else {
