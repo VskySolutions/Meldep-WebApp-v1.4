@@ -13,8 +13,8 @@
           dense
         />
       </q-card-section>
-      <div v-if="AllAnswers.length === 0">
-          <h5 class="text-center text-grey">No Notes Available</h5>
+      <div v-if="allAnswers.length === 0">
+          <h5 class="text-center text-grey">No Answers Available</h5>
       </div>
        <!-- Timeline Section (scrollable) -->
       <div class="col scroll q-px-xl" style="overflow-y:auto; flex-grow:1; display:flex; flex-direction:column">
@@ -69,13 +69,48 @@ const authStore = useAuthStore();
 const user = authStore.user;
 
 // answers
-const AllAnswers = ref([]);
+const allAnswers = ref([]);
 
 // get all answers and map list
-const getAllResponseLogsByQuestionAnswersId = () => {
+const getAllQuestionAnswersByQuestionId = () => {
   loading.value = true;
-  projectQuestionsAnswersService.getAllResponseLogsByQuestionAnswersId(props.id).then((resp) => {
-    AllAnswers.value = _.cloneDeep(resp);
+  projectQuestionsAnswersService.getAllQuestionAnswersByQuestionId(props.id, true).then((resp) => {
+    const questionList = resp.projectQuestionsAnswerList || [];
+    const answers = [];
+
+    questionList.forEach((question) => {
+      const description = question.description
+            ?.replace(/<[^>]*>/g, '')
+            .trim();
+      // Add original Question
+     if (description) {
+      answers.push({
+        id: question.id,
+        description: question.description,
+        createdOnUtc: question.createdOnUtc,
+        createdBy: question.createdBy,
+      });
+    }
+
+      // Add Response Logs
+      (question.projectQuestionsAnswersResponseLog || []).forEach(
+        (response) => {
+          answers.push({
+            id: response.id,
+            description: response.description,
+            createdOnUtc: response.createdOnUtc,
+            createdBy: response.createdBy,
+          });
+        }
+      );
+      answers.sort(
+        (a, b) =>
+          new Date(b.createdOnUtc).getTime() -
+          new Date(a.createdOnUtc).getTime()
+      );
+      allAnswers.value = answers;
+      console.log("allAnswers.value", allAnswers.value);
+    });
   }).finally(() => {
     loading.value = false;
   });
@@ -83,8 +118,8 @@ const getAllResponseLogsByQuestionAnswersId = () => {
 
 // group the answers
 const groupedAnswers = computed(() => {
-  return AllAnswers.value.reduce((groups, note) => {
-    const date = new Date(note.CreatedOnUtc);
+  return allAnswers.value.reduce((groups, note) => {
+    const date = new Date(note.createdOnUtc).toDateString();
     if (!groups[date]) {
       groups[date] = [];
     }
@@ -96,7 +131,7 @@ const groupedAnswers = computed(() => {
 // ======================================================================
 // On page rendering
 onMounted(() => {
-  getAllResponseLogsByQuestionAnswersId();
+  getAllQuestionAnswersByQuestionId();
 });
 
 </script>

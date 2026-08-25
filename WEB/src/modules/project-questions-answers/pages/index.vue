@@ -238,7 +238,13 @@
                     `${props.row.project.name} : ${props.row.title}`
                     )"
                   >
-                  {{ truncateText(props.row.lastAnswer) }}
+                    {{
+                      truncateText(
+                        props.row.lastAnswer?.trim()
+                          ? props.row.lastAnswer
+                          : props.row.description
+                      )
+                    }}
                   <q-tooltip>
                     View Answers
                   </q-tooltip>
@@ -508,12 +514,30 @@ function setActiveRowIdInLocalStorage(id) {
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
 // truncate text after 60 characters
-const truncateText = (htmlText, limit = 60) => {
-  const plainText = htmlText?.replace(/<[^>]*>/g, '')?.replace(/&nbsp;/g, ' ') || ''
+// const truncateText = (htmlText, limit = 60) => {
+//  const plainText = htmlText
+//     ?.replace(/<[^>]*>/g, '')
+//     ?.replace(/&nbsp;/g, ' ')
+//     || ''
 
-  return plainText.length > limit
-    ? plainText.substring(0, limit) + '...'
-    : plainText
+//   const textarea = document.createElement('textarea')
+//   textarea.innerHTML = plainText
+
+//   const decodedText = textarea.value
+
+//   return decodedText.length > limit
+//     ? decodedText.substring(0, limit) + '...'
+//     : decodedText
+// }
+
+const truncateText = (htmlText, limit = 60) => {
+  const text = (htmlText || '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .trim()
+
+  return text.length > limit ? `${text.substring(0, limit)}...` : text
 }
 
 const refreshQuestionsAnswersList = () => {

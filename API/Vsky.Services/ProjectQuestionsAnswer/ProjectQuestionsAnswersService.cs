@@ -346,11 +346,57 @@ namespace Vsky.Services.ProjectQuestionsAnswer
         #region GetAllQuestionAnswersByQuestionId
         public List<ProjectQuestionsAnswers> GetAllQuestionAnswersByQuestionId(string SiteId, string questionId, bool latestOnTop)
         {
-            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.Id == questionId);
+            //var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.Id == questionId);
+
+            //query = latestOnTop
+            //        ? query.OrderByDescending(x => x.CreatedOnUtc) // latest first
+            //        : query.OrderBy(x => x.CreatedOnUtc); // oldest first
+
+            //return query.Select(x => new ProjectQuestionsAnswers
+            //{
+            //    Id = x.Id,
+            //    Description = x.Description,
+            //    CreatedById = x.CreatedById,
+            //    CreatedOnUtc = x.CreatedOnUtc,
+            //    UpdatedById = x.UpdatedById,
+            //    UpdatedOnUtc = x.UpdatedOnUtc,
+            //    ProjectQuestionsAnswersResponseLog = x.ProjectQuestionsAnswersResponseLog
+            //        .Where(d => !d.Deleted)
+            //        .OrderByDescending(d => d.CreatedOnUtc)
+            //        .Select(p => new ProjectQuestionsAnswersResponseLog
+            //    {
+            //        Id = p.Id,
+            //        Description = p.Description,
+            //        CreatedOnUtc = p.CreatedOnUtc,
+            //        CreatedBy = new ApplicationUser
+            //        {
+            //            Id = p.CreatedBy.Id,
+            //            Person = new Person
+            //            {
+            //                Id = p.CreatedBy.PersonId,
+            //                FullName = p.CreatedBy.Person.FirstName + " " + p.CreatedBy.Person.LastName
+            //            }
+            //        },
+            //    }).ToList(),
+            //    CreatedBy = new ApplicationUser
+            //    {
+            //        Id = x.CreatedBy.Id,
+            //        Person = new Person
+            //        {
+            //            FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+            //        }
+            //    },
+            //}).ToList();
+
+            var query = _projectQuestionsAnswersRepository.TableNoTracking
+    .Where(x =>
+        !x.Deleted &&
+        x.SiteId == SiteId &&
+        x.Id == questionId);
 
             query = latestOnTop
-                    ? query.OrderByDescending(x => x.CreatedOnUtc) // latest first
-                    : query.OrderBy(x => x.CreatedOnUtc); // oldest first
+                ? query.OrderByDescending(x => x.CreatedOnUtc)
+                : query.OrderBy(x => x.CreatedOnUtc);
 
             return query.Select(x => new ProjectQuestionsAnswers
             {
@@ -360,32 +406,38 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedById = x.UpdatedById,
                 UpdatedOnUtc = x.UpdatedOnUtc,
+
+                // Response logs - latest response first
                 ProjectQuestionsAnswersResponseLog = x.ProjectQuestionsAnswersResponseLog
                     .Where(d => !d.Deleted)
                     .OrderByDescending(d => d.CreatedOnUtc)
-                    .Select(p => new ProjectQuestionsAnswersResponseLog
-                {
-                    Id = p.Id,
-                    Description = p.Description,
-                    CreatedOnUtc = p.CreatedOnUtc,
-                    CreatedBy = new ApplicationUser
+                    .Select(d => new ProjectQuestionsAnswersResponseLog
                     {
-                        Id = p.CreatedBy.Id,
-                        Person = new Person
+                        Id = d.Id,
+                        Description = d.Description,
+                        CreatedOnUtc = d.CreatedOnUtc,
+                        CreatedBy = new ApplicationUser
                         {
-                            Id = p.CreatedBy.PersonId,
-                            FullName = p.CreatedBy.Person.FirstName + " " + p.CreatedBy.Person.LastName
+                            Id = d.CreatedBy.Id,
+                            Person = new Person
+                            {
+                                Id = d.CreatedBy.PersonId,
+                                FullName = d.CreatedBy.Person.FirstName + " " +
+                                           d.CreatedBy.Person.LastName
+                            }
                         }
-                    },
-                }).ToList(),
+                    })
+                    .ToList(),
+
                 CreatedBy = new ApplicationUser
                 {
                     Id = x.CreatedBy.Id,
                     Person = new Person
                     {
-                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+                        FullName = x.CreatedBy.Person.FirstName + " " +
+                                   x.CreatedBy.Person.LastName
                     }
-                },
+                }
             }).ToList();
         }
         #endregion

@@ -1,6 +1,6 @@
 <template>
   <!-- Timeline Section (scrollable) -->
-  <div class="col scroll q-px-sm" style="overflow-y:auto; flex-grow:1; height:64vh; display:flex; flex-direction:column-reverse">
+  <div class="col scroll q-px-sm" style="overflow-y:auto; flex-grow:1; height:64vh; display:flex; flex-direction:column">
     <q-timeline color="secondary">
       <template v-for="(group, date) in groupedAnswers" :key="date">
         <!-- :side="user.userId === note.createdById ? 'right' : 'left'" -->
@@ -27,7 +27,7 @@
       </template>
     </q-timeline>
     <div v-if="allAnswers.length === 0">
-      <h5 class="text-center text-grey">No Notes Available</h5>
+      <h5 class="text-center text-grey">No Answers Available</h5>
     </div>
   </div>
 </template>
@@ -58,16 +58,20 @@ const getAllQuestionAnswersByQuestionId = () => {
     const answers = [];
 
     questionList.forEach((question) => {
-
+      const description = question.description
+            ?.replace(/<[^>]*>/g, '')
+            .trim();
       // Add original Question
-      answers.push({
-        id: question.id,
-        description: question.description,
-        createdOnUtc: question.createdOnUtc,
-        createdById: question.createdById,
-        createdBy: question.createdBy,
-        type: "Question"
-      });
+      if (description) {
+        answers.push({
+          id: question.id,
+          description: question.description,
+          createdOnUtc: question.createdOnUtc,
+          createdById: question.createdById,
+          createdBy: question.createdBy,
+          type: "Question"
+        });
+      }
 
       // Add Response Logs
       (question.projectQuestionsAnswersResponseLog || []).forEach(
@@ -86,8 +90,8 @@ const getAllQuestionAnswersByQuestionId = () => {
       // Sort oldest → latest
       answers.sort(
         (a, b) =>
-          new Date(a.createdOnUtc) -
-          new Date(b.createdOnUtc)
+          new Date(b.createdOnUtc).getTime() -
+          new Date(a.createdOnUtc).getTime()
       );
       allAnswers.value = answers;
       console.log("allAnswers.value", allAnswers.value);

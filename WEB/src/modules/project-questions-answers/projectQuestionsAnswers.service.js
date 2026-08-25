@@ -17,10 +17,6 @@ export default {
     return http.get(`/project-questions-answers/details/${id}`).then(response => response.data);
   },
 
-  getAllResponseLogsByQuestionAnswersId (id) {
-    return http.get(`/project-questions-answers/response-logs/${id}`).then(response => response.data);
-  },
-
   saveQuestionAnswers (id, model) {
     if (id) {
       return http.put(`/project-questions-answers/${id}`, model).then(response => response.data);
