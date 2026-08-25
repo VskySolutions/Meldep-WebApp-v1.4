@@ -10,7 +10,7 @@
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator inline-label mobile-arrows>
-            <q-tab name="1_tab" label="Description." class="q-px-lg q-mr-md" />
+            <q-tab name="1_tab" label="Description" class="q-px-lg q-mr-md" />
             <q-tab name="2_tab" label="Requirement Info." class="q-px-lg" :disable="disableTab" />
           </q-tabs>
           <q-separator />

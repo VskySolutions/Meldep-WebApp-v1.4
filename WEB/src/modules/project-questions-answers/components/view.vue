@@ -22,13 +22,13 @@
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12 col-sm-12 col-md-12">
-                <div class="q-mb-xs">Title</div>
+                <div class="q-mb-xs">Question</div>
                 <div class="text-black q-mb-sm">{{ model.title }}</div>
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12">
-                <div class="q-mb-xs">Description</div>
+                <div class="q-mb-xs">Answer</div>
                 <p class="q-pt-md text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
               </div>
             </div>
@@ -135,7 +135,7 @@ const model = ref({
 
 const changeLogPagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 const changeLogColumns = ref([
-  { name: "description", label: "Description", field: "description", align: "left", sortable: true },
+  { name: "description", label: "Answer", field: "description", align: "left", sortable: true },
   { name: "createdBy.person.fullName", label: "Created By", field: "createdBy.person.fullName", align: "left", sortable: true },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true },
   { name: "updatedBy.person.fullName", label: "Updated By", field: "updatedBy.person.fullName", align: "left", sortable: true },
