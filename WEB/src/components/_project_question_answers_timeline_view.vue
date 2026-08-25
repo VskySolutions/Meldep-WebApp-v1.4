@@ -94,7 +94,6 @@ const getAllQuestionAnswersByQuestionId = () => {
           new Date(a.createdOnUtc).getTime()
       );
       allAnswers.value = answers;
-      console.log("allAnswers.value", allAnswers.value);
     });
 
   }).finally(() => {

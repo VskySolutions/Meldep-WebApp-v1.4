@@ -506,7 +506,7 @@
                                 </span>
                               </div>
                             </q-td>
-                            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">
+                            <q-td class="hidden" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">
                               {{ props.row.name }}
                               <q-icon
                                 v-if="props.row.activityNameDescription"
@@ -537,11 +537,11 @@
                                 @update:model-value="onChangeActivityStatus(props.row.id, props.row.activityStatus.id)"
                               />
                             </q-td>
-                            <q-td class="text-right" style="width: 5%;">
+                            <q-td class="text-right hidden" style="width: 5%;">
                               {{ props.row.estimateHours }}
                             </q-td>
                           </q-tr>
-                          <q-tr v-if="props.pageIndex === activityRows.length - 1">
+                          <q-tr class="hidden" v-if="props.pageIndex === activityRows.length - 1">
                             <q-td colspan="5" class="text-right font-bold"><b>Total Hours:</b></q-td>
                             <q-td class="text-right"><b>{{ totalEstimateHours() }}</b></q-td>
                           </q-tr><q-separator />
@@ -1065,9 +1065,9 @@ const activityColumns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true },
   { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true },
   { name: "task.name", label: "Task Name", field: "task.name", align: "left", sortable: true },
-  { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
-  { name: "activityStatus.dropDownValue", label: "Activity Status", field: "activityStatus.dropDownValue", align: "left", sortable: true },
-  { name: "estimateHours", label: "Est. Hrs", field: "estimateHours", align: "right", sortable: true }
+  // { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
+  { name: "activityStatus.dropDownValue", label: "Activity Status", field: "activityStatus.dropDownValue", align: "left", sortable: true }
+  // { name: "estimateHours", label: "Est. Hrs", field: "estimateHours", align: "right", sortable: true }
 ]);
 
 const movementRegDate = ref(null);

@@ -55,7 +55,7 @@
           </q-td>
           <q-td style="width: 20%;">
             <span>
-              <p v-html="props.row.description" />
+              <p v-html="props.row.lastAnswer ? props.row.lastAnswer : props.row.description" />
             </span>            
           </q-td>
         </q-tr>

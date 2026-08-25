@@ -21,6 +21,7 @@ namespace Vsky.Services.ProjectEmployeeMappings
 
         private readonly IRepository<ProjectEmployeeMapping> _projectEmployeeMappingRepository;
         private readonly IRepository<VWEmployeeAssignedHours> _vWEmployeeAssignedHoursRepository;
+        private readonly IRepository<ProjectActivity> _projectActivityRepository;
 
         #endregion
 
@@ -30,10 +31,13 @@ namespace Vsky.Services.ProjectEmployeeMappings
         /// </summary>
         /// <param name="projectEmployeeMappingRepository"></param>
         public ProjectEmployeeMappingService(IRepository<ProjectEmployeeMapping> projectEmployeeMappingRepository,
-            IRepository<VWEmployeeAssignedHours> vWEmployeeAssignedHoursRepository)
+            IRepository<VWEmployeeAssignedHours> vWEmployeeAssignedHoursRepository,
+            IRepository<ProjectActivity> projectActivityRepository
+        )
         {
             _projectEmployeeMappingRepository = projectEmployeeMappingRepository;
             _vWEmployeeAssignedHoursRepository = vWEmployeeAssignedHoursRepository;
+            _projectActivityRepository = projectActivityRepository;
         }
 
         #endregion
@@ -201,9 +205,9 @@ namespace Vsky.Services.ProjectEmployeeMappings
 
         //    return result;
         //}
-        public async Task<List<ProjectCharterEmployee>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, DateTime? currentDate = null)
+        public async Task<List<ProjectCharterEmployee>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, string taskId, DateTime? currentDate = null)
         {
-            if (string.IsNullOrEmpty(projectId) || !currentDate.HasValue)
+            if (string.IsNullOrEmpty(projectId) || string.IsNullOrEmpty(taskId) || !currentDate.HasValue)
                 return new List<ProjectCharterEmployee>();
 
             var month = currentDate.Value.Month;
@@ -236,6 +240,22 @@ namespace Vsky.Services.ProjectEmployeeMappings
 
             var employeeIds = result.Select(x => x.EmployeeId).ToList();
 
+            // Get employees who already have an activity
+            // under the selected task.
+            var assignedEmployeeIds = await _projectActivityRepository.TableNoTracking
+                .Where(x =>
+                    !x.Deleted &&
+                    x.ProjectId == projectId &&
+                    x.TaskId == taskId &&
+                    employeeIds.Contains(x.AssignedToId))
+                .Select(x => x.AssignedToId)
+                .Distinct()
+                .ToListAsync();
+
+            var assignedEmployeeIdLookup = assignedEmployeeIds
+                .ToHashSet();
+
+
             var employeeAssignedHours = await _vWEmployeeAssignedHoursRepository.TableNoTracking
                 .Where(x => employeeIds.Contains(x.EmployeeId)
                          && x.WeekendDate >= startDate
@@ -252,6 +272,8 @@ namespace Vsky.Services.ProjectEmployeeMappings
 
             foreach (var item in result)
             {
+                item.IsActivityAssigned = assignedEmployeeIdLookup.Contains(item.EmployeeId);
+
                 item.EmployeeAssignedHours = lookup[item.EmployeeId]
                     .Select(x => new ProjectCharterEmployeeAssignedHours
                     {

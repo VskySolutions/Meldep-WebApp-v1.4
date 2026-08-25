@@ -1051,7 +1051,8 @@ namespace Vsky.Services.ProjectActivities
             {
                 Id = x.Id,
                 Name = x.Name,
-                DisplayText = x.Name + " (" + x.EstimateHours.ToString("0.##") + ")",
+                //DisplayText = x.Name + " (" + x.EstimateHours.ToString("0.##") + ")",
+                DisplayText = x.Name,
                 AssignedTo = new Employee
                 {
                     Person = new Person

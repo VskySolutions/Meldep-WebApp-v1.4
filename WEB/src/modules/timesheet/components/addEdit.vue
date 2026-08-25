@@ -390,7 +390,7 @@ const columns = ref([
   { name: "projectId", label: "Project", field: "projectId", align: "left", sortable: false },
   { name: "projectModuleId", label: "Module", field: "projectModuleId", align: "left", sortable: false },
   { name: "projectTaskId", label: "Task", field: "projectTaskId", align: "left", sortable: false },
-  { name: "projectActivityId", label: "Activity (Est. Hrs)", field: "projectActivityId", align: "left", sortable: false },
+  { name: "projectActivityId", label: "Activity", field: "projectActivityId", align: "left", sortable: false },
   { name: "description", label: "Activity Details", field: "description", align: "left", sortable: false },
   { name: "hours", label: "Hours", field: "hours", align: "left", sortable: false }
 ]);

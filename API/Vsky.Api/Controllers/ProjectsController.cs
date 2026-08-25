@@ -1695,7 +1695,7 @@ namespace Vsky.Api.Controllers
 
         #region GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId
         [HttpGet("ProjectCharterEmployeesWithWeeklyPlanHours/list")]
-        public async Task<IActionResult> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string id)
+        public async Task<IActionResult> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string id, string taskId)
         {
             try
             {
@@ -1704,7 +1704,7 @@ namespace Vsky.Api.Controllers
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
-                var list = await _projectEmployeeMappingService.GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(id, GetDateTime);
+                var list = await _projectEmployeeMappingService.GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(id, taskId, GetDateTime);
                 var model = _mapper.Map<List<ProjectCharterEmployee>>(list);
                 return Ok(model);
             }

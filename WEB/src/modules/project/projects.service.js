@@ -117,8 +117,8 @@ export default {
   getProjectEmployees (id) {
     return http.get(`/projects/ProjectEmployees/list?id=${id}`).then(response => response.data);
   },
-  getProjectCharterEmployeesWithWeeklyPlanHoursByProjectId (id) {
-    return http.get(`/projects/ProjectCharterEmployeesWithWeeklyPlanHours/list?id=${id}`).then(response => response.data);
+  getProjectCharterEmployeesWithWeeklyPlanHoursByProjectId (id, taskId) {
+    return http.get(`/projects/ProjectCharterEmployeesWithWeeklyPlanHours/list?id=${id}&taskId=${taskId}`).then(response => response.data);
   },
   getProjectSwimlanesById (id) {
     return http.get(`project-swimlane/get-project-swimlanes-by-id/${id}`).then(response => response.data);

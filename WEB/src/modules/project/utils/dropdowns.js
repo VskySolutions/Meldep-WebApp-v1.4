@@ -53,7 +53,8 @@ export default function projectModule () {
 
         return `${item.employeeName} (${weekendHours})`;
       },
-      dataKey: "employeeName"
+      dataKey: "employeeName",
+      disableKey: "isActivityAssigned"
     }
   );
 

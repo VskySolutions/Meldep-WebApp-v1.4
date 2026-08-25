@@ -41,6 +41,7 @@ public class ProjectCharterEmployee
     public string Id { get; set; }
     public string EmployeeId { get; set; }
     public string EmployeeName { get; set; }
+    public bool IsActivityAssigned { get; set; }
 
     public List<ProjectCharterEmployeeAssignedHours> EmployeeAssignedHours { get; set; } = new();
 }

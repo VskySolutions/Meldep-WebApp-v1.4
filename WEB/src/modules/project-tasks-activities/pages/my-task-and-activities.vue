@@ -498,11 +498,11 @@
                       </q-td>
 
                       <!-- Estimate Hours -->
-                      <q-td style="width: 5%;" class="text-right">
+                      <!-- <q-td style="width: 5%;" class="text-right">
                         <span v-if="activityProps.row.showTaskNameAndIcons">
                           {{ activityProps.row.task.estimateTime }}
                         </span>
-                      </q-td>
+                      </q-td> -->
 
                       <!-- Actions -->
                       <q-td style="width: 5%;" class="text-center actions">
@@ -673,7 +673,7 @@
                     </q-tr>
                   </template>
                   <template #bottom-row>
-                    <q-tr class="bg-grey-2 text-black">
+                    <q-tr class="bg-grey-2 text-black hidden">
                       <q-td colspan="7" class="text-right text-weight-bold">
                         Total Hours:
                       </q-td>
@@ -695,7 +695,7 @@
           </q-tr>
         </template>
         <template #bottom-row>
-          <q-tr class="bg-grey-3 text-black">
+          <q-tr class="bg-grey-3 text-black hidden">
             <q-td colspan="100%">
               <div class="row items-center">
                 <div
@@ -907,8 +907,8 @@ const columns = ref([
   { name: "task.status.dropDownValue", label: "Task Status", field: "task.status.dropDownValue", align: "left", sortable: true, style: "display: none", headerStyle: "display: none" },
   // { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
   { name: "assignedTo.person.firstname", label: "Activity Owner", field: "assignedTo.person.firstname", align: "left", sortable: true },
-  { name: "activityStatus.dropDownValue", label: "Activity Status", field: "activityStatus.dropDownValue", align: "left", sortable: true },
-  { name: "task.estimateTime", label: "Task Est. Hrs", field: "task.estimateTime", align: "left", sortable: true }
+  { name: "activityStatus.dropDownValue", label: "Activity Status", field: "activityStatus.dropDownValue", align: "left", sortable: true }
+  // { name: "task.estimateTime", label: "Task Est. Hrs", field: "task.estimateTime", align: "left", sortable: true }
   // { name: "estimateHours", label: "Est. Hrs", field: "estimateHours", align: "right", sortable: true }
 ]);
 

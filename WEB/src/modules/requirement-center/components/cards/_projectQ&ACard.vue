@@ -126,7 +126,6 @@ const getProjectQAByRequirementId = async ({ pagination: p }) => {
     loading.value = true;
     const resp = await requirementCenterService.getProjectQAByRequirementId(payload);
     rows.value = resp.projectQuestionsAnswerList || [];
-    console.log("rows.value", rows.value);
     if (rows.value.length > 0) {
       projectId.value = rows.value[0].project?.id || '';
     } else {

@@ -48,7 +48,7 @@ namespace Vsky.Services.ProjectEmployeeMappings
 
         #region GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId
         // Title: GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId
-        Task<List<ProjectCharterEmployee>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, DateTime? currentDate = null);
+        Task<List<ProjectCharterEmployee>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, string taskId, DateTime? currentDate = null);
         #endregion
 
         #region GetProjectCharterEmployeeByProjectId
