@@ -252,6 +252,36 @@ namespace Vsky.Api.Controllers
             var model = _mapper.Map<List<TimesheetGroupResponse>>(result);
             return Ok(model);
         }
+
+        [HttpPost("timesheet-tabular-list")]
+        public async Task<IActionResult> GetAllTimesheetsByRequirementId(RequirementCenterTimesheetSearchModel searchModel)
+        {
+            var LoggedUserId = User.GetLoggedInUserId<string>();
+            var siteId = _globalVariable.SiteId;
+
+            var createdBy = searchModel.CreatedBy == "Created By Me" ? LoggedUserId : "";
+            var result = await _timesheetLinesService.GetAllTimesheetsByRequirementId(
+                siteId,
+                searchModel.RequirementId,
+                createdBy,
+                searchModel.SearchText,
+                searchModel.EmployeeId,
+                searchModel.ProjectTaskId,
+                searchModel.ProjectActivityId,
+                searchModel.ActivityDate,
+                searchModel.FromDate,
+                searchModel.ToDate,
+                searchModel.ThisWeek,
+                searchModel.LastNumberOfWeeks,
+                searchModel.SortBy,
+                searchModel.Descending,
+                searchModel.Page,
+                searchModel.PageSize
+            );
+
+            var model = _mapper.Map<List<TimesheetLinesModel>>(result);
+            return Ok(model);
+        }
         #endregion
         #endregion
 

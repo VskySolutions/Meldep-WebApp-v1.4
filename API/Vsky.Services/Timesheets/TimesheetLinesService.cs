@@ -709,6 +709,93 @@ namespace Vsky.Services.Timesheets
 
             return query;
         }
+
+        public async Task<List<TimesheetLines>> GetAllTimesheetsByRequirementId(
+          string siteId,
+          string requirementId,
+          string createdBy,
+          string searchText,
+          string employeeId,
+          string projectTaskId,
+          string projectActivityId,
+          DateTime? activityDate,
+          DateTime? fromDate,
+          DateTime? toDate,
+          bool thisWeek,
+          int lastNumberOfWeeks,
+          string sortBy,
+          bool descending, 
+          int page = 1,
+          int pageSize = int.MaxValue,
+          bool lookup = false
+      )
+        {
+            var query = GetFilteredTimesheetQuery(
+                siteId,
+                requirementId,
+                createdBy,
+                searchText,
+                employeeId,
+                projectTaskId,
+                projectActivityId,
+                activityDate,
+                fromDate,
+                toDate,
+                thisWeek,
+                lastNumberOfWeeks);
+
+            query = query
+                .Select(x => new TimesheetLines
+                {
+                    Id = x.Id,
+                    Hours = x.Hours,
+                    Description = x.Description,
+
+                    Project = new Project
+                    {
+                        Id = x.Project.Id,
+                        Name = x.Project.Name
+                    },
+
+                    Task = new ProjectTask
+                    {
+                        Id = x.Task.Id,
+                        Name = x.Task.Name
+                    },
+
+                    ProjectActivity = new ProjectActivity
+                    {
+                        Id = x.ProjectActivity.Id,
+                        Name = x.ProjectActivity.Name
+                    },
+
+                    Timesheet = new Timesheet
+                    {
+                        TimesheetDate = x.Timesheet.TimesheetDate,
+
+                        User = new ApplicationUser
+                        {
+                            Id = x.Timesheet.User.Id,
+                            UserName = x.Timesheet.User.UserName,
+
+                            Person = new Person
+                            {
+                                Id = x.Timesheet.User.PersonId,
+                                FirstName = x.Timesheet.User.Person.FirstName,
+                                LastName = x.Timesheet.User.Person.LastName,
+                                FullName = x.Timesheet.User.Person.FirstName + " " +
+                                           x.Timesheet.User.Person.LastName
+                            }
+                        }
+                    }
+                });
+                //.OrderByDescending(x => x.Timesheet.TimesheetDate)
+                //.ThenBy(x => x.Timesheet.User.Person.FullName)
+                //.ToListAsync();
+
+            var list = new PagedList<TimesheetLines>(query, page, pageSize);
+            return list;
+        }
         #endregion
 
         #endregion

@@ -1,9 +1,8 @@
 <template>
-  <q-card flat bordered>
-    <q-separator />
-
-    <q-card-section>
-      <div class="row justify-end">
+  <q-card flat bordered class="dashboard-card" style="border: 0.5px solid #1b75ab;">
+    <!-- Header -->
+    <q-card-section class="row items-center justify-end q-pb-sm">
+      <div class="row items-center">
         <div class="search-container position-relative">
           <searchFilterBar
             v-model="search.searchText"
@@ -83,28 +82,40 @@
           </q-menu>
         </div>
       </div>
+
+      <div class="row items-center q-gutter-sm">
+        <q-btn
+          v-if="projectId"
+          icon="o_open_in_new"
+          size="sm"
+          outline
+          class="text-primary q-ml-md"
+          style="padding: 3px 7px; min-height: 30px;"
+          @click="$router.push({ path: '/project-action-items',
+          state: {
+            projectId: projectId,
+            requirementId: props.requirementId
+          }})"
+        >
+          <q-tooltip>Open Project Action Items</q-tooltip>
+        </q-btn>
+      </div>
     </q-card-section>
     <q-separator />
 
+    <!-- Table -->
     <q-table
-      v-model:pagination="pagination"
       flat
-      :loading="loading"
       :rows="filteredItems"
       :columns="columns"
+      :loading="loading"
+      v-model:pagination="pagination"
       row-key="id"
+      :rows-per-page-options="[20, 50, 100, 200, 500]"
+      class="req-dashboard-table"
       separator="cell"
-      binary-state-sort
       no-data-label="No data available"
-      :rows-per-page-options="[20, 50, 100, 200]"
-      style="height: calc(100vh - 220px)"
     >
-      <template #loading>
-        <q-inner-loading showing color="primary">
-          <q-spinner size="40px" />
-        </q-inner-loading>
-      </template>
-
       <template #header="props">
         <q-tr :props="props" class="bg-primary text-white">
           <q-th
@@ -118,53 +129,36 @@
       </template>
 
       <template #body="props">
-        <q-tr
-          :props="props"
-          class="cursor-pointer"
-          :class="{ 'bg-blue-1': selectedActionItems === props.row.id }"
-          @click="
-            selectedActionItems = props.row.id;
-            emit('select', props.row);
-          "
-        >
-          <q-td class="q-pa-none">
-            <div class="column q-gutter-xs" style="white-space: normal; word-break: break-word;">
-              <div class="row items-center justify-between">
-              </div>
-              <div class="text-black text-weight-medium">
-                {{ props.row.title }}
-              </div>
-              <!-- <div class="text-caption text-grey-7">
-                {{ props.row.project.name }}
-              </div> -->
-              <div class="text-black text-weight-medium">
-                <q-badge
-                  rounded
-                  class="q-mr-xs"
-                  :style="{
-                    backgroundColor: props.row.priorityBgColor,
-                    color: props.row.priorityTextColor
-                  }"
-                >
-                  {{ props.row.priorityName }}
-                  <q-tooltip>Priority</q-tooltip>
-                </q-badge>
-              </div>
-              <div class="text-caption text-grey-7">
-                <strong>Due Date:</strong>
-                {{ props.row.dueDate }}
-              </div>
-            </div>
+        <q-tr :props="props">
+
+          <q-td style="width:40%;" class="hoverable-cell" @click="onProjectActionItemsView(props.row.id)">
+            {{ props.row.title }}
           </q-td>
+          
+          <q-td style="width:40%;">
+            {{ props.row.customer.name }}
+          </q-td>
+          
+          <q-td style="width:40%;">
+            {{ props.row.employee.person.fullName }}
+          </q-td>
+
+          <q-td style="width:40%;">
+            {{ props.row.dueDate }}
+          </q-td>
+          
+          <q-td style="width:40%;">
+            {{ props.row.priority.dropDownValue }}
+          </q-td>
+
         </q-tr>
-        <q-separator />
       </template>
     </q-table>
   </q-card>
 </template>
-
 <script setup>
 import { computed, ref, watch, onMounted } from "vue";
+import { notifyError } from "assets/utils";
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
 
@@ -182,45 +176,48 @@ import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 // SOP Change :- Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
 
-const emit = defineEmits(["select"]);
+// SOP Change :- Shared Project Dialogs
+import {
+  initProjectActionItemsDialogs,
+  onProjectActionItemsView
+} from "src/modules/project-action-items/utils/dialogs.js";
+
+const emit = defineEmits(['summary']);
 
 const props = defineProps({
   requirementId: {
     type: String,
     required: true
-  },
-  projectId: {
-    type: String,
-    required: true
-  },
-  activeTab: String
+  }
 });
 
+// common variables
 const authStore = useAuthStore();
 const user = authStore.user;
 const loading = ref(false);
 const searchLoader = ref(false);
-const selectedActionItems = ref(null);
 const rows = ref([]);
 const showFilter = ref(false);
 const siteId = computed(() => authStore.user?.siteId);
 const { toDate } = useFilters();
 
 const columns = [
-  {
-    name: "Action Items",
-    label: "Action Items",
-    field: "title",
-    align: "left",
-    sortable: false
-  }
-];
+  { name: "title", label: "TITLE", field: "title", align: "left", sortable: true },
+  { name: "customerId", label: "CUSTOMER", field: "customer.name", align: "left", sortable: true },
+  { name: "employeeId", label: "EMPLOYEE", field: "employee.person.fullName", align: "left", sortable: true },
+  { name: "dueDate", label: "DUE DATE", field: "dueDate", align: "left", sortable: true },
+  { name: "priority.dropDownValue", label: "PRIORITY", field: "priority.dropDownValue", align: "left", sortable: true }
+]
 
+const projectId = ref('');
 const getProjectActionItemsByRequirementId = async ({ pagination: p }) => {
-  const { page, rowsPerPage, sortBy, descending } = p;  
+  loading.value = true;
+  const { page, rowsPerPage, sortBy, descending } = p;
+
   search.value.dueDate = search.value.dueDate
     ? toDate(search.value.dueDate)
     : null;
+
   const payload = {
     searchText: search.value.searchText,
     requirementId: props.requirementId,
@@ -238,17 +235,12 @@ const getProjectActionItemsByRequirementId = async ({ pagination: p }) => {
   try {
     loading.value = true;
     const resp = await requirementCenterService.getProjectActionItemsByRequirementId(payload);
-
-    rows.value = resp.projectActionItemList.map(item => ({
-      ...item,
-      priorityName: item.priority?.dropDownValue ?? '-',
-      priorityTextColor: item.priority?.color ?? '#000',
-      priorityBgColor: item.priority?.bgColor ?? '#e0e0e0'
-    }));
+    rows.value = resp.projectActionItemList || [];
 
     if (rows.value.length > 0) {
-      selectedActionItems.value = rows.value[0].id;
-      emit("select", rows.value[0]);
+      projectId.value = rows.value[0].project?.id || '';
+    } else {
+      projectId.value = '';
     }
     Object.assign(pagination.value, {
       page,
@@ -262,6 +254,10 @@ const getProjectActionItemsByRequirementId = async ({ pagination: p }) => {
       pagination: pagination.value,
       activeRowId: activeRowId.value,
       sorts
+    });
+
+    emit('summary', {
+      total: rows.value.length
     });
   } catch (err) {
     console.error(err);
@@ -287,7 +283,7 @@ const {
   sorts,
   saveDataTableState
 } = useSiteTableState({
-  storageKey: "requirement-Center-Project-Action-Items-List",
+  storageKey: "requirement-Center-Project-Action-Items-Tabular-List",
   siteId,
   defaultSearch: {
     searchText: "",
@@ -353,6 +349,7 @@ const appliedFilters = computed(() => ({
   ...(search.value.title ? { "Title": search.value.title } : {}),
   ...(search.value.dueDate ? { "Due Date": search.value.dueDate } : {})
 }));
+
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
 // ----------------------------------------------------------------------------------------------------------------
@@ -369,6 +366,11 @@ const {
 
 const { activeEmployeesDropdown } = employeeModule();
 const { customerNameDropdown } = customerModule();
+
+// ------------------------------------------------------------------------------------
+// DataTable:- Initialization Of Dialogs, Actions
+// ------------------------------------------------------------------------------------
+initProjectActionItemsDialogs(activeRowId);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load
@@ -389,13 +391,6 @@ watch(
   () => {
     searchLoader.value = true;
     refreshProjectActionItemsList();
-  }
-);
-
-watch(
-  () => props.activeTab,
-  () => {
-    showFilter.value = false;
   }
 );
 

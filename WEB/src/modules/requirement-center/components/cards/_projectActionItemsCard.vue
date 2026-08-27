@@ -75,7 +75,7 @@
       <template #body="props">
         <q-tr :props="props">
 
-          <q-td style="width:40%;">
+          <q-td style="width:40%;" class="hoverable-cell" @click="onProjectActionItemsView(props.row.id)">
             {{ props.row.title }}
           </q-td>
           
@@ -106,6 +106,12 @@ import { notifyError } from "assets/utils";
 
 import requirementCenterService from "src/modules/requirement-center/requirementCenter.service";
 
+// SOP Change :- Shared Project Dialogs
+import {
+  initProjectActionItemsDialogs,
+  onProjectActionItemsView
+} from "src/modules/project-action-items/utils/dialogs.js";
+
 const emit = defineEmits(['summary']);
 
 const props = defineProps({
@@ -116,7 +122,9 @@ const props = defineProps({
 });
 
 const loading = ref(false);
+const activeRowId = ref(null);
 const rows = ref([]);
+
 const pagination = ref({ sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 const columns = [
   { name: "title", label: "TITLE", field: "title", align: "left", sortable: true },
@@ -158,6 +166,11 @@ const getProjectActionItemsByRequirementId = async ({ pagination: p }) => {
     loading.value = false;
   }
 };
+
+// ------------------------------------------------------------------------------------
+// DataTable:- Initialization Of Dialogs, Actions
+// ------------------------------------------------------------------------------------
+initProjectActionItemsDialogs(activeRowId);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load

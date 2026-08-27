@@ -75,7 +75,7 @@
       <template #body="props">
         <q-tr :props="props">
 
-          <q-td style="width:40%;">
+          <q-td style="width:40%;" class="cursor-pointer hoverable-cell" @click="onQuestionAnswersView(props.row.id)">
             {{ props.row.title }}
           </q-td>
 
@@ -94,6 +94,12 @@ import { notifyError } from "assets/utils";
 
 import requirementCenterService from "src/modules/requirement-center/requirementCenter.service";
 
+// SOP Change :- Shared Project Dialogs
+import {
+  initQuestionsAnswersDialogs,
+  onQuestionAnswersView
+} from "src/modules/project-questions-answers/utils/dialogs.js";
+
 const emit = defineEmits(['summary']);
 
 const props = defineProps({
@@ -103,6 +109,7 @@ const props = defineProps({
   }
 });
 
+const activeRowId = ref(null);
 const loading = ref(false);
 const rows = ref([]);
 const pagination = ref({ sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
@@ -142,6 +149,11 @@ const getProjectQAByRequirementId = async ({ pagination: p }) => {
     loading.value = false;
   }
 };
+
+// ------------------------------------------------------------------------------------
+// DataTable:- Initialization Of Dialogs, Actions (SOP Change)
+// ------------------------------------------------------------------------------------
+initQuestionsAnswersDialogs(activeRowId);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load

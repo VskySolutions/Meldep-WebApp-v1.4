@@ -82,6 +82,25 @@ namespace Vsky.Services.Timesheets
             int pageSize = int.MaxValue,
             bool lookup = false
         );
+        Task<List<TimesheetLines>> GetAllTimesheetsByRequirementId(
+          string siteId,
+          string requirementId,
+          string createdBy,
+          string searchText,
+          string employeeId,
+          string projectTaskId,
+          string projectActivityId,
+          DateTime? activityDate,
+          DateTime? fromDate,
+          DateTime? toDate,
+          bool thisWeek,
+          int lastNumberOfWeeks,
+          string sortBy,
+          bool descending,
+          int page = 1,
+          int pageSize = int.MaxValue,
+          bool lookup = false
+      );
         #endregion
 
         #region InsertTimesheetLines

@@ -13,6 +13,9 @@ export default {
   getTimesheetByRequirementId (requirementId) {
     return http.get(`/requirement-dashboard/timesheet-list?requirementId=${requirementId}`).then(response => response.data);
   },
+  getAllTimesheetByRequirementId (model) {
+    return http.post("/requirement-dashboard/timesheet-tabular-list", model).then(response => response.data);
+  },
   getGroupedTimesheetsByRequirementId (model) {
     return http.post("/requirement-dashboard/timesheet-groups", model).then(response => response.data);
   },

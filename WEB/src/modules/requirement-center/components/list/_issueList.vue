@@ -216,7 +216,14 @@ const getIssuesByRequirementId = async ({ pagination: p }) => {
   search.value.issueNumber = number || "0";
 
   const payload = {
+    searchText: search.value.searchText,
     requirementId: props.requirementId,
+    issueNumber: search.value.issueNumber,
+    name: search.value.name,
+    priorityIds: search.value.priorityIds,
+    statusIds: search.value.statusIds,
+    issueTypeIds: search.value.issueTypeIds,
+    employeeIds: search.value.employeeIds,
     page,
     pageSize: rowsPerPage,
     sortBy,

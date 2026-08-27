@@ -159,6 +159,11 @@
         label="Workspace"
         icon="o_workspaces"
       />
+      <q-tab
+        name="workbench"
+        label="workbench"
+        icon="o_workspaces"
+      />
     </q-tabs>
 
     <q-separator />
@@ -186,6 +191,19 @@
           :projectActionItems-count="counts.projectActionItemsCount"
         />
       </q-tab-panel>
+
+      <q-tab-panel name="workbench">
+        <WorkbenchTabTab
+          :requirement-id="requirementId"
+          :project-id="requirement.projectId"
+          :task-count="counts.taskCount"
+          :test-case-count="counts.testCaseCount"
+          :issue-count="counts.issueCount"
+          :timesheet-count="counts.timesheetCount"
+          :projectQA-count="counts.projectQACount"
+          :projectActionItems-count="counts.projectActionItemsCount"
+        />
+      </q-tab-panel>
     </q-tab-panels>
   </q-page>
 </template>
@@ -196,6 +214,7 @@ import _ from "lodash";
 
 import DashboardTab from "modules/requirement-center/components/_dashboardTab.vue";
 import WorkspaceTab from "modules/requirement-center/components/_workspaceTab.vue";
+import WorkbenchTabTab from "modules/requirement-center/components/_workbenchTab.vue";
 import requirementService from "modules/requirement/requirement.service";
 
 // Props values i.e. come from query string

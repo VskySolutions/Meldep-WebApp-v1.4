@@ -247,7 +247,6 @@ import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 // SOP Change :- Shared Inputs
 import singleSelectDropdown from "src/components/form-inputs/_singleSelectDropdown.vue";
 
-
 const emit = defineEmits([
   "select",
   "search-change"
