@@ -8,129 +8,148 @@
       <q-separator />
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
-          <fieldset>
-            <legend>Project Module Info</legend>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Project Name</div>
-                <div class="text-black">
-                  {{ model.project.name }}
-                </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Start Date</div>
-                <div class="text-black">
-                  {{ model.startDate ? model.startDate : "-" }}
-                </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6 hidden">
-                <div class="q-mb-xs">Project Module Number</div>
-                <div class="text-black">
-                  {{ model.projectModuleNumber }}
-                </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">End Date</div>
-                <div class="text-black">
-                  {{ model.endDate ? model.endDate : "-" }}
-                </div>
-              </div>
-              <div class="col-6 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Project Module Status</div>
-                <div class="text-black">
-                  {{ model.projectModuleStatus.dropDownValue }}
-                </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <!-- <div class="col">
-                  <div class="q-mb-xs text-black">Project Module Type</div>
-                  <div>
-                    {{ model.projectModuleType.dropDownValue }}
+          <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator>
+            <q-tab name="1_tab" label="Description" class="q-px-lg q-mr-md" />
+            <q-tab name="2_tab" label="Project Module Info" class="q-px-lg q-mr-md" />
+          </q-tabs>
+          <q-separator />
+          <q-tab-panels v-model="tab" animated class="q-mt-xs">
+            <q-tab-panel name="1_tab">
+              <fieldset>
+                <legend>Description</legend>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="text-black RichTextEditor">
+                    <span v-html="model.description || '-'"></span>
                   </div>
-                </div> -->
-              <div class="col-6 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Sort Order</div>
-                <div class="text-black">
-                  {{ model.sortOrder }}
                 </div>
-              </div>
-              <div class="col-6 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Created Date</div>
-                <div class="text-black">
-                  {{ model.createdOnUtc }}
+              </fieldset>
+            </q-tab-panel>
+            <q-tab-panel name="2_tab">
+              <fieldset>
+                <legend>Project Module Info</legend>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Project Name</div>
+                    <div class="text-black">
+                      {{ model.project.name }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Start Date</div>
+                    <div class="text-black">
+                      {{ model.startDate ? model.startDate : "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6 hidden">
+                    <div class="q-mb-xs">Project Module Number</div>
+                    <div class="text-black">
+                      {{ model.projectModuleNumber }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Created By</div>
-                <div class="text-black">
-                  {{ model.createdBy.person.firstName + " "+ model.createdBy.person.lastName }}
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">End Date</div>
+                    <div class="text-black">
+                      {{ model.endDate ? model.endDate : "-" }}
+                    </div>
+                  </div>
+                  <div class="col-6 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Project Module Status</div>
+                    <div class="text-black">
+                      {{ model.projectModuleStatus.dropDownValue }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Updated By</div>
-                <div class="text-black">
-                  {{ model.updatedBy?.person?.firstName && model.updatedBy?.person?.lastName
-                    ? model.updatedBy.person.firstName + " " + model.updatedBy.person.lastName
-                    : "-" }}
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <!-- <div class="col">
+                      <div class="q-mb-xs text-black">Project Module Type</div>
+                      <div>
+                        {{ model.projectModuleType.dropDownValue }}
+                      </div>
+                    </div> -->
+                  <div class="col-6 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Sort Order</div>
+                    <div class="text-black">
+                      {{ model.sortOrder }}
+                    </div>
+                  </div>
+                  <div class="col-6 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Created Date</div>
+                    <div class="text-black">
+                      {{ model.createdOnUtc }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12">
-                <div class="q-mb-xs">Description:</div>
-                <div class="text-black RichTextEditor">
-                  <p v-html="model.description ? model.description : '-'" />
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Created By</div>
+                    <div class="text-black">
+                      {{ model.createdBy.person.firstName + " "+ model.createdBy.person.lastName }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Updated By</div>
+                    <div class="text-black">
+                      {{ model.updatedBy?.person?.firstName && model.updatedBy?.person?.lastName
+                        ? model.updatedBy.person.firstName + " " + model.updatedBy.person.lastName
+                        : "-" }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12">
-                <div class="q-mb-xs">Notes:</div>
-                <div class="text-black RichTextEditor">
-                  <p v-html="model.notes ? model.notes : '-'" />
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12">
+                    <div class="q-mb-xs">Description:</div>
+                    <div class="text-black RichTextEditor">
+                      <p v-html="model.description ? model.description : '-'" />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </fieldset>
-          <fieldset class="q-mb-lg">
-            <legend>Project Module Files</legend>
-            <q-table
-              ref="tableRef" v-model:pagination="filepagination" bordered class="no-shadow" :loading="loading" :rows="filesrows" :columns="fileColumns" row-key="id" separator="cell"
-              binary-state-sort :rows-per-page-options="[20, 50, 100, 200, 500]"
-            >
-              <template #header="props">
-                <q-tr :props="props" class="bg-primary text-white">
-                  <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-                  <q-th auto-width class="text-center">Actions</q-th>
-                </q-tr>
-              </template>
-              <template #body="props">
-                <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                  <!-- <q-td style="width: 10%">
-                    <a :href="baseURL + props.row.file.virtualPath" target="_blank">
-                      {{ extractFileName(props.row.file.virtualPath) }}
-                    </a>
-                  </q-td> -->
-                  <q-td>{{ extractFileName(props.row.file.seoFilename) }}</q-td>
-                  <q-td>{{ props.row.createdBy.person.firstName + " " + props.row.createdBy.person.lastName }}</q-td>
-                  <q-td>{{ props.row.createdOnUtc.replaceAll("-", "/") }}</q-td>
-                  <q-td style="width: 5%;" class="text-center actions">
-                    <q-btn icon="o_visibility" size="sm" class="q-pr-xs" flat @click="viewFile(props.row.file.virtualPath)" />
-                    <q-btn icon="o_download" size="sm" class="q-pl-xs" flat @click="downloadFile(props.row.file.virtualPath)" />
-                    <!-- <q-icon name="o_download" class="cursor-pointer q-mr-sm" size="xs" @click="onDownload(props.row.file.virtualPath)">
-                      <q-tooltip>Download</q-tooltip>
-                    </q-icon>
-                    <a :href="baseURL + props.row.file.virtualPath" download target="_blank" class="q-mr-sm" rel="noopener noreferrer"><q-icon name="o_visibility" color="black" size="xs" /><q-tooltip>View</q-tooltip></a> -->
-                  </q-td>
-                </q-tr>
-              </template>
-            </q-table>
-          </fieldset>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12">
+                    <div class="q-mb-xs">Notes:</div>
+                    <div class="text-black RichTextEditor">
+                      <p v-html="model.notes ? model.notes : '-'" />
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset class="q-mb-lg">
+                <legend>Project Module Files</legend>
+                <q-table
+                  ref="tableRef" v-model:pagination="filepagination" bordered class="no-shadow" :loading="loading" :rows="filesrows" :columns="fileColumns" row-key="id" separator="cell"
+                  binary-state-sort :rows-per-page-options="[20, 50, 100, 200, 500]"
+                >
+                  <template #header="props">
+                    <q-tr :props="props" class="bg-primary text-white">
+                      <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+                      <q-th auto-width class="text-center">Actions</q-th>
+                    </q-tr>
+                  </template>
+                  <template #body="props">
+                    <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                      <!-- <q-td style="width: 10%">
+                        <a :href="baseURL + props.row.file.virtualPath" target="_blank">
+                          {{ extractFileName(props.row.file.virtualPath) }}
+                        </a>
+                      </q-td> -->
+                      <q-td>{{ extractFileName(props.row.file.seoFilename) }}</q-td>
+                      <q-td>{{ props.row.createdBy.person.firstName + " " + props.row.createdBy.person.lastName }}</q-td>
+                      <q-td>{{ props.row.createdOnUtc.replaceAll("-", "/") }}</q-td>
+                      <q-td style="width: 5%;" class="text-center actions">
+                        <q-btn icon="o_visibility" size="sm" class="q-pr-xs" flat @click="viewFile(props.row.file.virtualPath)" />
+                        <q-btn icon="o_download" size="sm" class="q-pl-xs" flat @click="downloadFile(props.row.file.virtualPath)" />
+                        <!-- <q-icon name="o_download" class="cursor-pointer q-mr-sm" size="xs" @click="onDownload(props.row.file.virtualPath)">
+                          <q-tooltip>Download</q-tooltip>
+                        </q-icon>
+                        <a :href="baseURL + props.row.file.virtualPath" download target="_blank" class="q-mr-sm" rel="noopener noreferrer"><q-icon name="o_visibility" color="black" size="xs" /><q-tooltip>View</q-tooltip></a> -->
+                      </q-td>
+                    </q-tr>
+                  </template>
+                </q-table>
+              </fieldset>
+            </q-tab-panel>
+          </q-tab-panels>
         </div>
       </div>
     </q-card>
@@ -149,6 +168,7 @@ import useFilters from "composables/useFilters";
 const { toDate } = useFilters();
 const loading = ref(true);
 const filesrows = ref([]);
+const tab = ref("1_tab");
 
 // Define emits
 defineEmits([...useDialogPluginComponent.emits]);

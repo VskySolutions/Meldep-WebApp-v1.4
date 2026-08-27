@@ -9,13 +9,24 @@
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator>
-            <q-tab name="1_tab" label="Project Info." class="q-px-lg q-mr-md" />
-            <q-tab name="2_tab" label="Project Charter" class="q-px-lg" />
-            <q-tab v-if="role === 'admin'" name="3_tab" label="Infra Services" class="q-px-lg" :disable="disableTab" />
+            <q-tab name="1_tab" label="Description" class="q-px-lg q-mr-md" />
+            <q-tab name="2_tab" label="Project Info." class="q-px-lg q-mr-md" />
+            <q-tab name="3_tab" label="Project Charter" class="q-px-lg" />
+            <q-tab v-if="role === 'admin'" name="4_tab" label="Infra Services" class="q-px-lg" :disable="disableTab" />
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated class="q-mt-xs">
             <q-tab-panel name="1_tab">
+              <fieldset>
+                <legend>Description</legend>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="text-black RichTextEditor">
+                    <span v-html="model.description || '-'"></span>
+                  </div>
+                </div>
+              </fieldset>
+            </q-tab-panel>
+            <q-tab-panel name="2_tab">
               <!-- <q-card class="card-header with-tools headerBasic"> -->
               <fieldset>
                 <legend>Project Info</legend>
@@ -163,7 +174,7 @@
                 </q-table>
               </fieldset>
             </q-tab-panel>
-            <q-tab-panel name="2_tab">
+            <q-tab-panel name="3_tab">
               <fieldset class="q-mb-lg">
                 <legend>Project Charter</legend>
                 <q-table
@@ -185,7 +196,7 @@
                 </q-table>
               </fieldset>
             </q-tab-panel>
-            <q-tab-panel v-if="role === 'admin'" name="3_tab">
+            <q-tab-panel v-if="role === 'admin'" name="4_tab">
               <AccountServicesTab
                 :rows="servicesRows"
                 :loading="loading"
