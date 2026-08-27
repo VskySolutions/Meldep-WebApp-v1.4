@@ -162,7 +162,7 @@
       <q-tab
         name="workbench"
         label="workbench"
-        icon="o_workspaces"
+        icon="o_view_list"
       />
     </q-tabs>
 
