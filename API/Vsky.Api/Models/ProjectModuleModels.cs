@@ -31,6 +31,8 @@ namespace Vsky.Api.Models
 
         public DateTime CreatedOnUtc { get; set; }
         public string CreatedById { get; set; }
+        public DateTime UpdatedOnUtc { get; set; }
+
         public List<IFormFile> ProjectModuleFiles { get; set; }
         public List<string> ExistingFiles { get; set; }
         public string ProjectSwimlaneId { get; set; }

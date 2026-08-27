@@ -184,14 +184,6 @@
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12">
-                    <div class="q-mb-xs">Description:</div>
-                    <div class="text-black RichTextEditor">
-                      <p v-html="model.description ? model.description : '-'" />
-                    </div>
-                  </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Created By</div>
                     <div class="text-black">

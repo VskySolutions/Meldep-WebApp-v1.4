@@ -334,6 +334,7 @@ namespace Vsky.Services.ProjectModules
                 ProjectModuleTypeId = x.ProjectModuleTypeId,
                 ProjectId = x.ProjectId,
                 CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 //SiteId = x.SiteId,
                 SortOrder = x.SortOrder,
                 Project = new Project

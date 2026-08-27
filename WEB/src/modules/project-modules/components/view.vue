@@ -75,17 +75,17 @@
                     </div>
                   </div>
                   <div class="col-6 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Created Date</div>
+                    <div class="q-mb-xs">Created By</div>
                     <div class="text-black">
-                      {{ model.createdOnUtc }}
+                      {{ model.createdBy.person.firstName + " "+ model.createdBy.person.lastName }}
                     </div>
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Created By</div>
+                    <div class="q-mb-xs">Created Date</div>
                     <div class="text-black">
-                      {{ model.createdBy.person.firstName + " "+ model.createdBy.person.lastName }}
+                      {{ model.createdOnUtc }}
                     </div>
                   </div>
                   <div class="col-12 col-sm-6 col-md-6">
@@ -98,12 +98,12 @@
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12">
-                    <div class="q-mb-xs">Description:</div>
-                    <div class="text-black RichTextEditor">
-                      <p v-html="model.description ? model.description : '-'" />
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Updated Date</div>
+                      <div class="text-black">
+                        {{ model.updatedOnUtc }}
+                      </div>
                     </div>
-                  </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">

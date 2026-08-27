@@ -86,12 +86,6 @@
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12 col-sm-12 col-md-12">
-                    <div class="q-mb-xs">Activity Details</div>
-                    <div class="text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
-                  </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Created By</div>
                     <div class="text-black">
