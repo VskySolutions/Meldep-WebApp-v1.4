@@ -13,6 +13,7 @@ namespace Vsky.Services.Projects
             string siteId,
             bool isTemplate,
             string userId,
+            string employeeId,
             string searchText,
             List<string> projectIds,
             List<string> projectCategoryIds,
@@ -37,6 +38,7 @@ namespace Vsky.Services.Projects
         Task<IPagedList<Project>> GetAllProjectsForNotes(
           string siteId,
           string userId,
+          string employeeId,
           string searchText,
           List<string> projectIds,
           List<string> projectCategoryIds,
@@ -62,8 +64,8 @@ namespace Vsky.Services.Projects
         #endregion
 
         #region GetAllProjectListForDropdown
-        Task<List<Project>> GetAllProjectListForDropdown(string SiteId, string LoggedUserId, string[] statuses = null);
-        Task<List<CommonDropDown>> GetProjectsListForDropdown(string SiteId, string LoggedUserId, bool isTemplate, string ActiveStatus, bool isAllProject);
+        Task<List<Project>> GetAllProjectListForDropdown(string SiteId, string LoggedUserId, string employeeId, string[] statuses = null);
+        Task<List<CommonDropDown>> GetProjectsListForDropdown(string SiteId, string LoggedUserId, string employeeId, bool isTemplate, string ActiveStatus, bool isAllProject);
         #endregion
 
         #region GetProjectDetailsById

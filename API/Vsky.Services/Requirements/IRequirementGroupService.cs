@@ -8,7 +8,20 @@ namespace Vsky.Services.Requirements
     public interface IRequirementGroupService
     {
         #region GetAllRequirementGroups
-        Task<IPagedList<RequirementGroup>> GetAllRequirementGroups(string SiteId, string LoggedUserId, string SearchText, int requirementGroupNumber, List<string> projectIds, string name, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        Task<IPagedList<RequirementGroup>> GetAllRequirementGroups(
+            string SiteId, 
+            string LoggedUserId,
+            string employeeId,
+            string SearchText, 
+            int requirementGroupNumber, 
+            List<string> projectIds, 
+            string name, 
+            string sortBy, 
+            bool descending, 
+            int page = 1, 
+            int pageSize = int.MaxValue, 
+            bool lookup = false
+        );
         IPagedList<RequirementGroup> GetAllRequirementGroupsForDashboard(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
 
         #endregion

@@ -22,10 +22,18 @@
           <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;" class="hoverable-cell">{{ props.row.name }}</q-td>
           <q-td style="width: 8%;">{{ toDate(props.row.startDate) }}</q-td>
           <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 8%;">
-            <span v-if="props.row.projectUserMappings.filter(mapping => mapping.employeeDesignation.dropDownValue === 'Project Coordinator').length > 0">
-              <span v-for="(userMapping, index) in props.row.projectUserMappings.filter(mapping => mapping.employeeDesignation.dropDownValue === 'Project Coordinator')" :key="userMapping.id">
-                <span text-color="black">{{ userMapping.user.person.fullName }}</span>
-                <span v-if="index !== props.row.projectUserMappings.filter(mapping => mapping.employeeDesignation.dropDownValue === 'Project Coordinator').length - 1"><br></span>
+            <span v-if="props.row.projectCoordinators?.length">
+              <span
+                v-for="(coordinator, index) in props.row.projectCoordinators"
+                :key="index"
+              >
+                <span>{{ coordinator }}</span>
+
+                <span
+                  v-if="index !== props.row.projectCoordinators.length - 1"
+                >
+                  <br>
+                </span>
               </span>
             </span>
             <span v-else>
@@ -100,8 +108,30 @@ const getProjects = (props) => {
     ProjectRows.value = resp.data.map(project => ({
       ...project,
       checkboxStatus: false, // Initialize checkboxStatus for each row
-      projectLeads: project.projectUserMappings ? project.projectUserMappings.filter(mapping => mapping.employeeDesignation.dropDownValue === "Project Lead")
-        .map(mapping => mapping.user.person.fullName) : []
+
+      projectLeads: project.projectEmployeeMappings
+        ? project.projectEmployeeMappings
+            .filter(mapping =>
+              mapping.projectEmployeeRoleMappings?.some(
+                roleMapping =>
+                  roleMapping.sitesProjectRoles?.masterProjectRoles?.name === "Project Lead"
+              )
+            )
+            .map(mapping => mapping.employee?.person?.fullName)
+            .filter(Boolean)
+        : [],
+
+      projectCoordinators: project.projectEmployeeMappings
+        ? project.projectEmployeeMappings
+            .filter(mapping =>
+              mapping.projectEmployeeRoleMappings?.some(
+                roleMapping =>
+                  roleMapping.sitesProjectRoles?.masterProjectRoles?.name === "Project Coordinator"
+              )
+            )
+            .map(mapping => mapping.employee?.person?.fullName)
+            .filter(Boolean)
+        : []
     }));
     pagination.value.page = page;
     pagination.value.rowsPerPage = rowsPerPage;

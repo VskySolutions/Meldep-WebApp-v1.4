@@ -1162,9 +1162,9 @@ const LoadProjectPlan = async (weeklyPlan) => {
     activeProjectCharterGroupBy.value = weeklyPlan.project.projectCharterGroupByList;
     activeProjectPlanApprover.value = weeklyPlan.project.planApprover;
 
-    isFullAccess.value = weeklyPlan.project?.projectUserMappings[0] === undefined ? isFullAccess.value : weeklyPlan.project?.projectUserMappings[0]?.fullAccess;
-    isViewAccess.value = weeklyPlan.project?.projectUserMappings[0] === undefined ? isViewAccess.value : weeklyPlan.project?.projectUserMappings[0]?.viewOnly;
-    isChatAccess.value = weeklyPlan.project?.projectUserMappings[0] === undefined ? isChatAccess.value : weeklyPlan.project?.projectUserMappings[0]?.notes;
+    isFullAccess.value = weeklyPlan.project?.currentUserManage ?? false;
+    isViewAccess.value = weeklyPlan.project?.currentUserView ?? false;
+    isChatAccess.value = weeklyPlan.project?.currentUserNotes ?? false;
 
     showApprovePlanAction.value = employeeId === weeklyPlan.project.planApproverId;
     disableLoadMore.value = false;

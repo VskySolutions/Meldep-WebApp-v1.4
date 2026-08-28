@@ -11,6 +11,7 @@ namespace Vsky.Services.Issues
         Task<IPagedList<Issue>> GetAllIssues(
             string SiteId,
             string LoggedUserId,
+            string employeeId,
             string SearchText,
             int issueNumber,
             List<string> projectIds, 

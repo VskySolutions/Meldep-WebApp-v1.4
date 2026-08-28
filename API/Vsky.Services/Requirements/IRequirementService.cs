@@ -12,6 +12,7 @@ namespace Vsky.Services.Requirements
         Task<IPagedList<Requirement>> GetAllRequirements(
             string SiteId,
             string LoggedUserId,
+            string employeeId,
             string SearchText,
             int requirementNumber,
             List<string> projectIds,

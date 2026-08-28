@@ -371,6 +371,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<ILeadActivityLogsService, LeadActivityLogsService>();
             builder.Services.AddScoped<ISetReminderService, SetReminderService>();
             builder.Services.AddScoped<IProjectEmployeeMappingService, ProjectEmployeeMappingService>();
+            builder.Services.AddScoped<IProjectEmployeeRoleMappingService, ProjectEmployeeRoleMappingService>();
             builder.Services.AddScoped<IPersonService, PersonService>();
             builder.Services.AddScoped<IPersonSitesMappingService, PersonSitesMappingService>();
             builder.Services.AddScoped<IDailyPlannerService, DailyPlannerService>();
@@ -529,6 +530,8 @@ namespace Vsky.Api
 
             builder.Services.AddScoped<IProjectQuestionsAnswersService, ProjectQuestionsAnswersService>();
             builder.Services.AddScoped<IProjectQuestionsAnswersResponseLogService, ProjectQuestionsAnswersResponseLogService>();
+
+            builder.Services.AddScoped<ISitesProjectRolesService, SitesProjectRolesService>();
 
             builder.Services.ConfigureCors();
             builder.Services.ConfigureIISIntegration();

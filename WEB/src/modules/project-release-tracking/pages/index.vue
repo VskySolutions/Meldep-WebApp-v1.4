@@ -472,12 +472,10 @@ const getAllReleaseTracking = async ({ pagination: p }) => {
   });
   releaseTrackingService.getAllReleaseTracking(payload).then((resp) => {
     rows.value = resp.projectReleaseTrackingsList.map(release => {
-      const userMapping = release.project?.projectUserMappings?.[0];
-
       return {
         ...release,
-        isEditable: role === "admin" || (userMapping?.fullAccess ?? false),
-        isView: role === "admin" || (userMapping?.viewOnly ?? false)
+        isEditable: release.project.currentUserManage ?? false,
+        isView: release.project.currentUserView ?? false
       };
     });
     Object.assign(pagination.value, {

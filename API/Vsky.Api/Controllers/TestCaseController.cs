@@ -79,10 +79,13 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+
                 // Fetch a list of test cases on search criteria (name, sorting, pagination)
                 var list = await _testCaseService.GetAllTestCases(
                     SiteId,
                     LoggedUserId,
+                    employeeId,
                     searchModel.SearchText,
                     searchModel.TestCaseNumber,
                     searchModel.ProjectIds,

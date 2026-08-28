@@ -13,6 +13,7 @@ namespace Vsky.Services.ProjectTasks
         Task<IPagedList<ProjectTask>> GetAllProjectTasks(
             string SiteId, 
             string LoggedUserId,
+            string employeeId,
             string SearchText,
             bool isTemplate,
             int projectTaskNumber,
@@ -93,7 +94,7 @@ namespace Vsky.Services.ProjectTasks
             string employeeId = null
         );
         Task<List<CommonDropDown>> GetAllProjectMultiTaskListForDropdown(string siteId, bool isTemplate, string projectId = null, string projectModuleId = null);
-        Task<List<CommonDropDown>> GetAllProjectTaskWithProjectListForDropdown(string siteId, string LoggedUserId);
+        Task<List<CommonDropDown>> GetAllProjectTaskWithProjectListForDropdown(string siteId, string LoggedUserId, string employeeId);
         #endregion
 
         Task<int> GetLastProjectTaskNumber();

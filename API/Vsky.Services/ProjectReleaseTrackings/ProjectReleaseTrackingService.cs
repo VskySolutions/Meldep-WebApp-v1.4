@@ -52,6 +52,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
             string siteId,
             string searchText,
             string LoggedUserId,
+            string employeeId,
             List<string> projectIds,
             List<string> infraInstanceIds,
             List<string> deploymentOwnerIds,
@@ -70,7 +71,23 @@ namespace Vsky.Services.ProjectReleaseTrackings
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, siteId);
 
             if (!IsAdmin)
-                query = query.Where(p => p.Project.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == LoggedUserId));
+            {
+                query = query.Where(x =>
+                    x.Project.CreatedById == LoggedUserId ||
+                    x.CreatedById == LoggedUserId ||
+                    x.Project.ProjectEmployeeMappings.Any(m =>
+                        !m.Deleted &&
+                        m.EmployeeId == employeeId &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                                !p.Deleted &&
+                                (p.FullAccess || p.ViewOnly || p.Notes)
+                            )
+                        )
+                    )
+                );
+            }
 
             if (projectIds?.Any() == true) query = query.Where(x => projectIds.Contains(x.ProjectId));
             if (infraInstanceIds?.Any() == true) query = query.Where(x => infraInstanceIds.Contains(x.InfraInstanceId));
@@ -139,13 +156,36 @@ namespace Vsky.Services.ProjectReleaseTrackings
                 {
                     Id = x.Project.Id,
                     Name = x.Project.Name,
-                    ProjectUserMappings = x.Project.ProjectUserMappings.Where(m => !m.Deleted && m.ProjectId == x.Project.Id && (IsAdmin || m.AspNetUserId == LoggedUserId)).Take(1).Select(m => new ProjectUserMapping
-                    {
-                        Id = m.Id,
-                        FullAccess = m.FullAccess,
-                        ViewOnly = m.ViewOnly,
-                        Notes = m.Notes
-                    }).ToList(),
+                    CurrentUserManage =
+                    x.CreatedById == LoggedUserId ||
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess))),
+
+                    CurrentUserView =
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.ViewOnly)))
                 },
                 InfraInstance = new InfraProjectInstance
                 {

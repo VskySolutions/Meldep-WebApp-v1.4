@@ -62,6 +62,7 @@ namespace Vsky.Services.ProjectActivities
         // Optimization Completed - MT
         public async Task<IPagedList<ProjectActivity>> GetAllProjectActivities(string SiteId, 
             string userId, 
+            string employeeId,
             string createdBy, 
             string SearchText,
             string activeStatus,
@@ -214,7 +215,7 @@ namespace Vsky.Services.ProjectActivities
                     {
                         Id = x.Project.ProjectStatus.Id,
                         DropDownValue = x.Project.ProjectStatus.DropDownValue,
-                    }
+                    },
                     //ProjectUserMappings = x.Project.ProjectUserMappings
                     //    .Where(m => !m.Deleted && m.ProjectId == x.Project.Id && (isAdmin || m.AspNetUserId == userId))
                     //    .Take(1).Select(m => new ProjectUserMapping
@@ -224,6 +225,51 @@ namespace Vsky.Services.ProjectActivities
                     //        ViewOnly = m.ViewOnly,
                     //        Notes = m.Notes
                     //    }).ToList()
+                    CurrentUserManage =
+                    x.CreatedById == userId ||
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess))),
+
+                    //CurrentUserView =
+                    //x.Project.ProjectEmployeeMappings
+                    //    .Where(m =>
+                    //        !m.Deleted &&
+                    //        m.EmployeeId == employeeId)
+                    //    .Any(m =>
+                    //        m.ProjectEmployeeRoleMappings
+                    //            .Where(r => !r.Deleted)
+                    //            .Any(r =>
+                    //                r.SitesProjectRoles
+                    //                    .SitesProjectRolesPermissions
+                    //                    .Any(p =>
+                    //                        !p.Deleted &&
+                    //                        p.ViewOnly))),
+
+                    CurrentUserNotes =
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.Notes)))
                 },
                 ProjectModule = new ProjectModule
                 {

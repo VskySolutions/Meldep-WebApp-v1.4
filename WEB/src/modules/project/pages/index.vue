@@ -84,6 +84,7 @@
                       <multiSelectDropdown
                         v-model="search.projectStatusIds"
                         label="Status"
+                        labelTooltip="Indicates the current stage or state of the project in its lifecycle."
                         :options="statusListForSearch"
                         :filter="getProjectStatusFilter"
                         :isShowAll="true"
@@ -105,6 +106,7 @@
                       <singleSelectDropdown
                         v-model="search.statusId"
                         label="Active/Inactive"
+                        labelTooltip="Determines whether the project is currently available for use across the application. Active projects are displayed and available to users; Inactive projects are hidden from the overall application."
                         :options="projectActiveInActiveDropdown.list.value"
                       />
                       <multiSelectDropdown
@@ -161,7 +163,7 @@
                   v-if="role === 'admin'"
                   icon="o_lock"
                   outline
-                  class="text-primary btnRounded q-ml-xs"
+                  class="text-primary btnRounded q-ml-xs hidden"
                   @click="$router.push('/project/assign-users-to-project')"
                 >
                   <q-tooltip>Security</q-tooltip>
@@ -492,6 +494,28 @@
                       <q-tooltip>
                         <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
                         <span>{{ props.row.projectManager?.text }}</span>
+                      </q-tooltip>
+                    </div>
+                  </div>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('technicalLead')"
+                  class="common-q-td"
+                >
+                  <div
+                    class="flex justify-center task-box cursor-grab"
+                    :class="props.row.technicalLead ? 'TaskActivity' : ''"
+                  >
+                    <div v-if="props.row.technicalLead">
+                      <span
+                        class="Person"
+                        :style="{ background: props.row.technicalLead.bgColor, color: props.row.technicalLead.color }"
+                      >
+                        {{ getInitials(typeof props.row.technicalLead === 'object' ? props.row.technicalLead.text || props.row.technicalLead.name : getNameFromId(props.row.technicalLead)) }}
+                      </span>
+                      <q-tooltip>
+                        <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
+                        <span>{{ props.row.technicalLead?.text }}</span>
                       </q-tooltip>
                     </div>
                   </div>
@@ -857,7 +881,7 @@
                           <q-item-section>Edit</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="props.row.isEditable && !search.isTemplate"
+                          v-if="(props.row.isEditable || pMRole) && !search.isTemplate"
                           v-ripple clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id); onProjectEdit(props.row.id, true, refreshProjectList)"
                         >
@@ -868,6 +892,7 @@
                           v-if="props.row.createdById === loggedUserId || role === 'admin' || props.row.isProjectManager"
                           v-ripple
                           clickable
+                          class="hidden"
                           @click="setActiveRowIdInLocalStorage(props.row.id); onAssignUserToProject(props.row.id, props.row.name, refreshProjectList)"
                         >
                           <q-item-section avatar><q-icon name="o_assignment_ind" size="xs" /></q-item-section>
@@ -1025,7 +1050,10 @@
                           <q-item-section avatar>
                             <q-icon :name="props.row.active ? 'o_block' : 'o_check_circle_outline'" :color="!props.row.active ? 'positive' : 'negative'" size="xs" />
                           </q-item-section>
-                          <q-item-section>{{ !props.row.active ? 'Set Active?' : 'Set Inactive?' }}</q-item-section>
+                          <q-item-section>{{ !props.row.active ? 'Set Active?' : 'Set Inactive?' }}
+                            <q-tooltip v-if="!props.row.active">Sets the project as Active, making it available and visible across the application.</q-tooltip>
+                            <q-tooltip v-else>Sets the project as Inactive, hiding it from the overall application and making it unavailable to users.</q-tooltip>
+                          </q-item-section>
                         </q-item>
                         <q-item
                           v-if="props.row.isEditable"
@@ -1051,7 +1079,6 @@
                 </q-td>
                 <q-td class="text-right">
                   <b>
-                    <!-- {{ totalTaskActivityHours() }} / -->
                      {{ totalEstimateHours() }}</b>
                 </q-td>
                 <q-td
@@ -1163,9 +1190,11 @@ const authStore = useAuthStore();
 const loading = ref(true);
 const user = authStore.user;
 const loggedUserId = user.userId;
-const loginUserEmployeeId = user?.employeeId;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
+const pMRole = user?.roles?.some(
+  r => r?.toLowerCase() === "project manager"
+) ?? false;
 
 const currentSiteId = computed(() => user.siteId);
 
@@ -1195,8 +1224,9 @@ const columns = ref([
   { name: "projectCoordinator.id", label: "PC", field: "projectCoordinator.id", align: "center", sortable: false, default: true, tooltip: "Project Coordinators" },
   { name: "projectLeads", label: "PL", field: row => row.projectLeads.join(", "), align: "center", sortable: false, default: true, tooltip: "Project Leads" },
   { name: "projectManager", label: "PM", field: "projectManager", align: "center", sortable: false, default: true, tooltip: "Project Manager" },
+  { name: "technicalLead", label: "TL", field: "technicalLead", align: "center", sortable: false, default: true, tooltip: "Technical Lead" },
   { name: "projectPriority.dropDownValue", label: "Priority", field: "projectPriority.dropDownValue", align: "left", sortable: true, default: true },
-  { name: "projectStatus.dropDownValue", label: "Status", field: "projectStatus.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "projectStatus.dropDownValue", label: "Status", field: "projectStatus.dropDownValue", align: "left", sortable: true, default: true, tooltip: "Indicates the current stage or state of the project in its lifecycle." },
   { name: "projectType.dropDownValue", label: "Type", field: "projectType.dropDownValue", align: "center", sortable: true, default: false },
   { name: "projectCategoryId", label: "Category", field: "projectCategoryId", align: "center", sortable: true, default: false },
   { name: "totalRequirementCount", label: "Req.", field: "totalRequirementCount", align: "right", sortable: false, default: true, tooltip: "Project Requirements With Status Summary" },
@@ -1256,14 +1286,13 @@ const getAllProjectList = async ({ pagination: p }) => {
       const coordinators = [];
 
       let manager = null;
-      let isProjectManager = false;
+      let technicalLead = null;
 
       for (let j = 0; j < mappings.length; j++) {
         const m = mappings[j];
 
         const emp = m.employee;
         const person = emp?.person;
-        const roleName = m.employeeRoleDropdown?.dropDownValue;
 
         const empObj = {
           value: String(emp?.id),
@@ -1272,19 +1301,25 @@ const getAllProjectList = async ({ pagination: p }) => {
           color: person?.color
         };
 
-        if (roleName === "Project Lead") {
-          leads.push(empObj);
-        } else if (roleName === "Project Coordinator") {
-          coordinators.push(empObj);
-        } else if (roleName === "Project Manager") {
-          manager = empObj;
-          if (emp?.id === loginUserEmployeeId) {
-            isProjectManager = true;
+        const roleMappings = m.projectEmployeeRoleMappings || [];
+
+        for (let r = 0; r < roleMappings.length; r++) {
+          const roleMapping = roleMappings[r];
+
+          const roleName =
+            roleMapping?.sitesProjectRoles?.masterProjectRoles?.name;
+
+          if (roleName === "Project Lead") {
+            leads.push(empObj);
+          } else if (roleName === "Project Coordinator") {
+            coordinators.push(empObj);
+          } else if (roleName === "Project Manager") {
+            manager = empObj;
+          } else if (roleName === "Technical Lead") {
+            technicalLead = empObj;
           }
         }
       }
-
-      const userMapping = project.projectUserMappings?.[0];
 
       const customerName = project.customer?.name || "";
       const showCustomerName =
@@ -1307,15 +1342,15 @@ const getAllProjectList = async ({ pagination: p }) => {
 
       result[i] = {
         ...project,
-
-        isNotes: userMapping?.notes ?? false,
-        isEditable: role === "admin" || (userMapping?.fullAccess ?? false),
+        isNotes: project.currentUserNotes ?? false,
+        isEditable:
+          role === "admin" ||
+          project.currentUserManage === true,
         checkboxStatus: selectedIds.has(project.id),
         projectLeads: leads,
         projectCoordinators: coordinators,
         projectManager: manager,
-        isProjectManager,
-
+        technicalLead,
         projectTags: tags,
         showCustomerName
       };
@@ -1427,10 +1462,6 @@ function getTotalHours(field) {
 
 function totalEstimateHours() {
   return getTotalHours("totalTaskEstimateHours");
-}
-
-function totalTaskActivityHours() {
-  return getTotalHours("totalActivityHours");
 }
 
 function getCountColor (total, completedCount) {
@@ -1806,13 +1837,22 @@ onMounted(async () => {
   // Get Project Active/InActive and Set default to Active
   await projectActiveInActiveDropdown.load("Project Active Status");
   const activeValue = await projectActiveInActiveDropdown.getValueByLabel("Active");
-  const setProjectStatus = projectStatusList.value.find(status => status.text.toLowerCase() === "in progress");
+  // const setProjectStatus = projectStatusList.value.find(status => status.text.toLowerCase() === "in progress");
+  const defaultProjectStatuses = projectStatusList.value
+  .filter(status =>
+    ["new", "open", "in progress"].includes(status.text.toLowerCase())
+  )
+  .map(status => status.value);
+
   loadProjectNameDropdown();
 
   // Set Default values for advance filter
   if (search.value.statusId === null || search.value.statusId === undefined) search.value.statusId = activeValue;
-  if (search.value.projectStatusIds?.length === 0) search.value.projectStatusIds = [setProjectStatus.value];
+  // if (search.value.projectStatusIds?.length === 0) search.value.projectStatusIds = [setProjectStatus.value];
 
+  if (search.value.projectStatusIds?.length === 0) {
+    search.value.projectStatusIds = defaultProjectStatuses;
+  }
   refreshProjectList();
 });
 

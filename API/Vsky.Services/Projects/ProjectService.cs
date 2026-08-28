@@ -68,6 +68,7 @@ namespace Vsky.Services.Projects
             string siteId,
             bool isTemplate,
             string userId,
+            string employeeId,
             string searchText,
             List<string> projectIds,
             List<string> projectCategoryIds,
@@ -93,8 +94,11 @@ namespace Vsky.Services.Projects
             var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == siteId && x.IsTemplate == isTemplate);
 
             bool isAdmin = await IsCurrentUserAdmin(userId, siteId);
-            if (!isAdmin)
-                query = query.Where(p => p.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == userId && (m.FullAccess || m.ViewOnly || m.Notes)));
+            bool isPM = await IsCurrentUserPM(userId, siteId);
+            if (!isAdmin && !isPM)
+            {
+                query = ApplyProjectSecurity(query, userId, employeeId);
+            }
 
             if (projectIds?.Any() == true) query = query.Where(x => projectIds.Contains(x.Id));
             if (projectCategoryIds?.Any() == true) query = query.Where(x => projectCategoryIds.Contains(x.ProjectCategoryId));
@@ -102,8 +106,32 @@ namespace Vsky.Services.Projects
             if (status == 0) query = query.Where(x => !x.Active);
             else if (status == 1) query = query.Where(x => x.Active);
             if (teamMemberIds?.Any() == true) query = query.Where(x => x.ProjectEmployeeMappings.Any(m => teamMemberIds.Contains(m.EmployeeId)));
-            if (coordinatorIds?.Any() == true) query = query.Where(x => x.ProjectEmployeeMappings.Any(m => coordinatorIds.Contains(m.EmployeeId) && !m.Deleted && m.EmployeeRoleDropdown.DropDownValue == "Project Coordinator"));
-            if (leadIds?.Any() == true) query = query.Where(x => x.ProjectEmployeeMappings.Any(m => leadIds.Contains(m.EmployeeId) && !m.Deleted && m.EmployeeRoleDropdown.DropDownValue == "Project Lead"));
+            if (coordinatorIds?.Any() == true)
+            {
+                query = query.Where(x =>
+                    x.ProjectEmployeeMappings.Any(m =>
+                        coordinatorIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Project Coordinator"
+                        )
+                    )
+                );
+            }
+            if (leadIds?.Any() == true)
+            {
+                query = query.Where(x =>
+                    x.ProjectEmployeeMappings.Any(m =>
+                        leadIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Project Lead"
+                        )
+                    )
+                );
+            }
             if (priorityIds?.Any() == true) query = query.Where(x => priorityIds.Contains(x.ProjectPriorityId));
             if (typeIds?.Any() == true) query = query.Where(x => typeIds.Contains(x.ProjectTypeId));
             if (customerIds?.Any() == true) query = query.Where(x => customerIds.Contains(x.CustomerId));
@@ -187,13 +215,6 @@ namespace Vsky.Services.Projects
                     Tags = new Tags { Id = t.Tags.Id, Name = t.Tags.Name, Color = t.Tags.Color, BgColor = t.Tags.BgColor }
                 }).ToList(),
                 ProjectColor = x.ProjectColors.Where(c => c.AspNetUserId == userId && !c.Deleted).Select(c => c.Color).FirstOrDefault(),
-                //ProjectColors = x.ProjectColors.Where(pc => !pc.Deleted && pc.AspNetUserId == userId)
-                //.Select(pc => new ProjectColor
-                //{
-                //    Id = pc.Id,
-                //    Color = pc.Color
-                //})
-                //.ToList(),
                 ProjectEmployeeMappings = x.ProjectEmployeeMappings.Where(m => !m.Deleted).Select(m => new ProjectEmployeeMapping
                 {
                     Id = m.Id,
@@ -208,16 +229,70 @@ namespace Vsky.Services.Projects
                             Color = m.Employee.Person.Color,
                         }
                     },
-                    EmployeeRoleDropdown = new DropDown { Id = m.EmployeeRoleDropdown.Id, DropDownValue = m.EmployeeRoleDropdown.DropDownValue }
+                    ProjectEmployeeRoleMappings = m.ProjectEmployeeRoleMappings
+                        .Where(roleMapping => !roleMapping.Deleted)
+                        .Select(roleMapping => new ProjectEmployeeRoleMapping
+                        {
+                            Id = roleMapping.Id,
+
+                            SitesProjectRoles = new SitesProjectRoles
+                            {
+                                Id = roleMapping.SitesProjectRoles.Id,
+
+                                MasterProjectRoles = new MasterProjectRoles
+                                {
+                                    Name = roleMapping.SitesProjectRoles.MasterProjectRoles.Name
+                                }
+                            }
+                        })
+                        .OrderBy(role => role.SitesProjectRoles.MasterProjectRoles.Name)
+                        .ToList(),
                 }).ToList(),
-                ProjectUserMappings = x.ProjectUserMappings.Where(m => !m.Deleted && m.ProjectId == x.Id && (isAdmin || m.AspNetUserId == userId)).Take(1).Select(m => new ProjectUserMapping
-                {
-                    Id = m.Id,
-                    AspNetUserId = m.AspNetUserId,
-                    FullAccess = m.FullAccess,
-                    ViewOnly = m.ViewOnly,
-                    Notes = m.Notes
-                }).ToList(),
+                CurrentUserManage =
+                    x.CreatedById == userId ||
+                    x.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess))),
+
+                CurrentUserView =
+                    x.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.ViewOnly))),
+
+                CurrentUserNotes =
+                    x.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.Notes))),
                 TotalTaskCount = x.ProjectTasks.Count(m => !m.Deleted && !m.IsMoved && !m.ProjectModule.Deleted && !m.Project.Deleted),
                 CompletedTaskCount = x.ProjectTasks.Count(m => !m.Deleted && !m.IsMoved && !m.ProjectModule.Deleted && !m.Project.Deleted && (m.Status.DropDownValue == "Completed" || m.Status.DropDownValue == "Close")),
                 TotalIssueCount = x.Issue.Count(m => !m.Deleted && !m.Project.Deleted),
@@ -236,6 +311,7 @@ namespace Vsky.Services.Projects
         public async Task<IPagedList<Project>> GetAllProjectsForNotes(
            string siteId,
            string userId,
+           string employeeId,
            string searchText,
            List<string> projectIds,
            List<string> projectCategoryIds,
@@ -260,7 +336,22 @@ namespace Vsky.Services.Projects
 
             bool isAdmin = await IsCurrentUserAdmin(userId, siteId);
             if (!isAdmin)
-                query = query.Where(p => p.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == userId && (m.FullAccess || m.ViewOnly || m.Notes)));
+            {
+                query = query.Where(x =>
+                    x.CreatedById == userId ||
+                    x.ProjectEmployeeMappings.Any(m =>
+                        !m.Deleted &&
+                        m.EmployeeId == employeeId &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                                !p.Deleted &&
+                                (p.FullAccess || p.ViewOnly || p.Notes)
+                            )
+                        )
+                    )
+                );
+            }
 
             if (projectIds?.Any() == true) query = query.Where(x => projectIds.Contains(x.Id));
             if (projectCategoryIds?.Any() == true) query = query.Where(x => projectCategoryIds.Contains(x.ProjectCategoryId));
@@ -268,8 +359,32 @@ namespace Vsky.Services.Projects
             if (status == 0) query = query.Where(x => !x.Active);
             else if (status == 1) query = query.Where(x => x.Active);
             if (teamMemberIds?.Any() == true) query = query.Where(x => x.ProjectEmployeeMappings.Any(m => teamMemberIds.Contains(m.EmployeeId)));
-            if (coordinatorIds?.Any() == true) query = query.Where(x => x.ProjectEmployeeMappings.Any(m => coordinatorIds.Contains(m.EmployeeId) && !m.Deleted && m.EmployeeRoleDropdown.DropDownValue == "Project Coordinator"));
-            if (leadIds?.Any() == true) query = query.Where(x => x.ProjectEmployeeMappings.Any(m => leadIds.Contains(m.EmployeeId) && !m.Deleted && m.EmployeeRoleDropdown.DropDownValue == "Project Lead"));
+            if (coordinatorIds?.Any() == true)
+            {
+                query = query.Where(x =>
+                    x.ProjectEmployeeMappings.Any(m =>
+                        coordinatorIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Project Coordinator"
+                        )
+                    )
+                );
+            }
+            if (leadIds?.Any() == true)
+            {
+                query = query.Where(x =>
+                    x.ProjectEmployeeMappings.Any(m =>
+                        leadIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Project Lead"
+                        )
+                    )
+                );
+            }
             if (priorityIds?.Any() == true) query = query.Where(x => priorityIds.Contains(x.ProjectPriorityId));
             if (typeIds?.Any() == true) query = query.Where(x => typeIds.Contains(x.ProjectTypeId));
             if (customerIds?.Any() == true) query = query.Where(x => customerIds.Contains(x.CustomerId));
@@ -304,14 +419,6 @@ namespace Vsky.Services.Projects
                 Active = x.Active,
                 CreatedById = x.CreatedById,
                 ProjectStatus = new DropDown { Id = x.ProjectStatus.Id, DropDownValue = x.ProjectStatus.DropDownValue },
-                ProjectUserMappings = x.ProjectUserMappings.Where(m => !m.Deleted && m.ProjectId == x.Id && (isAdmin || m.AspNetUserId == userId)).Take(1).Select(m => new ProjectUserMapping
-                {
-                    Id = m.Id,
-                    AspNetUserId = m.AspNetUserId,
-                    FullAccess = m.FullAccess,
-                    ViewOnly = m.ViewOnly,
-                    Notes = m.Notes
-                }).ToList(),
                 TotalTaskCount = x.ProjectTasks.Count(m => !m.Deleted && !m.IsMoved && !m.ProjectModule.Deleted && !m.Project.Deleted),
                 ProjectNotesCount = _notesRepository.TableNoTracking.Count(m => !m.Deleted && m.SubModuleId == x.Id && m.Type == "Projects")
             }), page, pageSize);
@@ -333,13 +440,28 @@ namespace Vsky.Services.Projects
         #endregion
 
         #region GetAllProjectListForDropdown
-        public async Task<List<Project>> GetAllProjectListForDropdown(string SiteId, string LoggedUserId, string[] statuses = null)
+        public async Task<List<Project>> GetAllProjectListForDropdown(string SiteId, string LoggedUserId, string employeeId, string[] statuses = null)
         {
             var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && x.Active && !x.IsTemplate && x.SiteId == SiteId);
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
             if (!IsAdmin)
-                query = query.Where(p => p.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == LoggedUserId));
+            {
+                query = query.Where(x =>
+                    x.CreatedById == LoggedUserId ||
+                    x.ProjectEmployeeMappings.Any(m =>
+                        !m.Deleted &&
+                        m.EmployeeId == employeeId &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                                !p.Deleted &&
+                                (p.FullAccess || p.ViewOnly || p.Notes)
+                            )
+                        )
+                    )
+                );
+            }
 
             if (statuses != null && statuses.Any())
             {
@@ -361,7 +483,7 @@ namespace Vsky.Services.Projects
             return list;
         }
 
-        public async Task<List<CommonDropDown>> GetProjectsListForDropdown(string SiteId, string LoggedUserId, bool isTemplate, string ActiveStatus, bool isAllProject)
+        public async Task<List<CommonDropDown>> GetProjectsListForDropdown(string SiteId, string LoggedUserId, string employeeId, bool isTemplate, string ActiveStatus, bool isAllProject)
         {
             var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.IsTemplate == isTemplate);
 
@@ -380,7 +502,22 @@ namespace Vsky.Services.Projects
                 bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
                 if (!IsAdmin)
-                    query = query.Where(p => p.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == LoggedUserId));
+                {
+                    query = query.Where(x =>
+                    x.CreatedById == LoggedUserId ||
+                        x.ProjectEmployeeMappings.Any(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId &&
+                            m.ProjectEmployeeRoleMappings.Any(r =>
+                                !r.Deleted &&
+                                r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                                    !p.Deleted &&
+                                    (p.FullAccess || p.ViewOnly || p.Notes)
+                                )
+                            )
+                        )
+                    );
+                }
             }
             var list = await query
                        .OrderBy(x => x.Name.Replace(" ", ""))
@@ -504,28 +641,100 @@ namespace Vsky.Services.Projects
                         FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                     }
                 },
-                ProjectEmployeeMappings = x.ProjectEmployeeMappings.Where(m => !m.Deleted).Select(mapping => new ProjectEmployeeMapping
+                ProjectEmployeeMappings = x.ProjectEmployeeMappings
+                .Where(mapping => !mapping.Deleted)
+                .Select(mapping => new ProjectEmployeeMapping
                 {
                     Id = mapping.Id,
+
+                    ProjectId = mapping.ProjectId,
+
                     EmployeeId = mapping.EmployeeId,
-                    EmployeeDesignationId = mapping.EmployeeDesignationId,
+
                     ProductivityFactor = mapping.ProductivityFactor,
+
                     Employee = new Employee
                     {
                         Id = mapping.Employee.Id,
+
                         Person = new Person
                         {
                             Id = mapping.Employee.Person.Id,
-                            FullName = mapping.Employee.Person.FirstName + " " + mapping.Employee.Person.LastName,
-                        },
-                    },
-                    EmployeeRoleDropdown = new DropDown
-                    {
-                        Id = mapping.EmployeeRoleDropdown.Id,
-                        DropDownValue = mapping.EmployeeRoleDropdown.DropDownValue,
-                    }
 
-                }).OrderBy(x => x.EmployeeRoleDropdown.DropDownValue).ThenBy(x => x.Employee.Person.FullName).ToList(),
+                            FullName =
+                                mapping.Employee.Person.FirstName
+                                + " "
+                                + mapping.Employee.Person.LastName
+                        }
+                    },
+
+                    ProjectEmployeeRoleMappings = mapping.ProjectEmployeeRoleMappings
+                    .Where(roleMapping => !roleMapping.Deleted)
+                    .Select(roleMapping => new ProjectEmployeeRoleMapping
+                    {
+                        Id = roleMapping.Id,
+
+                        //SiteProjectRoleId =
+                        //    roleMapping.SiteProjectRoleId,
+
+                        SitesProjectRoles = new SitesProjectRoles
+                        {
+                            Id = roleMapping.SitesProjectRoles.Id,
+
+                            MasterProjectRoles = new MasterProjectRoles
+                            {
+                                Name = roleMapping.SitesProjectRoles.MasterProjectRoles.Name
+                            },
+
+                            SitesProjectRolesPermissions = roleMapping.SitesProjectRoles
+                        .SitesProjectRolesPermissions
+                        .Where(permission => !permission.Deleted)
+                        .Select(permission => new SitesProjectRolesPermissions
+                        {
+                            Id = permission.Id,
+                            FullAccess = permission.FullAccess,
+                            ViewOnly = permission.ViewOnly,
+                            Notes = permission.Notes
+                        })
+                        .ToList()
+                        }
+                    })
+                    .OrderBy(role => role.SitesProjectRoles.MasterProjectRoles.Name)
+                    .ToList(),
+
+                    // Aggregate permissions of all roles assigned to employee
+                    Manage =
+                        mapping.ProjectEmployeeRoleMappings
+                            .Where(roleMapping => !roleMapping.Deleted)
+                            .Any(roleMapping =>
+                                roleMapping.SitesProjectRoles
+                                    .SitesProjectRolesPermissions
+                                    .Any(permission =>
+                                        !permission.Deleted &&
+                                        permission.FullAccess)),
+
+                    View =
+                        mapping.ProjectEmployeeRoleMappings
+                            .Where(roleMapping => !roleMapping.Deleted)
+                            .Any(roleMapping =>
+                                roleMapping.SitesProjectRoles
+                                    .SitesProjectRolesPermissions
+                                    .Any(permission =>
+                                        !permission.Deleted &&
+                                        permission.ViewOnly)),
+
+                    Notes =
+                        mapping.ProjectEmployeeRoleMappings
+                            .Where(roleMapping => !roleMapping.Deleted)
+                            .Any(roleMapping =>
+                                roleMapping.SitesProjectRoles
+                                    .SitesProjectRolesPermissions
+                                    .Any(permission =>
+                                        !permission.Deleted &&
+                                        permission.Notes))
+                })
+                .OrderBy(mapping => mapping.Employee.Person.FullName)
+                .ToList(),
                 ProjectFileList = x.ProjectFileList.Where(x => !x.Deleted).OrderByDescending(x => x.CreatedOnUtc).Select(mapping => new ProjectFiles
                 {
                     Id = mapping.Id,
@@ -895,7 +1104,6 @@ namespace Vsky.Services.Projects
                 {
                     Id = mapping.Id,
                     EmployeeId = mapping.EmployeeId,
-                    EmployeeDesignationId = mapping.EmployeeDesignationId,
                     ProductivityFactor = mapping.ProductivityFactor,
                     Employee = new Employee
                     {
@@ -906,11 +1114,24 @@ namespace Vsky.Services.Projects
                             FullName = mapping.Employee.Person.FirstName + " " + mapping.Employee.Person.LastName,
                         },
                     },
-                    EmployeeRoleDropdown = new DropDown
-                    {
-                        Id = mapping.EmployeeRoleDropdown.Id,
-                        DropDownValue = mapping.EmployeeRoleDropdown.DropDownValue,
-                    }
+                    ProjectEmployeeRoleMappings = mapping.ProjectEmployeeRoleMappings
+                        .Where(roleMapping => !roleMapping.Deleted)
+                        .Select(roleMapping => new ProjectEmployeeRoleMapping
+                        {
+                            Id = roleMapping.Id,
+
+                            SitesProjectRoles = new SitesProjectRoles
+                            {
+                                Id = roleMapping.SitesProjectRoles.Id,
+
+                                MasterProjectRoles = new MasterProjectRoles
+                                {
+                                    Name = roleMapping.SitesProjectRoles.MasterProjectRoles.Name
+                                }
+                            }
+                        })
+                        .OrderBy(role => role.SitesProjectRoles.MasterProjectRoles.Name)
+                        .ToList(),
 
                 }).ToList(),
                 ProjectFileList = x.ProjectFileList.Where(x => !x.Deleted).OrderByDescending(x => x.CreatedOnUtc).Select(mapping => new ProjectFiles
@@ -1073,7 +1294,6 @@ namespace Vsky.Services.Projects
                 {
                     Id = mapping.Id,
                     EmployeeId = mapping.EmployeeId,
-                    EmployeeDesignationId = mapping.EmployeeDesignationId,
                     ProductivityFactor = mapping.ProductivityFactor,
                     Employee = new Employee
                     {
@@ -1084,12 +1304,24 @@ namespace Vsky.Services.Projects
                             FullName = mapping.Employee.Person.FirstName + " " + mapping.Employee.Person.LastName,
                         },
                     },
-                    EmployeeRoleDropdown = new DropDown
-                    {
-                        Id = mapping.EmployeeRoleDropdown.Id,
-                        DropDownValue = mapping.EmployeeRoleDropdown.DropDownValue,
-                    }
+                    ProjectEmployeeRoleMappings = mapping.ProjectEmployeeRoleMappings
+                        .Where(roleMapping => !roleMapping.Deleted)
+                        .Select(roleMapping => new ProjectEmployeeRoleMapping
+                        {
+                            Id = roleMapping.Id,
 
+                            SitesProjectRoles = new SitesProjectRoles
+                            {
+                                Id = roleMapping.SitesProjectRoles.Id,
+
+                                MasterProjectRoles = new MasterProjectRoles
+                                {
+                                    Name = roleMapping.SitesProjectRoles.MasterProjectRoles.Name
+                                }
+                            }
+                        })
+                        .OrderBy(role => role.SitesProjectRoles.MasterProjectRoles.Name)
+                        .ToList()
                 }).ToList(),
                 ProjectFileList = x.ProjectFileList.Where(x => !x.Deleted).OrderByDescending(x => x.CreatedOnUtc).Select(mapping => new ProjectFiles
                 {
@@ -1507,7 +1739,6 @@ namespace Vsky.Services.Projects
                 {
                     Id = mapping.Id,
                     EmployeeId = mapping.EmployeeId,
-                    EmployeeDesignationId = mapping.EmployeeDesignationId,
                     ProductivityFactor = mapping.ProductivityFactor,
                     Employee = new Employee
                     {
@@ -1518,11 +1749,24 @@ namespace Vsky.Services.Projects
                             FullName = mapping.Employee.Person.FirstName + " " + mapping.Employee.Person.LastName,
                         },
                     },
-                    EmployeeRoleDropdown = new DropDown
-                    {
-                        Id = mapping.EmployeeRoleDropdown.Id,
-                        DropDownValue = mapping.EmployeeRoleDropdown.DropDownValue,
-                    }
+                    ProjectEmployeeRoleMappings = mapping.ProjectEmployeeRoleMappings
+                        .Where(roleMapping => !roleMapping.Deleted)
+                        .Select(roleMapping => new ProjectEmployeeRoleMapping
+                        {
+                            Id = roleMapping.Id,
+
+                            SitesProjectRoles = new SitesProjectRoles
+                            {
+                                Id = roleMapping.SitesProjectRoles.Id,
+
+                                MasterProjectRoles = new MasterProjectRoles
+                                {
+                                    Name = roleMapping.SitesProjectRoles.MasterProjectRoles.Name
+                                }
+                            }
+                        })
+                        .OrderBy(role => role.SitesProjectRoles.MasterProjectRoles.Name)
+                        .ToList()
 
                 }).ToList(),
                 ProjectFileList = x.ProjectFileList.Where(x => !x.Deleted).OrderByDescending(x => x.CreatedOnUtc).Select(mapping => new ProjectFiles
@@ -1630,7 +1874,6 @@ namespace Vsky.Services.Projects
                 {
                     Id = mapping.Id,
                     EmployeeId = mapping.EmployeeId,
-                    EmployeeDesignationId = mapping.EmployeeDesignationId,
                     ProductivityFactor = mapping.ProductivityFactor,
                     Employee = new Employee
                     {
@@ -1641,11 +1884,24 @@ namespace Vsky.Services.Projects
                             FullName = mapping.Employee.Person.FirstName + " " + mapping.Employee.Person.LastName,
                         },
                     },
-                    EmployeeRoleDropdown = new DropDown
-                    {
-                        Id = mapping.EmployeeRoleDropdown.Id,
-                        DropDownValue = mapping.EmployeeRoleDropdown.DropDownValue,
-                    }
+                    ProjectEmployeeRoleMappings = mapping.ProjectEmployeeRoleMappings
+                        .Where(roleMapping => !roleMapping.Deleted)
+                        .Select(roleMapping => new ProjectEmployeeRoleMapping
+                        {
+                            Id = roleMapping.Id,
+
+                            SitesProjectRoles = new SitesProjectRoles
+                            {
+                                Id = roleMapping.SitesProjectRoles.Id,
+
+                                MasterProjectRoles = new MasterProjectRoles
+                                {
+                                    Name = roleMapping.SitesProjectRoles.MasterProjectRoles.Name
+                                }
+                            }
+                        })
+                        .OrderBy(role => role.SitesProjectRoles.MasterProjectRoles.Name)
+                        .ToList()
 
                 }).ToList()
             });
@@ -1690,11 +1946,24 @@ namespace Vsky.Services.Projects
                             FullName = mapping.Employee.Person.FirstName + " " + mapping.Employee.Person.LastName,
                         },
                     },
-                    EmployeeRoleDropdown = new DropDown
+                    ProjectEmployeeRoleMappings = mapping.ProjectEmployeeRoleMappings
+                    .Where(roleMapping => !roleMapping.Deleted)
+                    .Select(roleMapping => new ProjectEmployeeRoleMapping
                     {
-                        Id = mapping.EmployeeRoleDropdown.Id,
-                        DropDownValue = mapping.EmployeeRoleDropdown.DropDownValue,
-                    }
+                        Id = roleMapping.Id,
+
+                        SitesProjectRoles = new SitesProjectRoles
+                        {
+                            Id = roleMapping.SitesProjectRoles.Id,
+
+                            MasterProjectRoles = new MasterProjectRoles
+                            {
+                                Name = roleMapping.SitesProjectRoles.MasterProjectRoles.Name
+                            }
+                        }
+                    })
+                    .OrderBy(role => role.SitesProjectRoles.MasterProjectRoles.Name)
+                    .ToList()
 
                 }).ToList()
             });
@@ -1836,14 +2105,23 @@ namespace Vsky.Services.Projects
         #endregion
 
         #region GetAllProjectDataByProjectId
-        public async Task<Project> GetAllProjectDataByProjectId(string SiteId, string projectId)
+        public async Task<Project> GetAllProjectDataByProjectId(
+            string SiteId,
+            string projectId)
         {
             var query = _projectRepository.TableNoTracking
-            .Where(x => !x.Deleted && x.SiteId == SiteId && x.Id == projectId)
-            .Include(x => x.ProjectModules.Where(x => !x.Deleted))
-            .ThenInclude(b => b.ProjectTasks.Where(b => !b.Deleted))
-            .ThenInclude(c => c.ProjectActivities.Where(c => !c.Deleted))
-            .Include(x => x.ProjectEmployeeMappings.Where(pem => !pem.Deleted));
+                .Where(x =>
+                    !x.Deleted &&
+                    x.SiteId == SiteId &&
+                    x.Id == projectId)
+
+                .Include(x => x.ProjectModules.Where(m => !m.Deleted))
+                    .ThenInclude(m => m.ProjectTasks.Where(t => !t.Deleted))
+                        .ThenInclude(t => t.ProjectActivities.Where(a => !a.Deleted))
+
+                .Include(x => x.ProjectEmployeeMappings.Where(m => !m.Deleted))
+                    .ThenInclude(m => m.ProjectEmployeeRoleMappings.Where(r => !r.Deleted))
+                        .ThenInclude(r => r.SitesProjectRoles);
 
             return await query.FirstOrDefaultAsync();
         }
@@ -2032,6 +2310,43 @@ namespace Vsky.Services.Projects
             var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
 
             return isAdmin;
+        }
+        private async Task<bool> IsCurrentUserPM(string userId, string siteId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+                return false;
+
+            var roles = await _applicationUserRoleService
+                .GetRoleNamesByUserAndSite(user.Id, siteId);
+
+            return roles.Contains("Project Manager");
+        }
+        private IQueryable<Project> ApplyProjectSecurity(
+            IQueryable<Project> query,
+            string userId,
+            string employeeId
+        )
+        {
+            return query.Where(p =>
+                p.CreatedById == userId ||
+                p.ProjectEmployeeMappings.Any(m =>
+                    !m.Deleted &&
+                    m.EmployeeId == employeeId &&
+                    m.ProjectEmployeeRoleMappings.Any(r =>
+                        !r.Deleted &&
+                        r.SitesProjectRoles.SitesProjectRolesPermissions.Any(permission =>
+                            !permission.Deleted &&
+                            (
+                                permission.FullAccess ||
+                                permission.ViewOnly ||
+                                permission.Notes
+                            )
+                        )
+                    )
+                )
+            );
         }
     }
 }

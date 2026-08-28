@@ -49,6 +49,7 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
 
                 int Status = 2;
                 if (!string.IsNullOrWhiteSpace(model.StatusId))
@@ -60,6 +61,7 @@ namespace Vsky.Api.Controllers
                     SiteId,
                     model.SearchText,
                     logginuser: LoggedUserId,
+                    employeeId,
                     model.ProjectId,
                     model.CustomerIds,
                     model.CustomerTypeIds,
@@ -103,6 +105,7 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
                 var year =  searchModel.Year == "" ? 0 : Convert.ToUInt16(searchModel.Year);
 
                 int Status = 2;
@@ -127,6 +130,7 @@ namespace Vsky.Api.Controllers
                     SiteId: SiteId, 
                     filterProject: searchModel.filterProject, 
                     logginuser: LoggedUserId,
+                    employeeId,
                     searchModel.SearchText,
                     CustomerIds: searchModel.CustomerIds, 
                     ProjectTypeIds: searchModel.ProjectTypeIds,
@@ -166,6 +170,7 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
 
                 var projectIdList = new List<string>();
                 var projectModuleIdList = new List<string>();
@@ -181,6 +186,7 @@ namespace Vsky.Api.Controllers
                         SiteId: SiteId,
                         filterRequirement: searchModel.filterRequirement,
                         LoggedUserId: LoggedUserId,
+                        employeeId,
                         ProjectId: projectIdList,
                         ProjectModuleId: projectModuleIdList,
                         RequirementIds: searchModel.RequirementIds,
@@ -212,12 +218,26 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
 
                 var projectIdList = new List<string>();
                 if (!string.IsNullOrEmpty(searchModel.ProjectId))
                     projectIdList.Add(searchModel.ProjectId);
 
-                var list =await _vWDashboardServices.GetAllProjectModulesList(SiteId, isShowCloseStatus: searchModel.isShowCloseStatus, searchModel.filterModule,   LoggedUserId: LoggedUserId, ProjectModuleIds:searchModel.ProjectModuleIds, projectIdList, ProjectModuleStatusIds: searchModel.ProjectModuleStatusIds, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var list =await _vWDashboardServices.GetAllProjectModulesList(
+                    SiteId, 
+                    isShowCloseStatus: searchModel.isShowCloseStatus, 
+                    searchModel.filterModule,   
+                    LoggedUserId: LoggedUserId,
+                    employeeId,
+                    ProjectModuleIds:searchModel.ProjectModuleIds, 
+                    projectIdList, 
+                    ProjectModuleStatusIds: searchModel.ProjectModuleStatusIds, 
+                    searchModel.SortBy, 
+                    searchModel.Descending, 
+                    searchModel.Page, 
+                    searchModel.PageSize
+                );
                 return Ok(new
                 {
                     Data = list,
@@ -240,6 +260,7 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
 
                 var projectIdList = new List<string>();
                 var projectSwimlaneIdList = new List<string>();
@@ -263,7 +284,8 @@ namespace Vsky.Api.Controllers
                     isShowCloseStatus:searchModel.isShowCloseStatus, 
                     taskName:searchModel.Name ,
                     filterTask: searchModel.filterTask, 
-                    LoggedUserId: LoggedUserId, 
+                    LoggedUserId: LoggedUserId,
+                    employeeId,
                     ProjectId: projectIdList, 
                     ProjectSwimlaneId: projectSwimlaneIdList, 
                     ProjectModuleId: projectModuleIdList,
@@ -298,14 +320,15 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
 
-
-                var list =await _vWDashboardServices.GetAllProjectActivitiesList(SiteId,
+                var list = await _vWDashboardServices.GetAllProjectActivitiesList(SiteId,
                     searchModel.isShowCloseStatus, 
                     searchModel.isShowCompleteStatus, 
                     searchModel.filterActivity, 
                     searchModel.ProjectId, 
-                    LoggedUserId, 
+                    LoggedUserId,
+                    employeeId,
                     searchModel.ProjectSwimlaneId,
                     searchModel.ProjectModuleId,
                     searchModel.ProjectTaskId, 

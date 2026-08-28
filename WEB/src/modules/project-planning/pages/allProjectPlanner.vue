@@ -2647,12 +2647,11 @@ const getAllCustomerProjectsList = async (props) => {
     const resp = await allProjectPlannerService.getAllProjectsPlannerList(payload);
 
     const mappedRows = resp.data.map(project => {
-      const hasFullAccess = project?.projectUserMappings[0]?.fullAccess ?? false;
       return {
         ...project,
-        isViewOnly: project?.projectUserMappings[0]?.viewOnly ?? false,
-        isNotes: project?.projectUserMappings[0]?.notes ?? false,
-        isEditable: role === "admin" || hasFullAccess
+        isViewOnly: project.currentUserView ?? false,
+        isNotes: project.currentUserNotes ?? false,
+        isEditable: project.currentUserManage ?? false
       };
     });
 
@@ -2838,12 +2837,16 @@ const getAllProjectsModulesByProjectId = async (props) => {
     });
     const resp = await allProjectPlannerService.getAllProjectsModulesPlannerList(payload);
     ProjectModuleRows.value = resp.data.map(projectModule => {
-      const hasFullAccess = projectModule?.project?.projectUserMappings[0]?.fullAccess ?? false;
       return {
         ...projectModule,
-        isViewOnly: projectModule?.project?.projectUserMappings[0]?.viewOnly ?? false,
-        isNotes: projectModule?.project?.projectUserMappings[0]?.notes ?? false,
-        isEditable: role === "admin" || hasFullAccess
+          isViewOnly:
+            projectModule?.currentUserView ?? false,
+
+          isNotes:
+            projectModule?.currentUserNotes ?? false,
+
+          isEditable:
+            projectModule?.currentUserManage ?? false
       };
     });
     filteredProjectModuleRows.value = ProjectModuleRows.value; // Set initial value to all rows
@@ -3279,16 +3282,15 @@ const getTaskListByModuleId = async (props) => {
     });
     const resp = await allProjectPlannerService.getAllProjectsTaskPlannerList(payload);
     projectTasks.value = resp.data.map(task => {
-      const hasFullAccess = task?.project?.projectUserMappings[0]?.fullAccess ?? false;
       return {
         ...task,
         id: task.id,
         name: task.taskName,
         // checkboxStatus: false, // Initialize checkboxStatus for each row
         estimateTime: task.estimateTime,
-        isViewOnly: task?.project?.projectUserMappings[0]?.viewOnly ?? false,
-        isNotes: task?.project?.projectUserMappings[0]?.notes ?? false,
-        isEditable: role === "admin" || hasFullAccess,
+        isViewOnly: task.currentUserView ?? false,
+        isNotes: task.currentUserNotes ?? false,
+        isEditable: task.currentUserManage ?? false,
         startDate: task.startDate ? toDate(task.startDate) : "",
         endDate: task.endDate ? toDate(task.endDate) : "",
         assignedToId: task.assignedToId,
@@ -3503,13 +3505,12 @@ const getActivitiesByTask = async (props) => {
     const resp = await allProjectPlannerService.getAllProjectsActivityPlannerList(payload);
     projectActivities.value = resp.data;
     projectActivities.value = resp.data.map(activity => {
-      const hasFullAccess = activity?.project?.projectUserMappings[0]?.fullAccess ?? false;
       return {
         ...activity,
         // checkboxStatus: false, // Initialize checkbox state
-        isViewOnly: activity?.project?.projectUserMappings[0]?.viewOnly ?? false,
-        isNotes: activity?.project?.projectUserMappings[0]?.notes ?? false,
-        isEditable: role === "admin" || hasFullAccess
+        isViewOnly: activity.currentUserView ?? false,
+        isNotes: activity.currentUserNotes ?? false,
+        isEditable: activity.currentUserManage ?? false
       };
     });
     isDisabled = false; // Reset the isDisabled flag

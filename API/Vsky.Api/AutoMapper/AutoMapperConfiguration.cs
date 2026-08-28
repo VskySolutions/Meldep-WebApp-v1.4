@@ -383,8 +383,8 @@ namespace Vsky.Api.AutoMapper
             CreateMap<ProjectSwimLanes, ProjectSwimLanesModel>();
             CreateMap<ProjectSwimLanesModel, ProjectSwimLanes>();
 
-            CreateMap<ProjectUserMapping, ProjectUserMappingModel>();
-            CreateMap<ProjectUserMappingModel, ProjectUserMapping>();
+            //CreateMap<ProjectUserMapping, ProjectUserMappingModel>();
+            //CreateMap<ProjectUserMappingModel, ProjectUserMapping>();
             
             CreateMap<Expense_Advance_Requests, Expense_Advance_Requests_Models>();
             CreateMap<Expense_Advance_Requests_Models, Expense_Advance_Requests>();

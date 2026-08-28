@@ -15,8 +15,8 @@
                 <formMultiSelectDropdown
                   v-model="model.userIds"
                   label="Employee Name"
-                  :options="projectUsersByProjectIdForDropdown.list.value"
-                  :filter="projectUsersByProjectIdForDropdown.filter"
+                  :options="ProjectMappingUsersForDropdown.list.value"
+                  :filter="ProjectMappingUsersForDropdown.filter"
                   :error="v$.userIds.$error"
                   :error-message="v$.userIds.$errors[0]?.$message"
                   :onBlur="() => v$.userIds.$touch()"
@@ -128,8 +128,8 @@
                     <q-td style="width: 35%;">
                       <formSingleSelectDropdown
                         v-model="props.row.userIds"
-                        :options="projectUserByProjectIdDropdownSingleSelect.list.value"
-                        :filter="projectUserByProjectIdDropdownSingleSelect.filter"
+                        :options="ProjectMappingUserDropdownSingleSelect.list.value"
+                        :filter="ProjectMappingUserDropdownSingleSelect.filter"
                         :readonly="true"
                       />
                     </q-td>
@@ -190,7 +190,7 @@ import { uid, useDialogPluginComponent } from "quasar";
 import useVuelidate from "@vuelidate/core";
 import { required, helpers } from "@vuelidate/validators";
 import { ref, watch, onMounted, computed } from "vue";
-import { notifySuccess, notifyError, zwConfirmDelete } from "assets/utils";
+import { notifySuccess, notifyError } from "assets/utils";
 import projectModuleService from "../projectModules.service";
 import formMultiSelectDropdown from "src/components/form-inputs/_formMultiSelectDropdown.vue";
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
@@ -298,8 +298,8 @@ const {
 } = projectModuleOfProjectModule();
 
 const {
-  projectUsersByProjectIdForDropdown,
-  projectUserByProjectIdDropdownSingleSelect
+  ProjectMappingUsersForDropdown,
+  ProjectMappingUserDropdownSingleSelect
 } = projectModule();
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -422,8 +422,8 @@ onMounted(() => {
   if (ProjectId) {
     projectModulesByProjectIdForDropdown.load(false, false, ProjectId);
     projectModulesByProjectIdForDropdownSingleSelect.load(false, false, ProjectId);
-    projectUsersByProjectIdForDropdown.load(ProjectId);
-    projectUserByProjectIdDropdownSingleSelect.load(ProjectId);
+    ProjectMappingUsersForDropdown.load(ProjectId);
+    ProjectMappingUserDropdownSingleSelect.load(ProjectId);
   }
 });
 </script>

@@ -25,7 +25,7 @@ namespace Vsky.Services.TestPlans
         #region Services Initializations
 
         public TestPlanService(
-            IRepository<TestPlan> testPlanRepository, 
+            IRepository<TestPlan> testPlanRepository,
             UserManager<ApplicationUser> userManager,
             IApplicationUserRoleService applicationUserRoleService,
             ICommonService commonService
@@ -52,14 +52,30 @@ namespace Vsky.Services.TestPlans
         // Title: GetAllTestPlans
         // Description: This method retrieves a paginated list of test plan based on various search criteria such as name, 
         // It also supports sorting and includes related data .The method allows for both full and lookup (limited) data retrieval modes.
-        public async Task<IPagedList<TestPlan>> GetAllTestPlans(string SiteId, string LoggedUserId, string SearchText, int testPlanNumber, List<string> projectIds, string name, List<string> planMakerIds, List<string> planReviewerIds, string sortBy, Dictionary<string, string> sorts, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public async Task<IPagedList<TestPlan>> GetAllTestPlans(string SiteId, string LoggedUserId, string employeeId, string SearchText, int testPlanNumber, List<string> projectIds, string name, List<string> planMakerIds, List<string> planReviewerIds, string sortBy, Dictionary<string, string> sorts, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
         {
             var query = _testPlanRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
             if (!IsAdmin)
-                query = query.Where(p => p.Project.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == LoggedUserId && (m.FullAccess || m.ViewOnly || m.Notes)));
+            {
+                query = query.Where(x =>
+                    x.Project.CreatedById == LoggedUserId ||
+                    x.CreatedById == LoggedUserId ||
+                    x.Project.ProjectEmployeeMappings.Any(m =>
+                        !m.Deleted &&
+                        m.EmployeeId == employeeId &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                                !p.Deleted &&
+                                (p.FullAccess || p.ViewOnly || p.Notes)
+                            )
+                        )
+                    )
+                );
+            }
 
             if (projectIds != null && projectIds.Any())
                 query = query.Where(x => projectIds.Contains(x.ProjectId));
@@ -146,13 +162,37 @@ namespace Vsky.Services.TestPlans
                 {
                     Id = x.Project.Id,
                     Name = x.Project.Name,
-                    ProjectUserMappings = x.Project.ProjectUserMappings.Where(m => !m.Deleted && m.ProjectId == x.Project.Id && (IsAdmin || m.AspNetUserId == LoggedUserId)).Select(mapping => new ProjectUserMapping
-                    {
-                        Id = mapping.Id,
-                        FullAccess = mapping.FullAccess,
-                        ViewOnly = mapping.ViewOnly,
-                        Notes = mapping.Notes
-                    }).Take(1).ToList(),
+                    CurrentUserManage =
+                    x.Project.CreatedById == LoggedUserId ||
+                    x.CreatedById == LoggedUserId ||
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess))),
+
+                    CurrentUserNotes =
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.Notes)))
                 },
                 CreatedBy = new ApplicationUser
                 {
@@ -173,14 +213,13 @@ namespace Vsky.Services.TestPlans
             });
 
             var list = new PagedList<TestPlan>(query, page, pageSize);
-
             return list;
         }
 
         public IPagedList<TestPlan> GetAllTestPlanForDashboard(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
         {
             var query = _testPlanRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.ProjectId == projectId);
-            
+
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
                 var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
@@ -280,10 +319,10 @@ namespace Vsky.Services.TestPlans
             var list = await query
                 .OrderBy(x => x.Name)
                 .Select(x => new CommonDropDown
-            {
-                Value = x.Id,
-                Text = x.Name,
-            }).ToListAsync();
+                {
+                    Value = x.Id,
+                    Text = x.Name,
+                }).ToListAsync();
 
             return list;
         }

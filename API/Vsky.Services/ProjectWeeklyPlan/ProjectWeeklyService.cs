@@ -21,8 +21,8 @@ namespace Vsky.Services.ProjectWeeklyPlan
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
         public ProjectWeeklyService(
-            IRepository<Models.ProjectWeeklyPlan> projectWeeklyPlanRepository, 
-            IRepository<Notes> notesRepository, 
+            IRepository<Models.ProjectWeeklyPlan> projectWeeklyPlanRepository,
+            IRepository<Notes> notesRepository,
             IRepository<DropDown> dropdownRepository,
             UserManager<ApplicationUser> userManager,
             IApplicationUserRoleService applicationUserRoleService
@@ -67,6 +67,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
         public async Task<IPagedList<Models.ProjectWeeklyPlan>> GetAllProjectWeeklyPlanListAsync(
             string SiteId,
             string LoggedUserId,
+            string employeeId,
             DateTime GetDateTime,
             string PlanTypeId,
             string SearchText,
@@ -86,13 +87,29 @@ namespace Vsky.Services.ProjectWeeklyPlan
         {
             var query = _projectWeeklyPlanRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
             var dropdownData = _dropdownRepository.TableNoTracking.FirstOrDefault(x => x.Id == PlanTypeId);
-            var NotesType = "Project "+ dropdownData.DropDownValue + " Plan";
+            var NotesType = "Project " + dropdownData.DropDownValue + " Plan";
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
             int diff = (7 + (GetDateTime.DayOfWeek - DayOfWeek.Monday)) % 7;
             DateTime startOfWeek = GetDateTime.AddDays(-1 * diff);
 
             if (!IsAdmin)
-                query = query.Where(p => p.Project.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == LoggedUserId));
+            {
+                query = query.Where(x =>
+                    x.Project.CreatedById == LoggedUserId ||
+                    x.CreatedById == LoggedUserId ||
+                    x.Project.ProjectEmployeeMappings.Any(m =>
+                        !m.Deleted &&
+                        m.EmployeeId == employeeId &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                                !p.Deleted &&
+                                (p.FullAccess || p.ViewOnly || p.Notes)
+                            )
+                        )
+                    )
+                );
+            }
 
             // project filter
             if (ProjectIds != null && ProjectIds.Any())
@@ -107,10 +124,32 @@ namespace Vsky.Services.ProjectWeeklyPlan
                 query = query.Where(x => x.Project.Active == true);
 
             if (ProjectCoordinatorIds != null && ProjectCoordinatorIds.Any())
-                query = query.Where(x => x.Project.ProjectEmployeeMappings.Any(m => ProjectCoordinatorIds.Contains(m.EmployeeId) && m.EmployeeRoleDropdown.DropDownValue == "Project Coordinator" && !m.Deleted));
+            {
+                query = query.Where(x =>
+                    x.Project.ProjectEmployeeMappings.Any(m =>
+                        ProjectCoordinatorIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Project Coordinator"
+                        )
+                    )
+                );
+            }
 
             if (ProjectLeadsIds != null && ProjectLeadsIds.Any())
-                query = query.Where(x => x.Project.ProjectEmployeeMappings.Any(m => ProjectLeadsIds.Contains(m.EmployeeId) && m.EmployeeRoleDropdown.DropDownValue == "Project Lead" && !m.Deleted));
+            {
+                query = query.Where(x =>
+                    x.Project.ProjectEmployeeMappings.Any(m =>
+                        ProjectLeadsIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Project Lead"
+                        )
+                    )
+                );
+            }
 
             if (ProjectPriorityIds != null && ProjectPriorityIds.Any())
                 query = query.Where(x => ProjectPriorityIds.Contains(x.Project.ProjectPriorityId));
@@ -156,41 +195,109 @@ namespace Vsky.Services.ProjectWeeklyPlan
                             PrimaryPhoneNumber = x.Project.PlanApprover.Person.PrimaryPhoneNumber,
                         }
                     },
-                    ProjectCharterGroupByList = x.Project.ProjectEmployeeMappings.Where(m => !m.Deleted)
-                    .GroupBy(m => new {
-                        Id = m.EmployeeRoleDropdown.Id,
-                        Value = m.EmployeeRoleDropdown.DropDownValue
-                    })
-                    .Select(group => new ProjectCharterGroupBy
-                    {
-                        GroupId = group.Key.Id.ToString(),
-                        GroupValue = group.Key.Value,
-                        EmployeeMappingList = group
-                            .OrderBy(m => m.Employee.Person.FirstName)
-                            .Select(g => new ProjectEmployeeMapping
+                    ProjectCharterGroupByList = x.Project.ProjectEmployeeMappings
+                        .Where(m => !m.Deleted)
+                        .SelectMany(m => m.ProjectEmployeeRoleMappings
+                            .Where(r => !r.Deleted)
+                            .Select(r => new
                             {
-                                EmployeeId = g.EmployeeId,
-                                Employee = new Employee
+                                EmployeeId = m.EmployeeId,
+
+                                EmployeeIdValue = m.Employee.Id,
+
+                                PersonId = m.Employee.Person.Id,
+                                FirstName = m.Employee.Person.FirstName,
+                                LastName = m.Employee.Person.LastName,
+                                PrimaryEmailAddress = m.Employee.Person.PrimaryEmailAddress,
+                                PrimaryPhoneNumber = m.Employee.Person.PrimaryPhoneNumber,
+
+                                RoleId = r.SitesProjectRoles.Id,
+                                RoleName = r.SitesProjectRoles.MasterProjectRoles.Name
+                            }))
+                        .GroupBy(x => new
+                        {
+                            Id = x.RoleId,
+                            Value = x.RoleName
+                        })
+                        .Select(group => new ProjectCharterGroupBy
+                        {
+                            GroupId = group.Key.Id.ToString(),
+                            GroupValue = group.Key.Value,
+
+                            EmployeeMappingList = group
+                                .OrderBy(m => m.FirstName)
+                                .Select(g => new ProjectEmployeeMapping
                                 {
-                                    Id = g.Employee.Id,
-                                    Person = new Person
+                                    EmployeeId = g.EmployeeId,
+
+                                    Employee = new Employee
                                     {
-                                        Id = g.Employee.Person.Id,
-                                        FirstName = g.Employee.Person.FirstName,
-                                        LastName = g.Employee.Person.LastName,
-                                        PrimaryEmailAddress = g.Employee.Person.PrimaryEmailAddress,
-                                        PrimaryPhoneNumber = g.Employee.Person.PrimaryPhoneNumber,
+                                        Id = g.EmployeeIdValue,
+
+                                        Person = new Person
+                                        {
+                                            Id = g.PersonId,
+                                            FirstName = g.FirstName,
+                                            LastName = g.LastName,
+                                            PrimaryEmailAddress = g.PrimaryEmailAddress,
+                                            PrimaryPhoneNumber = g.PrimaryPhoneNumber
+                                        }
                                     }
-                                },
-                            }).ToList()
-                    })
-                    .OrderBy(group => group.GroupValue)
-                    .ToList(),
-                    ProjectUserMappings = x.Project.ProjectUserMappings.Where(m => !m.Deleted && m.AspNetUserId == LoggedUserId && m.ProjectId == x.ProjectId).ToList(),
+                                })
+                                .ToList()
+                        })
+                        .OrderBy(group => group.GroupValue)
+                        .ToList(),
+                    CurrentUserManage =
+                    x.Project.CreatedById == LoggedUserId ||
+                    x.CreatedById == LoggedUserId ||
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess))),
+
+                    CurrentUserView =
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.ViewOnly))),
+
+                    CurrentUserNotes =
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.Notes))),
                     ProjectMessageCount = x.Project.ProjectsMessages.Count(m => !m.Deleted),
                     ProjectNotesCount = _notesRepository.TableNoTracking.Count(m => !m.Deleted && m.SubModuleId == x.ProjectId && m.Type == NotesType)
                 },
-                ProjectWeeklyPlanDates = x.ProjectWeeklyPlanDates.Where(m =>!m.Deleted && m.PlanTypeId == PlanTypeId && m.WeekDate >= startOfWeek && (IsAdmin || !m.IsApproved && !m.IsCompleted ))
+                ProjectWeeklyPlanDates = x.ProjectWeeklyPlanDates.Where(m => !m.Deleted && m.PlanTypeId == PlanTypeId && m.WeekDate >= startOfWeek && (IsAdmin || !m.IsApproved && !m.IsCompleted))
                 .Select(d => new ProjectWeeklyPlanDates
                 {
                     Id = d.Id

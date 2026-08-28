@@ -1003,11 +1003,10 @@ const getAllProjectTaskList = async ({ pagination: p }) => {
 }
 
 function transformTaskRow (task, storedTaskIds, isAdmin) {
-  const projectMapping = task?.project?.projectUserMappings?.[0] || {};
   const moduleMapping = task?.projectModule?.projectModulesUserMappings?.[0];
 
-  const projectFullAccess = projectMapping.fullAccess ?? false;
-  const projectNote = projectMapping.notes ?? false;
+  const projectFullAccess = task?.project?.currentUserManage ?? false;
+  const projectNote = task?.project?.currentUserNotes ?? false;
 
   const combinedEditable = isAdmin || (moduleMapping ? moduleMapping.fullAccess : projectFullAccess);
   const combinedNote = isAdmin || (moduleMapping ? moduleMapping.notes : projectNote);

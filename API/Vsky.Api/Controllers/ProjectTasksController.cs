@@ -131,10 +131,12 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
                 // Fetch a list
                 var list = await _taskService.GetAllProjectTasks(
                     SiteId,
                     LoggedUserId,
+                    employeeId,
                     searchModel.SearchText,
                     searchModel.IsTemplate,
                     searchModel.ProjectTaskNumber,
@@ -420,8 +422,9 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
 
-                var list = await _taskService.GetAllProjectTaskWithProjectListForDropdown(SiteId, LoggedUserId);
+                var list = await _taskService.GetAllProjectTaskWithProjectListForDropdown(SiteId, LoggedUserId, employeeId);
                 var model = _mapper.Map<List<CommonDropDown>>(list);
                 return Ok(model);
             }
@@ -2789,11 +2792,13 @@ namespace Vsky.Api.Controllers
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
             var SiteId = _globalVariable.SiteId;
+            var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+
             if (searchModel.ProjectIds != null && searchModel.ProjectIds.Count > 1)
                 searchModel.SortBy = "calendar";
 
             var fullPageSize = int.MaxValue;
-            var tasks = await _taskService.GetAllProjectTasks(SiteId, LoggedUserId, searchModel.SearchText, searchModel.IsTemplate, searchModel.ProjectTaskNumber, searchModel.ProjectIds, searchModel.ProjectModuleIds, searchModel.RequirementIds, null, searchModel.ProjectLeadsIds, searchModel.StatusIds, searchModel.PriorityIds, searchModel.CustomerIds, searchModel.CompanyContactIds, searchModel.ActivityOwners, searchModel.Name, searchModel.TaskTagsIds, searchModel.SortBy, searchModel.Sorts, searchModel.Descending, 1, fullPageSize);
+            var tasks = await _taskService.GetAllProjectTasks(SiteId, LoggedUserId, employeeId, searchModel.SearchText, searchModel.IsTemplate, searchModel.ProjectTaskNumber, searchModel.ProjectIds, searchModel.ProjectModuleIds, searchModel.RequirementIds, null, searchModel.ProjectLeadsIds, searchModel.StatusIds, searchModel.PriorityIds, searchModel.CustomerIds, searchModel.CompanyContactIds, searchModel.ActivityOwners, searchModel.Name, searchModel.TaskTagsIds, searchModel.SortBy, searchModel.Sorts, searchModel.Descending, 1, fullPageSize);
 
             // selected month 
             //var now = CalendarMonth;

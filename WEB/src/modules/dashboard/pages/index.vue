@@ -1207,10 +1207,10 @@ const getProjectActivities = async (props) => {
   projectActivitiesService.getAllProjectActivities(payload).then((resp) => {
     activityRows.value = resp.data;
     activityRows.value = resp.data.map(activity => {
-      const hasFullAccess = activity?.project?.projectUserMappings[0]?.fullAccess ?? false;
+      const hasFullAccess = activity?.project?.currentUserManage ?? false;
       return {
         ...activity,
-        isNotes: activity?.project?.projectUserMappings[0]?.notes ?? false,
+        isNotes: activity?.project?.currentUserNotes ?? false,
         isEditable: role === "admin" || hasFullAccess
       };
     });

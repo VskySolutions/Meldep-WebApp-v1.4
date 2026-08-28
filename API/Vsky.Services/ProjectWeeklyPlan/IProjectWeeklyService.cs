@@ -19,6 +19,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
         Task<IPagedList<Models.ProjectWeeklyPlan>> GetAllProjectWeeklyPlanListAsync(
             string SiteId,
             string LoggedUserId,
+            string employeeId,
             DateTime GetDateTime,
             string PlanTypeId,
             string SearchText,

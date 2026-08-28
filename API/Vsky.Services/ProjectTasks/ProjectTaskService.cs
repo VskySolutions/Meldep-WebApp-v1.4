@@ -31,7 +31,7 @@ namespace Vsky.Services.ProjectTasks
         //private readonly IRepository<Timesheet> _timesheetRepository;
         private readonly IRepository<TimesheetLines> _timesheetLinerepository;
         private readonly ICommonService _commonService;
-        private readonly IRepository<ProjectUserMapping> _projectUserMappingRepository;
+        private readonly IRepository<Project> _projectRepository;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
         #endregion
 
@@ -45,7 +45,7 @@ namespace Vsky.Services.ProjectTasks
             IRepository<VWProjectTaskStatusSummary> vWProjectTaskStatusSummary,
             IRepository<TimesheetLines> timesheetLinerepository,
             ICommonService commonService,
-            IRepository<ProjectUserMapping> projectUserMappingRepository,
+            IRepository<Project> projectRepository,
             IApplicationUserRoleService applicationUserRoleService
         )
         {
@@ -57,7 +57,7 @@ namespace Vsky.Services.ProjectTasks
             _vWProjectTaskStatusSummary = vWProjectTaskStatusSummary;
             _timesheetLinerepository = timesheetLinerepository;
             _commonService = commonService;
-            _projectUserMappingRepository = projectUserMappingRepository;
+            _projectRepository = projectRepository;
             _applicationUserRoleService = applicationUserRoleService;
         }
         #endregion
@@ -90,6 +90,7 @@ namespace Vsky.Services.ProjectTasks
         public async Task<IPagedList<ProjectTask>> GetAllProjectTasks(
             string siteId,
             string userId,
+            string employeeId,
             string searchText,
             bool isTemplate,
             int projectTaskNumber,
@@ -117,7 +118,21 @@ namespace Vsky.Services.ProjectTasks
             bool isAdmin = await IsCurrentUserAdmin(userId, siteId);
             if (!isAdmin)
             {
-                query = query.Where(x => x.Project.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == userId && (m.FullAccess || m.ViewOnly || m.Notes)));
+                query = query.Where(x =>
+                    x.Project.CreatedById == userId ||
+                    x.CreatedById == userId ||
+                    x.Project.ProjectEmployeeMappings.Any(m =>
+                        !m.Deleted &&
+                        m.EmployeeId == employeeId &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                                !p.Deleted &&
+                                (p.FullAccess || p.ViewOnly || p.Notes)
+                            )
+                        )
+                    )
+                );
 
                 // Check if user exists in ProjectModulesUserMappings
                 bool userExistsInModule = query.Any(x => x.ProjectModule.ProjectModulesUserMappings.Any(m => !m.Deleted && m.AspNetUserId == userId));
@@ -132,7 +147,19 @@ namespace Vsky.Services.ProjectTasks
             if (moduleIds?.Any() == true) query = query.Where(x => moduleIds.Contains(x.ProjectModuleId));
             if (requirementIds?.Any() == true) query = query.Where(x => requirementIds.Contains(x.RequirementId));
             if (projectTaskIds?.Any() == true) query = query.Where(x => projectTaskIds.Contains(x.Id));
-            if (leadIds?.Any() == true) query = query.Where(x => x.Project.ProjectEmployeeMappings.Any(m => leadIds.Contains(m.EmployeeId) && !m.Deleted && m.EmployeeRoleDropdown.DropDownValue == "Project Lead"));
+            if (leadIds?.Any() == true)
+            {
+                query = query.Where(x =>
+                    x.Project.ProjectEmployeeMappings.Any(m =>
+                        leadIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Project Lead"
+                        )
+                    )
+                );
+            }
             if (statusIds?.Any() == true) query = query.Where(x => statusIds.Contains(x.StatusId));
             if (priorityIds?.Any() == true) query = query.Where(x => priorityIds.Contains(x.PriorityId));
             if (tagIds?.Any() == true) query = query.Where(x => x.ProjectTask_Tags.Any(t => !t.Deleted && t.AspNetUserId == userId && tagIds.Contains(t.Tags.Id)));
@@ -239,15 +266,36 @@ namespace Vsky.Services.ProjectTasks
                         DropDownValue = x.Project.ProjectStatus.DropDownValue,
                     },
                     ProjectNotesCount = _notesRepository.TableNoTracking.Count(m => !m.Deleted && m.SubModuleId == x.Project.Id && m.Type == "Projects"),
-                    ProjectUserMappings = x.Project.ProjectUserMappings
-                        .Where(m => !m.Deleted && m.ProjectId == x.Project.Id && (isAdmin || m.AspNetUserId == userId))
-                        .Take(1).Select(m => new ProjectUserMapping
-                        {
-                            Id = m.Id,
-                            FullAccess = m.FullAccess,
-                            ViewOnly = m.ViewOnly,
-                            Notes = m.Notes
-                        }).ToList(),
+                    CurrentUserManage =
+                    x.CreatedById == userId ||
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess))),
+
+                    CurrentUserNotes =
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.Notes)))
                 },
                 ProjectModule = new ProjectModule
                 {
@@ -365,11 +413,6 @@ namespace Vsky.Services.ProjectTasks
                         IssueNumber = m.Issue.IssueNumber,
                         Status = m.Issue.Status == null ? null : new DropDown { Id = m.Issue.Status.Id, DropDownValue = m.Issue.Status.DropDownValue }
                     }
-                    //Requirement = m.Requirement == null ? null : new Requirement
-                    //{
-                    //    RequirementNumber = m.Requirement.RequirementNumber,
-                    //    Status = m.Requirement.Status == null ? null : new DropDown { Id = m.Requirement.Status.Id, DropDownValue = m.Requirement.Status.DropDownValue }
-                    //}
                 }).ToList(),
                 ProjectTaskNotesCount = _notesRepository.TableNoTracking.Count(m => !m.Deleted && m.SubModuleId == x.Id && m.Type == "Project Task")
 
@@ -703,7 +746,20 @@ namespace Vsky.Services.ProjectTasks
             if (projectTaskNumber != 0) query = query.Where(x => x.ProjectTaskNumber == projectTaskNumber);
             if (projectIds?.Any() == true) query = query.Where(x => projectIds.Contains(x.ProjectId));
             if (projectModuleIds?.Any() == true) query = query.Where(x => projectModuleIds.Contains(x.ProjectModuleId));
-            if (projectLeadsIds?.Any() == true) query = query.Where(x => x.Project.ProjectEmployeeMappings.Any(m => projectLeadsIds.Contains(m.EmployeeId) && m.EmployeeRoleDropdown.DropDownValue == "Project Lead"));
+            //if (projectLeadsIds?.Any() == true) query = query.Where(x => x.Project.ProjectEmployeeMappings.Any(m => projectLeadsIds.Contains(m.EmployeeId) && m.EmployeeRoleDropdown.DropDownValue == "Project Lead"));
+            if (projectLeadsIds != null && projectLeadsIds.Any())
+            {
+                query = query.Where(x =>
+                    x.Project.ProjectEmployeeMappings.Any(m =>
+                        projectLeadsIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Project Lead"
+                        )
+                    )
+                );
+            }
             //if (statusIds?.Any() == true) query = query.Where(x => statusIds.Contains(x.StatusId));
             if (priorityIds?.Any() == true) query = query.Where(x => priorityIds.Contains(x.PriorityId));
             if (customerIds?.Any() == true) query = query.Where(x => customerIds.Contains(x.Project.CustomerId));
@@ -838,7 +894,7 @@ namespace Vsky.Services.ProjectTasks
             return list;
         }
 
-        public async Task<List<CommonDropDown>> GetAllProjectTaskWithProjectListForDropdown(string siteId, string LoggedUserId)
+        public async Task<List<CommonDropDown>> GetAllProjectTaskWithProjectListForDropdown(string siteId, string LoggedUserId, string employeeId)
         {
             var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active && !x.IsMoved);
 
@@ -846,10 +902,26 @@ namespace Vsky.Services.ProjectTasks
 
             if (!IsAdmin)
             {
-                //query = query.Where(p => p.Project.ProjectUserMappings.Any(m => !m.Deleted && m.AspNetUserId == LoggedUserId));
-                var allowedProjectIds = await _projectUserMappingRepository.TableNoTracking
-                    .Where(x => !x.Deleted && x.AspNetUserId == LoggedUserId)
-                    .Select(x => x.ProjectId)
+                var allowedProjectIds = await _projectRepository.TableNoTracking
+                    .Where(x =>
+                    x.CreatedById == LoggedUserId ||
+                        x.ProjectEmployeeMappings.Any(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId &&
+                            m.ProjectEmployeeRoleMappings.Any(r =>
+                                !r.Deleted &&
+                                r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                                    !p.Deleted &&
+                                    (
+                                        p.FullAccess ||
+                                        p.ViewOnly ||
+                                        p.Notes
+                                    )
+                                )
+                            )
+                        )
+                    )
+                    .Select(x => x.Id)
                     .Distinct()
                     .ToListAsync();
 

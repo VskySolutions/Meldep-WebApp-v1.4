@@ -467,7 +467,7 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region GetAllCustomerContactListForDropdown
-        // Title: GetAllProjectListForDropdown
+        // Title: GetAllCustomerContactListForDropdown
         // Description: This endpoint retrieves the details of a specific project based on its unique identifier (ID). 
         [HttpGet("contactdropdown/list")]
         public async Task<IActionResult> GetAllCustomerContactListForDropdown(string siteId)

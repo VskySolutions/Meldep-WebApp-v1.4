@@ -117,6 +117,9 @@ export default {
   getProjectEmployees (id) {
     return http.get(`/projects/ProjectEmployees/list?id=${id}`).then(response => response.data);
   },
+  getProjectMappingUsers (id) {
+    return http.get(`/projects/ProjectMappingUsers/list?id=${id}`).then(response => response.data);
+  },
   getProjectCharterEmployeesWithWeeklyPlanHoursByProjectId (id, taskId) {
     return http.get(`/projects/ProjectCharterEmployeesWithWeeklyPlanHours/list?id=${id}&taskId=${taskId}`).then(response => response.data);
   },
@@ -226,17 +229,22 @@ export default {
   getProjectUsers (model) {
     return http.post("/project-users/list", model).then(response => response.data);
   },
-  getProjectUserByProjectId (id) {
-    return http.get(`/project-users/user/${id}`).then(response => response.data);
+  // getProjectUserByProjectId (id) {
+  //   return http.get(`/project-users/user/${id}`).then(response => response.data);
+  // },
+  // saveProjectUser (id, model) {
+  //   if (id) {
+  //     return http.put(`/project-users/${id}`, model).then(response => response.data);
+  //   }
+  // },
+  // assignBulk (ids, model) {
+  //   if (ids) {
+  //     return http.put(`/project-users/savebulk/${ids}`, model).then(response => response.data);
+  //   }
+  // },
+
+  // site project roles
+  getAllSiteProjectRolesListForDropdown () {
+    return http.get("/site-project-roles/dropdown/list").then(response => response.data);
   },
-  saveProjectUser (id, model) {
-    if (id) {
-      return http.put(`/project-users/${id}`, model).then(response => response.data);
-    }
-  },
-  assignBulk (ids, model) {
-    if (ids) {
-      return http.put(`/project-users/savebulk/${ids}`, model).then(response => response.data);
-    }
-  }
 };

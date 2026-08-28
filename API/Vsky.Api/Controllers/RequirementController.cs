@@ -99,10 +99,13 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+
                 // Fetch a list of Requirements on search criteria (name, sorting, pagination)
                 var list = await _requirementService.GetAllRequirements(
                     SiteId,
                     LoggedUserId,
+                    employeeId,
                     searchModel.SearchText,
                     searchModel.RequirementNumber,
                     searchModel.ProjectIds,

@@ -1073,18 +1073,11 @@ const getAllRequirement = async ({ pagination: p }) => {
     const resp = await requirementService.getAllRequirement(payload);
 
     rows.value = resp.data.map(requirement => {
-      const hasFullAccess =
-        requirement.project?.projectUserMappings?.[0]?.fullAccess ?? false;
-
       return {
         ...requirement,
-
         checkboxStatus: storedRequirementIds.includes(requirement.id),
-
-        isNotes:
-          requirement.project?.projectUserMappings?.[0]?.notes ?? false,
-
-        isEditable: role === "admin" || hasFullAccess,
+        isNotes: requirement.project?.currentUserNotes ?? false,
+        isEditable: requirement.project?.currentUserManage,
 
         requirementTags:
           requirement.requirementTags?.map(tag => ({

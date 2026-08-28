@@ -11,7 +11,8 @@ namespace Vsky.Services.TestCases
         #region GetAllTestCases
         Task<IPagedList<TestCase>> GetAllTestCases(
             string SiteId, 
-            string LoggedUserId, 
+            string LoggedUserId,
+            string employeeId,
             string SearchText, 
             int testCaseNumber, 
             List<string> projectIds,

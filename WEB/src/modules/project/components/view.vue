@@ -28,7 +28,7 @@
             </q-tab-panel>
             <q-tab-panel name="2_tab">
               <!-- <q-card class="card-header with-tools headerBasic"> -->
-              <fieldset>
+              <fieldset class="q-mb-lg">
                 <legend>Project Info</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
@@ -82,7 +82,23 @@
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Status</div>
+                    <div class="q-mb-xs">Status
+                      <q-icon
+                        name="o_info"
+                        size="16px"
+                        class="q-ml-xs cursor-pointer text-grey-7"
+                      >
+                        <q-tooltip
+                          anchor="top middle"
+                          self="bottom middle"
+                          :offset="[0, 6]"
+                        >
+                          <div style="max-width: 320px; white-space: normal;">
+                            Indicates the current stage or state of the project in its lifecycle.
+                          </div>
+                        </q-tooltip>
+                      </q-icon>
+                    </div>
                     <div class="text-black">
                       {{ model.projectStatus.dropDownValue ? model.projectStatus.dropDownValue : "-" }}
                     </div>
@@ -99,14 +115,6 @@
                     <div class="q-mb-xs">Project Type</div>
                     <div class="text-black">
                       {{ model.projectType.dropDownValue ? model.projectType.dropDownValue : "-" }}
-                    </div>
-                  </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12 col-sm-12 col-md-12">
-                    <div class="q-mb-xs">Description</div>
-                    <div class="text-black RichTextEditor">
-                      <p v-html="model.description ? model.description : '-'" />
                     </div>
                   </div>
                 </div>
@@ -175,8 +183,8 @@
               </fieldset>
             </q-tab-panel>
             <q-tab-panel name="3_tab">
-              <fieldset class="q-mb-lg">
-                <legend>Project Charter</legend>
+              <!-- <fieldset class="q-mb-lg">
+                <legend>Project Charter</legend> -->
                 <q-table
                   ref="tableRef" v-model:pagination="pagination" bordered class="no-shadow" :loading="loading" :rows="rows" :columns="columns" row-key="id" separator="cell"
                   binary-state-sort :rows-per-page-options="[20, 50, 100, 200, 500]"
@@ -188,13 +196,65 @@
                   </template>
                   <template #body="props">
                     <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                      <q-td style="width: 45%">{{ props.row.employeeName }}</q-td>
-                      <q-td style="width: 45%">{{ props.row.employeeRole }}</q-td>
-                      <q-td style="width: 10%" align="right">{{ props.row.productivityFactor }}</q-td>
+                      <q-td style="width: 25%">
+                        {{ props.row.employeeName }}
+                      </q-td>
+
+                      <!-- Role -->
+                      <q-td style="width: 35%">
+                        <div class="row items-center q-gutter-xs">
+                          <q-badge
+                            v-for="role in props.row.roles"
+                            :key="role.id"
+                            color="primary"
+                            rounded
+                            class="q-px-sm q-py-xs"
+                          >
+                            {{ role.roleName }}
+                          </q-badge>
+
+                          <span v-if="!props.row.roles?.length">-</span>
+                        </div>
+                      </q-td>
+
+                      <!-- Productivity -->
+                      <q-td
+                        style="width: 10%"
+                        class="text-right"
+                      >
+                        {{ props.row.productivityFactor }}
+                      </q-td>
+
+                      <!-- Manage -->
+                      <q-td style="width: 10%" align="center">
+                        <q-icon
+                          v-if="props.row.fullAccess"
+                          name="o_check"
+                          color="positive"
+                        />
+                      </q-td>
+
+                      <!-- View -->
+                      <q-td style="width: 10%" align="center">
+                        <q-icon
+                          v-if="props.row.viewOnly"
+                          name="o_check"
+                          color="positive"
+                        />
+                      </q-td>
+
+                      <!-- Notes -->
+                      <q-td style="width: 10%" align="center">
+                        <q-icon
+                          v-if="props.row.notes"
+                          name="o_check"
+                          color="positive"
+                        />
+                      </q-td>
                     </q-tr>
                   </template>
                 </q-table>
-              </fieldset>
+              <!-- </fieldset> -->
             </q-tab-panel>
             <q-tab-panel v-if="role === 'admin'" name="4_tab">
               <AccountServicesTab
@@ -234,10 +294,47 @@ const servicesRows = ref([]);
 const loading = ref(true);
 const tab = ref("1_tab");
 const pagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
+// const columns = ref([
+//   { name: "employeeName", label: "Employee Name", field: "employeeName", align: "left" },
+//   { name: "employeeRole", label: "Role", field: "employeeRole", align: "left" },
+//   { name: "productivityFactor", label: "Productivity Factor", field: "productivityFactor", align: "right" }
+// ]);
 const columns = ref([
-  { name: "employeeName", label: "Employee Name", field: "employeeName", align: "left" },
-  { name: "employeeRole", label: "Role", field: "employeeRole", align: "left" },
-  { name: "productivityFactor", label: "Productivity Factor", field: "productivityFactor", align: "right" }
+  {
+    name: "employeeId",
+    label: "Employee Name",
+    field: "employeeName",
+    align: "left",
+    sortable: true
+  },
+  {
+    name: "siteProjectRoleIds",
+    label: "Role",
+    field: "siteProjectRoleIds",
+    align: "left"
+  },
+  {
+    name: "productivityFactor",
+    label: "Productivity Factor",
+    field: "productivityFactor",
+    align: "right",
+    sortable: true
+  },
+  {
+    name: "fullAccess",
+    label: "Manage",
+    field: "fullAccess"
+  },
+  {
+    name: "viewOnly",
+    label: "View",
+    field: "viewOnly"
+  },
+  {
+    name: "notes",
+    label: "Notes",
+    field: "notes"
+  }
 ]);
 
 const filepagination = ref({ sortBy: "", descending: true, rowsPerPage: 20, page: 1 });
@@ -305,12 +402,64 @@ const getProject = () => {
     model.value = _.cloneDeep(resp);
     model.value.startDateStr = resp.startDate ? toDate(resp.startDate) : "";
     model.value.goLiveDateStr = resp.goLiveDate ? toDate(resp.goLiveDate) : "";
-    rows.value = resp.projectEmployeeMappings.map(item => ({
-      ...item,
-      employeeName: item.employee.person.fullName,
-      employeeRole: item.employeeRoleDropdown.dropDownValue,
-      startDate: item.productivityFactor
-    }));
+    rows.value = (resp.projectEmployeeMappings || []).map(item => {
+      const roles = (item.projectEmployeeRoleMappings || [])
+        .filter(role => role?.sitesProjectRoles)
+        .map(role => {
+          const siteRole = role.sitesProjectRoles;
+
+          return {
+            id: role.id,
+            siteProjectRoleId: siteRole.id,
+            roleName:
+              siteRole.masterProjectRoles?.name || "",
+
+            fullAccess: (
+              siteRole.sitesProjectRolesPermissions || []
+            ).some(permission => permission.fullAccess === true),
+
+            viewOnly: (
+              siteRole.sitesProjectRolesPermissions || []
+            ).some(permission => permission.viewOnly === true),
+
+            notes: (
+              siteRole.sitesProjectRolesPermissions || []
+            ).some(permission => permission.notes === true)
+          };
+        });
+
+      return {
+        ...item,
+
+        // Employee
+        employeeId: item.employeeId,
+
+        employeeName:
+          item.employee?.person?.fullName || "-",
+
+        // Role IDs
+        siteProjectRoleIds: roles
+          .map(role => role.siteProjectRoleId)
+          .filter(Boolean),
+
+        // Role names for displaying in table
+        roleNames: roles
+          .map(role => role.roleName)
+          .filter(Boolean),
+
+        // Keep complete role information for tooltip
+        roles,
+
+        // Productivity
+        productivityFactor:
+          item.productivityFactor ?? 0,
+
+        // Effective permissions
+        fullAccess: roles.some(role => role.fullAccess),
+        viewOnly: roles.some(role => role.viewOnly),
+        notes: roles.some(role => role.notes)
+      };
+    });
     filesrows.value = resp.projectFileList.map(item => ({
       ...item
     }));

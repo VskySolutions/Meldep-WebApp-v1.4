@@ -57,6 +57,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
 
                 query = query.Where(m =>
                     (m.Title ?? "").ToLower().Contains(searchText) ||
+                    (m.Description ?? "").ToLower().Contains(searchText) ||
                     (m.Project != null && (m.Project.Name ?? "").ToLower().Contains(searchText)) ||
                     (m.Requirement != null && (m.Requirement.Title ?? "").ToLower().Contains(searchText)) ||
 
@@ -77,11 +78,43 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                         ((m.UpdatedBy.Person.FirstName ?? "") + " " + (m.UpdatedBy.Person.LastName ?? ""))
                             .ToLower()
                             .Contains(searchText)
-                     ))
+                     )) ||
+                    (
+                        (
+                            m.ProjectQuestionsAnswersResponseLog
+                                .Where(p => !p.Deleted)
+                                .OrderByDescending(p => p.CreatedOnUtc)
+                                .Select(p => p.Description)
+                                .FirstOrDefault() ?? ""
+                        )
+                        .ToLower()
+                        .Contains(searchText)
+                    )
                 );
             }
 
-            if (!string.IsNullOrWhiteSpace(sortBy))
+            if (string.Equals(sortBy, "lastAnswer", StringComparison.OrdinalIgnoreCase))
+            {
+                if (descending)
+                {
+                    query = query.OrderByDescending(x =>
+                        x.ProjectQuestionsAnswersResponseLog
+                            .Where(p => !p.Deleted)
+                            .OrderByDescending(p => p.CreatedOnUtc)
+                            .Select(p => p.Description)
+                            .FirstOrDefault());
+                }
+                else
+                {
+                    query = query.OrderBy(x =>
+                        x.ProjectQuestionsAnswersResponseLog
+                            .Where(p => !p.Deleted)
+                            .OrderByDescending(p => p.CreatedOnUtc)
+                            .Select(p => p.Description)
+                            .FirstOrDefault());
+                }
+            }
+            else if(!string.IsNullOrWhiteSpace(sortBy))
             {
                 var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
                 query = query.OrderBy(orderBy);
@@ -216,7 +249,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                 searchText = searchText.ToLower();
                 var isDate = DateTime.TryParse(searchText, out var parsedDate);
 
-                query = query.Where(m => 
+                query = query.Where(m =>
                         (m.Project != null && m.Project.Name.ToLower().Contains(searchText))
                      || (m.Requirement != null && m.Requirement.Title.ToLower().Contains(searchText))
                      || (m.Title != null && m.Title.ToLower().Contains(searchText))
@@ -346,7 +379,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
         #region GetAllQuestionAnswersByQuestionId
         public List<ProjectQuestionsAnswers> GetAllQuestionAnswersByQuestionId(string SiteId, string questionId, bool latestOnTop)
         {
-            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x =>!x.Deleted && x.SiteId == SiteId && x.Id == questionId);
+            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.Id == questionId);
 
             query = latestOnTop
                 ? query.OrderByDescending(x => x.CreatedOnUtc)

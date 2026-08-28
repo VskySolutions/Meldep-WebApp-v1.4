@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AutoMapper;
-using Ical.Net.DataTypes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -52,6 +50,7 @@ namespace Vsky.Api.Controllers
         private readonly IMapper _mapper;
         private readonly IProjectService _projectService;
         private readonly IProjectEmployeeMappingService _projectEmployeeMappingService;
+        private readonly IProjectEmployeeRoleMappingService _projectEmployeeRoleMappingService;
         private readonly ICommonService _commonService;
         private readonly ISiteService _siteService;
         private readonly IDropDownService _dropDownService;
@@ -71,7 +70,6 @@ namespace Vsky.Api.Controllers
         private readonly IProjectTaskService _projectTaskService;
         private readonly ITagService _tagService;
         private readonly IProjectsTagService _projectsTagService;
-        private readonly IProjectUserMappingService _projectUserMappingService;
         private readonly IProjectModuleService _projectModuleService;
         private readonly IProjectTaskTagService _projectTaskTagService;
         private readonly IProjectActivityService _projectActivityService;
@@ -98,6 +96,7 @@ namespace Vsky.Api.Controllers
             IMapper mapper,
             IProjectService projectService,
             IProjectEmployeeMappingService projectEmployeeMappingService,
+            IProjectEmployeeRoleMappingService projectEmployeeRoleMappingService,
             ICommonService commonService,
             ISiteService siteService,
             IDropDownService dropDownService,
@@ -115,7 +114,6 @@ namespace Vsky.Api.Controllers
             ISitesModifiedLogsService sitesModifiedLogsService,
             IIssueService issueService,
             IProjectTaskService projectTaskService,
-            IProjectUserMappingService projectUserMappingService,
             ITagService tagService,
             IProjectsTagService projectsTagService,
             IProjectModuleService projectModuleService,
@@ -142,6 +140,7 @@ namespace Vsky.Api.Controllers
             _mapper = mapper;
             _projectService = projectService;
             _projectEmployeeMappingService = projectEmployeeMappingService;
+            _projectEmployeeRoleMappingService = projectEmployeeRoleMappingService;
             _commonService = commonService;
             _siteService = siteService;
             _dropDownService = dropDownService;
@@ -160,7 +159,6 @@ namespace Vsky.Api.Controllers
             _sitesModifiedLogsService = sitesModifiedLogsService;
             _issueService = issueService;
             _projectTaskService = projectTaskService;
-            _projectUserMappingService = projectUserMappingService;
             _tagService = tagService;
             _projectsTagService = projectsTagService;
             _projectModuleService = projectModuleService;
@@ -194,6 +192,7 @@ namespace Vsky.Api.Controllers
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
                 int Status = 2;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
                 if (!string.IsNullOrWhiteSpace(searchModel.StatusId))
                 {
                     var activeStatus = _dropDownService.GetDropDownById(searchModel.StatusId).GetAwaiter().GetResult();
@@ -205,6 +204,7 @@ namespace Vsky.Api.Controllers
                     SiteId,
                     searchModel.IsTemplate,
                     LoggedUserId,
+                    employeeId,
                     searchModel.SearchText,
                     searchModel.ProjectIds,
                     searchModel.ProjectCategoryIds,
@@ -259,6 +259,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+
                 int Status = 2;
                 if (!string.IsNullOrWhiteSpace(searchModel.StatusId))
                 {
@@ -269,6 +271,7 @@ namespace Vsky.Api.Controllers
                 var list = await _projectService.GetAllProjectsForNotes(
                     SiteId,
                     LoggedUserId,
+                    employeeId,
                     searchModel.SearchText,
                     searchModel.ProjectIds,
                     searchModel.ProjectCategoryIds,
@@ -328,7 +331,9 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var list = await _projectService.GetAllProjectListForDropdown(SiteId, LoggedUserId, statuses);
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+
+                var list = await _projectService.GetAllProjectListForDropdown(SiteId, LoggedUserId, employeeId, statuses);
                 var model = _mapper.Map<List<ProjectModel>>(list);
                 return Ok(model);
             }
@@ -346,7 +351,9 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var list = await _projectService.GetProjectsListForDropdown(SiteId, LoggedUserId, isTemplate, ActiveStatus, isAllProject);
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+
+                var list = await _projectService.GetProjectsListForDropdown(SiteId, LoggedUserId, employeeId, isTemplate, ActiveStatus, isAllProject);
                 var model = _mapper.Map<List<CommonDropDown>>(list);
                 return Ok(model);
             }
@@ -683,17 +690,6 @@ namespace Vsky.Api.Controllers
 
                     if (!string.IsNullOrEmpty(model.PlanApproverId))
                         _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "Projects", entity.Id, model.Name, entity.Id, model.Name, "Plan Approver", model.PlanApproverId, LoggedUserId, GetDateTime);
-
-                    // Project Security
-                    var ProjectSecurity = new ProjectUserMapping();
-                    ProjectSecurity.AspNetUserId = LoggedUserId;
-                    ProjectSecurity.ProjectId = ProjectId;
-                    ProjectSecurity.FullAccess = true;
-                    ProjectSecurity.ViewOnly = true;
-                    ProjectSecurity.Notes = true;
-                    ProjectSecurity.CreatedById = LoggedUserId;
-                    ProjectSecurity.CreatedOnUtc = GetDateTime;
-                    _projectUserMappingService.InsertProjectUser(ProjectSecurity);
 
                     // Generate WorkBoard
                     await GenerateDefaultWorkboard(SiteId, entity.Id, LoggedUserId, GetDateTime);
@@ -1058,131 +1054,138 @@ namespace Vsky.Api.Controllers
                         if (IsPlanApproverChanged)
                             _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "Projects", entity.Id, model.Name, entity.Id, model.Name, "Plan Approver", model.PlanApproverId, LoggedUserId, GetDateTime);
                     }
-
                     if (model.Tab == "2_tab")
                     {
-                        if (model.ProjectEmployeeMappings.Count() > 0)
+                        if (model.ProjectEmployeeMappings != null &&
+                            model.ProjectEmployeeMappings.Any())
                         {
-                            var managerRoleId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Employee Designation", "Project Manager");
-                            var coordinatorRoleId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Employee Designation", "Project Coordinator");
-
-                            // Define role priority
-                            var rolePriority = new Dictionary<string, int>
-                            {
-                                { managerRoleId, 1 },
-                                { coordinatorRoleId, 2 },
-                            };
-
-                            var employeeGroups = model.ProjectEmployeeMappings
-                                                .Where(x =>
-                                                    !x.Deleted ||
-                                                    (x.Deleted && !string.IsNullOrWhiteSpace(x.Id))
-                                                )
-                                                .GroupBy(x => x.EmployeeId)
-                                                .Select(g =>
-                                                    g.OrderBy(x =>
-                                                        x.Deleted
-                                                            ? 100
-                                                            : rolePriority.TryGetValue(x.EmployeeDesignationId, out var priority)
-                                                                ? priority
-                                                                : 99
-                                                    ).First()
-                                                )
-                                                .ToList();
-
-                            var employeeUserMapping = new Dictionary<(string EmployeeId, string DesignationId), string>();
-
-                            var processedUserIds = new HashSet<string>();
-                            foreach (var item in employeeGroups)
-                            {
-                                var aspNetUserId = _commonService.GetLoggeduserIdByEmployeeId(SiteId, item.EmployeeId);
-                                var existingUser = await _projectUserMappingService.GetRecordByUserIdandProjectId(SiteId, aspNetUserId, id);
-                                
-                                string userMappingId = null;
-                                // Get all roles for this employee
-                                var allRolesForEmployee = model.ProjectEmployeeMappings
-                                    .Where(x => x.EmployeeId == item.EmployeeId && !x.Deleted)
-                                    .ToList();
-
-                                // Pick the highest priority active role
-                                var activeRole = allRolesForEmployee
-                                    .OrderBy(x => rolePriority.ContainsKey(x.EmployeeDesignationId) ? rolePriority[x.EmployeeDesignationId] : 99)
-                                    .FirstOrDefault();
-                                if (aspNetUserId != null)
-                                {
-                                    if (activeRole != null)
-                                    {
-                                        // Employee still has at least one active role
-                                        bool hasFullAccess = activeRole.EmployeeDesignationId == managerRoleId ||
-                                                             activeRole.EmployeeDesignationId == coordinatorRoleId;
-
-                                        userMappingId = await UpdateOrInsertUserMapping(existingUser, aspNetUserId, id, LoggedUserId, GetDateTime, hasFullAccess, true, true, false, processedUserIds);
-                                    }
-                                    else
-                                    {
-                                        userMappingId = await UpdateOrInsertUserMapping(existingUser, aspNetUserId, id, LoggedUserId, GetDateTime, false, true, true, true, processedUserIds, SiteId);
-                                    }
-                                }
-                                employeeUserMapping[(item.EmployeeId, item.EmployeeDesignationId)] = userMappingId;
-                            }
                             foreach (var item in model.ProjectEmployeeMappings)
                             {
-                                employeeUserMapping.TryGetValue(
-                                    (item.EmployeeId, item.EmployeeDesignationId),
-                                    out var userMappingId
-                                );
+                                if (string.IsNullOrWhiteSpace(item.EmployeeId))
+                                    continue;
 
-                                var type = await _projectEmployeeMappingService.GetProjectEmployeeById(item.Id);
-                                if (type != null)
+                                // PROJECT EMPLOYEE MAPPING
+                                var projectEmployeeMapping = await _projectEmployeeMappingService.GetProjectEmployeeById(item.Id);
+
+                                if (projectEmployeeMapping != null)
                                 {
-                                    if (!item.Deleted)
-                                    {
-                                        if (item.EmployeeDesignationId == managerRoleId)
-                                        {
-                                            var existEmpForPMRole = await _projectEmployeeMappingService.GetProjectEmployeeByRoleIdAndProjectId(SiteId, id, managerRoleId, null, item.Id);
-                                            if (existEmpForPMRole != null)
-                                                continue;
-                                        }
+                                    // Existing Project Employee Mapping
+                                    projectEmployeeMapping.ProjectId = id;
+                                    projectEmployeeMapping.EmployeeId = item.EmployeeId;
+                                    projectEmployeeMapping.ProductivityFactor = item.ProductivityFactor;
 
-                                        var exist = await _projectEmployeeMappingService.GetProjectEmployeeByRoleIdAndProjectId(SiteId, id, item.EmployeeDesignationId, item.EmployeeId, item.Id);
-                                        if (exist != null)
-                                            continue;
-                                    }
+                                    projectEmployeeMapping.UpdatedById = LoggedUserId;
+                                    projectEmployeeMapping.UpdatedOnUtc = GetDateTime;
+                                    projectEmployeeMapping.Deleted = item.Deleted;
 
-                                    type.ProjectId = id;
-                                    type.EmployeeId = item.EmployeeId;
-                                    type.EmployeeDesignationId = item.EmployeeDesignationId;
-                                    type.ProductivityFactor = item.ProductivityFactor;
-                                    type.ProjectUserMappingId = userMappingId;
-
-                                    // Set the Updated by and Updated on properties
-                                    type.UpdatedById = LoggedUserId;
-                                    type.UpdatedOnUtc = GetDateTime;
-                                    type.Deleted = item.Deleted;
-                                    _projectEmployeeMappingService.UpdateProjectEmployees(type);
+                                    _projectEmployeeMappingService.UpdateProjectEmployees(projectEmployeeMapping);
                                 }
                                 else
                                 {
-                                    if (!item.Deleted)
+                                    // New Project Employee Mapping
+                                    if (item.Deleted)
+                                        continue;
+
+                                    projectEmployeeMapping = new ProjectEmployeeMapping
                                     {
-                                        if (item.EmployeeDesignationId == managerRoleId)
+                                        Id = Guid.NewGuid().ToString(),
+                                        ProjectId = id,
+                                        EmployeeId = item.EmployeeId,
+                                        ProductivityFactor = item.ProductivityFactor,
+                                        CreatedById = LoggedUserId,
+                                        UpdatedById = LoggedUserId,
+                                        CreatedOnUtc = GetDateTime,
+                                        UpdatedOnUtc = GetDateTime,
+                                        Deleted = false
+                                    };
+
+                                    _projectEmployeeMappingService
+                                        .InsertProjectEmployees(projectEmployeeMapping);
+                                }
+
+                                // Get actual ProjectEmployeeMapping Id
+                                var projectEmployeeMappingId = projectEmployeeMapping.Id;
+
+                                // PROJECT EMPLOYEE ROLE MAPPING
+                                var selectedRoleIds =
+                                    item.SiteProjectRoleIds?
+                                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                                        .Distinct()
+                                        .ToList()
+                                    ?? new List<string>();
+
+                                // DELETE / SOFT DELETE ALL OLD ROLE MAPPINGS
+                                var existingRoleMappings = _projectEmployeeRoleMappingService.GetRoleMappingByProjectEmployeeMappingId(projectEmployeeMappingId);
+
+                                if (existingRoleMappings != null &&
+                                    existingRoleMappings.Any())
+                                {
+                                    foreach (var existingRole in existingRoleMappings)
+                                    {
+                                        // Employee mapping deleted
+                                        // all role mappings should be deleted
+                                        if (item.Deleted)
                                         {
-                                            var existEmpForPMRole = await _projectEmployeeMappingService.GetProjectEmployeeByRoleIdAndProjectId(SiteId, id, managerRoleId, null);
-                                            if (existEmpForPMRole != null)
-                                                continue;
+                                            existingRole.UpdatedById = LoggedUserId;
+                                            existingRole.UpdatedOnUtc = GetDateTime;
+
+                                            _projectEmployeeRoleMappingService.DeleteProjectEmployeeRole(existingRole);
+
+                                            continue;
                                         }
 
-                                        var exist = await _projectEmployeeMappingService.GetProjectEmployeeByRoleIdAndProjectId(SiteId, id, item.EmployeeDesignationId, item.EmployeeId);
-                                        if (exist != null)
-                                            continue;
+                                        // Employee mapping active
+                                        // If role is no longer selected, soft delete it.
+                                        if (!selectedRoleIds.Contains(
+                                                existingRole.SiteProjectRoleId))
+                                        {
+                                            existingRole.UpdatedById = LoggedUserId;
+                                            existingRole.UpdatedOnUtc = GetDateTime;
 
-                                        AddProjectEmployee(id, item.EmployeeId, item.EmployeeDesignationId, item.ProductivityFactor, userMappingId, LoggedUserId, GetDateTime, item.Deleted);
+                                            _projectEmployeeRoleMappingService.DeleteProjectEmployeeRole(existingRole);
+                                        }
+                                    }
+                                }
+
+                                // INSERT / RESTORE SELECTED ROLE MAPPINGS
+                                if (!item.Deleted)
+                                {
+                                    foreach (var roleId in selectedRoleIds)
+                                    {
+                                        var existingRole =
+                                            existingRoleMappings?
+                                                .FirstOrDefault(x =>
+                                                    x.SiteProjectRoleId == roleId);
+
+                                        if (existingRole == null)
+                                        {
+                                            // New role
+                                            var newRoleMapping =
+                                                new ProjectEmployeeRoleMapping
+                                                {
+                                                    Id = Guid.NewGuid().ToString(),
+
+                                                    ProjectEmployeeMappingId =
+                                                        projectEmployeeMappingId,
+
+                                                    SiteProjectRoleId = roleId,
+
+                                                    CreatedById = LoggedUserId,
+                                                    CreatedOnUtc = GetDateTime,
+
+                                                    UpdatedById = LoggedUserId,
+                                                    UpdatedOnUtc = GetDateTime,
+
+                                                    Deleted = false
+                                                };
+
+                                            _projectEmployeeRoleMappingService.InsertProjectEmployeeRole(newRoleMapping);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-
                     return Ok(entity);
                 }
                 return ModelStateError(ModelState);
@@ -1738,6 +1741,27 @@ namespace Vsky.Api.Controllers
             }
         }
         #endregion
+        #region GetProjectEmployeesByProjectIdAndReturnUserId
+        [HttpGet("ProjectMappingUsers/list")]
+        public async Task<IActionResult> GetProjectEmployeesByProjectIdAndReturnUserId(string id)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var SiteData = await _siteService.GetById(SiteId);
+                var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                var list = await _projectEmployeeMappingService.GetProjectEmployeesByProjectIdAndReturnUserId(id);
+                var model = _mapper.Map<List<CommonDropDown>>(list);
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
 
         #region Copy Project As Template
         [HttpPost("copy-project-as-template")]
@@ -1759,12 +1783,34 @@ namespace Vsky.Api.Controllers
                     string ActionType = model.IsTemplate ? "Project To Template" : "Template To Project";
                     string newProjectId = await AddProject(SiteId, ActionType, false, projectData, LoggedUserId, GetDateTime);
 
-                    // Copy Project Employee Mapping
-                    if (projectData.ProjectEmployeeMappings != null && projectData.ProjectEmployeeMappings.Any())
+                    // Copy Project Employee Mapping and Roles
+                    if (projectData.ProjectEmployeeMappings != null &&
+                        projectData.ProjectEmployeeMappings.Any())
                     {
                         foreach (var mapping in projectData.ProjectEmployeeMappings)
                         {
-                            AddProjectEmployee(newProjectId, mapping.EmployeeId, mapping.EmployeeDesignationId, mapping.ProductivityFactor, mapping.ProjectUserMappingId, LoggedUserId, GetDateTime, mapping.Deleted);
+                            var newEmployeeMappingId = AddProjectEmployee(
+                                newProjectId,
+                                mapping.EmployeeId,
+                                mapping.ProductivityFactor,
+                                LoggedUserId,
+                                GetDateTime,
+                                mapping.Deleted);
+
+                            // Copy Employee Roles
+                            if (mapping.ProjectEmployeeRoleMappings != null &&
+                                mapping.ProjectEmployeeRoleMappings.Any())
+                            {
+                                foreach (var roleMapping in mapping.ProjectEmployeeRoleMappings)
+                                {
+                                    AddProjectEmployeeRole(
+                                        newEmployeeMappingId,
+                                        roleMapping.SiteProjectRoleId,
+                                        LoggedUserId,
+                                        GetDateTime,
+                                        roleMapping.Deleted);
+                                }
+                            }
                         }
                     }
 
@@ -1823,6 +1869,7 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
 
                 int Status = 2;
                 if (!string.IsNullOrWhiteSpace(searchModel.StatusId))
@@ -1834,6 +1881,7 @@ namespace Vsky.Api.Controllers
                 var List = await _projectWeeklyService.GetAllProjectWeeklyPlanListAsync(
                     SiteId,
                     LoggedUserId,
+                    employeeId,
                     GetDateTime,
                     searchModel.PlanTypeId,
                     searchModel.SearchText,
@@ -2581,32 +2629,34 @@ namespace Vsky.Api.Controllers
 
                     // Insert data into the Charter
                     var projectCharterData = _projectEmployeeMappingService.GetProjectEmployeeByProjectId(module.ProjectId);
-                    if (projectCharterData != null && projectCharterData.Count > 0)
+
+                    if (projectCharterData != null && projectCharterData.Any())
                     {
                         foreach (var charter in projectCharterData)
                         {
-                            AddProjectEmployee(projectEntity.Id, charter.EmployeeId, charter.EmployeeDesignationId, charter.ProductivityFactor, charter.ProjectUserMappingId, LoggedUserId, GetDateTime, charter.Deleted);
-                        }
-                    }
+                            // Copy Employee Mapping
+                            var newEmployeeMappingId = AddProjectEmployee(
+                                projectEntity.Id,
+                                charter.EmployeeId,
+                                charter.ProductivityFactor,
+                                LoggedUserId,
+                                GetDateTime,
+                                charter.Deleted);
 
-                    // Insert data into project security
-                    var projectUsersData = await _projectUserMappingService.GetProjectUserByProjectId(SiteId, module.ProjectId);
-                    if(projectUsersData != null && projectUsersData.Count > 0)
-                    {
-                        foreach (var user in projectUsersData)
-                        {
-                            var ProjectUserMapping = new ProjectUserMapping();
-                            ProjectUserMapping.Id = Guid.NewGuid().ToString();
-                            ProjectUserMapping.ProjectId = projectEntity.Id;
-                            ProjectUserMapping.AspNetUserId = user.AspNetUserId;
-                            ProjectUserMapping.FullAccess = user.FullAccess;
-                            ProjectUserMapping.ViewOnly = user.ViewOnly;
-                            ProjectUserMapping.Notes = user.Notes;
-
-                            ProjectUserMapping.CreatedById = LoggedUserId;
-                            ProjectUserMapping.CreatedOnUtc = GetDateTime;
-                            ProjectUserMapping.Deleted = user.Deleted;
-                            _projectUserMappingService.InsertProjectUser(ProjectUserMapping);
+                            // Copy Employee Roles
+                            if (charter.ProjectEmployeeRoleMappings != null &&
+                                charter.ProjectEmployeeRoleMappings.Any())
+                            {
+                                foreach (var roleMapping in charter.ProjectEmployeeRoleMappings)
+                                {
+                                    AddProjectEmployeeRole(
+                                        newEmployeeMappingId,
+                                        roleMapping.SiteProjectRoleId,
+                                        LoggedUserId,
+                                        GetDateTime,
+                                        roleMapping.Deleted);
+                                }
+                            }
                         }
                     }
 
@@ -2814,19 +2864,6 @@ namespace Vsky.Api.Controllers
             newProjectCopy.UpdatedOnUtc = GetDateTime;
             _projectService.InsertProject(newProjectCopy);
 
-            ProjectUserMapping ProjectUserMapping = new ProjectUserMapping();
-            ProjectUserMapping.ProjectId = newProjectCopy.Id;
-            ProjectUserMapping.AspNetUserId = LoggedUserId;
-            ProjectUserMapping.FullAccess = true;
-            ProjectUserMapping.ViewOnly = true;
-            ProjectUserMapping.Notes = true;
-            ProjectUserMapping.Deleted = false;
-
-            ProjectUserMapping.CreatedById = LoggedUserId;
-            ProjectUserMapping.CreatedOnUtc = GetDateTime;
-            _projectUserMappingService.InsertProjectUser(ProjectUserMapping);
-
-
             return newProjectCopy.Id;
         }
 
@@ -2978,23 +3015,56 @@ namespace Vsky.Api.Controllers
 
             return newActivity.Id;
         }
-        private void AddProjectEmployee(string projectId, string employeeId, string employeeDesignationId, decimal? productivityFactor, string projectUserMappingId, string LoggedUserId, DateTime GetDateTime, bool deleted = false)
+        private string AddProjectEmployee(
+         string projectId,
+         string employeeId,
+         decimal? productivityFactor,
+         string LoggedUserId,
+         DateTime GetDateTime,
+         bool deleted = false)
         {
-            var projectEmployeeMapping = new ProjectEmployeeMapping();
+            var projectEmployeeMapping = new ProjectEmployeeMapping
+            {
+                Id = Guid.NewGuid().ToString(),
+                ProjectId = projectId,
+                EmployeeId = employeeId,
+                ProductivityFactor = productivityFactor,
 
-            projectEmployeeMapping.Id = Guid.NewGuid().ToString();
-            projectEmployeeMapping.ProjectId = projectId;
-            projectEmployeeMapping.EmployeeId = employeeId;
-            projectEmployeeMapping.EmployeeDesignationId = employeeDesignationId;
-            projectEmployeeMapping.ProductivityFactor = productivityFactor;
-            projectEmployeeMapping.ProjectUserMappingId = projectUserMappingId;
+                CreatedById = LoggedUserId,
+                UpdatedById = LoggedUserId,
+                CreatedOnUtc = GetDateTime,
+                UpdatedOnUtc = GetDateTime,
+                Deleted = deleted
+            };
 
-            projectEmployeeMapping.CreatedById = LoggedUserId;
-            projectEmployeeMapping.UpdatedById = LoggedUserId;
-            projectEmployeeMapping.CreatedOnUtc = GetDateTime;
-            projectEmployeeMapping.UpdatedOnUtc = GetDateTime;
-            projectEmployeeMapping.Deleted = deleted;
-            _projectEmployeeMappingService.InsertProjectEmployees(projectEmployeeMapping);
+            _projectEmployeeMappingService.InsertProjectEmployees(
+                projectEmployeeMapping);
+
+            return projectEmployeeMapping.Id;
+        }
+        private void AddProjectEmployeeRole(
+            string projectEmployeeMappingId,
+            string sitesProjectRolesId,
+            string LoggedUserId,
+            DateTime GetDateTime,
+            bool deleted = false)
+        {
+            var roleMapping = new ProjectEmployeeRoleMapping
+            {
+                Id = Guid.NewGuid().ToString(),
+
+                ProjectEmployeeMappingId = projectEmployeeMappingId,
+                SiteProjectRoleId = sitesProjectRolesId,
+
+                CreatedById = LoggedUserId,
+                UpdatedById = LoggedUserId,
+                CreatedOnUtc = GetDateTime,
+                UpdatedOnUtc = GetDateTime,
+                Deleted = deleted
+            };
+
+            _projectEmployeeRoleMappingService.InsertProjectEmployeeRole(
+                roleMapping);
         }
 
         private void AddProjectTaskTags(string ProjectTaskId, ProjectTask_Tags model, string LoggedUserId, DateTime GetDateTime)
@@ -3071,60 +3141,6 @@ namespace Vsky.Api.Controllers
             _projectService.UpdateProject(entity);
 
             return true;
-        }
-
-        private async Task<string> UpdateOrInsertUserMapping(ProjectUserMapping existingUser, string aspNetUserId, string projectId, string LoggedUserId, DateTime GetDateTime, bool fullAccess, bool viewOnly, bool notes, bool deleted, HashSet<string> processedUserIds, string siteId = null)
-        {
-            if ((existingUser != null && fullAccess) || (existingUser != null && deleted))
-            {
-                // Skip if this AspNetUserId is already processed
-                if (!processedUserIds.Add(existingUser.Id))
-                    return existingUser.Id;
-
-                existingUser.ProjectId = projectId;
-                existingUser.AspNetUserId = aspNetUserId;
-                existingUser.FullAccess = fullAccess;
-                existingUser.ViewOnly = viewOnly;
-                existingUser.Notes = notes;
-                existingUser.Deleted = deleted;
-                _projectUserMappingService.UpdateProjectUser(existingUser);
-
-                if (deleted)
-                {
-                    var moduleIds = (await _projectModuleService.GetAllModulesByProjectId(projectId)).Select(m => m.Id).ToList();
-
-                    if (moduleIds.Any())
-                    {
-                        var users = await _projectModulesUserMappingService.GetUsersByProjectModuleIds(siteId, moduleIds);
-                        var usersToDelete = users.Where(x => x.AspNetUserId == aspNetUserId).ToList();
-
-                        foreach (var user in usersToDelete)
-                        {
-                            var entity = await _projectModulesUserMappingService.GetProjectModuleUserById(user.Id);
-                            _projectModulesUserMappingService.DeleteProjectModuleUser(entity);
-                        }
-                    }
-                }
-                return existingUser?.Id;
-            }
-            else if (existingUser == null && !deleted)
-            {
-                var newUser = new ProjectUserMapping
-                {
-                    ProjectId = projectId,
-                    AspNetUserId = aspNetUserId,
-                    FullAccess = fullAccess,
-                    ViewOnly = viewOnly,
-                    Notes = notes,
-                    Deleted = deleted,
-                    CreatedById = LoggedUserId,
-                    CreatedOnUtc = GetDateTime
-                };
-                _projectUserMappingService.InsertProjectUser(newUser);
-                processedUserIds.Add(newUser.Id);
-                return newUser?.Id;
-            }
-            return null;
         }
         #endregion
     }

@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
-using Vsky.Services.ProjectEmployeeMappings;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Vsky.Services.ProjectEmployeeMappings
 {
@@ -18,7 +16,7 @@ namespace Vsky.Services.ProjectEmployeeMappings
         /// <summary>
         /// Define Service
         /// </summary>
-
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IRepository<ProjectEmployeeMapping> _projectEmployeeMappingRepository;
         private readonly IRepository<VWEmployeeAssignedHours> _vWEmployeeAssignedHoursRepository;
         private readonly IRepository<ProjectActivity> _projectActivityRepository;
@@ -30,11 +28,15 @@ namespace Vsky.Services.ProjectEmployeeMappings
         /// Service Initializations
         /// </summary>
         /// <param name="projectEmployeeMappingRepository"></param>
-        public ProjectEmployeeMappingService(IRepository<ProjectEmployeeMapping> projectEmployeeMappingRepository,
-            IRepository<VWEmployeeAssignedHours> vWEmployeeAssignedHoursRepository,
+        public ProjectEmployeeMappingService(
+            UserManager<ApplicationUser> userManager, 
+            IRepository<ProjectEmployeeMapping> projectEmployeeMappingRepository,
+            IRepository<VWEmployeeAssignedHours> vWEmployeeAssignedHoursRepository
+        ,
             IRepository<ProjectActivity> projectActivityRepository
         )
         {
+            _userManager = userManager;
             _projectEmployeeMappingRepository = projectEmployeeMappingRepository;
             _vWEmployeeAssignedHoursRepository = vWEmployeeAssignedHoursRepository;
             _projectActivityRepository = projectActivityRepository;
@@ -67,39 +69,18 @@ namespace Vsky.Services.ProjectEmployeeMappings
 
         #region GetProjectEmployeeByProjectId
         // Title : GetProjectEmployeeByProjectId
-        // Description: Retrieves a list of ProjectEmployeeMapping entities associated with a specific project ID.
+        // Description: Retrieves Project Employee Mappings with their assigned roles.
         public List<ProjectEmployeeMapping> GetProjectEmployeeByProjectId(string ProjectId)
         {
-            var query = _projectEmployeeMappingRepository.TableNoTracking.Where(x => x.ProjectId == ProjectId);
-            var list = query.ToList();
-            return list;
-        }
-        #endregion
+            var query = _projectEmployeeMappingRepository.TableNoTracking
+                .Where(x =>
+                    x.ProjectId == ProjectId &&
+                    !x.Deleted)
+                .Include(x => x.ProjectEmployeeRoleMappings
+                    .Where(r => !r.Deleted))
+                .ToList();
 
-        //#region GetProjectEmployeeRoleById
-
-        //public async Task<ProjectEmployeeMapping> GetById(string id)
-        //{
-        //    var query = _projectEmployeeMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.Id == id);
-        //    var item = await query.FirstOrDefaultAsync();
-        //    return item;
-        //}
-        //#endregion
-
-        #region GetProjectEmployeeByRoleIdAndProjectId
-
-        public async Task<ProjectEmployeeMapping> GetProjectEmployeeByRoleIdAndProjectId(string SiteId, string projectId, string roleId, string employeeId = null, string id = null)
-        {
-            var query = _projectEmployeeMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.Project.SiteId == SiteId && x.ProjectId == projectId && x.EmployeeDesignationId == roleId);
-
-            if (!string.IsNullOrWhiteSpace(employeeId))
-                query = query.Where(x => x.EmployeeId == employeeId);
-
-            if (!string.IsNullOrWhiteSpace(id))
-                query = query.Where(x => x.Id != id);
-
-            var item = await query.FirstOrDefaultAsync();
-            return item;
+            return query;
         }
         #endregion
 
@@ -159,52 +140,6 @@ namespace Vsky.Services.ProjectEmployeeMappings
         #endregion
 
         #region GetProjectCharterEmployeeByProjectId
-        //public async Task<List<ProjectEmployeeMapping>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, DateTime? currentDate = null)
-        //{
-        //    if (string.IsNullOrEmpty(projectId) || !currentDate.HasValue)
-        //        return new List<ProjectEmployeeMapping>();
-
-        //    var month = currentDate.Value.Month;
-        //    var year = currentDate.Value.Year;
-
-        //    var result = await _projectEmployeeMappingRepository.TableNoTracking
-        //        .Where(x => !x.Deleted && x.ProjectId == projectId && x.Employee.Active)
-
-        //        // GROUP BY Employee to remove duplicates
-        //        .GroupBy(x => new
-        //        {
-        //            x.Employee.Id,
-        //            x.Employee.Person.FirstName,
-        //            x.Employee.Person.LastName
-        //        })
-        //        .Select(g => new ProjectEmployeeMapping
-        //        {
-        //            Id = g.First().Id,
-        //            Employee = new Employee
-        //            {
-        //                Id = g.Key.Id,
-        //                Person = new Person
-        //                {
-        //                    FullName = g.Key.FirstName + " " + g.Key.LastName
-        //                },
-        //                EmployeeAssignedHours = _vWEmployeeAssignedHoursRepository.TableNoTracking
-        //                    .Where(h => h.EmployeeId == g.Key.Id
-        //                             && h.WeekendDate.Month == month
-        //                             && h.WeekendDate.Year == year)
-        //                    .Select(h => new VWEmployeeAssignedHours
-        //                    {
-        //                        TotalHours = h.TotalHours,
-        //                        WeekendDate = h.WeekendDate
-        //                    })
-        //                    .ToList()
-        //            }
-        //        })
-
-        //        .OrderBy(x => x.Employee.Person.FullName)
-        //        .ToListAsync();
-
-        //    return result;
-        //}
         public async Task<List<ProjectCharterEmployee>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, string taskId, DateTime? currentDate = null)
         {
             if (string.IsNullOrEmpty(projectId) || string.IsNullOrEmpty(taskId) || !currentDate.HasValue)
@@ -312,6 +247,43 @@ namespace Vsky.Services.ProjectEmployeeMappings
 
             return list;
         }
+
+        public async Task<List<CommonDropDown>> GetProjectEmployeesByProjectIdAndReturnUserId(string projectId)
+        {
+            if (string.IsNullOrEmpty(projectId))
+                return new List<CommonDropDown>();
+
+            var list = await _projectEmployeeMappingRepository.TableNoTracking
+                .Where(x =>
+                    !x.Deleted &&
+                    x.ProjectId == projectId &&
+                    x.Employee.Active &&
+                    x.Employee.Person != null)
+                .Select(x => new
+                {
+                    PersonId = x.Employee.Person.Id,
+                    FirstName = x.Employee.Person.FirstName,
+                    LastName = x.Employee.Person.LastName
+                })
+                        .Distinct()
+                .Join(
+                    _userManager.Users,
+                    employee => employee.PersonId,
+                    user => user.Person.Id,
+                    (employee, user) => new CommonDropDown
+                    {
+                        Text = string.Concat(
+                            employee.FirstName,
+                            " ",
+                            employee.LastName
+                        ),
+                        Value = user.Id
+                    })
+                .OrderBy(x => x.Text)
+                .ToListAsync();
+
+            return list;
+        }
         #endregion
 
         #region GetProjectEmployeeByRoleId
@@ -319,7 +291,7 @@ namespace Vsky.Services.ProjectEmployeeMappings
         public List<ProjectEmployeeMapping> GetProjectEmployeesByRoleId(string projectId, string roleId)
         {
 
-            var query = _projectEmployeeMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.ProjectId == projectId && x.EmployeeDesignationId == roleId);
+            var query = _projectEmployeeMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.ProjectId == projectId && x.ProjectEmployeeRoleMappings.Any(r => r.SiteProjectRoleId == roleId));
             query = query.Select(x => new ProjectEmployeeMapping
             {
                 Id = x.Id,

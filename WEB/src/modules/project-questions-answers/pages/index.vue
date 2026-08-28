@@ -64,24 +64,9 @@
                   </q-menu>
                 </div>
               </div>
-              <!-- <manageDropdownOptions
-                v-model="showManageDropdownOptions"
-                :manage-drop-down-types="manageDropDownTypes"
-                :selected-field="selectedField"
-              /> -->
               <div class="q-ml-xs">
                 <q-btn icon="o_add" outline label="Add Question Answers" no-caps class="text-primary btnRounded q-mr-xs" @click="onQuestionAnswersAdd(search.projectIds?.[0], search.requirementIds?.[0], refreshQuestionsAnswersList)" />
-                <!-- <q-btn
-                  v-if="role === 'admin'"
-                  icon="o_playlist_add"
-                  outline
-                  no-caps
-                  class="text-primary btnRounded q-ml-xs"
-                  @click="showManageDropdownOptions = !showManageDropdownOptions"
-                >
-                  <q-tooltip>Manage Dropdowns</q-tooltip>
-                </q-btn> -->
-                 <!-- Reset Column Width -->
+                <!-- Reset Column Width -->
                 <q-btn
                   icon="o_refresh"
                   outline
@@ -140,7 +125,6 @@
             </template>
             <template #header="props">
               <q-tr :props="props" class="bg-primary text-white">
-                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
                 <q-th
                   v-for="col in props.cols"
                   :key="col.name"
@@ -153,7 +137,7 @@
                   @click="!isResizing && col.sortable"
                 >
                   {{ col.label }}
-                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                  <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)"></div>
                 </q-th>
                 <q-th auto-width class="text-center">Actions</q-th>
               </q-tr>
@@ -192,15 +176,6 @@
                     </div>
                   </div>
                 </q-td>
-                <!-- <q-td v-if="selectedColumnNames.includes('requirement.title')"
-                  class="common-q-td hoverable-cell"
-                  style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
-                  @click="onRequirementView(props.row.requirement?.id)"
-                >
-                  <span v-if="props.row.requirement?.title">
-                    {{ props.row.requirement?.title }}
-                  </span>
-                </q-td> -->
                 <q-td
                   v-if="selectedColumnNames.includes('requirement.title')"
                   class="common-q-td hoverable-cell"
@@ -231,24 +206,40 @@
                 <q-td v-if="selectedColumnNames.includes('title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" class="cursor-pointer" @click="onQuestionAnswersView(props.row.id)">
                   {{ props.row.title }}
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('lastAnswer')" class="common-q-td hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                <q-td
+                  v-if="selectedColumnNames.includes('lastAnswer')"
+                  class="common-q-td hoverable-cell answer-cell"
+                  :style="{
+                    width: (resizeWidths?.lastAnswer || 120) + 'px',
+                    minWidth: '80px',
+                    maxWidth: (resizeWidths?.lastAnswer || 120) + 'px'
+                  }"
+                >
                   <span
+                    class="answer-text"
                     @click="onAnswerTimelineView(
-                    props.row.id,
-                    `${props.row.project.name} : ${props.row.title}`
+                      props.row.id,
+                      `${props.row.project?.name} : ${props.row.title}`
                     )"
                   >
                     {{
-                      truncateText(
+                      getAnswerText(
                         props.row.lastAnswer?.trim()
                           ? props.row.lastAnswer
                           : props.row.description
                       )
                     }}
-                  <q-tooltip>
-                    View Answers
-                  </q-tooltip>
-                </span>
+
+                    <q-tooltip>
+                      {{
+                        getAnswerText(
+                          props.row.lastAnswer?.trim()
+                            ? props.row.lastAnswer
+                            : props.row.description
+                        )
+                      }}
+                    </q-tooltip>
+                  </span>
                 </q-td>
                 <q-td
                   v-if="selectedColumnNames.includes('createdBy.person.firstName')"
@@ -373,11 +364,6 @@ const loading = ref(true);
 const showFilter = ref(false);
 const searchLoader = ref(false);
 const authStore = useAuthStore();
-// const user = authStore.user;
-// const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
-// const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
-// const showManageDropdownOptions = ref(false);
-// const manageDropDownTypes = ref([]);
 const showSortDialog = ref(false);
 
 const siteId = computed(() => authStore.user?.siteId);
@@ -503,6 +489,20 @@ const getAllQuestionAnswers = async ({ pagination: p }) => {
   });
 };
 
+const getAnswerText = (htmlText) => {
+  if (!htmlText) return "";
+
+  const textarea = document.createElement("textarea");
+
+  textarea.innerHTML = htmlText
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ");
+
+  return textarea.value
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 function setActiveRowIdInLocalStorage(id) {
   activeRowId.value = id;
 
@@ -513,32 +513,6 @@ function setActiveRowIdInLocalStorage(id) {
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
-// truncate text after 60 characters
-// const truncateText = (htmlText, limit = 60) => {
-//  const plainText = htmlText
-//     ?.replace(/<[^>]*>/g, '')
-//     ?.replace(/&nbsp;/g, ' ')
-//     || ''
-
-//   const textarea = document.createElement('textarea')
-//   textarea.innerHTML = plainText
-
-//   const decodedText = textarea.value
-
-//   return decodedText.length > limit
-//     ? decodedText.substring(0, limit) + '...'
-//     : decodedText
-// }
-
-const truncateText = (htmlText, limit = 60) => {
-  const text = (htmlText || '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .trim()
-
-  return text.length > limit ? `${text.substring(0, limit)}...` : text
-}
 
 const refreshQuestionsAnswersList = () => {
   getAllQuestionAnswers({ pagination: pagination.value });
@@ -679,7 +653,6 @@ const {
   projectNameDropdown
 } = projectModule();
 
-// const { getDropdownTypesByModuleNameForDropdown } = manageDropdownModule();
 const { requirementsByProjectModuleIdForDropdown } = requirementModule();
 
 // ----------------------------
@@ -725,9 +698,6 @@ onMounted(async () => {
   projectNameDropdown.load();
   if (search.value.projectIds.length > 0) requirementsByProjectModuleIdForDropdown.load('', search.value.projectIds);
 
-  // Admin:- Manage all Release-Tracking Dropdowns and Types
-  // manageDropDownTypes.value = await getDropdownTypesByModuleNameForDropdown("Release-Tracking");
-
   document.addEventListener("click", handleDocumentClick);
 });
 
@@ -735,5 +705,17 @@ onMounted(async () => {
 <style scoped>
 .table-project-questions-answers .Custom-DataTable {
   min-width: max-content;
+}
+.answer-cell {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.answer-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
 }
 </style>

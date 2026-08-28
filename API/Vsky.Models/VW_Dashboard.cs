@@ -29,6 +29,13 @@ namespace Vsky.Models
         public int TotalDoneTaskCount { get; set; }
         public DateTime? CreatedOnUtc { get; set; }
 
+        [NotMapped]
+        public bool CurrentUserManage { get; set; }
+        [NotMapped]
+        public bool CurrentUserView { get; set; }
+        [NotMapped]
+        public bool CurrentUserNotes { get; set; }
+
         public virtual VWCustomerTaskStatusSummary CustomerTaskStatusSummary { get; set; }
         public virtual ICollection<VW_Project> Projects { get; set; } = new List<VW_Project>();
     }
@@ -70,6 +77,12 @@ namespace Vsky.Models
         public int CompletedRequirementCount { get; set; }
         public string CompanyContactId { get; set; }
         public DateTime? CreatedOnUtc { get; set; }
+        [NotMapped]
+        public bool CurrentUserManage { get; set; }
+        [NotMapped]
+        public bool CurrentUserView { get; set; }
+        [NotMapped]
+        public bool CurrentUserNotes { get; set; }
 
         public virtual VW_Customer Customer { get; set; }
         public virtual VWProjectTaskStatusSummary ProjectTaskStatusSummary { get; set; }
@@ -77,7 +90,7 @@ namespace Vsky.Models
         public virtual VWProjectRequirementStatusSummary ProjectRequirementStatusSummary { get; set; }
 
         public virtual ICollection<ProjectEmployeeMapping> ProjectEmployeeMappings { get; set; } = new List<ProjectEmployeeMapping>();
-        public virtual ICollection<ProjectUserMapping> ProjectUserMappings { get; set; } = new List<ProjectUserMapping>();
+        //public virtual ICollection<ProjectUserMapping> ProjectUserMappings { get; set; } = new List<ProjectUserMapping>();
 
     }
 
@@ -109,6 +122,12 @@ namespace Vsky.Models
         public string Color { get; set; }
         public string ProjectModuleStatus { get; set; }
         public int RequirementCount { get; set; }
+        [NotMapped]
+        public bool CurrentUserManage { get; set; }
+        [NotMapped]
+        public bool CurrentUserView { get; set; }
+        [NotMapped]
+        public bool CurrentUserNotes { get; set; }
         public virtual VW_Project Project { get; set; }
 
     }
@@ -130,6 +149,12 @@ namespace Vsky.Models
         public int TaskCloseCount { get; set; }
         public int TotalDoneTaskCount { get; set; }
 
+        [NotMapped]
+        public bool CurrentUserManage { get; set; }
+        [NotMapped]
+        public bool CurrentUserView { get; set; }
+        [NotMapped]
+        public bool CurrentUserNotes { get; set; }
         public virtual VW_Project Project { get; set; }
         public virtual VW_ProjectModules ProjectModule { get; set; }
     }
@@ -176,6 +201,13 @@ namespace Vsky.Models
         public int ActivityCloseCount { get; set; }
         public int ActivityCompletedCount { get; set; }
         public string Color { get; set; }
+
+        [NotMapped]
+        public bool CurrentUserManage { get; set; }
+        [NotMapped]
+        public bool CurrentUserView { get; set; }
+        [NotMapped]
+        public bool CurrentUserNotes { get; set; }
         public virtual VW_Project Project { get; set; }
 
         public virtual ICollection<VW_ProjectTaskActivities> ProjectActivities { get; set; } = new List<VW_ProjectTaskActivities>();
@@ -209,6 +241,13 @@ namespace Vsky.Models
 
         [NotMapped]
         public string ActivityNameDescription { get; set; }
+
+        [NotMapped]
+        public bool CurrentUserManage { get; set; }
+        [NotMapped]
+        public bool CurrentUserView { get; set; }
+        [NotMapped]
+        public bool CurrentUserNotes { get; set; }
 
         public virtual VW_Project Project { get; set; }
 

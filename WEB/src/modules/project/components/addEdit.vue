@@ -1,6 +1,6 @@
 <template>
   <q-dialog ref="dialogRef" class="customDialog" persistent full-height position="right" @hide="onDialogHide">
-    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width:1200px !important; max-width: 100vw !important;">
+    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 1300px !important; max-width: 95vw !important;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
         <div v-if="!isCharter" class="text-h2 text-white">{{ id ? "Edit" : "Add" }} Project</div>
         <div v-else class="text-h2 text-white">{{ model.name }}</div>
@@ -85,7 +85,24 @@
                         :error-message="v$.companyContactId.$errors[0]?.$message"
                       />
                       <div class="col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12" :class="{ edit_project: !props.id }">
-                        <div class="q-mb-xs text-black">Project Status<span class="required">*</span></div>
+                        <div class="q-mb-xs text-black">Project Status
+                          <q-icon
+                            name="o_info"
+                            size="16px"
+                            class="q-ml-xs cursor-pointer text-grey-7"
+                          >
+                            <q-tooltip
+                              anchor="top middle"
+                              self="bottom middle"
+                              :offset="[0, 6]"
+                            >
+                              <div style="max-width: 320px; white-space: normal;">
+                                Indicates the current stage or state of the project in its lifecycle.
+                              </div>
+                            </q-tooltip>
+                          </q-icon>
+                          <span class="required">*</span>
+                        </div>
                         <q-select
                           v-model="model.projectStatusId"
                           clearable use-input
@@ -166,7 +183,23 @@
                         :error-message="v$.planApproverId.$errors[0]?.$message"
                       />
                       <div class="col-12 col-sm-2 col-md-2 col-lg-2">
-                        <div class="q-mb-xs q-mt-md text-black">Select Status</div>
+                        <div class="q-mb-xs q-mt-md text-black">Active/Inactive Flag
+                          <q-icon
+                            name="o_info"
+                            size="16px"
+                            class="q-ml-xs cursor-pointer text-grey-7"
+                          >
+                            <q-tooltip
+                              anchor="top middle"
+                              self="bottom middle"
+                              :offset="[0, 6]"
+                            >
+                              <div style="max-width: 320px; white-space: normal;">
+                                Determines whether the project is currently available for use across the application. Active projects are displayed and available to users; Inactive projects are hidden from the overall application.
+                              </div>
+                            </q-tooltip>
+                          </q-icon>
+                        </div>
                         <q-checkbox
                           v-model="model.active"
                           label="Active"
@@ -268,30 +301,65 @@
                               :props="props"
                             >
                               {{ col.label }}
-                              <span v-if="['employeeId', 'employeeDesignationId', 'productivityFactor'].includes(col.name)" class="required">*</span>
+                              <q-icon v-if="col.tooltip" name="o_info" size="xs" class="q-mx-xs">
+                                <q-tooltip class="text-caption">
+                                  {{ col.tooltip }}
+                                </q-tooltip>
+                              </q-icon>
+                              <span v-if="['employeeId', 'siteProjectRoleIds', 'productivityFactor'].includes(col.name)" class="required">*</span>
                             </q-th>
                             <q-th auto-width class="text-center">Actions</q-th>
                           </q-tr>
                         </template>
                         <template #body="props">
                           <q-tr :class="props.row.deleted ? 'hidden' : ''">
-                            <q-td width="40%">
-                              <formSingleSelectDropdown
+                            <q-td width="30%">
+                              <!-- <formSingleSelectDropdown
                                 v-model="props.row.employeeId"
                                 :options="activeEmployeesDropdownSingleSelect.list.value"
                                 :filter="activeEmployeesDropdownSingleSelect.filter"
                                 :error="rowValidations[props.rowIndex]?.value?.employeeId.$error"
                                 :errorMessage="rowValidations[props.rowIndex]?.value?.employeeId.$errors[0]?.$message"
+                              /> -->
+                              <formSingleSelectDropdown
+                                v-model="props.row.employeeId"
+                                :options="getEmployeeOptionsForRow(props.row)"
+                                :filter="activeEmployeesDropdownSingleSelect.filter"
+                                :error="rowValidations[props.rowIndex]?.value?.employeeId.$error"
+                                :errorMessage="rowValidations[props.rowIndex]?.value?.employeeId.$errors[0]?.$message"
                               />
                             </q-td>
-                            <q-td width="40%">
-                              <formSingleSelectDropdown
+                            <q-td width="31%">
+                              <!-- <formSingleSelectDropdown
                                 v-model="props.row.employeeDesignationId"
                                 :options="employeeDesignationDropdownSingleSelect.list.value"
                                 :filter="employeeDesignationDropdownSingleSelect.filter"
                                 :disable="props.row.isDefaultRole"
                                 :error="rowValidations[props.rowIndex]?.value?.employeeDesignationId.$error"
                                 :error-message="rowValidations[props.rowIndex]?.value?.employeeDesignationId.$errors[0]?.$message"
+                              /> -->
+                              <!-- <formMultiSelectDropdown
+                                v-model="props.row.siteProjectRoleIds"
+                                required
+                                :options="siteProjectRolesDropdown.list.value"
+                                :error="rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$error"
+                                :error-message="rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$errors[0]?.$message"
+                                :onBlur="() => rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$touch()"
+                                popup-content-class="customPopupContentClass"
+                                :show-role-access="true"
+                                @update:model-value="updateRowAccess(props.row)"
+                              /> -->
+                              <formMultiSelectDropdown
+                                v-model="props.row.siteProjectRoleIds"
+                                required
+                                :options="siteProjectRolesDropdown.list.value"
+                                :error="rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$error"
+                                :error-message="rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$errors[0]?.$message"
+                                :onBlur="() => rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$touch()"
+                                popup-content-class="customPopupContentClass"
+                                :clear-search-on-select="true"
+                                :show-role-access="true"
+                                @update:model-value="updateRowAccess(props.row)"
                               />
                             </q-td>
                             <q-td style="width: 10%; white-space: normal; overflow-wrap: break-word;">
@@ -308,14 +376,23 @@
                                 :error-message="rowValidations[props.rowIndex]?.value?.productivityFactor.$errors[0]?.$message"
                               />
                             </q-td>
-                            <q-td class="text-center" style="width: 10%;">
+                            <td class="text-center" style="width: 8%; vertical-align: middle;">
+                              <q-checkbox v-model="props.row.fullAccess" color="primary" disable />
+                            </td>
+                            <td class="text-center" style="width: 8%; vertical-align: middle;">
+                              <q-checkbox v-model="props.row.viewOnly" color="primary" disable />
+                            </td>
+                            <td class="text-center" style="width: 8%; vertical-align: middle;">
+                              <q-checkbox v-model="props.row.notes" color="primary" disable />
+                            </td>
+                            <q-td class="text-center" style="width: 5%;">
                              <q-icon
                                 name="o_delete"
                                 size="xs"
-                                :class="props.row.isDefaultRole ? 'text-red-3 cursor-not-allowed' : 'cursor-pointer text-red'"
-                                @click="!props.row.isDefaultRole && onDeleteProjectCharter(props.row)"
+                                class="cursor-pointer text-red"
+                                @click="onDeleteProjectCharter(props.row)"
                               >
-                                <q-tooltip v-if="!props.row.isDefaultRole">
+                                <q-tooltip>
                                   Delete
                                 </q-tooltip>
                               </q-icon>
@@ -366,6 +443,7 @@ import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.j
 import multiFileUploader from "src/components/form-inputs/_multiFileUpload.vue";
 // SOP Change :- Shared Inputs
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
+import formMultiSelectDropdown from "src/components/form-inputs/_formMultiSelectDropdown.vue";
 import formDate from "src/components/form-inputs/_formDate.vue";
 
 const $q = useQuasar();
@@ -385,17 +463,65 @@ const loading = ref(true);
 const processing = ref(false);
 const processingClose = ref(false);
 const isFilesValid = ref(true);
-const defaultRoles = [ "Project Manager", "Project Coordinator", "Project Lead" ];
+const defaultRoles = [
+  "Project Manager",
+  "Project Coordinator",
+  "Project Lead"
+];
 const hasSavedDefaultRoles = ref(false);
+const allSiteProjectRoles = ref([]);
 
-// console.log(tab.value, "tab.value");
+// const projectRoleOptions = ref([]);
 const rows = ref([]);
 const rowCounter = ref(0);
 const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1 });
+// const columns = ref([
+//   { name: "employeeId", label: "Employee Name", field: "employeeId", align: "left", sortable: true },
+//   { name: "employeeDesignationId", label: "Role", field: "employeeDesignationId", align: "left", sortable: true },
+//   { name: "productivityFactor", label: "Productivity Factor", field: "productivityFactor", align: "right", sortable: true },
+//   { name: "fullAccess", label: "Manage", field: "fullAccess" },
+//   { name: "viewOnly", label: "View", field: "viewOnly" },
+//   { name: "notes", label: "Notes", field: "notes" }
+// ]);
 const columns = ref([
-  { name: "employeeId", label: "Employee Name", field: "employeeId", align: "left", sortable: true },
-  { name: "employeeDesignationId", label: "Role", field: "employeeDesignationId", align: "left", sortable: true },
-  { name: "productivityFactor", label: "Productivity Factor", field: "productivityFactor", align: "right", sortable: true }
+  {
+    name: "employeeId",
+    label: "Employee Name",
+    field: "employee.person.fullName",
+    align: "left",
+    sortable: true
+  },
+  {
+    name: "siteProjectRoleIds",
+    label: "Role",
+    field: "siteProjectRoleIds",
+    align: "left"
+  },
+  {
+    name: "productivityFactor",
+    label: "Productivity Factor",
+    field: "productivityFactor",
+    align: "right",
+    sortable: true
+  },
+  {
+    name: "fullAccess",
+    label: "Manage",
+    field: "fullAccess",
+    tooltip: "Manage all project-related data."
+  },
+  {
+    name: "viewOnly",
+    label: "View",
+    field: "viewOnly",
+    tooltip: "View all project-related data."
+  },
+  {
+    name: "notes",
+    label: "Notes",
+    field: "notes",
+    tooltip: "Manage project-related notes."
+  }
 ]);
 
 // Define model values
@@ -459,9 +585,405 @@ const betweenZeroAndOne = helpers.withMessage(
 
 const rowRules = {
   employeeId: { required: helpers.withMessage("Employee name is required", required) },
-  employeeDesignationId: { required: helpers.withMessage("Role is required", required) },
+  siteProjectRoleIds: { required: helpers.withMessage("Role is required", required) },
   productivityFactor: { required: helpers.withMessage("Productivity Factor is required", required), betweenZeroAndOne }
 };
+
+function getRoleAccess(role) {
+  if (!role) {
+    return {
+      fullAccess: false,
+      viewOnly: false,
+      notes: false
+    };
+  }
+
+  // Permissions can come from different structures
+  const permissions =
+    role.data ||
+    role.sitesProjectRolesPermissions ||
+    role.sitesProjectRoles?.sitesProjectRolesPermissions ||
+    [];
+
+  const permissionList = Array.isArray(permissions)
+    ? permissions
+    : [permissions];
+
+  return {
+    fullAccess: permissionList.some(p => p?.fullAccess === true),
+    viewOnly: permissionList.some(p => p?.viewOnly === true),
+    notes: permissionList.some(p => p?.notes === true)
+  };
+}
+
+// function updateRowAccess(row) {
+//   const roleIds = Array.isArray(row.siteProjectRoleIds)
+//     ? row.siteProjectRoleIds
+//     : [];
+
+//   const selectedRoles = roleIds
+//     .map(roleId =>
+//       allSiteProjectRoles.value.find(
+//         role => String(role.value) === String(roleId)
+//       )
+//     )
+//     .filter(Boolean);
+
+//   let fullAccess = false;
+//   let viewOnly = false;
+//   let notes = false;
+
+//   selectedRoles.forEach(role => {
+//     const access = getRoleAccess(role);
+
+//     if (access.fullAccess) {
+//       fullAccess = true;
+//     }
+
+//     if (access.viewOnly) {
+//       viewOnly = true;
+//     }
+
+//     if (access.notes) {
+//       notes = true;
+//     }
+//   });
+
+//   row.fullAccess = fullAccess;
+//   row.viewOnly = viewOnly;
+//   row.notes = notes;
+
+//   row.roles = selectedRoles;
+
+//   row.roleNames = selectedRoles
+//     .map(role =>
+//       role.text ||
+//       role.roleName ||
+//       role.name ||
+//       role.masterProjectRoles?.name
+//     )
+//     .filter(Boolean);
+// }
+function updateRowAccess(row) {
+  let roleIds = Array.isArray(row.siteProjectRoleIds)
+    ? [...row.siteProjectRoleIds]
+    : [];
+
+  let selectedRoles = roleIds
+    .map(roleId =>
+      allSiteProjectRoles.value.find(
+        role => String(role.value) === String(roleId)
+      )
+    )
+    .filter(Boolean);
+
+  // ---------------------------------------------------------
+  // Project Manager can be assigned to only one employee
+  // ---------------------------------------------------------
+  const isProjectManagerSelected = selectedRoles.some((role) => {
+    const roleName =
+      role?.roleName ||
+      role?.text ||
+      role?.name ||
+      role?.masterProjectRoles?.name ||
+      role?.masterProjectRoles?.text;
+
+    return roleName?.trim().toLowerCase() === "project manager";
+  });
+
+  if (isProjectManagerSelected) {
+    const anotherProjectManager = rows.value.find(otherRow => {
+      if (otherRow === row || otherRow.deleted) {
+        return false;
+      }
+
+      const otherRoleIds = Array.isArray(otherRow.siteProjectRoleIds)
+        ? otherRow.siteProjectRoleIds
+        : [];
+
+      return otherRoleIds.some(roleId => {
+        const role = allSiteProjectRoles.value.find(
+          item => String(item.value) === String(roleId)
+        );
+
+        const roleName =
+          role?.roleName ||
+          role?.text ||
+          role?.name ||
+          role?.masterProjectRoles?.name ||
+          role?.masterProjectRoles?.text;
+
+        return roleName?.trim().toLowerCase() === "project manager";
+      });
+    });
+
+    if (anotherProjectManager) {
+      // Remove Project Manager from current row
+      roleIds = roleIds.filter(roleId => {
+        const role = allSiteProjectRoles.value.find(
+          item => String(item.value) === String(roleId)
+        );
+
+        const roleName =
+          role?.roleName ||
+          role?.text ||
+          role?.name ||
+          role?.masterProjectRoles?.name ||
+          role?.masterProjectRoles?.text;
+
+        return roleName?.trim().toLowerCase() !== "project manager";
+      });
+
+      row.siteProjectRoleIds = roleIds;
+
+      notifyError({
+        message: "Project Manager role is already assigned to another employee."
+      });
+
+      // Rebuild selected roles after removing PM
+      selectedRoles = roleIds
+        .map(roleId =>
+          allSiteProjectRoles.value.find(
+            role => String(role.value) === String(roleId)
+          )
+        )
+        .filter(Boolean);
+    }
+
+    // If there is already a PM on another row, PM is not allowed
+    // on this row.
+  }
+
+  // ---------------------------------------------------------
+  // Calculate effective permissions
+  // ---------------------------------------------------------
+  let fullAccess = false;
+  let viewOnly = false;
+  let notes = false;
+
+  selectedRoles.forEach(role => {
+    const access = getRoleAccess(role);
+
+    if (access.fullAccess) {
+      fullAccess = true;
+    }
+
+    if (access.viewOnly) {
+      viewOnly = true;
+    }
+
+    if (access.notes) {
+      notes = true;
+    }
+  });
+
+  // Full Access has highest priority.
+  // If Full Access is available, View and Notes are not required.
+  if (fullAccess) {
+    viewOnly = false;
+    notes = false;
+  }
+
+  row.fullAccess = fullAccess;
+  row.viewOnly = viewOnly;
+  row.notes = notes;
+
+  row.roles = selectedRoles;
+
+  row.roleNames = selectedRoles
+    .map(role =>
+      role.text ||
+      role.roleName ||
+      role.name ||
+      role.masterProjectRoles?.name
+    )
+    .filter(Boolean);
+}
+
+// function validateDuplicateEmployees() {
+//   const employeeMap = new Map();
+
+//   rows.value
+//     .filter(row => !row.deleted)
+//     .forEach((row, index) => {
+//       if (!row.employeeId) return;
+
+//       const employeeId = String(row.employeeId);
+
+//       if (!employeeMap.has(employeeId)) {
+//         employeeMap.set(employeeId, []);
+//       }
+
+//       employeeMap.get(employeeId).push(index + 1);
+//     });
+
+//   const duplicates = [...employeeMap.entries()]
+//     .filter(([, indexes]) => indexes.length > 1);
+
+//   if (duplicates.length > 0) {
+//     notifyError({
+//       message: "The same employee cannot be assigned to multiple rows."
+//     });
+
+//     return false;
+//   }
+
+//   return true;
+// }
+function validateDuplicateEmployees() {
+  const employeeRows = rows.value.filter(
+    row => !row.deleted && row.employeeId !== null && row.employeeId !== undefined && row.employeeId !== ""
+  );
+
+  const employeeMap = new Map();
+
+  employeeRows.forEach((row, index) => {
+    const employeeId = String(row.employeeId).trim();
+
+    if (!employeeMap.has(employeeId)) {
+      employeeMap.set(employeeId, []);
+    }
+
+    employeeMap.get(employeeId).push({
+      row,
+      rowNumber: index + 1
+    });
+  });
+
+  const duplicateGroups = [...employeeMap.values()].filter(
+    group => group.length > 1
+  );
+
+  if (duplicateGroups.length === 0) {
+    return true;
+  }
+
+  const duplicateEmployees = duplicateGroups
+    .map(group => {
+      const employee = group[0].row;
+
+      return (
+        employee.employee?.person?.fullName ||
+        employee.employee?.person?.name ||
+        employee.person?.fullName ||
+        `Employee ID: ${employee.employeeId}`
+      );
+    })
+    .join(", ");
+
+  notifyError({
+    message: `The following employee(s) are added more than once: ${duplicateEmployees}. Please remove the duplicate employee before saving.`
+  });
+
+  return false;
+}
+
+function validateSingleProjectManager() {
+  const activeRows = rows.value.filter(row => !row.deleted);
+
+  let projectManagerCount = 0;
+
+  activeRows.forEach(row => {
+    const roleIds = Array.isArray(row.siteProjectRoleIds)
+      ? row.siteProjectRoleIds
+      : [];
+
+    const hasProjectManager = roleIds.some(roleId => {
+      const role = allSiteProjectRoles.value.find(
+        item => String(item.value) === String(roleId)
+      );
+
+      const roleName =
+        role?.roleName ||
+        role?.text ||
+        role?.name ||
+        role?.masterProjectRoles?.name ||
+        role?.masterProjectRoles?.text;
+
+      return roleName?.trim().toLowerCase() === "project manager";
+    });
+
+    if (hasProjectManager) {
+      projectManagerCount++;
+    }
+  });
+
+  if (projectManagerCount > 1) {
+    notifyError({
+      message: "Only one employee can be assigned the Project Manager role."
+    });
+
+    return false;
+  }
+
+  return true;
+}
+
+function getEmployeeOptionsForRow(currentRow) {
+  const selectedEmployeeIds = new Set(
+    rows.value
+      .filter(row => !row.deleted && row !== currentRow && row.employeeId)
+      .map(row => String(row.employeeId))
+  );
+
+  return activeEmployeesDropdownSingleSelect.list.value.map(employee => ({
+    ...employee,
+    disable: selectedEmployeeIds.has(String(employee.value))
+  }));
+}
+
+function validateMandatoryProjectRoles() {
+  const activeRows = rows.value.filter(row => !row.deleted);
+
+  const assignedRoleNames = new Set();
+
+  activeRows.forEach(row => {
+    const selectedRoles = Array.isArray(row.roles)
+      ? row.roles
+      : [];
+
+    selectedRoles.forEach(role => {
+      const roleName =
+        role.roleName ||
+        role.text ||
+        role.name ||
+        role.masterProjectRoles?.name ||
+        role.masterProjectRoles?.text;
+
+      if (roleName) {
+        assignedRoleNames.add(roleName.trim().toLowerCase());
+      }
+    });
+
+    // Also check roleIds against the dropdown.
+    const roleIds = Array.isArray(row.siteProjectRoleIds)
+      ? row.siteProjectRoleIds
+      : [];
+
+    roleIds.forEach(roleId => {
+      const dropdownRole = siteProjectRolesDropdown.list.value.find(
+        item => String(item.value) === String(roleId)
+      );
+
+      if (dropdownRole?.text) {
+        assignedRoleNames.add(dropdownRole.text.trim().toLowerCase());
+      }
+    });
+  });
+
+  const missingRoles = defaultRoles.filter(
+    role => !assignedRoleNames.has(role.toLowerCase())
+  );
+  if (missingRoles.length > 0) {
+    notifyError({
+      message: `Please assign: ${missingRoles.join(", ")}.`
+    });
+
+    return false;
+  }
+
+  return true;
+}
 
 let projectId = props.id;
 let disableTab = true;
@@ -469,36 +991,248 @@ if (projectId) {
   disableTab = false;
 }
 
+// const getProject = (projectId) => {
+//   loading.value = true;
+//   projectService.getProject(projectId).then((resp) => {
+//     model.value = _.cloneDeep(resp);
+//     companyContactDropdownSingleSelect.load(resp.customerId);
+//     projectSubCategoryDropdownSingleSelect.load(resp.projectCategoryId);
+//     activeEmployeesDropdownSingleSelect.load(user.siteId);
+//     setTimeout(() => {
+//       getDescriptionBySubCategoryId(resp.projectCategoryId, resp.projectSubcategoryId);
+//     }, 200);
+//     model.value.startDateStr = resp.startDate ? format(resp.startDate, "MM/dd/yyyy") : "";
+//     model.value.description = resp.description ? resp.description : "";
+//     model.value.goLiveDateStr = resp.goLiveDate ? format(resp.goLiveDate, "MM/dd/yyyy") : "";
+//     model.value.projectFiles = resp.projectFileList || [];
+//     let counter = rowCounter.value;
+//     // rows.value = resp.projectEmployeeMappings.map(item => {
+//     //   const row = {
+//     //     ...item,
+//     //     rowCounter: ++counter,
+//     //    productivityFactor: item.productivityFactor ?? 0,
+//     //     editing: false,
+//     //     flag: "Edit"
+//     //   };
+//     //   return row;
+//     // });
+//     rows.value = (resp.projectEmployeeMappings || []).map((item) => {
+//       const roles = item.projectEmployeeRoleMappings || [];
+//       const mappedRoles = roles
+//       .filter(role => role?.sitesProjectRoles)
+//       .map(role => {
+//         const siteProjectRole = role.sitesProjectRoles;
+
+//         const roleName =
+//           siteProjectRole?.masterProjectRoles?.name || "";
+
+//         const permissions =
+//           siteProjectRole?.sitesProjectRolesPermissions || [];
+
+//         const fullAccess = permissions.some(
+//           permission => permission.fullAccess === true
+//         );
+
+//         const viewOnly = !fullAccess && permissions.some(
+//           permission => permission.viewOnly === true
+//         );
+
+//         const notes = !fullAccess && permissions.some(
+//           permission => permission.notes === true
+//         );
+
+//         return {
+//           id: role.id,
+//           siteProjectRoleId: siteProjectRole.id,
+//           roleName: roleName,
+//           fullAccess,
+//           viewOnly,
+//           notes
+//         };
+//         // return {
+//         //   id: role.id,
+//         //   siteProjectRoleId: siteProjectRole.id,
+//         //   roleName: roleName,
+
+//         //   fullAccess: permissions.some(
+//         //       permission => permission.fullAccess === true
+//         //   ),
+
+//         //   viewOnly: permissions.some(
+//         //       permission => permission.viewOnly === true
+//         //   ),
+
+//         //   notes: permissions.some(
+//         //       permission => permission.notes === true
+//         //   )
+//         // };
+//       });
+
+//       const roleIds = mappedRoles
+//         .map(role => role.siteProjectRoleId)
+//         .filter(Boolean);
+
+//       // Effective permissions across all assigned roles
+//       const manage = mappedRoles.some(role => role.fullAccess);
+//       const view = mappedRoles.some(role => role.viewOnly);
+//       const notes = mappedRoles.some(role => role.notes);
+
+//       const row = {
+//         ...item,
+//         rowCounter: ++counter,
+//         productivityFactor: item.productivityFactor ?? 0,
+//         editing: false,
+//         flag: "Edit",
+//         // Multiple roles
+//         siteProjectRoleIds: roleIds,
+//         // Detailed roles
+//         roles: mappedRoles,
+//         // Role names
+//         roleNames: mappedRoles
+//             .map(role => role.roleName)
+//             .filter(Boolean),
+
+//         // Effective permissions
+//         fullAccess: manage,
+//         viewOnly: view,
+//         notes: notes
+//       };
+
+//       return row;
+//     });
+//     rowCounter.value = counter;
+//     // addDefaultProjectCharterRows();
+//     syncRowValidations();
+//     }).finally(() => {
+//     loading.value = false;
+//   });
+// };
+
 const getProject = (projectId) => {
   loading.value = true;
+
   projectService.getProject(projectId).then((resp) => {
     model.value = _.cloneDeep(resp);
-    // console.log("resp", resp);
+
     companyContactDropdownSingleSelect.load(resp.customerId);
     projectSubCategoryDropdownSingleSelect.load(resp.projectCategoryId);
     activeEmployeesDropdownSingleSelect.load(user.siteId);
+
     setTimeout(() => {
-      getDescriptionBySubCategoryId(resp.projectCategoryId, resp.projectSubcategoryId);
+      getDescriptionBySubCategoryId(
+        resp.projectCategoryId,
+        resp.projectSubcategoryId
+      );
     }, 200);
-    model.value.startDateStr = resp.startDate ? format(resp.startDate, "MM/dd/yyyy") : "";
-    model.value.description = resp.description ? resp.description : "";
-    model.value.goLiveDateStr = resp.goLiveDate ? format(resp.goLiveDate, "MM/dd/yyyy") : "";
+
+    model.value.startDateStr = resp.startDate
+      ? format(resp.startDate, "MM/dd/yyyy")
+      : "";
+
+    model.value.description = resp.description
+      ? resp.description
+      : "";
+
+    model.value.goLiveDateStr = resp.goLiveDate
+      ? format(resp.goLiveDate, "MM/dd/yyyy")
+      : "";
+
     model.value.projectFiles = resp.projectFileList || [];
+
     let counter = rowCounter.value;
-    rows.value = resp.projectEmployeeMappings.map(item => {
+
+    rows.value = (resp.projectEmployeeMappings || []).map((item) => {
+      const roles = item.projectEmployeeRoleMappings || [];
+
+      const mappedRoles = roles
+        .filter(role => role?.sitesProjectRoles)
+        .map(role => {
+          const siteProjectRole = role.sitesProjectRoles;
+
+          const roleName =
+            siteProjectRole?.masterProjectRoles?.name || "";
+
+          const permissions =
+            siteProjectRole?.sitesProjectRolesPermissions || [];
+
+          // ---------------------------------------------------------
+          // Role-level permissions
+          // Full Access has highest priority
+          // ---------------------------------------------------------
+          const fullAccess = permissions.some(
+            permission => permission.fullAccess === true
+          );
+
+          const viewOnly = !fullAccess && permissions.some(
+            permission => permission.viewOnly === true
+          );
+
+          const notes = !fullAccess && permissions.some(
+            permission => permission.notes === true
+          );
+
+          return {
+            id: role.id,
+            siteProjectRoleId: siteProjectRole.id,
+            roleName,
+            fullAccess,
+            viewOnly,
+            notes
+          };
+        });
+
+      const roleIds = mappedRoles
+        .map(role => role.siteProjectRoleId)
+        .filter(Boolean);
+
+      // ---------------------------------------------------------
+      // Effective permissions across all assigned roles
+      // Full Access has highest priority
+      // ---------------------------------------------------------
+      const fullAccess = mappedRoles.some(
+        role => role.fullAccess === true
+      );
+
+      const viewOnly = !fullAccess && mappedRoles.some(
+        role => role.viewOnly === true
+      );
+
+      const notes = !fullAccess && mappedRoles.some(
+        role => role.notes === true
+      );
+
       const row = {
         ...item,
+
         rowCounter: ++counter,
-       productivityFactor: item.productivityFactor ?? 0,
+        productivityFactor: item.productivityFactor ?? 0,
         editing: false,
-        flag: "Edit"
+        flag: "Edit",
+
+        // Multiple roles
+        siteProjectRoleIds: roleIds,
+
+        // Detailed roles
+        roles: mappedRoles,
+
+        // Role names
+        roleNames: mappedRoles
+          .map(role => role.roleName)
+          .filter(Boolean),
+
+        // Effective permissions
+        fullAccess,
+        viewOnly,
+        notes
       };
+
       return row;
     });
+
     rowCounter.value = counter;
-    addDefaultProjectCharterRows();
+
     syncRowValidations();
-    }).finally(() => {
+  }).finally(() => {
     loading.value = false;
   });
 };
@@ -532,16 +1266,35 @@ function syncRowValidations () {
   );
 }
 
-function onAddProjectCharter () {
+// function onAddProjectCharter () {
+//   const currentCounter = ++rowCounter.value;
+//   rows.value.unshift({
+//     id: uid(),
+//     employeeId: "",
+//     siteProjectRoleIds: [],
+//     productivityFactor: 0,
+//     deleted: false,
+//     rowCounter: currentCounter
+//   });
+//   syncRowValidations();
+// }
+function onAddProjectCharter() {
   const currentCounter = ++rowCounter.value;
+
   rows.value.unshift({
     id: uid(),
     employeeId: "",
-    employeeDesignationId: "",
+    siteProjectRoleIds: [],
     productivityFactor: 0,
     deleted: false,
-    rowCounter: currentCounter
+    rowCounter: currentCounter,
+    fullAccess: false,
+    viewOnly: false,
+    notes: false,
+    roles: [],
+    roleNames: []
   });
+
   syncRowValidations();
 }
 
@@ -560,41 +1313,40 @@ const onDeleteProjectCharter = (row) => {
   );
 };
 
+// function addDefaultProjectCharterRows() {
+//   defaultRoles.forEach(role => {
+//     // Find the designation in the dropdown
+//     const designation = siteProjectRolesDropdown.list.value.find(
+//       x => x.text === role
+//     );
 
-function addDefaultProjectCharterRows() {
-  defaultRoles.forEach(role => {
-    // Find the designation in the dropdown
-    const designation = employeeDesignationDropdownSingleSelect.list.value.find(
-      x => x.text === role
-    );
+//     if (!designation) return;
 
-    if (!designation) return;
+//     // Check if the role already exists in the table
+//     const existingRow = rows.value.find(
+//       x => x.employeeDesignationId === designation.value
+//     );
 
-    // Check if the role already exists in the table
-    const existingRow = rows.value.find(
-      x => x.employeeDesignationId === designation.value
-    );
+//     if (existingRow) {
+//       existingRow.isDefaultRole = true;
+//       return;
+//     }
 
-    if (existingRow) {
-      existingRow.isDefaultRole = true;
-      return;
-    }
+//     hasSavedDefaultRoles.value = true;
+//     // Role does not exist - add a new default row
+//     const currentCounter = ++rowCounter.value;
 
-    hasSavedDefaultRoles.value = true;
-    // Role does not exist - add a new default row
-    const currentCounter = ++rowCounter.value;
-
-    rows.value.push({
-      id: uid(),
-      employeeId: user?.employeeId ? user.employeeId : "",
-      employeeDesignationId: designation.value,
-      productivityFactor: 0,
-      deleted: false,
-      rowCounter: currentCounter,
-      isDefaultRole: true
-    });
-  });
-}
+//     rows.value.push({
+//       id: uid(),
+//       employeeId: user?.employeeId ? user.employeeId : "",
+//       employeeDesignationId: designation.value,
+//       productivityFactor: 0,
+//       deleted: false,
+//       rowCounter: currentCounter,
+//       isDefaultRole: true
+//     });
+//   });
+// }
 
 function disableProjectDatesBeforeStartDate (date) {
   // If no Start Date is set, allow all dates
@@ -608,14 +1360,68 @@ function disableProjectDatesBeforeStartDate (date) {
   return current >= start;
 }
 
-const confirmProjectClose = async () => {
-  // If the required roles are already saved, close immediately
-  if (!hasSavedDefaultRoles.value) {
+const confirmProjectClose = () => {
+  // New project: close directly without confirmation
+  if (!props.id && !projectId) {
     onDialogCancel();
     return;
   }
 
-  const formName = props.isCharter ? "Project Charter" : "Project";
+  const activeRows = rows.value.filter(row => !row.deleted);
+
+  const assignedRoleNames = new Set();
+
+  activeRows.forEach(row => {
+    // Check roles already mapped on the row
+    const selectedRoles = Array.isArray(row.roles)
+      ? row.roles
+      : [];
+
+    selectedRoles.forEach(role => {
+      const roleName =
+        role.roleName ||
+        role.text ||
+        role.name ||
+        role.masterProjectRoles?.name ||
+        role.masterProjectRoles?.text;
+
+      if (roleName) {
+        assignedRoleNames.add(roleName.trim().toLowerCase());
+      }
+    });
+
+    // Also check selected role IDs against dropdown
+    const roleIds = Array.isArray(row.siteProjectRoleIds)
+      ? row.siteProjectRoleIds
+      : [];
+
+    roleIds.forEach(roleId => {
+      const dropdownRole = siteProjectRolesDropdown.list.value.find(
+        item => String(item.value) === String(roleId)
+      );
+
+      if (dropdownRole?.text) {
+        assignedRoleNames.add(
+          dropdownRole.text.trim().toLowerCase()
+        );
+      }
+    });
+  });
+
+  const missingRoles = defaultRoles.filter(
+    role => !assignedRoleNames.has(role.toLowerCase())
+  );
+
+  // All mandatory roles are assigned → close directly
+  if (missingRoles.length === 0) {
+    onDialogCancel();
+    return;
+  }
+
+  // One or more mandatory roles are missing → confirmation popup
+  const formName = props.isCharter
+    ? "Project Charter"
+    : "Project";
 
   zwConfirm({
     title: "Confirmation",
@@ -634,145 +1440,6 @@ const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 const onSubmitClose = () => {
   onSubmit(1);
 };
-
-// const onSubmit = async (isClose = 0) => {
-//   if (isClose === 1) {
-//     processingClose.value = true;
-//     processing.value = false;
-//   } else {
-//     processing.value = true;
-//   }
-//   try {
-//     const formData = new FormData();
-//     let isValid = true;
-//     rowValidations.value = rows.value.map(row =>
-//       !row.deleted ? useVuelidate(rowRules, row, { $lazy: true, $autoDirty: true }) : null
-//     );
-
-//     for (let i = 0; i < rowValidations.value.length; i++) {
-//       const validation = rowValidations.value[i];
-//       const row = rows.value[i];
-
-//       if (!row.deleted && validation?.value) {
-//         await validation.value.$touch();
-//         const isRowValid = await validation.value.$validate();
-//         if (!isRowValid) isValid = false;
-//       }
-//     }
-
-//     if (!isFilesValid.value) {
-//       notifyWarning({ message: "Please upload valid files" });
-//       return;
-//     }
-
-//     if ((await v$.value.$validate() && isValid) || (props.isCharter && isValid)) {
-//       if (tab.value === "2_tab" && rows.value.length === 0) {
-//         notifyError({ message: "Add at least one employee in project." });
-//         return;
-//       }
-//       if (isClose === 1) {
-//         processingClose.value = true;
-//       } else {
-//         processing.value = true;
-//       }
-//       if (!props.isCharter) {
-//         // Append other fields
-//         formData.append("companyContactId", model.value.companyContactId);
-//         formData.append("projectStatusId", model.value.projectStatusId);
-//         formData.append("projectCategoryId", model.value.projectCategoryId ? model.value.projectCategoryId : "");
-//         formData.append("projectSubcategoryId", model.value.projectSubcategoryId ? model.value.projectSubcategoryId : "");
-//         formData.append("startDateStr", model.value.startDateStr);
-//         formData.append("goLiveDateStr", model.value.goLiveDateStr);
-//         formData.append("projectPriorityId", model.value.projectPriorityId);
-//         formData.append("projectTypeId", model.value.projectTypeId);
-//         formData.append("planApproverId", model.value.planApproverId);
-//         formData.append("active", model.value.active);
-//         formData.append("isTemplate", model.value.isTemplate ?? false);
-//         formData.append("description", model.value.description);
-
-//         toRaw(model.value.projectFiles || []).forEach((file) => {
-//           if (file.file && file.file.virtualPath) {
-//             // For existing files, append metadata instead of the file itself
-//             formData.append("ExistingFiles", JSON.stringify({
-//               id: file.id,
-//               virtualPath: file.file.virtualPath
-//             }));
-//           } else {
-//             // For new files, append as raw file objects (IFormFile)
-//             formData.append("ProjectFiles", file);
-//           }
-//         });
-
-//         // Also pass the projectFileFlag for general status tracking
-//         formData.append("projectFileFlag", model.value.projectFileFlag || "no_change");
-//       }
-//       const isValidRow = (emp) => {
-//         if (emp.deleted && emp.id === null) return false;
-//         if (!emp) return false;
-
-//         return true;
-//       };
-
-//       model.value.projectEmployeeMappings = rows.value
-//         .filter(isValidRow)
-//         .map(emp => ({ ...emp }));
-
-//       formData.append("name", model.value.name);
-//       formData.append("customerId", model.value.customerId);
-//       formData.append("isCharter", props.isCharter);
-//       formData.append("tab", tab.value);
-//       model.value.projectEmployeeMappings.forEach((emp, index) => {
-//         const trimmedProductivityFactor = (emp.productivityFactor ?? "").toString().trim();
-//         const parsedProductivityFactor =
-//       emp.deleted === true ? 0 : trimmedProductivityFactor === "" ? null : parseFloat(trimmedProductivityFactor);
-
-//         formData.append(`projectEmployeeMappings[${index}].id`, emp.id ?? uid());
-//         formData.append(`projectEmployeeMappings[${index}].employeeId`, emp.employeeId ?? "");
-//         formData.append(`projectEmployeeMappings[${index}].employeeDesignationId`, emp.employeeDesignationId ?? "");
-//         formData.append(`projectEmployeeMappings[${index}].productivityFactor`, parsedProductivityFactor);
-//         formData.append(`projectEmployeeMappings[${index}].deleted`, emp.deleted ?? false);
-//       });
-
-//       projectService.saveProject(projectId, formData).then((resp) => {
-//         notifySuccess({ message: "Project is saved successfully." });
-//         if (tab.value === "2_tab" && rows.value.length === 0) {
-//           notifyError({ message: "Add at least one role in project charter." });
-//           return;
-//         }
-//         projectId = resp.id;
-//         disableTab = false;
-//         getProject(projectId);
-//         if (isClose === 1) {
-//           onDialogOK();
-//         } else {
-//           const currentTab = tab.value;
-//           switch (currentTab) {
-//           case "1_tab":
-//             tab.value = "2_tab";
-//             break;
-//           default:
-//             break;
-//           }
-//         }
-//       });
-//     }
-//   } catch (error) {
-//     console.error("Error in submitting the project:", error);
-//     notifyError({ message: "An error occurred while saving the project." });
-//   } finally {
-//     if (isClose === 1) {
-//       processingClose.value = true;
-//       processing.value = false;
-//     } else {
-//       processing.value = true;
-//     }
-
-//     setTimeout(() => {
-//       processing.value = false;
-//       processingClose.value = false;
-//     }, 1500);
-//   }
-// };
 
 const onSubmit = async (isClose = 0) => {
   if (isClose === 1) {
@@ -805,6 +1472,7 @@ const onSubmit = async (isClose = 0) => {
         }
       }
     }
+
     if (tab.value === "2_tab" && !props.isCharter) {
       const formValid = await v$.value.$validate();
 
@@ -817,6 +1485,30 @@ const onSubmit = async (isClose = 0) => {
         return;
       }
     }
+
+    // if (props.isCharter || tab.value === "2_tab") {
+    //   if (!validateDuplicateEmployees()) {
+    //     return;
+    //   }
+
+    //   if (!validateMandatoryProjectRoles()) {
+    //     return;
+    //   }
+    // }
+    if (props.isCharter || tab.value === "2_tab") {
+      if (!validateDuplicateEmployees()) {
+        return;
+      }
+
+      if (!validateSingleProjectManager()) {
+        return;
+      }
+
+      if (!validateMandatoryProjectRoles()) {
+        return;
+      }
+    }
+
     if (!isFilesValid.value) {
       notifyWarning({ message: "Please upload valid files" });
       return;
@@ -879,14 +1571,31 @@ const onSubmit = async (isClose = 0) => {
       formData.append("isCharter", props.isCharter);
       formData.append("tab", tab.value);
       model.value.projectEmployeeMappings.forEach((emp, index) => {
-        const trimmedProductivityFactor = (emp.productivityFactor ?? "").toString().trim();
-        const parsedProductivityFactor =
-      emp.deleted === true ? 0 : trimmedProductivityFactor === "" ? null : parseFloat(trimmedProductivityFactor);
+        // const trimmedProductivityFactor = (emp.productivityFactor ?? "").toString().trim();
+        // const parsedProductivityFactor =
+        // emp.deleted === true ? 0 : trimmedProductivityFactor === "" ? null : parseFloat(trimmedProductivityFactor);
 
         formData.append(`projectEmployeeMappings[${index}].id`, emp.id ?? uid());
         formData.append(`projectEmployeeMappings[${index}].employeeId`, emp.employeeId ?? "");
-        formData.append(`projectEmployeeMappings[${index}].employeeDesignationId`, emp.employeeDesignationId ?? "");
-        formData.append(`projectEmployeeMappings[${index}].productivityFactor`, parsedProductivityFactor ?? 0 );
+        // formData.append(`projectEmployeeMappings[${index}].siteProjectRoleIds`, emp.siteProjectRoleIds ?? "");
+        // formData.append(`projectEmployeeMappings[${index}].productivityFactor`, parsedProductivityFactor ?? 0 );
+        formData.append(
+          `projectEmployeeMappings[${index}].productivityFactor`,
+          emp.deleted === true
+            ? 0
+            : parseFloat(emp.productivityFactor) || 0
+        );
+        const roleIds = Array.isArray(emp.siteProjectRoleIds)
+          ? emp.siteProjectRoleIds
+          : [];
+
+        roleIds.forEach(roleId => {
+          formData.append(
+            `projectEmployeeMappings[${index}].siteProjectRoleIds`,
+            roleId
+          );
+        });
+
         formData.append(`projectEmployeeMappings[${index}].deleted`, emp.deleted ?? false);
       });
 
@@ -1156,11 +1865,11 @@ const {
   projectSubCategoryDropdownSingleSelect,
   projectTypeDropdownSingleSelect,
   projectPriorityDropdownSingleSelect,
-  projectApproverDropdownSingleSelect
+  projectApproverDropdownSingleSelect,
+  siteProjectRolesDropdown
 } = projectModule();
 
-const { activeEmployeesDropdownSingleSelect,
-  employeeDesignationDropdownSingleSelect
+const { activeEmployeesDropdownSingleSelect
 } = employeeModule();
 
 const { customerDropdownSingleSelect } = customerModule();
@@ -1168,17 +1877,18 @@ const { companyContactDropdownSingleSelect } = companyContactsModule();
 
 watch(tab, (newVal, oldVal) => {
   if (newVal !== oldVal) {
-  projectApproverDropdownSingleSelect.reset();
-  activeEmployeesDropdownSingleSelect.reset();
-  employeeDesignationDropdownSingleSelect.reset();
+    projectApproverDropdownSingleSelect.reset();
+    activeEmployeesDropdownSingleSelect.reset();
+    // employeeDesignationDropdownSingleSelect.reset();
+    siteProjectRolesDropdown.reset();
   }
 });
 
-watch(tab, async (newTab) => {
-  if (newTab === "2_tab") {
-      addDefaultProjectCharterRows();
-  }
-});
+// watch(tab, async (newTab) => {
+//   if (newTab === "2_tab") {
+//       addDefaultProjectCharterRows();
+//   }
+// });
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load - If changed
@@ -1186,16 +1896,23 @@ watch(tab, async (newTab) => {
 
 onMounted(async () => {
   projectApproverDropdownSingleSelect.load(user.siteId);
-  employeeDesignationDropdownSingleSelect.load("Employee Designation");
+  // employeeDesignationDropdownSingleSelect.load("Employee Designation");
+
   customerDropdownSingleSelect.load();
   getAllProjectStatusDropdown("Project Status");
   projectPriorityDropdownSingleSelect.load("Project Priorities");
   projectTypeDropdownSingleSelect.load("Project Type");
   projectCategoryDropdownSingleSelect.load("ProjectCategory");
+  await siteProjectRolesDropdown.load();
+
+  // Keep an unfiltered copy for role/access calculation
+  allSiteProjectRoles.value = _.cloneDeep(
+    siteProjectRolesDropdown.list.value
+  );
 });
 
 watch(
-  () => employeeDesignationDropdownSingleSelect.list.value.length,
+  () => siteProjectRolesDropdown.list.value.length,
   (length) => {
     if (length > 0 && projectId) {
       getProject(projectId);

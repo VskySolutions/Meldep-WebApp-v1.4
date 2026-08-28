@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Vsky.Core;
 using Vsky.Models;
-
 
 namespace Vsky.Services.ProjectEmployeeMappings
 {
@@ -11,11 +9,6 @@ namespace Vsky.Services.ProjectEmployeeMappings
     {
         #region GetProjectEmployeeById
         Task<ProjectEmployeeMapping> GetProjectEmployeeById(string id);
-        #endregion
-
-        #region GetProjectEmployeeRoleById
-        //Task<ProjectEmployeeMapping> GetById(string id);
-        Task<ProjectEmployeeMapping> GetProjectEmployeeByRoleIdAndProjectId(string SiteId, string projectId, string roleId, string employeeId = null, string id = null);
         #endregion
 
         #region GetProjectEmployeeByProjectId
@@ -54,6 +47,7 @@ namespace Vsky.Services.ProjectEmployeeMappings
         #region GetProjectCharterEmployeeByProjectId
         // Title: GetProjectCharterEmployeeByProjectId
         Task<List<CommonDropDown>> GetProjectCharterEmployeeByProjectId(string projectId);
+        Task<List<CommonDropDown>> GetProjectEmployeesByProjectIdAndReturnUserId(string projectId);
         #endregion
 
         #region GetProjectEmployeesByRoleId

@@ -87,7 +87,7 @@ namespace Vsky.Data
         public virtual DbSet<Project> Projects { get; set; }
         public virtual DbSet<ProjectsMessages> ProjectMessages { get; set; }
         public virtual DbSet<ProjectFiles> ProjectFiles { get; set; }
-        public virtual DbSet<ProjectUserMapping> ProjectUserMapping { get; set; }
+        //public virtual DbSet<ProjectUserMapping> ProjectUserMapping { get; set; }
         public virtual DbSet<ProjectTags> Project_Tags { get; set; }
         public virtual DbSet<ProjectPinned> ProjectPinned { get; set; }
         public virtual DbSet<ProjectColor> ProjectColor { get; set; }
@@ -96,6 +96,11 @@ namespace Vsky.Data
         public virtual DbSet<ProjectActionItems> ProjectActionItems { get; set; }
         public virtual DbSet<ProjectQuestionsAnswers> ProjectQuestionsAnswers { get; set; }
         public virtual DbSet<ProjectQuestionsAnswersResponseLog> ProjectQuestionsAnswersResponseLog { get; set; }
+
+        // Sites Project Roles
+        public virtual DbSet<MasterProjectRoles> MasterProjectRoles { get; set; }
+        public virtual DbSet<SitesProjectRoles> SitesProjectRoles { get; set; }
+        public virtual DbSet<SitesProjectRolesPermissions> SitesProjectRolesPermissions { get; set; }
 
         // Project Release Tracking
         public virtual DbSet<ProjectReleaseTracking> ProjectReleaseTracking { get; set; }
@@ -1265,7 +1270,6 @@ namespace Vsky.Data
 
                 entity.Property(e => e.EmployeeId).HasMaxLength(450);
                 entity.Property(e => e.ProjectId).IsRequired().HasMaxLength(450);
-                entity.Property(e => e.EmployeeDesignationId).HasMaxLength(256);
                 entity.Property(e => e.ProductivityFactor);
 
                 entity.Property(e => e.CreatedById).HasMaxLength(450);
@@ -1277,8 +1281,6 @@ namespace Vsky.Data
                 entity.HasOne(d => d.Employee).WithMany(p => p.ProjectEmployeeMappings).HasForeignKey(d => d.EmployeeId);
                 entity.HasOne(d => d.Project).WithMany(p => p.ProjectEmployeeMappings).HasForeignKey(d => d.ProjectId);
                 entity.HasOne(d => d.VW_Project).WithMany(p => p.ProjectEmployeeMappings).HasForeignKey(d => d.ProjectId);
-
-                entity.HasOne(d => d.EmployeeRoleDropdown).WithMany().HasForeignKey(d => d.EmployeeDesignationId);
             });
 
             builder.Entity<ProjectTags>(entity =>
@@ -1319,42 +1321,76 @@ namespace Vsky.Data
                 entity.HasOne(e => e.SentByUser).WithMany().HasForeignKey(e => e.SentBy);
             });
 
-            builder.Entity<ProjectUserMapping>(entity =>
+            //builder.Entity<ProjectUserMapping>(entity =>
+            //{
+            //    entity.ToTable("Project_User_Mapping");
+
+            //    entity.Property(e => e.ProjectId).IsRequired().HasMaxLength(450);
+            //    entity.Property(e => e.AspNetUserId).HasMaxLength(256);
+            //    entity.Property(e => e.FullAccess);
+            //    entity.Property(e => e.ViewOnly);
+            //    entity.Property(e => e.Notes);
+
+            //    entity.Property(e => e.CreatedById).HasMaxLength(450);
+            //    entity.Property(e => e.CreatedOnUtc).HasPrecision(6);
+
+            //    entity.HasOne(d => d.Project).WithMany(p => p.ProjectUserMappings).HasForeignKey(d => d.ProjectId);
+            //    entity.HasOne(d => d.VW_Project).WithMany(p => p.ProjectUserMappings).HasForeignKey(d => d.ProjectId);
+            //    entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.AspNetUserId);
+            //});
+
+            builder.Entity<ProjectEmployeeRoleMapping>(entity =>
             {
-                entity.ToTable("Project_User_Mapping");
+                entity.ToTable("Project_Employee_Role_Mapping");
 
-                entity.Property(e => e.ProjectId).IsRequired().HasMaxLength(450);
-                entity.Property(e => e.AspNetUserId).HasMaxLength(256);
-                entity.Property(e => e.FullAccess);
-                entity.Property(e => e.ViewOnly);
-                entity.Property(e => e.Notes);
+                entity.Property(e => e.ProjectEmployeeMappingId).IsRequired().HasMaxLength(450);
+                entity.Property(e => e.SiteProjectRoleId).IsRequired().HasMaxLength(450);
 
-                entity.Property(e => e.CreatedById).HasMaxLength(450);
-                entity.Property(e => e.CreatedOnUtc).HasPrecision(6);
-
-                entity.HasOne(d => d.Project).WithMany(p => p.ProjectUserMappings).HasForeignKey(d => d.ProjectId);
-                entity.HasOne(d => d.VW_Project).WithMany(p => p.ProjectUserMappings).HasForeignKey(d => d.ProjectId);
-                entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.AspNetUserId);
+                entity.HasOne(d => d.ProjectEmployeeMapping).WithMany(x => x.ProjectEmployeeRoleMappings).HasForeignKey(d => d.ProjectEmployeeMappingId);
+                entity.HasOne(d => d.SitesProjectRoles).WithMany().HasForeignKey(d => d.SiteProjectRoleId);
             });
 
+            #endregion
+
+            #region Site project roles
+            builder.Entity<MasterProjectRoles>(entity =>
+            {
+                entity.ToTable("Master_ProjectRoles");
+            });
+
+            builder.Entity<SitesProjectRoles>(entity =>
+            {
+                entity.ToTable("Sites_ProjectRoles");
+
+                entity.Property(e => e.MasterProjectRoleId).IsRequired().HasMaxLength(450);
+                entity.HasOne(d => d.MasterProjectRoles).WithMany().HasForeignKey(d => d.MasterProjectRoleId);
+            });
+
+            builder.Entity<SitesProjectRolesPermissions>(entity =>
+            {
+                entity.ToTable("Sites_ProjectRoles_Permissions");
+
+                entity.Property(e => e.SiteProjectRoleId).IsRequired().HasMaxLength(450);
+                entity.HasOne(d => d.SitesProjectRoles).WithMany(x => x.SitesProjectRolesPermissions).HasForeignKey(d => d.SiteProjectRoleId);
+            });
             #endregion
 
             #region Project Release Tracking
 
             builder.Entity<ProjectReleaseTracking>(entity =>
-            {
-                entity.ToTable("ProjectReleaseTracking");
+        {
+            entity.ToTable("ProjectReleaseTracking");
 
-                entity.HasOne(d => d.Site).WithMany().HasForeignKey(d => d.SiteId);
-                entity.HasOne(d => d.Project).WithMany().HasForeignKey(d => d.ProjectId);
-                entity.HasOne(d => d.InfraInstance).WithMany().HasForeignKey(d => d.InfraInstanceId);
-                entity.HasOne(d => d.DeploymentOwner).WithMany().HasForeignKey(d => d.DeploymentOwnerId);
-                entity.HasOne(d => d.Approver).WithMany().HasForeignKey(d => d.ApproverId);
-                entity.HasOne(d => d.Tester).WithMany().HasForeignKey(d => d.TesterId);
-                entity.HasOne(d => d.ReleaseType).WithMany().HasForeignKey(d => d.ReleaseTypeId);
-                entity.HasOne(d => d.CreatedBy).WithMany().HasForeignKey(d => d.CreatedById);
-                entity.HasOne(d => d.UpdatedBy).WithMany().HasForeignKey(d => d.UpdatedById);
-            });
+            entity.HasOne(d => d.Site).WithMany().HasForeignKey(d => d.SiteId);
+            entity.HasOne(d => d.Project).WithMany().HasForeignKey(d => d.ProjectId);
+            entity.HasOne(d => d.InfraInstance).WithMany().HasForeignKey(d => d.InfraInstanceId);
+            entity.HasOne(d => d.DeploymentOwner).WithMany().HasForeignKey(d => d.DeploymentOwnerId);
+            entity.HasOne(d => d.Approver).WithMany().HasForeignKey(d => d.ApproverId);
+            entity.HasOne(d => d.Tester).WithMany().HasForeignKey(d => d.TesterId);
+            entity.HasOne(d => d.ReleaseType).WithMany().HasForeignKey(d => d.ReleaseTypeId);
+            entity.HasOne(d => d.CreatedBy).WithMany().HasForeignKey(d => d.CreatedById);
+            entity.HasOne(d => d.UpdatedBy).WithMany().HasForeignKey(d => d.UpdatedById);
+        });
 
             builder.Entity<ProjectReleaseTrackingReqPlanTaskIssueMapping>(entity =>
             {
@@ -1489,7 +1525,7 @@ namespace Vsky.Data
                 entity.HasOne(d => d.Requirement).WithMany().HasForeignKey(d => d.RequirementId);
                 entity.HasOne(d => d.Priority).WithMany().HasForeignKey(d => d.PriorityId);
             });
-            
+
             builder.Entity<ProjectQuestionsAnswers>(entity =>
             {
                 entity.ToTable("ProjectQuestionsAnswers");

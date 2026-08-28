@@ -538,20 +538,64 @@ const model = ref({
 const getProject = () => {
   loading.value = true;
   projectService.getProject(selectedProjectId).then((resp) => {
+    const projectEmployeeMappings = resp.projectEmployeeMappings ?? [];
+
     model.value = {
       ..._.cloneDeep(resp),
-      projectLeads: resp.projectEmployeeMappings ? resp.projectEmployeeMappings.filter(mapping => mapping.employeeRoleDropdown.dropDownValue === "Project Lead")
-        .map(mapping => mapping.employee.person.fullName) : [],
-      projectCoordinators: resp.projectEmployeeMappings ? resp.projectEmployeeMappings.filter(mapping => mapping.employeeRoleDropdown.dropDownValue === "Project Coordinator")
-        .map(mapping => mapping.employee.person.fullName) : [],
-      projectTeamMembers: resp.projectEmployeeMappings ? resp.projectEmployeeMappings.filter(mapping => mapping.employeeRoleDropdown.dropDownValue === "Team Members")
-        .map(mapping => mapping.employee.person.fullName) : [],
-      projectSystemAnalyst: resp.projectEmployeeMappings ? resp.projectEmployeeMappings.filter(mapping => mapping.employeeRoleDropdown.dropDownValue === "System Analyst")
-        .map(mapping => mapping.employee.person.fullName) : [],
-      projectSystemArchitect: resp.projectEmployeeMappings ? resp.projectEmployeeMappings.filter(mapping => mapping.employeeRoleDropdown.dropDownValue === "System Architect")
-        .map(mapping => mapping.employee.person.fullName) : [],
-      projectBillingAdmin: resp.projectEmployeeMappings ? resp.projectEmployeeMappings.filter(mapping => mapping.employeeRoleDropdown.dropDownValue === "Project Billing Admin")
-        .map(mapping => mapping.employee.person.fullName) : []
+
+      projectLeads: projectEmployeeMappings
+        .filter(mapping =>
+          mapping.projectEmployeeRoleMappings?.some(roleMapping =>
+            roleMapping.sitesProjectRoles?.masterProjectRoles?.name === "Project Lead"
+          )
+        )
+        .map(mapping => mapping.employee?.person?.fullName)
+        .filter(Boolean),
+
+      projectCoordinators: projectEmployeeMappings
+        .filter(mapping =>
+          mapping.projectEmployeeRoleMappings?.some(roleMapping =>
+            roleMapping.sitesProjectRoles?.masterProjectRoles?.name === "Project Coordinator"
+          )
+        )
+        .map(mapping => mapping.employee?.person?.fullName)
+        .filter(Boolean),
+
+      projectTeamMembers: projectEmployeeMappings
+        .filter(mapping =>
+          mapping.projectEmployeeRoleMappings?.some(roleMapping =>
+            roleMapping.sitesProjectRoles?.masterProjectRoles?.name === "Team Members"
+          )
+        )
+        .map(mapping => mapping.employee?.person?.fullName)
+        .filter(Boolean),
+
+      projectSystemAnalyst: projectEmployeeMappings
+        .filter(mapping =>
+          mapping.projectEmployeeRoleMappings?.some(roleMapping =>
+            roleMapping.sitesProjectRoles?.masterProjectRoles?.name === "System Analyst"
+          )
+        )
+        .map(mapping => mapping.employee?.person?.fullName)
+        .filter(Boolean),
+
+      projectSystemArchitect: projectEmployeeMappings
+        .filter(mapping =>
+          mapping.projectEmployeeRoleMappings?.some(roleMapping =>
+            roleMapping.sitesProjectRoles?.masterProjectRoles?.name === "System Architect"
+          )
+        )
+        .map(mapping => mapping.employee?.person?.fullName)
+        .filter(Boolean),
+
+      projectBillingAdmin: projectEmployeeMappings
+        .filter(mapping =>
+          mapping.projectEmployeeRoleMappings?.some(roleMapping =>
+            roleMapping.sitesProjectRoles?.masterProjectRoles?.name === "Project Billing Admin"
+          )
+        )
+        .map(mapping => mapping.employee?.person?.fullName)
+        .filter(Boolean)
     };
     servicesRows.value = (resp.infraProjectServices ?? []).map(row => {
       const service = row.infraAccountServices || {};

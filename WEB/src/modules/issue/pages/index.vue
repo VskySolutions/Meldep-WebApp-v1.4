@@ -442,12 +442,17 @@
                         :label="props.row.issueNotesCount"
                       />
                     </a>
-                    <q-btn dense flat icon="o_more_vert" color="primary">
+                    <q-btn
+                      v-if="props.row.isEditable"
+                      dense
+                      flat
+                      icon="o_more_vert"
+                      color="primary"
+                    >
                       <q-tooltip>More Options</q-tooltip>
                       <q-menu auto-close>
                         <q-list style="min-width: 180px">
                           <q-item
-                            v-if="props.row.isEditable"
                             v-ripple clickable
                             @click="setActiveRowIdInLocalStorage(props.row.id); onIssueEdit(props.row.id, refreshIssueList)"
                           >
@@ -455,7 +460,6 @@
                             <q-item-section>Edit</q-item-section>
                           </q-item>
                           <q-item
-                            v-if="props.row.isEditable"
                             v-ripple clickable
                             @click="setActiveRowIdInLocalStorage(props.row.id); onIssueStatusLog(props.row.id)"
                           >
@@ -463,7 +467,6 @@
                             <q-item-section>Issue Status change log</q-item-section>
                           </q-item>
                           <q-item
-                            v-if="props.row.isEditable"
                             v-ripple clickable
                             :class="{ 'disabled-icon': props.row.status.dropDownValue === 'Converted to Task' }"
                             @click="setActiveRowIdInLocalStorage(props.row.id); onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.name, props.row.description, true)"
@@ -472,7 +475,6 @@
                             <q-item-section>Convert into Task</q-item-section>
                           </q-item>
                           <q-item
-                            v-if="props.row.isEditable"
                             v-ripple clickable
                             @click="setActiveRowIdInLocalStorage(props.row.id); onIssueAddActivity(props.row.id, refreshIssueList)"
                           >
@@ -480,7 +482,6 @@
                             <q-item-section>Add Activities</q-item-section>
                           </q-item>
                           <q-item
-                            v-if="props.row.isEditable"
                             v-ripple
                             clickable
                             @click="onSubmitIssueDelete(props.row.id, props.row.name, refreshIssueList)"
@@ -836,12 +837,11 @@ const getAllIssue = async ({ pagination: p }) => {
   const storedIssueIds = localStorage.getItem("selectedIssueIds") || [];
   issuesService.getAllIssue(payload).then((resp) => {
     rows.value = resp.data.map(requirement => {
-      const hasFullAccess = requirement.project?.projectUserMappings[0]?.fullAccess ?? false;
       return {
         ...requirement,
         checkboxStatus: storedIssueIds.includes(requirement.id), // Initialize checkboxStatus for each row
-        isNotes: requirement.project?.projectUserMappings[0]?.notes ?? false,
-        isEditable: role === "admin" || hasFullAccess
+        isNotes: requirement.project?.currentUserNotes ?? false,
+        isEditable: requirement?.project.currentUserManage ?? false
       };
     });
     statusSummary.value = resp.statusSummary;

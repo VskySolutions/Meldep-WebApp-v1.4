@@ -70,8 +70,22 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+
                 // Fetch a list of RequirementGroups on search criteria (name, sorting, pagination)
-                var list = await _requirementGroupService.GetAllRequirementGroups(SiteId, LoggedUserId, searchModel.SearchText, searchModel.RequirementGroupNumber, searchModel.ProjectIds, searchModel.Name, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var list = await _requirementGroupService.GetAllRequirementGroups(
+                    SiteId, 
+                    LoggedUserId, 
+                    employeeId, 
+                    searchModel.SearchText, 
+                    searchModel.RequirementGroupNumber, 
+                    searchModel.ProjectIds, 
+                    searchModel.Name, 
+                    searchModel.SortBy, 
+                    searchModel.Descending, 
+                    searchModel.Page, 
+                    searchModel.PageSize
+                );
                 // Map the fetched list to a model suitable for the response
                 var model = new RequirementGroupListModel
                 {

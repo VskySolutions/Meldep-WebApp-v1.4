@@ -594,13 +594,10 @@ const getAllTestCase = async ({ pagination: p }) => {
     const resp = await testcasesService.getAllTestCase(payload);
 
     rows.value = resp.data.map(testCase => {
-      const hasFullAccess =
-        testCase?.project?.projectUserMappings?.[0]?.fullAccess ?? false;
-
       return {
         ...testCase,
-        isNotes: testCase?.project?.projectUserMappings?.[0]?.notes ?? false,
-        isEditable: role === "admin" || hasFullAccess
+        isNotes: testCase?.project?.currentUserNotes ?? false,
+        isEditable: testCase?.project?.currentUserManage ?? false
       };
     });
 

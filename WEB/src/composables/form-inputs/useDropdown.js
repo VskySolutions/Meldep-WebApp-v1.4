@@ -12,6 +12,7 @@ export function useMultiSelectDropdown (serviceCall, config = {}) {
     bgColorKey = null,
     labelFn = null,
     disableFn = null,
+    dataKey = null,
     afterLoad = null
   } = config;
 
@@ -24,6 +25,9 @@ export function useMultiSelectDropdown (serviceCall, config = {}) {
         return {
           text,
           value: getNestedValue(item, valueKey),
+          data: dataKey
+            ? getNestedValue(item, dataKey)
+            : null,
           color: colorKey ? getNestedValue(item, colorKey) : null,
           bgColor: bgColorKey ? getNestedValue(item, bgColorKey) : null,
           disable: disableFn ? disableFn(item) : false

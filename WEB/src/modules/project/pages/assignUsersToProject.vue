@@ -23,42 +23,42 @@
           </div>
           <div class="col-12 col-xs-7 col-sm-9 col-md-8 col-lg-7 col-xl-7">
             <div class="row items-center justify-end no-wrap">
-                <div class="search-container position-relative">
-                  <searchFilterBar
-                    v-model="search.searchText"
-                    :loading="searchLoader"
-                    :applied-filters="appliedFilters"
-                    @toggle-filter="showFilter = !showFilter"
-                  />
-                  <!-- Dropdown Content -->
-                  <q-menu v-model="showFilter" anchor="bottom left" self="top left" persistent no-parent-event style="width: 500px;" @click-outside="showFilter = false">
-                    <q-card class="q-pa-sm">
-                      <div class="row items-center q-mb-sm">
-                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                          <label class="Cutomlabel q-mt-sm fs-13">Search by</label>
-                        </div>
-                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
-                          <q-radio v-model="search.isTemplate" checked-icon="o_task_alt" unchecked-icon="o_panorama_fish_eye" :val="false" label="Projects" @click="onChangeProjectOrTemplate()" />
-                          <q-radio v-model="search.isTemplate" checked-icon="o_task_alt" unchecked-icon="o_panorama_fish_eye" :val="true" label="Templates" @click="onChangeProjectOrTemplate()" />
-                        </div>
+              <div class="search-container position-relative">
+                <searchFilterBar
+                  v-model="search.searchText"
+                  :loading="searchLoader"
+                  :applied-filters="appliedFilters"
+                  @toggle-filter="showFilter = !showFilter"
+                />
+                <!-- Dropdown Content -->
+                <q-menu v-model="showFilter" anchor="bottom left" self="top left" persistent no-parent-event style="width: 500px;" @click-outside="showFilter = false">
+                  <q-card class="q-pa-sm">
+                    <div class="row items-center q-mb-sm">
+                      <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                        <label class="Cutomlabel q-mt-sm fs-13">Search by</label>
                       </div>
-                      <multiSelectDropdown
-                        v-model="search.projectIds"
-                        label="Name"
-                        :options="projectNameDropdown.list.value"
-                        :filter="projectNameDropdown.filter"
-                      />
-                      <!-- Search and Clear Buttons -->
-                      <div class="row justify-end q-gutter-sm q-mb-sm">
-                        <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showFilter = false; onSearch(); }" />
-                        <q-btn style="width: 20%;" outline color="grey-4" label="Clear" class="text-grey-9 btnRounded" no-caps @click="onClear" />
-                        <q-btn style="width: 20%;" outline color="negative" label="Close" class="btnRounded" no-caps @click="() => { showFilter = false; }" />
+                      <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                        <q-radio v-model="search.isTemplate" checked-icon="o_task_alt" unchecked-icon="o_panorama_fish_eye" :val="false" label="Projects" @click="onChangeProjectOrTemplate()" />
+                        <q-radio v-model="search.isTemplate" checked-icon="o_task_alt" unchecked-icon="o_panorama_fish_eye" :val="true" label="Templates" @click="onChangeProjectOrTemplate()" />
                       </div>
-                    </q-card>
-                  </q-menu>
-                </div>
-              <div class="q-gutter-md">
-                <q-btn icon="o_add" outline label="Assign Bulk" no-caps class="text-primary btnRounded q-ml-lg" @click="onAssignBulkUserToProject(refreshProjectUserList)">
+                    </div>
+                    <multiSelectDropdown
+                      v-model="search.projectIds"
+                      label="Name"
+                      :options="projectNameDropdown.list.value"
+                      :filter="projectNameDropdown.filter"
+                    />
+                    <!-- Search and Clear Buttons -->
+                    <div class="row justify-end q-gutter-sm q-mb-sm">
+                      <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showFilter = false; onSearch(); }" />
+                      <q-btn style="width: 20%;" outline color="grey-4" label="Clear" class="text-grey-9 btnRounded" no-caps @click="onClear" />
+                      <q-btn style="width: 20%;" outline color="negative" label="Close" class="btnRounded" no-caps @click="() => { showFilter = false; }" />
+                    </div>
+                  </q-card>
+                </q-menu>
+              </div>
+              <div class="q-gutter-md q-ml-xs">
+                <q-btn icon="o_add" outline label="Assign Bulk" no-caps class="text-primary btnRounded q-ml-lg hidden" @click="onAssignBulkUserToProject(refreshProjectUserList)">
                   <q-tooltip>Assign Bulk</q-tooltip>
                 </q-btn>
                 <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.back()" />
@@ -89,11 +89,11 @@
             <q-td style="width: 20%;">
               {{ props.row.name }}
             </q-td>
-            <q-td
+            <!-- <q-td
               style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 8%;"
             >
-              <div v-if="props.row.projectUsers?.length" class="col-9 flex TaskActivity cursor-grab">
-                <div v-for="(user, index) in props.row.projectUsers" :key="index" class="Person q-mr-xs">
+              <div v-if="props.row.projectModulesUser?.length" class="col-9 flex TaskActivity cursor-grab">
+                <div v-for="(user, index) in props.row.projectModulesUser" :key="index" class="Person q-mr-xs">
                   <span>{{ getInitials(user.text || user.name) }}</span>
                   <q-tooltip>
                     <div>
@@ -115,9 +115,9 @@
                   </q-tooltip>
                 </div>
               </div>
-            </q-td>
+            </q-td> -->
             <q-td style="width: 3%;" class="text-center actions">
-              <div class="relative-position inline-block custom-badge">
+              <!-- <div class="relative-position inline-block custom-badge">
                 <span
                   class="cursor-pointer flex items-center justify-center p-pm-icon-label"
                   @click="onAssignUserToProject(props.row.id, props.row.name, refreshProjectUserList)"
@@ -132,10 +132,10 @@
                 >
                   {{ props.row.projectUsers.length }}
                 </q-badge>
-              </div>
+              </div> -->
               <div class="relative-position inline-block custom-badge q-ml-md">
                 <span
-                  :class="['cursor-pointer', 'flex', 'items-center', 'justify-center', 'p-pm-icon-label', { 'disabled-btn': !(props.row.projectUsers?.length) }]"
+                  :class="['cursor-pointer', 'flex', 'items-center', 'justify-center', 'p-pm-icon-label', { 'disabled-btn': !(props.row.projectModulesUser?.length) }]"
                   @click="onAssignBulkUsersToProjectModule(props.row.id, props.row.name, refreshProjectUserList)"
                 >
                   PM
@@ -188,8 +188,8 @@ const tableRef = ref();
 const rows = ref([]);
 const activeRowId = ref(null);
 const columns = ref([
-  { name: "name", label: "Project Name", field: "name", align: "left", sortable: true },
-  { name: "projectUsers", label: "Assign To", field: "projectUsers", align: "left", sortable: false }
+  { name: "name", label: "Project Name", field: "name", align: "left", sortable: true }
+  // { name: "projectModulesUser", label: "Assign To", field: "projectModulesUser", align: "left", sortable: false }
 ]);
 
 // local storage values
@@ -217,30 +217,34 @@ const getProjectUsers = (props) => {
   projectService.getProjectUsers(payload).then((resp) => {
     rows.value = resp.data.map(project => ({
       ...project,
-      projectUsers: project.projectUserMappings
-        ? project.projectUserMappings
-          .map(mapping => {
-            const id = mapping.user?.id;
-            const name = mapping.user?.person?.fullName;
-            const fullAccess = mapping.fullAccess;
-            const viewOnly = mapping.viewOnly;
-            const notes = mapping.notes;
-            return {
-              value: String(id),
-              text: name || "Unknown",
-              fullAccess,
-              viewOnly,
-              notes
-            };
-          })
-        : [],
+      // projectUsers: project.projectUserMappings
+      //   ? project.projectUserMappings
+      //     .map(mapping => {
+      //       const id = mapping.user?.id;
+      //       const name = mapping.user?.person?.fullName;
+      //       const fullAccess = mapping.fullAccess;
+      //       const viewOnly = mapping.viewOnly;
+      //       const notes = mapping.notes;
+      //       return {
+      //         value: String(id),
+      //         text: name || "Unknown",
+      //         fullAccess,
+      //         viewOnly,
+      //         notes
+      //       };
+      //     })
+      //   : [],
       projectModulesUser: Array.isArray(project.projectModules)
-        ? project.projectModules.flatMap(module =>
-          module.projectModulesUserMappings?.map(mapping => ({
-            value: String(mapping.user?.id)
-          })) || []
-        )
-        : []
+  ? project.projectModules.flatMap(module =>
+      module.projectModulesUserMappings?.map(mapping => ({
+        value: String(mapping.user?.id),
+        text: mapping.user?.person?.fullName || "Unknown",
+        fullAccess: mapping.fullAccess,
+        viewOnly: mapping.viewOnly,
+        notes: mapping.notes
+      })) || []
+    )
+  : []
     }));
     pagination.value.page = page;
     pagination.value.rowsPerPage = rowsPerPage;
@@ -280,13 +284,18 @@ const onClear = () => {
   onSearch();
 };
 
-function getInitials (fullName) {
-  return fullName
-    .split(" ")
-    .map(word => word[0])
-    .join("")
-    .toUpperCase();
-}
+// function getInitials(fullName) {
+//   if (!fullName) {
+//     return "";
+//   }
+
+//   return fullName
+//     .split(" ")
+//     .filter(Boolean)
+//     .map(word => word[0])
+//     .join("")
+//     .toUpperCase();
+// }
 
 const onChangeProjectOrTemplate = () => {
   search.value.projectIds = [];

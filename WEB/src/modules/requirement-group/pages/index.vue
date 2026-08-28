@@ -235,11 +235,10 @@ const getAllRequirementGroup = (props) => {
   setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination, activeRowId: activeRowId.value });
   requirementGroupsService.getAllRequirementGroup(payload).then((resp) => {
     rows.value = resp.data.map(requirement => {
-      const hasFullAccess = requirement.project?.projectUserMappings[0]?.fullAccess ?? false;
       return {
         ...requirement,
-        isNotes: requirement.project?.projectUserMappings[0]?.notes ?? false,
-        isEditable: role === "admin" || hasFullAccess
+        isNotes: requirement.project?.currentUserNotes ?? false,
+        isEditable: requirement.project?.currentUserManage ?? false
       };
     });
     pagination.value.page = page;

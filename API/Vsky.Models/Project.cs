@@ -86,6 +86,15 @@ public class Project : BaseEntity
     [NotMapped]
     public string ProjectColor{ get; set; }
 
+    [NotMapped]
+    public bool CurrentUserManage { get; set; }
+
+    [NotMapped]
+    public bool CurrentUserView { get; set; }
+
+    [NotMapped]
+    public bool CurrentUserNotes { get; set; }
+
     public virtual CompanyClients Customer { get; set; }
     public virtual CompanyContacts CompanyContact { get; set; }
     public virtual DropDown ProjectPriority { get; set; }
@@ -100,7 +109,7 @@ public class Project : BaseEntity
 
     // Project Connections
     public virtual ICollection<ProjectEmployeeMapping> ProjectEmployeeMappings { get; set; } = new List<ProjectEmployeeMapping>();
-    public virtual ICollection<ProjectUserMapping> ProjectUserMappings { get; set; } = new List<ProjectUserMapping>();
+    //public virtual ICollection<ProjectUserMapping> ProjectUserMappings { get; set; } = new List<ProjectUserMapping>();
     public virtual ICollection<ProjectTags> ProjectTags { get; set; } = new List<ProjectTags>();
     public virtual ICollection<ProjectPinned> ProjectPinned { get; set; } = new List<ProjectPinned>();
     public virtual ICollection<ProjectColor> ProjectColors { get; set; } = new List<ProjectColor>();

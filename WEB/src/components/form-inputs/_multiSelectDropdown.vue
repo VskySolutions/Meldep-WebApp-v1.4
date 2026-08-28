@@ -2,7 +2,24 @@
   <!-- <div class="row items-center q-mb-sm"> -->
     <div :class="props.containerClass || 'row items-center q-mb-sm'">
     <div v-if="props.label" class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-      <label class="Cutomlabel q-mt-sm fs-13">{{ props.label }}</label>
+      <label class="Cutomlabel q-mt-sm fs-13">{{ props.label }}
+        <q-icon
+          v-if="labelTooltip"
+          name="o_info"
+          size="16px"
+          class="q-ml-xs cursor-pointer text-grey-7"
+        >
+          <q-tooltip
+            anchor="top middle"
+            self="bottom middle"
+            :offset="[0, 6]"
+          >
+            <div style="max-width: 320px; white-space: normal;">
+              {{ labelTooltip }}
+            </div>
+          </q-tooltip>
+        </q-icon>
+      </label>
     </div>
 
     <!-- <div
@@ -110,6 +127,10 @@ const props = defineProps({
   inputClass: {
     type: String,
     default: ""
+  },
+  labelTooltip: {
+    type: String,
+    default: ''
   }
 });
 

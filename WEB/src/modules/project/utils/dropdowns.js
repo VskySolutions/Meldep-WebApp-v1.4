@@ -31,6 +31,16 @@ export default function projectModule () {
     valueKey: "value"
   });
 
+  const ProjectMappingUsersForDropdown = useMultiSelectDropdown(projectService.getProjectMappingUsers, {
+    labelKey: "text",
+    valueKey: "value"
+  });
+
+  const ProjectMappingUserDropdownSingleSelect = useSingleSelectDropdown(projectService.getProjectMappingUsers, {
+    labelKey: "text",
+    valueKey: "value"
+  });
+
   const projectUserByProjectIdDropdownSingleSelect = useSingleSelectDropdown(projectService.getProjectUserByProjectId, {
     labelKey: "user.person.fullName",
     valueKey: "user.id"
@@ -119,6 +129,12 @@ export default function projectModule () {
     bgColorKey: "bgColor"
   });
 
+  const siteProjectRolesDropdown = useMultiSelectDropdown(projectService.getAllSiteProjectRolesListForDropdown, {
+    labelKey: "masterProjectRoles.name",
+    valueKey: "id",
+    dataKey: "sitesProjectRolesPermissions"
+  });
+
   return {
     projectNameDropdown,
     projectNameDropdownSingleSelect,
@@ -132,11 +148,14 @@ export default function projectModule () {
     projectTypesDropdown,
     projectStatusDropdown,
     projectEmployeesForDropdown,
+    ProjectMappingUsersForDropdown,
+    ProjectMappingUserDropdownSingleSelect,
     projectCharterEmployeesWithWeeklyPlanHoursForDropdown,
     projectCategoryDropdownSingleSelect,
     projectSubCategoryDropdownSingleSelect,
     projectTypeDropdownSingleSelect,
     projectEmployeeDropdownSingleSelect,
-    projectTagsDropdown
+    projectTagsDropdown,
+    siteProjectRolesDropdown
   };
 }

@@ -10,7 +10,8 @@ namespace Vsky.Services.ProjectActivities
     {
         #region GetAllProjectActivities
         Task<IPagedList<ProjectActivity>> GetAllProjectActivities(string SiteId,
-            string userId, 
+            string userId,
+            string employeeId,
             string createdBy,
             string SearchText,
             string activeStatus,

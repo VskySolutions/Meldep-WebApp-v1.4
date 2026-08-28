@@ -590,14 +590,11 @@ const getAllTestPlan = async ({ pagination: p }) => {
     sorts
   });
   testplansService.getAllTestPlan(payload).then((resp) => {
-    // rows.value = resp.data;
     rows.value = resp.data.map(testPlan => {
-      const hasFullAccess = testPlan?.project?.projectUserMappings[0]?.fullAccess ?? false;
-      // console.log(hasFullAccess);
       return {
         ...testPlan,
-        isNotes: testPlan?.project?.projectUserMappings[0]?.notes ?? false,
-        isEditable: role === "admin" || hasFullAccess
+        isNotes: testPlan?.project?.currentUserNotes ?? false,
+        isEditable: testPlan?.project?.currentUserManage ?? false
       };
     });
     pagination.value = {

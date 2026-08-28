@@ -5,6 +5,7 @@ using Vsky.Api.Framework.Models;
 using System.Text.Json.Serialization;
 using Vsky.Core;
 using Vsky.Models;
+using System.ComponentModel.DataAnnotations.Schema;
 //using Vsky.Models.SwimLane;
 
 namespace Vsky.Api.Models
@@ -76,7 +77,10 @@ namespace Vsky.Api.Models
         public string TemplateName { get; set; }
         public string IsFrom { get; set; }
 
-      
+        public bool CurrentUserManage { get; set; }
+        public bool CurrentUserView { get; set; }
+        public bool CurrentUserNotes { get; set; }
+
         public string ProjectFileFlag { get; set; }
         public string ProjectColor { get; set; }
         public bool IsPinned { get; set; }
@@ -114,7 +118,6 @@ namespace Vsky.Api.Models
         public virtual ICollection<ProjectTaskModel> ProjectTasks { get; set; } = new List<ProjectTaskModel>();
         public virtual ICollection<ProjectModuleModel> ProjectModules { get; set; } = new List<ProjectModuleModel>();
         public virtual ICollection<ProjectsMessagesModel> ProjectsMessages { get; set; } = new List<ProjectsMessagesModel>();
-        public virtual ICollection<ProjectUserMappingModel> ProjectUserMappings { get; set; } = new List<ProjectUserMappingModel>();
         public virtual ICollection<ProjectTags> ProjectTags { get; set; } = new List<ProjectTags>();
         public virtual ICollection<ProjectColor> ProjectColors { get; set; } = new List<ProjectColor>();
 
