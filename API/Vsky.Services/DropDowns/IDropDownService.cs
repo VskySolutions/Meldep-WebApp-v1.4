@@ -14,6 +14,7 @@ namespace Vsky.Services.DropDowns
 
         #region GetDropDowns
         Task<IList<DropDown>> GetDropDowns(string typeId);
+        Task<IList<DropDown>> GetDropDownsByTypeIds(List<string> typeIds);
         #endregion
 
         #region GetDropDowns

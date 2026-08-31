@@ -314,13 +314,6 @@
                         <template #body="props">
                           <q-tr :class="props.row.deleted ? 'hidden' : ''">
                             <q-td width="30%">
-                              <!-- <formSingleSelectDropdown
-                                v-model="props.row.employeeId"
-                                :options="activeEmployeesDropdownSingleSelect.list.value"
-                                :filter="activeEmployeesDropdownSingleSelect.filter"
-                                :error="rowValidations[props.rowIndex]?.value?.employeeId.$error"
-                                :errorMessage="rowValidations[props.rowIndex]?.value?.employeeId.$errors[0]?.$message"
-                              /> -->
                               <formSingleSelectDropdown
                                 v-model="props.row.employeeId"
                                 :options="getEmployeeOptionsForRow(props.row)"
@@ -330,25 +323,6 @@
                               />
                             </q-td>
                             <q-td width="31%">
-                              <!-- <formSingleSelectDropdown
-                                v-model="props.row.employeeDesignationId"
-                                :options="employeeDesignationDropdownSingleSelect.list.value"
-                                :filter="employeeDesignationDropdownSingleSelect.filter"
-                                :disable="props.row.isDefaultRole"
-                                :error="rowValidations[props.rowIndex]?.value?.employeeDesignationId.$error"
-                                :error-message="rowValidations[props.rowIndex]?.value?.employeeDesignationId.$errors[0]?.$message"
-                              /> -->
-                              <!-- <formMultiSelectDropdown
-                                v-model="props.row.siteProjectRoleIds"
-                                required
-                                :options="siteProjectRolesDropdown.list.value"
-                                :error="rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$error"
-                                :error-message="rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$errors[0]?.$message"
-                                :onBlur="() => rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$touch()"
-                                popup-content-class="customPopupContentClass"
-                                :show-role-access="true"
-                                @update:model-value="updateRowAccess(props.row)"
-                              /> -->
                               <formMultiSelectDropdown
                                 v-model="props.row.siteProjectRoleIds"
                                 required
@@ -450,7 +424,6 @@ const $q = useQuasar();
 const { fonts, toolbar } = getEditorConfig($q);
 const authStore = useAuthStore();
 const user = authStore.user;
-// const baseURL = process.env.API_BASE_URL;
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 defineEmits([...useDialogPluginComponent.emits]);
 
@@ -468,21 +441,11 @@ const defaultRoles = [
   "Project Coordinator",
   "Project Lead"
 ];
-const hasSavedDefaultRoles = ref(false);
 const allSiteProjectRoles = ref([]);
 
-// const projectRoleOptions = ref([]);
 const rows = ref([]);
 const rowCounter = ref(0);
 const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1 });
-// const columns = ref([
-//   { name: "employeeId", label: "Employee Name", field: "employeeId", align: "left", sortable: true },
-//   { name: "employeeDesignationId", label: "Role", field: "employeeDesignationId", align: "left", sortable: true },
-//   { name: "productivityFactor", label: "Productivity Factor", field: "productivityFactor", align: "right", sortable: true },
-//   { name: "fullAccess", label: "Manage", field: "fullAccess" },
-//   { name: "viewOnly", label: "View", field: "viewOnly" },
-//   { name: "notes", label: "Notes", field: "notes" }
-// ]);
 const columns = ref([
   {
     name: "employeeId",
@@ -572,6 +535,7 @@ function isValidProductivityFactor (value) {
   const num = parseFloat(str);
   return !isNaN(num) && num >= 0 && num <= 1;
 }
+
 function validateFactor (value) {
   if (value != null && value !== undefined && String(value).trim() !== "") {
     return isValidProductivityFactor(value) || "Productivity Factor must be a number between 0 and 1";
@@ -616,54 +580,6 @@ function getRoleAccess(role) {
   };
 }
 
-// function updateRowAccess(row) {
-//   const roleIds = Array.isArray(row.siteProjectRoleIds)
-//     ? row.siteProjectRoleIds
-//     : [];
-
-//   const selectedRoles = roleIds
-//     .map(roleId =>
-//       allSiteProjectRoles.value.find(
-//         role => String(role.value) === String(roleId)
-//       )
-//     )
-//     .filter(Boolean);
-
-//   let fullAccess = false;
-//   let viewOnly = false;
-//   let notes = false;
-
-//   selectedRoles.forEach(role => {
-//     const access = getRoleAccess(role);
-
-//     if (access.fullAccess) {
-//       fullAccess = true;
-//     }
-
-//     if (access.viewOnly) {
-//       viewOnly = true;
-//     }
-
-//     if (access.notes) {
-//       notes = true;
-//     }
-//   });
-
-//   row.fullAccess = fullAccess;
-//   row.viewOnly = viewOnly;
-//   row.notes = notes;
-
-//   row.roles = selectedRoles;
-
-//   row.roleNames = selectedRoles
-//     .map(role =>
-//       role.text ||
-//       role.roleName ||
-//       role.name ||
-//       role.masterProjectRoles?.name
-//     )
-//     .filter(Boolean);
-// }
 function updateRowAccess(row) {
   let roleIds = Array.isArray(row.siteProjectRoleIds)
     ? [...row.siteProjectRoleIds]
@@ -800,36 +716,6 @@ function updateRowAccess(row) {
     .filter(Boolean);
 }
 
-// function validateDuplicateEmployees() {
-//   const employeeMap = new Map();
-
-//   rows.value
-//     .filter(row => !row.deleted)
-//     .forEach((row, index) => {
-//       if (!row.employeeId) return;
-
-//       const employeeId = String(row.employeeId);
-
-//       if (!employeeMap.has(employeeId)) {
-//         employeeMap.set(employeeId, []);
-//       }
-
-//       employeeMap.get(employeeId).push(index + 1);
-//     });
-
-//   const duplicates = [...employeeMap.entries()]
-//     .filter(([, indexes]) => indexes.length > 1);
-
-//   if (duplicates.length > 0) {
-//     notifyError({
-//       message: "The same employee cannot be assigned to multiple rows."
-//     });
-
-//     return false;
-//   }
-
-//   return true;
-// }
 function validateDuplicateEmployees() {
   const employeeRows = rows.value.filter(
     row => !row.deleted && row.employeeId !== null && row.employeeId !== undefined && row.employeeId !== ""
@@ -991,123 +877,6 @@ if (projectId) {
   disableTab = false;
 }
 
-// const getProject = (projectId) => {
-//   loading.value = true;
-//   projectService.getProject(projectId).then((resp) => {
-//     model.value = _.cloneDeep(resp);
-//     companyContactDropdownSingleSelect.load(resp.customerId);
-//     projectSubCategoryDropdownSingleSelect.load(resp.projectCategoryId);
-//     activeEmployeesDropdownSingleSelect.load(user.siteId);
-//     setTimeout(() => {
-//       getDescriptionBySubCategoryId(resp.projectCategoryId, resp.projectSubcategoryId);
-//     }, 200);
-//     model.value.startDateStr = resp.startDate ? format(resp.startDate, "MM/dd/yyyy") : "";
-//     model.value.description = resp.description ? resp.description : "";
-//     model.value.goLiveDateStr = resp.goLiveDate ? format(resp.goLiveDate, "MM/dd/yyyy") : "";
-//     model.value.projectFiles = resp.projectFileList || [];
-//     let counter = rowCounter.value;
-//     // rows.value = resp.projectEmployeeMappings.map(item => {
-//     //   const row = {
-//     //     ...item,
-//     //     rowCounter: ++counter,
-//     //    productivityFactor: item.productivityFactor ?? 0,
-//     //     editing: false,
-//     //     flag: "Edit"
-//     //   };
-//     //   return row;
-//     // });
-//     rows.value = (resp.projectEmployeeMappings || []).map((item) => {
-//       const roles = item.projectEmployeeRoleMappings || [];
-//       const mappedRoles = roles
-//       .filter(role => role?.sitesProjectRoles)
-//       .map(role => {
-//         const siteProjectRole = role.sitesProjectRoles;
-
-//         const roleName =
-//           siteProjectRole?.masterProjectRoles?.name || "";
-
-//         const permissions =
-//           siteProjectRole?.sitesProjectRolesPermissions || [];
-
-//         const fullAccess = permissions.some(
-//           permission => permission.fullAccess === true
-//         );
-
-//         const viewOnly = !fullAccess && permissions.some(
-//           permission => permission.viewOnly === true
-//         );
-
-//         const notes = !fullAccess && permissions.some(
-//           permission => permission.notes === true
-//         );
-
-//         return {
-//           id: role.id,
-//           siteProjectRoleId: siteProjectRole.id,
-//           roleName: roleName,
-//           fullAccess,
-//           viewOnly,
-//           notes
-//         };
-//         // return {
-//         //   id: role.id,
-//         //   siteProjectRoleId: siteProjectRole.id,
-//         //   roleName: roleName,
-
-//         //   fullAccess: permissions.some(
-//         //       permission => permission.fullAccess === true
-//         //   ),
-
-//         //   viewOnly: permissions.some(
-//         //       permission => permission.viewOnly === true
-//         //   ),
-
-//         //   notes: permissions.some(
-//         //       permission => permission.notes === true
-//         //   )
-//         // };
-//       });
-
-//       const roleIds = mappedRoles
-//         .map(role => role.siteProjectRoleId)
-//         .filter(Boolean);
-
-//       // Effective permissions across all assigned roles
-//       const manage = mappedRoles.some(role => role.fullAccess);
-//       const view = mappedRoles.some(role => role.viewOnly);
-//       const notes = mappedRoles.some(role => role.notes);
-
-//       const row = {
-//         ...item,
-//         rowCounter: ++counter,
-//         productivityFactor: item.productivityFactor ?? 0,
-//         editing: false,
-//         flag: "Edit",
-//         // Multiple roles
-//         siteProjectRoleIds: roleIds,
-//         // Detailed roles
-//         roles: mappedRoles,
-//         // Role names
-//         roleNames: mappedRoles
-//             .map(role => role.roleName)
-//             .filter(Boolean),
-
-//         // Effective permissions
-//         fullAccess: manage,
-//         viewOnly: view,
-//         notes: notes
-//       };
-
-//       return row;
-//     });
-//     rowCounter.value = counter;
-//     // addDefaultProjectCharterRows();
-//     syncRowValidations();
-//     }).finally(() => {
-//     loading.value = false;
-//   });
-// };
-
 const getProject = (projectId) => {
   loading.value = true;
 
@@ -1266,18 +1035,6 @@ function syncRowValidations () {
   );
 }
 
-// function onAddProjectCharter () {
-//   const currentCounter = ++rowCounter.value;
-//   rows.value.unshift({
-//     id: uid(),
-//     employeeId: "",
-//     siteProjectRoleIds: [],
-//     productivityFactor: 0,
-//     deleted: false,
-//     rowCounter: currentCounter
-//   });
-//   syncRowValidations();
-// }
 function onAddProjectCharter() {
   const currentCounter = ++rowCounter.value;
 
@@ -1312,41 +1069,6 @@ const onDeleteProjectCharter = (row) => {
     }
   );
 };
-
-// function addDefaultProjectCharterRows() {
-//   defaultRoles.forEach(role => {
-//     // Find the designation in the dropdown
-//     const designation = siteProjectRolesDropdown.list.value.find(
-//       x => x.text === role
-//     );
-
-//     if (!designation) return;
-
-//     // Check if the role already exists in the table
-//     const existingRow = rows.value.find(
-//       x => x.employeeDesignationId === designation.value
-//     );
-
-//     if (existingRow) {
-//       existingRow.isDefaultRole = true;
-//       return;
-//     }
-
-//     hasSavedDefaultRoles.value = true;
-//     // Role does not exist - add a new default row
-//     const currentCounter = ++rowCounter.value;
-
-//     rows.value.push({
-//       id: uid(),
-//       employeeId: user?.employeeId ? user.employeeId : "",
-//       employeeDesignationId: designation.value,
-//       productivityFactor: 0,
-//       deleted: false,
-//       rowCounter: currentCounter,
-//       isDefaultRole: true
-//     });
-//   });
-// }
 
 function disableProjectDatesBeforeStartDate (date) {
   // If no Start Date is set, allow all dates
@@ -1437,6 +1159,60 @@ const confirmProjectClose = () => {
 // Validate rules
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 
+const validateProjectCharterRows = async () => {
+  rowValidations.value = rows.value.map(row =>
+    !row.deleted
+      ? useVuelidate(rowRules, row, { $lazy: true, $autoDirty: true })
+      : null
+  );
+
+  const invalidRows = [];
+
+  for (let i = 0; i < rowValidations.value.length; i++) {
+    const validation = rowValidations.value[i];
+    const row = rows.value[i];
+
+    if (!row.deleted && validation?.value) {
+      await validation.value.$touch();
+      const isRowValid = await validation.value.$validate();
+
+      if (!isRowValid) {
+        const errors = validation.value.$errors
+          .map(error => {
+            const fieldMessages = {
+              employeeId: "Employee Name",
+              siteProjectRoleIds: "Role",
+              productivityFactor: "Productivity Factor"
+            };
+
+            return fieldMessages[error.$property] || error.$property;
+          })
+          .filter((value, index, array) => array.indexOf(value) === index);
+
+        invalidRows.push({
+          index: i,
+          rowNumber: i + 1,
+          page: Math.ceil((i + 1) / pagination.value.rowsPerPage),
+          errors
+        });
+      }
+    }
+  }
+
+  if (invalidRows.length > 0) {
+    // Navigate to the first invalid row's page
+    const firstInvalidRow = invalidRows[0];
+
+    pagination.value.page = firstInvalidRow.page;
+
+    notifyError({
+      message: "Please complete the required fields in the Project Charter."
+    });
+    return false;
+  }
+  return true;
+};
+
 const onSubmitClose = () => {
   onSubmit(1);
 };
@@ -1452,24 +1228,10 @@ const onSubmit = async (isClose = 0) => {
     const formData = new FormData();
     let isValid = true;
     if (isClose === 1 || props.isCharter) {
-      rowValidations.value = rows.value.map(row =>
-        !row.deleted
-          ? useVuelidate(rowRules, row, { $lazy: true, $autoDirty: true })
-          : null
-      );
+      isValid = await validateProjectCharterRows();
 
-      for (let i = 0; i < rowValidations.value.length; i++) {
-        const validation = rowValidations.value[i];
-        const row = rows.value[i];
-
-        if (!row.deleted && validation?.value) {
-          await validation.value.$touch();
-          const isRowValid = await validation.value.$validate();
-
-          if (!isRowValid) {
-            isValid = false;
-          }
-        }
+      if (!isValid) {
+        return;
       }
     }
 
@@ -1486,15 +1248,6 @@ const onSubmit = async (isClose = 0) => {
       }
     }
 
-    // if (props.isCharter || tab.value === "2_tab") {
-    //   if (!validateDuplicateEmployees()) {
-    //     return;
-    //   }
-
-    //   if (!validateMandatoryProjectRoles()) {
-    //     return;
-    //   }
-    // }
     if (props.isCharter || tab.value === "2_tab") {
       if (!validateDuplicateEmployees()) {
         return;
@@ -1571,14 +1324,8 @@ const onSubmit = async (isClose = 0) => {
       formData.append("isCharter", props.isCharter);
       formData.append("tab", tab.value);
       model.value.projectEmployeeMappings.forEach((emp, index) => {
-        // const trimmedProductivityFactor = (emp.productivityFactor ?? "").toString().trim();
-        // const parsedProductivityFactor =
-        // emp.deleted === true ? 0 : trimmedProductivityFactor === "" ? null : parseFloat(trimmedProductivityFactor);
-
         formData.append(`projectEmployeeMappings[${index}].id`, emp.id ?? uid());
         formData.append(`projectEmployeeMappings[${index}].employeeId`, emp.employeeId ?? "");
-        // formData.append(`projectEmployeeMappings[${index}].siteProjectRoleIds`, emp.siteProjectRoleIds ?? "");
-        // formData.append(`projectEmployeeMappings[${index}].productivityFactor`, parsedProductivityFactor ?? 0 );
         formData.append(
           `projectEmployeeMappings[${index}].productivityFactor`,
           emp.deleted === true
@@ -1588,14 +1335,12 @@ const onSubmit = async (isClose = 0) => {
         const roleIds = Array.isArray(emp.siteProjectRoleIds)
           ? emp.siteProjectRoleIds
           : [];
-
         roleIds.forEach(roleId => {
           formData.append(
             `projectEmployeeMappings[${index}].siteProjectRoleIds`,
             roleId
           );
         });
-
         formData.append(`projectEmployeeMappings[${index}].deleted`, emp.deleted ?? false);
       });
 
@@ -1607,19 +1352,6 @@ const onSubmit = async (isClose = 0) => {
         }
         projectId = resp.id;
         disableTab = false;
-        // getProject(projectId);
-        // if (isClose === 1) {
-        //   onDialogOK();
-        // } else {
-        //   const currentTab = tab.value;
-        //   switch (currentTab) {
-        //   case "1_tab":
-        //     tab.value = "2_tab";
-        //     break;
-        //   default:
-        //     break;
-        //   }
-        // }
          if (isClose === 1) {
           getProject(projectId);
           onDialogOK();
@@ -1879,16 +1611,9 @@ watch(tab, (newVal, oldVal) => {
   if (newVal !== oldVal) {
     projectApproverDropdownSingleSelect.reset();
     activeEmployeesDropdownSingleSelect.reset();
-    // employeeDesignationDropdownSingleSelect.reset();
     siteProjectRolesDropdown.reset();
   }
 });
-
-// watch(tab, async (newTab) => {
-//   if (newTab === "2_tab") {
-//       addDefaultProjectCharterRows();
-//   }
-// });
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load - If changed
@@ -1896,7 +1621,6 @@ watch(tab, (newVal, oldVal) => {
 
 onMounted(async () => {
   projectApproverDropdownSingleSelect.load(user.siteId);
-  // employeeDesignationDropdownSingleSelect.load("Employee Designation");
 
   customerDropdownSingleSelect.load();
   getAllProjectStatusDropdown("Project Status");

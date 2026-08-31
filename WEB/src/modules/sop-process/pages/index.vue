@@ -87,13 +87,45 @@
                   </q-menu>
                 </div>
               </div>
-              <manageDropdownOptions
-                v-model="showManageDropdownOptions"
-                :manage-drop-down-types="manageDropDownTypes"
-                :selected-field="selectedField"
-              />
-              <div class="q-ml-xs">
-                <q-btn v-if="role === 'editor' || role === 'both'" icon="o_add" outline label="Add Process" no-caps class="text-primary btnRounded" @click="onSOPProcessAdd(refreshSOPProcessList)" />
+              <div>
+                <q-btn
+                  v-if="role === 'editor' || role === 'both'"
+                  icon="o_add"
+                  outline label="Add Process"
+                  no-caps
+                  class="text-primary btnRounded"
+                  @click="onSOPProcessAdd(refreshSOPProcessList)"
+                />
+                <!-- Reset Column Width -->
+                <q-btn
+                  icon="o_refresh"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="resetColumnsWidth()"
+                >
+                  <q-tooltip>Reset Columns Width</q-tooltip>
+                </q-btn>
+                <!-- Column Hide/Show -->
+                <columnVisibilityMenu
+                  :all-column-names="allColumnNames"
+                  :selected-column-names="selectedColumnNames"
+                  @update:selected-column-names="selectedColumnNames = $event"
+                  @select-all-columns="selectAllColumns"
+                  @default-columns="defaultColumns"
+                />
+                <!-- Button to Open Sorting Dialog -->
+                <q-btn
+                  color="primary"
+                  icon="o_sort"
+                  class="btnRounded q-ml-sm"
+                  @click="showSortDialog = true"
+                >
+                  <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
+                    {{ selectedSortCount }}
+                  </q-badge>
+                  <q-tooltip>Sort</q-tooltip>
+                </q-btn>
                 <q-btn
                   v-if="adminRole === 'admin'"
                   icon="o_playlist_add"
@@ -105,6 +137,11 @@
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
               </div>
+              <manageDropdownOptions
+                v-model="showManageDropdownOptions"
+                :manage-drop-down-types="manageDropDownTypes"
+                :selected-field="selectedField"
+              />
             </div>
           </div>
         </div>
@@ -116,7 +153,7 @@
         :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
         :loading="loading"
         :rows="rows"
-        :columns="columns"
+        :columns="computedColumns"
         row-key="id"
         separator="cell"
         no-data-label="No data available"
@@ -131,21 +168,45 @@
         </template>
         <template #header="props">
           <q-tr :props="props" class="bg-primary text-white">
-            <q-th auto-width class="text-center" />
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+            <q-th
+              auto-width
+              class="text-center"
+            />
+
+            <!-- Visible Columns -->
+            <q-th
+              v-for="col in props.cols"
+              :key="col.name"
+              :props="props"
+              :style="{
+                width: (resizeWidths?.[col.name] || 120) + 'px',
+                minWidth: '80px',
+                position: 'relative'
+              }"
+              @click="!isResizing && col.sortable"
+            >
+              {{ col.label }}
+
+              <div
+                class="resize-handle"
+                @mousedown.stop="startResize($event, col.name)"
+              >
+              </div>
+            </q-th>
             <q-th auto-width class="text-center">Actions</q-th>
           </q-tr>
         </template>
         <template #body="props">
           <q-tr
             :props="props"
-            :class="highlightedId == props.row.id ? 'highlight'
+            :class="activeRowId == props.row.id ? 'highlight'
                   : (props.row.statusText?.toLowerCase() === 'submitted'
                       ? 'bg-cyan-1'
                       : '')"
           >
             <q-td
-              style="width: 2%; position: relative;"
+              auto-width
+              class="text-center"
             >
               <div
                 v-if="canEdit(props.row)"
@@ -158,48 +219,81 @@
               <div
                 v-else
                 :class="['dot-circle q-mr-xs', props.row.isActive ? 'dot-active' : 'dot-inactive']" style="cursor: default;"
-              />
+              ></div>
             </q-td>
-            <q-td>{{ props.row.sopProcessNumber }}</q-td>
-            <q-td style="width: 17%;" class="hoverable-cell">
+            <q-td
+              v-if="selectedColumnNames.includes('sopProcessNumber')"
+              class="common-q-td"
+            >
+              {{ props.row.sopProcessNumber }}
+            </q-td>
+            <q-td
+              v-if="selectedColumnNames.includes('title')"
+              class="common-q-td hoverable-cell"
+              :style="{
+                width: (resizeWidths?.title || 120) + 'px',
+                minWidth: '80px',
+                maxWidth: (resizeWidths?.title || 120) + 'px'
+              }"
+            >
               <span
-                class="cursor-pointer"
-                @click="onSOPProcessView(props.row.id)"
+                class="answer-text"
+                @click="() => {
+                  setActiveRow(props.row.id);
+                  onSOPProcessView(props.row.id);
+                }"
               >
-                {{ truncateText(props.row.title) }}
+                {{ props.row.title }}
+
+                <q-tooltip>
+                  View Full Process
+                </q-tooltip>
               </span>
-              <q-icon
-                v-if="shouldShowMore(props.row.title)"
-                name="o_more_horiz"
-                class="cursor-pointer text-primary three-dot"
-                @click.stop="onSOPProcessView(props.row.id)"
-              >
-                <q-tooltip>View Full Process</q-tooltip>
-              </q-icon>
             </q-td>
-            <q-td style="width: 25%;">
-              <span>{{ truncateText(props.row.purpose) }}</span>
-              <q-icon
-                v-if="shouldShowMore(props.row.purpose)"
-                name="o_more_horiz"
-                class="cursor-pointer text-primary three-dot"
-                @click.stop="onSOPProcessView(props.row.id)"
+            <q-td
+              v-if="selectedColumnNames.includes('purpose')"
+              class="common-q-td hoverable-cell"
+              :style="{
+                width: (resizeWidths?.purpose || 120) + 'px',
+                minWidth: '80px',
+                maxWidth: (resizeWidths?.purpose || 120) + 'px'
+              }"
+            >
+              <span
+                class="answer-text"
+                @click="() => {
+                  setActiveRow(props.row.id);
+                  onSOPProcessView(props.row.id);
+                }"
               >
-                <q-tooltip>View Full Process</q-tooltip>
-              </q-icon>
+                {{ props.row.purpose }}
+
+                <q-tooltip>
+                  View Full Process
+                </q-tooltip>
+              </span>
             </q-td>
-            <q-td style="width: 5%;">
+            <q-td
+              v-if="selectedColumnNames.includes('version')"
+              class="common-q-td"
+            >
               {{ props.row.version }}
             </q-td>
-            <q-td style="width: 8%;">
+            <q-td
+              v-if="selectedColumnNames.includes('category.type')"
+              class="common-q-td"
+            >
               {{ props.row.category?.type }}
             </q-td>
-            <q-td style="width: 8%;">
+            <q-td
+              v-if="selectedColumnNames.includes('subCategory.dropDownValue')"
+              class="common-q-td"
+            >
               {{ props.row.subCategory?.dropDownValue }}
             </q-td>
             <q-td
-              style="width: 14%;"
-              class="hoverable-cell common-q-td"
+              v-if="selectedColumnNames.includes('statusId')"
+              class="common-q-td hoverable-cell"
               @click="
                 isSOPProcessStatusEditable(
                   props.row,
@@ -262,24 +356,46 @@
                     )
                 " -->
             </q-td>
-            <q-td class="hidden">
-              <span>{{ truncateText(props.row.shortDescription) }}</span>
-              <q-icon
-                v-if="shouldShowMore(props.row.shortDescription)"
-                name="o_more_horiz"
-                class="cursor-pointer text-primary three-dot"
-                @click.stop="onSOPProcessView(props.row.id)"
+            <q-td
+              v-if="selectedColumnNames.includes('shortDescription')"
+              class="common-q-td hoverable-cell"
+              :style="{
+                width: (resizeWidths?.shortDescription || 120) + 'px',
+                minWidth: '80px',
+                maxWidth: (resizeWidths?.shortDescription || 120) + 'px'
+              }"
+            >
+              <span
+                class="answer-text"
+                @click="() => {
+                  setActiveRow(props.row.id);
+                  onSOPProcessView(props.row.id);
+                }"
               >
-                <q-tooltip>View Full Process</q-tooltip>
-              </q-icon>
+                {{ props.row.shortDescription }}
+
+                <q-tooltip>
+                  View Full Process
+                </q-tooltip>
+              </span>
             </q-td>
-            <q-td style="width: 8%;">
+            <q-td
+              v-if="selectedColumnNames.includes('updatedByName')"
+              class="common-q-td"
+            >
               {{ props.row.updatedBy?.person.fullName }}
             </q-td>
-            <q-td class="text-center" style="width: 8%;">
+          <q-td
+            v-if="selectedColumnNames.includes('updatedOnUtc')"
+            class="common-q-td text-center"
+          >
               {{ toDate(props.row.updatedOnUtc) }}
-            </q-td>
-            <q-td style="width: 5%;" class="actions" align="left">
+          </q-td>
+          <!-- <q-td style="width: 5%;" class="actions" align="left"> -->
+          <q-td
+            style="width: 5%;"
+            class="actions text-left"
+          >
               <q-icon
                 v-if="
                   canEdit(props.row) &&
@@ -288,52 +404,43 @@
                 name="o_cloud_upload"
                 class="cursor-pointer q-mr-sm"
                 size="xs"
-                @click="onSubmitSOPProcessPublished(props.row.id, props.row.title, refreshSOPProcessList, sopProcessStatusDropdownSingleSelect)">
+                @click="() => {
+                  setActiveRow(props.row.id);
+
+                  onSubmitSOPProcessPublished(
+                    props.row.id,
+                    props.row.title,
+                    refreshSOPProcessList,
+                    sopProcessStatusDropdownSingleSelect
+                  );
+                }"
+                >
                 <q-tooltip>Publish SOP Process</q-tooltip>
               </q-icon>
-              <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onSOPProcessView(props.row.id)">
+              <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="() => {
+                setActiveRow(props.row.id);
+                onSOPProcessView(props.row.id);
+              }">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <!-- <q-icon
-                v-if="canEdit(props.row) ||
-                  (
-                    canApprove() &&
-                    props.row.statusText?.toLowerCase() === 'submitted'
-                  )
-                "
-                :name="
-                  canApprove() &&
-                  props.row.statusText?.toLowerCase() === 'submitted'
-                    ? 'o_check_box'
-                    : 'o_edit'
-                "
-                class="cursor-pointer q-mr-sm"
-                size="xs"
-                @click="onSOPProcessEdit(props.row.id, refreshSOPProcessList)">
-                <q-tooltip>
-                  {{
-                    canApprove() &&
-                    props.row.statusText?.toLowerCase() === 'submitted'
-                      ? 'Review & Edit SOP Process'
-                      : 'Edit'
-                  }}
-                </q-tooltip>
-              </q-icon> -->
               <q-icon
                 v-if="canEdit(props.row) ||
                   (
                     canApprove() &&
-                    props.row.statusText?.toLowerCase() === 'submitted'
+                    (props.row.statusText?.toLowerCase() === 'submitted' || props.row.statusText?.toLowerCase() === 'draft')
                   )
                 "
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
                 size="xs"
-                @click="onSOPProcessEdit(props.row.id, refreshSOPProcessList)">
+                @click="() => {
+                  setActiveRow(props.row.id);
+                  onSOPProcessEdit(props.row.id, refreshSOPProcessList);
+                }">
                 <q-tooltip>
                   {{
                     canApprove() &&
-                    props.row.statusText?.toLowerCase() === 'submitted'
+                    (props.row.statusText?.toLowerCase() === 'submitted' || props.row.statusText?.toLowerCase() === 'draft')
                       ? 'Review & Edit SOP Process'
                       : 'Edit'
                   }}
@@ -347,7 +454,10 @@
                 name="o_check_box"
                 class="cursor-pointer q-mr-sm"
                 size="xs"
-                @click="onApproveSOPProcess(props.row)"
+                @click="() => {
+                  setActiveRow(props.row.id);
+                  onApproveSOPProcess(props.row);
+                }"
               >
                 <q-tooltip>Approve SOP Process</q-tooltip>
               </q-icon>
@@ -357,13 +467,15 @@
                 :color="props.row.isActive ? 'positive' : 'negative'"
                 class="cursor-pointer q-mr-sm"
                 size="xs"
-                @click="
+                @click="() => {
+                  setActiveRow(props.row.id);
+
                   onSubmitSOPProcessActiveInActiveToggle(
                     props.row.id,
                     props.row.isActive,
                     refreshSOPProcessList
-                  )
-                "
+                  );
+                }"
               >
                 <q-tooltip>
                   {{
@@ -390,19 +502,30 @@
     </q-card>
     <!-- <N8nChatbot /> -->
   </q-page>
+  <!-- Multi-Column Level Sorting -->
+  <multiColumnSortingDialog
+    v-model="showSortDialog"
+    :columns="columns"
+    :multi-sort="multiSort"
+    @add="addSortLevel"
+    @remove="removeSortLevel"
+    @apply="applyMultiSort"
+  />
 </template>
 <script setup>
 // Import libraries
 import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
-import { zwConfirm, getLocalStorage, setLocalStorage, clearLocalStorage } from "assets/utils";
+import { zwConfirm } from "assets/utils";
 
 import sopProcessService from "../sopProcess.service";
 
 // SOP Change :- Shared DataTable Views
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
 import manageDropdownOptions from "src/components/dataTable/_manageDropdownOptions.vue";
+import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
+import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
 
 // SOP Change :- Shared Dropdowns
 import manageDropdownModule from "src/modules/dropdown/utils/dropdowns.js";
@@ -414,6 +537,12 @@ import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSele
 // SOP Change :- Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
 // import N8nChatbot from 'src/modules/sop-process/components/_sopChatAssistant.vue';
+
+// SOP Change :- Shared Scripts DataTable Features
+import { useColumnManager } from "composables/dataTable/useColumnManager.js";
+import useColumnResize from "composables/dataTable/useColumnResize.js";
+import useMultiSort from "composables/dataTable/useMultiSort.js";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 // SOP Change :- Shared Project Dialogs
 import {
@@ -440,10 +569,12 @@ const loading = ref(true);
 const showFilter = ref(false);
 const searchLoader = ref(false);
 const activeEdit = ref({ rowId: null, field: null });
+const showSortDialog = ref(false);
 
 const authStore = useAuthStore();
 const user = authStore.user;
 const loggedUserId = user.userId;
+const siteId = computed(() => authStore.user?.siteId);
 
 // check login user role
 const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
@@ -483,32 +614,27 @@ const showManageDropdownOptions = ref(false);
 const { toDate } = useFilters();
 const manageDropDownTypes = ref([]);
 
-// local storage values
-const localStorageKey = "SOP Process";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const pagination = ref(filterLocalStorage?.pagination || { sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
-
 // Table variables
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
-  { name: "sopProcessNumber", label: "SOP Id", field: "sopProcessNumber", align: "left", sortable: true },
-  { name: "title", label: "Process Title", field: "title", align: "left", sortable: true },
-  { name: "purpose", label: "Purpose", field: "purpose", align: "left", sortable: true },
-  { name: "version", label: "Version", field: "version", align: "left", sortable: true },
-  { name: "category.type", label: "Category", field: "category.type", align: "left", sortable: true },
-  { name: "subCategory.dropDownValue", label: "Subcategory", field: "subCategory.dropDownValue", align: "left", sortable: true },
-  { name: "statusId", label: "Status", field: "statusId", align: "left", sortable: true },
-  // { name: "shortDescription", label: "Short Description", field: "shortDescription", align: "center", sortable: true },
-  { name: "updatedByName", label: "Updated By", field: "updatedByName", align: "left", sortable: true },
-  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "center", sortable: true }
+  { name: "sopProcessNumber", label: "SOP Id", field: "sopProcessNumber", align: "left", sortable: true, default: true },
+  { name: "title", label: "Process Title", field: "title", align: "left", sortable: true, default: true },
+  { name: "purpose", label: "Purpose", field: "purpose", align: "left", sortable: true, default: true },
+  { name: "version", label: "Version", field: "version", align: "left", sortable: true, default: true },
+  { name: "category.type", label: "Category", field: "category.type", align: "left", sortable: true, default: true },
+  { name: "subCategory.dropDownValue", label: "Subcategory", field: "subCategory.dropDownValue", align: "left", sortable: true, default: true },
+  { name: "statusId", label: "Status", field: "statusId", align: "left", sortable: true, default: true },
+  { name: "shortDescription", label: "Short Description", field: "shortDescription", align: "center", sortable: true, default: false },
+  { name: "updatedByName", label: "Updated By", field: "updatedByName", align: "left", sortable: true, default: true },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "center", sortable: true, default: true }
 ]);
 
-const highlightProjectId = filterLocalStorage?.activeRowId || null;
-const activeRowId = ref(highlightProjectId);
-const highlightedId = computed(() => {
-  return activeRowId.value;
-});
+// const highlightProjectId = filterLocalStorage?.activeRowId || null;
+// const activeRowId = ref(highlightProjectId);
+// const highlightedId = computed(() => {
+//   return activeRowId.value;
+// });
 
 // truncate text after 50 characters
 const truncateText = (text, length = 60) => {
@@ -525,33 +651,149 @@ const shouldShowMore = (text, length = 60) => {
 };
 
 // Search variables
-const getFilterValue = (key, defaultValue) => {
-  const val = filterLocalStorage?.[key];
-  return val && val.length > 0 ? val : defaultValue;
-};
+// const getFilterValue = (key, defaultValue) => {
+//   const val = filterLocalStorage?.[key];
+//   return val && val.length > 0 ? val : defaultValue;
+// };
 
 // Search variables
-const search = ref({
-  searchText: getFilterValue("searchText", ""),
-  title: getFilterValue("title", ""),
-  isActive: getFilterValue("isActive", true)
-});
+// const search = ref({
+//   searchText: getFilterValue("searchText", ""),
+//   title: getFilterValue("title", ""),
+//   isActive: getFilterValue("isActive", true)
+// });
 
+// const handleDocumentClick = (event) => {
+//   const highlightElement = document.querySelector(".highlight");
+//   // Check if clicked inside the highlighted row or icons
+//   if (highlightElement && !highlightElement.contains(event.target)) {
+//     activeRowId.value = null;
+//     const storedData = getLocalStorage(localStorageKey) || {};
+//     setLocalStorage(localStorageKey, { ...storedData, activeRowId: null });
+//   }
+// };
+// const setActiveRow = (id) => {
+//   activeRowId.value = id;
+//   saveDataTableState();
+// };
+
+const setActiveRow = (id) => {
+  activeRowId.value = id;
+
+  saveDataTableState({
+    search: { ...search.value },
+    pagination: { ...pagination.value },
+    activeRowId: id,
+    sorts: getCurrentSorts()
+  });
+};
+
+const clearActiveRow = () => {
+  activeRowId.value = null;
+
+  saveDataTableState({
+    search: { ...search.value },
+    pagination: { ...pagination.value },
+    activeRowId: null,
+    sorts: getCurrentSorts()
+  });
+};
+
+const getCurrentSorts = () => {
+  const formattedSorts = {};
+
+  for (const s of multiSort.value) {
+    if (s.column && s.direction) {
+      formattedSorts[s.column] = s.direction;
+    }
+  }
+
+  return formattedSorts;
+};
+// const handleDocumentClick = (event) => {
+//   const highlightElement = document.querySelector(".highlight");
+
+//   if (highlightElement && !highlightElement.contains(event.target)) {
+//     activeRowId.value = null;
+//     saveDataTableState();
+//   }
+// };
 const handleDocumentClick = (event) => {
-  const highlightElement = document.querySelector(".highlight");
-  // Check if clicked inside the highlighted row or icons
-  if (highlightElement && !highlightElement.contains(event.target)) {
-    activeRowId.value = null;
-    const storedData = getLocalStorage(localStorageKey) || {};
-    setLocalStorage(localStorageKey, { ...storedData, activeRowId: null });
+  const highlightedRow = event.target.closest("tr.highlight");
+
+  // Keep active row if clicking anywhere inside the active row
+  if (highlightedRow) {
+    return;
+  }
+
+  // Clear active row when clicking outside the active row
+  if (activeRowId.value !== null) {
+    clearActiveRow();
   }
 };
+
+const defaultSearch = {
+  searchText: "",
+  title: "",
+  categoryIds: [],
+  subCategoryIds: [],
+  statusIds: [],
+  isActive: true
+};
+
+const defaultPagination = {
+  sortBy: "updatedOnUtc",
+  descending: true,
+  rowsPerPage: 20,
+  page: 1
+};
+
+const {
+  search,
+  pagination,
+  activeRowId,
+  sorts,
+  resizeWidths,
+  selectedColumnNames,
+  getTableState,
+  saveDataTableState,
+  saveResizableWidthState,
+  saveColumnsState
+} = useSiteTableState({
+  storageKey: "sop-Process-Index",
+  siteId,
+  defaultSearch,
+  defaultPagination,
+  defaultSorts: {},
+  defaultResizableWidth: {},
+  defaultColumns: columns.value
+    .filter(col => col.default === true)
+    .map(col => col.name)
+});
 
 // Get/Map project list to table
 const getAllSOPProcessList = (props) => {
   const { page, rowsPerPage, sortBy, descending } = props.pagination;
   loading.value = true;
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
+
+  const sorts = {};
+  const multi = multiSort.value;
+  for (let i = 0; i < multi.length; i++) {
+    const s = multi[i];
+    if (s.column && s.direction) {
+      sorts[s.column] = s.direction;
+    }
+  }
+
+  const payload = { page, pageSize: rowsPerPage, sortBy, descending, sorts, ...search.value };
+
+  saveDataTableState({
+    search: search.value,
+    pagination: props.pagination,
+    activeRowId: activeRowId.value,
+    sorts
+  });
+
   sopProcessService.getAllSOPProcessList(payload).then((resp) => {
     rows.value = resp.sopProcessesList.map(data => {
       return {
@@ -559,16 +801,19 @@ const getAllSOPProcessList = (props) => {
       };
     });
 
-    pagination.value.page = page;
-    pagination.value.rowsPerPage = rowsPerPage;
-    pagination.value.sortBy = sortBy;
-    pagination.value.descending = descending;
-    pagination.value.rowsNumber = resp.total;
+    Object.assign(pagination.value, {
+      page,
+      rowsPerPage,
+      sortBy,
+      descending,
+      rowsNumber: resp.total
+    });
 
-    setLocalStorage(localStorageKey, {
-      ...search.value,
-      pagination: pagination.value,
-      activeRowId: activeRowId.value
+    saveDataTableState({
+      search: { ...search.value },
+      pagination: { ...pagination.value },
+      activeRowId: activeRowId.value,
+      sorts
     });
   }).finally(() => {
     loading.value = false;
@@ -709,20 +954,70 @@ const refreshSOPProcessList = () => {
 };
 
 // Search records as per parameters
+// const onSearch = () => {
+//   refreshSOPProcessList();
+// };
 const onSearch = () => {
+  saveDataTableState();
   refreshSOPProcessList();
 };
-
 // Clear search
 const onClear = () => {
   search.value.title = "";
   search.value.categoryIds = [];
   search.value.subCategoryIds = [];
   search.value.statusIds = [];
-  clearLocalStorage(localStorageKey);
+  saveDataTableState();
   onSearch();
 };
 
+const lsSorts = sorts.value || null;
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Column resize functionality (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  startResize,
+  resetColumnsWidth,
+  isResizing
+} = useColumnResize({
+  columns,
+  resizeWidths,
+  saveResizableWidthState
+});
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Hide/Show Columns (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  selectAllColumns,
+  defaultColumns,
+  allColumnNames,
+  computedColumns
+} = useColumnManager({
+  columns,
+  selectedColumnNames,
+  saveColumnsState,
+  isResizing
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// DataTable:- Sort Filter (SOP Change)
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  multiSort,
+  addSortLevel,
+  removeSortLevel,
+  applyMultiSort,
+  selectedSortCount
+} = useMultiSort({
+  lsSorts,
+  saveDataTableState,
+  onApplySort: () => {
+    refreshSOPProcessList();
+  }
+});
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions (SOP Change)
 // ------------------------------------------------------------------------------------
@@ -775,14 +1070,15 @@ function onClearFilters (key) {
     search.value.title = "";
   } else if (key === "Category") {
     search.value.categoryIds = [];
+    search.value.subCategoryIds = [];
   } else if (key === "Subcategory") {
     search.value.subCategoryIds = [];
   } else if (key === "Status") {
     search.value.statusIds = [];
-  } else if (key === "isActive") {
-    search.value.isActive = search.value.isActive;
+  } else if (key === "Active/Inactive") {
+    search.value.isActive = null;
   }
-  delete appliedFilters.value[key];
+  saveDataTableState();
   refreshSOPProcessList();
 }
 
@@ -800,15 +1096,51 @@ function getFilterCount (key) {
 // Save static search into localstorage.
 // ----------------------------
 watch(() => search.value.searchText, () => {
-  if (search.value.searchText) searchLoader.value = true;
+  if (search.value.searchText) {
+    searchLoader.value = true;
+  }
+
+  pagination.value.page = 1;
+  saveDataTableState();
   refreshSOPProcessList();
 });
 
-watch(() => search.value.categoryIds, async (newValue, oldValue) => {
-  if (newValue === oldValue) return;
-  if (newValue?.length === 0) sopProcessSubCategoriesDropdown.load();
+watch(
+  () => search.value.categoryIds,
+  async (newValue, oldValue) => {
+    if (JSON.stringify(newValue) === JSON.stringify(oldValue)) {
+      return;
+    }
 
-  sopProcessSubCategoriesDropdown.load(newValue);
+    if (!newValue?.length) {
+      search.value.subCategoryIds = [];
+    } else {
+      await sopProcessSubCategoriesDropdown.load(newValue);
+
+      // Remove selected subcategories that are no longer available
+      const availableIds =
+        sopProcessSubCategoriesDropdown.list.value.map(
+          item => item.value
+        );
+
+      search.value.subCategoryIds =
+        search.value.subCategoryIds.filter(id =>
+          availableIds.includes(id)
+        );
+    }
+
+    saveDataTableState();
+  },
+  { deep: true }
+);
+
+watch(activeRowId, (val) => {
+  saveDataTableState({
+    search: { ...search.value },
+    pagination: { ...pagination.value },
+    activeRowId: val,
+    sorts: getCurrentSorts()
+  });
 });
 
 onBeforeUnmount(() => {
@@ -817,20 +1149,20 @@ onBeforeUnmount(() => {
 
 // On page rendering
 onMounted(async () => {
-  tableRef.value.requestServerInteraction();
-
   // Admin:- Manage all SOP-Process Dropdowns and Types
   manageDropDownTypes.value = await getDropdownTypesByModuleNameForDropdown("SOP Process");
 
-  if (!activeRowId.value && highlightProjectId) {
-    activeRowId.value = highlightProjectId;
-  }
   document.addEventListener("click", handleDocumentClick);
   sopProcessCategoriesDropdown.load("SOP Process Category");
-  sopProcessSubCategoriesDropdown.load();
+  if (search.value.categoryIds?.length > 0) {
+    await sopProcessSubCategoriesDropdown.load(
+      search.value.categoryIds
+    );
+  }
   sopProcessStatusDropdownSingleSelect.load("SOP Process Status");
   sopProcessStatusesDropdown.load("SOP Process Status");
 
+  tableRef.value.requestServerInteraction();
   // loadSopAssistant();
 });
 
@@ -839,5 +1171,21 @@ onMounted(async () => {
 .three-dot {
   font-size: 13px;
   margin-left: 0px;
+}
+.resizable-cell-content {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.answer-text {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
 }
 </style>

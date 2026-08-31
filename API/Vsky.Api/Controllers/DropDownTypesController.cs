@@ -154,6 +154,30 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GetDropdownByTypeIds
+        // Title: GetDropdownByTypeIds
+        // Description: This endpoint retrieves all dropdown values for the specified dropdown type IDs.
+        [HttpPost("dropDownValuesByTypeIds")]
+        public async Task<IActionResult> GetDropdownByTypeIds(
+            [FromBody] List<string> typeIds)
+        {
+            if (typeIds == null || !typeIds.Any())
+            {
+                return Ok(new List<DropDownViewModel>());
+            }
+
+            var list = await _dropDownService.GetDropDownsByTypeIds(typeIds);
+
+            if (list != null)
+            {
+                var model = _mapper.Map<IList<DropDownViewModel>>(list);
+                return Ok(model);
+            }
+
+            return Ok(new List<DropDownViewModel>());
+        }
+        #endregion
+
         #region GetDropdownTypeByModuleName
         // Title: GetDropdownTypeByModuleName
         // Description: This endpoint retrieves all dropdown types associated with a given module name.

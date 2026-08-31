@@ -122,7 +122,6 @@ namespace Vsky.Services.ProjectQuestionsAnswer
             else
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
 
-
             // Apply multi-level dictionary sorting
             if (sorts != null && sorts.Count > 0)
             {

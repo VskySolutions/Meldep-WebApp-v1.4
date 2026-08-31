@@ -42,6 +42,11 @@ export default {
   getDropdownByTypeId (typeId) {
     return http.get(`/drop-downs-type/dropDownValueByTypeId?typeId=${typeId}`).then(response => response.data);
   },
+  getDropdownByTypeIds (typeIds) {
+    return http
+      .post('/drop-downs-type/dropDownValuesByTypeIds', typeIds)
+      .then(response => response.data);
+  },
   getDropDownForSite (siteId, type) {
     return http.get(`/drop-downs-type/dropdownlist?siteId=${siteId}&type=${type}`).then(response => response.data);
   },

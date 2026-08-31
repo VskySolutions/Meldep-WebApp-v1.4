@@ -131,6 +131,34 @@ namespace Vsky.Services.DropDowns
                      .ThenBy(x => x.DropDownType.IsAlphabeticalOrNumerical ? "" : x.DropDownValue);
             return await query.ToListAsync();
         }
+        public async Task<IList<DropDown>> GetDropDownsByTypeIds(List<string> typeIds)
+        {
+            typeIds = typeIds
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .ToList();
+
+            if (!typeIds.Any())
+            {
+                return new List<DropDown>();
+            }
+
+            var query = _dropdownRepository.TableNoTracking
+                .Where(x =>
+                    typeIds.Contains(x.DropDownTypeId) &&
+                    !x.Deleted &&
+                    !x.DropDownType.Deleted);
+
+            query = query
+                .OrderBy(x => x.DropDownType.IsAlphabeticalOrNumerical
+                    ? x.SortOrder
+                    : 0)
+                .ThenBy(x => x.DropDownType.IsAlphabeticalOrNumerical
+                    ? ""
+                    : x.DropDownValue);
+
+            return await query.ToListAsync();
+        }
         #endregion
 
         #region GetAllDropDowns

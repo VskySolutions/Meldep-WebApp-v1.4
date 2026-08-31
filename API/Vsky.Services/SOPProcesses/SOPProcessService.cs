@@ -10,6 +10,7 @@ using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.ApplicationUserRoles;
+using Vsky.Services.Common;
 
 namespace Vsky.Services.SOPProcesses
 {
@@ -18,17 +19,17 @@ namespace Vsky.Services.SOPProcesses
         #region Define services
         private readonly IRepository<SOPProcess> _sOPProcessRepository;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ApplicationDbContext _db;
+        private readonly ICommonService _commonService;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
         public SOPProcessService(IRepository<SOPProcess> sOPProcessRepository,
             UserManager<ApplicationUser> userManager,
-            ApplicationDbContext db,
+            ICommonService commonService,
             IApplicationUserRoleService applicationUserRoleService
         )
         {
             _sOPProcessRepository = sOPProcessRepository;
             _userManager = userManager;
-            _db = db;
+            _commonService = commonService;
             _applicationUserRoleService = applicationUserRoleService;
         }
         private static string GetOrderBy(string orderBy)
@@ -38,7 +39,21 @@ namespace Vsky.Services.SOPProcesses
         #endregion
 
         #region List
-        public IPagedList<Vsky.Models.SOPProcess> GetAllSOPProcesses(string searchText, string siteId, string logginuser, string title, List<string> categoryIds, List<string> subCategoryIds, List<string> statusIds, bool isActive, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue)
+        public IPagedList<Vsky.Models.SOPProcess> GetAllSOPProcesses(
+            string searchText, 
+            string siteId, 
+            string logginuser, 
+            string title, 
+            List<string> categoryIds, 
+            List<string> subCategoryIds, 
+            List<string> statusIds, 
+            bool isActive, 
+            string sortBy,
+            Dictionary<string, string> sorts, 
+            bool descending, 
+            int page = 1, 
+            int pageSize = int.MaxValue
+        )
         {
             var query = _sOPProcessRepository.TableNoTracking.Where(x => !x.Deleted && x.IsActive == isActive && x.SiteId == siteId);
 
@@ -87,38 +102,28 @@ namespace Vsky.Services.SOPProcesses
              normalizedRoles.Contains("sop approver") ||
              normalizedRoles.Contains("sop editor");
 
-            //       var latestIds = query
-            //.AsEnumerable()
-            //.Where(x => Version.TryParse(x.Version, out _))
-            //.GroupBy(x => x.SOPProcessNumber)
-            //.Select(g => g
-            //    .OrderByDescending(x => Version.Parse(x.Version))
-            //    .First()
-            //    .Id)
-            //.ToList();
-
             var sopVersionData = query
-     .AsEnumerable()
-     .Where(x => Version.TryParse(x.Version, out _))
-     .GroupBy(x => x.SOPProcessNumber)
-     .Select(g =>
-     {
-         var orderedVersions = g
-             .OrderBy(x => Version.Parse(x.Version))
+             .AsEnumerable()
+             .Where(x => Version.TryParse(x.Version, out _))
+             .GroupBy(x => x.SOPProcessNumber)
+             .Select(g =>
+             {
+                 var orderedVersions = g
+                     .OrderBy(x => Version.Parse(x.Version))
+                     .ToList();
+
+                 var originalVersion = orderedVersions
+                     .FirstOrDefault(x => x.Version == "1.0");
+
+                 var latestVersion = orderedVersions.Last();
+
+                 return new
+                 {
+                     LatestId = latestVersion.Id,
+                     OriginalCreatedById = originalVersion?.CreatedById
+                 };
+             })
              .ToList();
-
-         var originalVersion = orderedVersions
-             .FirstOrDefault(x => x.Version == "1.0");
-
-         var latestVersion = orderedVersions.Last();
-
-         return new
-         {
-             LatestId = latestVersion.Id,
-             OriginalCreatedById = originalVersion?.CreatedById
-         };
-     })
-     .ToList();
 
             var latestIds = sopVersionData
                 .Select(x => x.LatestId)
@@ -264,62 +269,12 @@ namespace Vsky.Services.SOPProcesses
             else
                 query = query.OrderByDescending(x => x.CreatedOnUtc);
 
-            //var result = query.Select(x => new SOPProcess
-            //{
-            //    Id = x.Id,
-            //    Title = x.Title,
-            //    SOPProcessNumber = x.SOPProcessNumber,
-            //    Version = x.Version,
-            //    ShortDescription = x.ShortDescription,
-            //    Purpose = x.Purpose,
-            //    IsActive = x.IsActive,
-            //    CreatedOnUtc = x.CreatedOnUtc,
-            //    UpdatedOnUtc = x.UpdatedOnUtc,
+            // Apply multi-level dictionary sorting
+            if (sorts != null && sorts.Count > 0)
+            {
+                query = _commonService.ApplySorting(query, sorts);
+            }
 
-            //    Category = x.Category == null ? null : new DropDownType
-            //    {
-            //        Id = x.Category.Id,
-            //        Type = x.Category.Type
-            //    },
-
-            //    SubCategory = x.SubCategory == null ? null : new DropDown
-            //    {
-            //        Id = x.SubCategory.Id,
-            //        DropDownValue = x.SubCategory.DropDownValue
-            //    },
-
-            //    CreatedBy = x.CreatedBy == null ? null : new ApplicationUser
-            //    {
-            //        Id = x.CreatedBy.Id,
-            //        Person = x.CreatedBy.Person == null ? null : new Person
-            //        {
-            //            Id = x.CreatedBy.PersonId,
-            //            FullName = (x.CreatedBy.Person.FirstName ?? "") + " " +
-            //           (x.CreatedBy.Person.LastName ?? "")
-            //        }
-            //    },
-
-            //    UpdatedBy = x.UpdatedBy == null ? null : new ApplicationUser
-            //    {
-            //        Id = x.UpdatedBy.Id,
-            //        Person = x.UpdatedBy.Person == null ? null : new Person
-            //        {
-            //            Id = x.UpdatedBy.PersonId,
-            //            FullName = (x.UpdatedBy.Person.FirstName ?? "") + " " +
-            //           (x.UpdatedBy.Person.LastName ?? "")
-            //        }
-            //    },
-
-            //    StatusText = x.SOPProcessStatusLog
-            //        .OrderByDescending(p => p.CreatedOnUtc)
-            //        .Select(p => p.Status.DropDownValue)
-            //        .FirstOrDefault(),
-
-            //    StatusId = x.SOPProcessStatusLog
-            //        .OrderByDescending(p => p.CreatedOnUtc)
-            //        .Select(p => p.Status.Id)
-            //        .FirstOrDefault()
-            //});
             var result = query.Select(x => new SOPProcess
             {
                 Id = x.Id,
@@ -331,10 +286,6 @@ namespace Vsky.Services.SOPProcesses
                 IsActive = x.IsActive,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
-
-                // IMPORTANT
-                // Do not try to get OriginalCreatedById from DB
-                // because it does not exist in DB.
 
                 Category = x.Category == null ? null : new DropDownType
                 {
@@ -373,14 +324,14 @@ namespace Vsky.Services.SOPProcesses
                 },
 
                 StatusText = x.SOPProcessStatusLog
-        .OrderByDescending(p => p.CreatedOnUtc)
-        .Select(p => p.Status.DropDownValue)
-        .FirstOrDefault(),
+                .OrderByDescending(p => p.CreatedOnUtc)
+                .Select(p => p.Status.DropDownValue)
+                .FirstOrDefault(),
 
                 StatusId = x.SOPProcessStatusLog
-        .OrderByDescending(p => p.CreatedOnUtc)
-        .Select(p => p.Status.Id)
-        .FirstOrDefault()
+                .OrderByDescending(p => p.CreatedOnUtc)
+                .Select(p => p.Status.Id)
+                .FirstOrDefault()
 
             }).ToList();
 
@@ -395,26 +346,15 @@ namespace Vsky.Services.SOPProcesses
             }
 
             return new PagedList<SOPProcess>(
-     result.AsQueryable(),
-     page,
-     pageSize
- );
-
-            //return new PagedList<SOPProcess>(result, page, pageSize);
+                 result.AsQueryable(),
+                 page,
+                 pageSize
+            );
         }
 
         #endregion
 
         #region Get By Id
-        //public SOPProcess GetSOPProcessById(string siteId, string id)
-        //{
-        //    var query = _sOPProcessRepository.Table
-        //        .Where(x => !x.Deleted && x.SiteId == siteId && x.Id == id)
-        //        .Include(x => x.SOPProcessStatusLog).ThenInclude(x => x.Status).OrderByDescending(s => s.CreatedOnUtc)
-        //        .FirstOrDefault();
-
-        //    return query;
-        //}
         public SOPProcess GetSOPProcessById(string siteId, string id)
         {
             return _sOPProcessRepository.Table
@@ -504,17 +444,6 @@ namespace Vsky.Services.SOPProcesses
         #region GetSOPProcessByTitle
         // Title: GetSOPProcessByTitle
         // Description: This method retrieves a SOP Process based on its title and Id. It allows an optional exclusion of a SOP Process by its ID, which can be useful for scenarios like checking for duplicates. while excluding a specific SOP Process. The method returns the first matching SOP Process or null if no match is found.
-        //public async Task<SOPProcess> GetSOPProcessByTitle(string SiteId, string title, string id = null)
-        //{
-        //    var query = _sOPProcessRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.Title.ToLower() == title.ToLower());
-
-        //    if (!string.IsNullOrEmpty(id))
-        //        query = query.Where(x => x.Id != id);
-
-        //    var item = await query.FirstOrDefaultAsync();
-
-        //    return item;
-        //}
         public async Task<SOPProcess> GetSOPProcessByTitle(string siteId, string title, int number = 0, string id = null)
         {
             var query = _sOPProcessRepository.TableNoTracking

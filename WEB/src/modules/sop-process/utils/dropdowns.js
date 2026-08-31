@@ -26,7 +26,7 @@ export default function sOPProcessModule () {
     valueKey: "id"
   });
 
-  const sopProcessSubCategoriesDropdown = useMultiSelectDropdown(commonService.getDropdownByTypeId, {
+  const sopProcessSubCategoriesDropdown = useMultiSelectDropdown(commonService.getDropdownByTypeIds, {
     labelKey: "dropdownValue",
     valueKey: "id"
   });
