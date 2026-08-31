@@ -475,7 +475,7 @@
                       v-for="col in props.cols"
                       :key="col.name" :props="props"
                     >{{ col.label }}
-                      <span v-if="['requirementLogDate','employeeId','requirementName'].includes(col.name)" class="required">*</span>
+                      <span v-if="['requirementLogDate','employeeId'].includes(col.name)" class="required">*</span>
                     </q-th>
                     <q-th auto-width class="text-center">Actions</q-th>
                   </q-tr>
@@ -529,9 +529,6 @@
                           stack-label
                           hide-bottom-space
                           :dense="true"
-                          :error="editingLogRowV$.requirementName.$error"
-                          :error-message="editingLogRowV$.requirementName.$errors[0]?.$message"
-                          @blur="editingLogRowV$.requirementName.$touch"
                         />
                       </div>
                     </q-td>
@@ -615,9 +612,6 @@
                         stack-label
                         hide-bottom-space
                         :dense="true"
-                        :error="editingLogRowV$.requirementName.$error"
-                        :error-message="editingLogRowV$.requirementName.$errors[0]?.$message"
-                        @blur="editingLogRowV$.requirementName.$touch"
                       />
                       <span
                         v-else :class="props.row.deleted ? 'text-delete' : ''"
@@ -751,7 +745,7 @@ const columns = ref([
 const logcolumns = ref([
   { name: "requirementLogDate", label: "Change Date", field: "requirementLogDate", align: "left", sortable: true },
   { name: "employeeId", label: "Change By", field: "employeeId", align: "left", sortable: true },
-  { name: "requirementName", label: "Requirement Change", field: "requirementName", align: "left", sortable: true },
+  { name: "requirementName", label: "Item Name", field: "requirementName", align: "left", sortable: true },
   { name: "description", label: "Description", field: "description", align: "left", sortable: true }
 ]);
 
@@ -836,7 +830,6 @@ const editingRowrules = {
 
 const editingLogRowrules = {
   employeeId: { required: helpers.withMessage("Change By Name is required", required), minLength: minLength(1), maxLength: maxLength(200) },
-  requirementName: { required: helpers.withMessage("Requirement Name is required", required) },
   requirementLogDateStr: {
     required: helpers.withMessage("Date is required", required),
     isDate: helpers.withMessage("Date is invalid", isDate)
@@ -1056,7 +1049,7 @@ async function onSave () {
     // check duplicate row
     let isDuplicate = 0;
     logrows.value.forEach((item, index) => {
-      if (item.requirementName.toLowerCase() === editingLogRow.value.requirementName.toLowerCase()) {
+      if (item.requirementName?.trim().toLowerCase() === editingLogRow.value.requirementName?.trim().toLowerCase()) {
         isDuplicate = 1;
       }
     });
