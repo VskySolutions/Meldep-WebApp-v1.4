@@ -245,6 +245,8 @@ namespace Vsky.Services.Issues
                             m.ProjectEmployeeRoleMappings
                                 .Where(r => !r.Deleted)
                                 .Any(r =>
+                                    r.SitesProjectRoles.MasterProjectRoles.Name == "Software Tester" ||
+                                    r.SitesProjectRoles.MasterProjectRoles.Name == "Software Developer" ||
                                     r.SitesProjectRoles
                                         .SitesProjectRolesPermissions
                                         .Any(p =>

@@ -1106,44 +1106,48 @@ namespace Vsky.Api.Controllers
                                 // Get actual ProjectEmployeeMapping Id
                                 var projectEmployeeMappingId = projectEmployeeMapping.Id;
 
-                                // PROJECT EMPLOYEE ROLE MAPPING
-                                var selectedRoleIds =
-                                    item.SiteProjectRoleIds?
-                                        .Where(x => !string.IsNullOrWhiteSpace(x))
-                                        .Distinct()
-                                        .ToList()
+                                // Get selected role IDs from the request.
+                                var selectedRoleIds = item.SiteProjectRoleIds?
+                                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                                    .Distinct()
+                                    .ToList()
                                     ?? new List<string>();
 
-                                // DELETE / SOFT DELETE ALL OLD ROLE MAPPINGS
-                                var existingRoleMappings = _projectEmployeeRoleMappingService.GetRoleMappingByProjectEmployeeMappingId(projectEmployeeMappingId);
+                                // Get ALL role mappings, including soft-deleted mappings.
+                                // This is required so previously deleted roles can be restored.
+                                var existingRoleMappings =
+                                    _projectEmployeeRoleMappingService
+                                        .GetRoleMappingByProjectEmployeeMappingId(projectEmployeeMappingId)
+                                        ?? new List<ProjectEmployeeRoleMapping>();
 
-                                if (existingRoleMappings != null &&
-                                    existingRoleMappings.Any())
+                                // DELETE / SOFT DELETE OLD ROLE MAPPINGS
+                                foreach (var existingRole in existingRoleMappings)
                                 {
-                                    foreach (var existingRole in existingRoleMappings)
+                                    // If employee mapping is deleted, delete all active roles.
+                                    if (item.Deleted)
                                     {
-                                        // Employee mapping deleted
-                                        // all role mappings should be deleted
-                                        if (item.Deleted)
+                                        if (!existingRole.Deleted)
                                         {
                                             existingRole.UpdatedById = LoggedUserId;
                                             existingRole.UpdatedOnUtc = GetDateTime;
 
-                                            _projectEmployeeRoleMappingService.DeleteProjectEmployeeRole(existingRole);
-
-                                            continue;
+                                            _projectEmployeeRoleMappingService
+                                                .DeleteProjectEmployeeRole(existingRole);
                                         }
 
-                                        // Employee mapping active
-                                        // If role is no longer selected, soft delete it.
-                                        if (!selectedRoleIds.Contains(
-                                                existingRole.SiteProjectRoleId))
-                                        {
-                                            existingRole.UpdatedById = LoggedUserId;
-                                            existingRole.UpdatedOnUtc = GetDateTime;
+                                        continue;
+                                    }
 
-                                            _projectEmployeeRoleMappingService.DeleteProjectEmployeeRole(existingRole);
-                                        }
+                                    // Employee mapping is active.
+                                    // Delete only active roles that are no longer selected.
+                                    if (!existingRole.Deleted &&
+                                        !selectedRoleIds.Contains(existingRole.SiteProjectRoleId))
+                                    {
+                                        existingRole.UpdatedById = LoggedUserId;
+                                        existingRole.UpdatedOnUtc = GetDateTime;
+
+                                        _projectEmployeeRoleMappingService
+                                            .DeleteProjectEmployeeRole(existingRole);
                                     }
                                 }
 
@@ -1152,35 +1156,40 @@ namespace Vsky.Api.Controllers
                                 {
                                     foreach (var roleId in selectedRoleIds)
                                     {
-                                        var existingRole =
-                                            existingRoleMappings?
-                                                .FirstOrDefault(x =>
-                                                    x.SiteProjectRoleId == roleId);
+                                        var existingRole = existingRoleMappings
+                                            .FirstOrDefault(x =>
+                                                x.SiteProjectRoleId == roleId);
 
-                                        if (existingRole == null)
+                                        if (existingRole != null)
                                         {
-                                            // New role
-                                            var newRoleMapping =
-                                                new ProjectEmployeeRoleMapping
-                                                {
-                                                    Id = Guid.NewGuid().ToString(),
+                                            // Role exists but was previously soft-deleted.
+                                            // Restore the existing record instead of inserting a duplicate.
+                                            if (existingRole.Deleted)
+                                            {
+                                                existingRole.Deleted = false;
+                                                existingRole.UpdatedById = LoggedUserId;
+                                                existingRole.UpdatedOnUtc = GetDateTime;
 
-                                                    ProjectEmployeeMappingId =
-                                                        projectEmployeeMappingId,
+                                                _projectEmployeeRoleMappingService
+                                                    .UpdateProjectEmployeeRole(existingRole);
+                                            }
 
-                                                    SiteProjectRoleId = roleId,
-
-                                                    CreatedById = LoggedUserId,
-                                                    CreatedOnUtc = GetDateTime,
-
-                                                    UpdatedById = LoggedUserId,
-                                                    UpdatedOnUtc = GetDateTime,
-
-                                                    Deleted = false
-                                                };
-
-                                            _projectEmployeeRoleMappingService.InsertProjectEmployeeRole(newRoleMapping);
+                                            continue;
                                         }
+
+                                        // Role doesn't exist at all, so create it.
+                                        var newRoleMapping = new ProjectEmployeeRoleMapping
+                                        {
+                                            ProjectEmployeeMappingId = projectEmployeeMappingId,
+                                            SiteProjectRoleId = roleId,
+                                            CreatedById = LoggedUserId,
+                                            CreatedOnUtc = GetDateTime,
+                                            UpdatedById = LoggedUserId,
+                                            UpdatedOnUtc = GetDateTime
+                                        };
+
+                                        _projectEmployeeRoleMappingService
+                                            .InsertProjectEmployeeRole(newRoleMapping);
                                     }
                                 }
                             }
