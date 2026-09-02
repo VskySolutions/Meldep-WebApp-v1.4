@@ -52,5 +52,16 @@ namespace Vsky.Services.Projects
             return list;
         }
         #endregion
+
+        #region GetSiteProjectRoleByName
+        public async Task<SitesProjectRoles> GetSiteProjectRoleByName(string siteId, string name)
+        {
+            return await _sitesProjectRolesRepository.TableNoTracking
+                .FirstOrDefaultAsync(x =>
+                    x.SiteId == siteId &&
+                    x.MasterProjectRoles.Name == name &&
+                    !x.Deleted);
+        }
+        #endregion
     }
 }

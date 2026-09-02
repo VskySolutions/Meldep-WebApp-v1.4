@@ -326,7 +326,7 @@
                               <formMultiSelectDropdown
                                 v-model="props.row.siteProjectRoleIds"
                                 required
-                                :options="siteProjectRolesDropdown.list.value"
+                                :options="projectRoleOptions"
                                 :error="rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$error"
                                 :error-message="rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$errors[0]?.$message"
                                 :onBlur="() => rowValidations[props.rowIndex]?.value?.siteProjectRoleIds.$touch()"
@@ -397,7 +397,7 @@ import _ from "lodash";
 import { useAuthStore } from "stores/auth";
 import { isDate } from "validators/zw_validators.js";
 import { zwConfirm, zwConfirmDelete, notifySuccess, notifyError, notifyWarning } from "assets/utils";
-import { ref, watch, onMounted, toRaw } from "vue";
+import { ref, watch, computed, onMounted, toRaw } from "vue";
 import { useQuasar, useDialogPluginComponent, uid } from "quasar";
 import { required, helpers, minLength, maxLength } from "@vuelidate/validators";
 import useVuelidate from "@vuelidate/core";
@@ -715,6 +715,54 @@ function updateRowAccess(row) {
     )
     .filter(Boolean);
 }
+// const canManageDelegateRole = ref(false);
+
+const canAssignDelegateRole = computed(() => {
+  const currentUserEmployeeId = String(user.employeeId || "");
+
+  const currentUserRow = rows.value.find(
+    row =>
+      !row.deleted &&
+      String(row.employeeId) === currentUserEmployeeId
+  );
+
+  if (!currentUserRow) {
+    return false;
+  }
+
+  return (currentUserRow.siteProjectRoleIds || []).some(roleId => {
+    const role = siteProjectRolesDropdown.list.value.find(
+      item => String(item.value) === String(roleId)
+    );
+
+    const roleName = (
+      role?.text ||
+      role?.label ||
+      role?.name ||
+      ""
+    ).trim().toLowerCase();
+
+    return (
+      roleName === "project manager" ||
+      roleName === "project coordinator"
+    );
+  });
+});
+
+const projectRoleOptions = computed(() => {
+  return siteProjectRolesDropdown.list.value.map(role => {
+    const roleName = (role.text || role.label || role.name || "")
+      .trim()
+      .toLowerCase();
+
+    return {
+      ...role,
+      disable:
+        roleName === "delegate" &&
+        !canAssignDelegateRole.value
+    };
+  });
+});
 
 function validateDuplicateEmployees() {
   const employeeRows = rows.value.filter(

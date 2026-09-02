@@ -82,6 +82,18 @@
                         :filter="activeEmployeesDropdown.filter"
                       />
                       <multiSelectDropdown
+                        v-model="search.projectManagerIds"
+                        label="Manager"
+                        :options="activeEmployeesDropdown.list.value"
+                        :filter="activeEmployeesDropdown.filter"
+                      />
+                      <multiSelectDropdown
+                        v-model="search.technicalLeadIds"
+                        label="Technical Lead"
+                        :options="activeEmployeesDropdown.list.value"
+                        :filter="activeEmployeesDropdown.filter"
+                      />
+                      <multiSelectDropdown
                         v-model="search.projectStatusIds"
                         label="Status"
                         labelTooltip="Indicates the current stage or state of the project in its lifecycle."
@@ -498,7 +510,7 @@
                     </div>
                   </div>
                 </q-td>
-                <q-td
+                <!-- <q-td
                   v-if="selectedColumnNames.includes('technicalLead')"
                   class="common-q-td"
                 >
@@ -516,6 +528,29 @@
                       <q-tooltip>
                         <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
                         <span>{{ props.row.technicalLead?.text }}</span>
+                      </q-tooltip>
+                    </div>
+                  </div>
+                </q-td> -->
+                <q-td
+                  v-if="selectedColumnNames.includes('technicalLeads')"
+                  class="common-q-td"
+                >
+                  <div
+                    v-if="props.row.technicalLeads?.length > 0"
+                    class="col-9 flex justify-center TaskActivity"
+                  >
+                    <div v-for="(lead, index) in props.row.technicalLeads" :key="index">
+                      <span
+                        class="Person"
+                        :style="{ background: lead.bgColor, color: lead.color }"
+                      >
+                        {{ typeof lead === 'object' ? getInitials((lead.text || lead.name)) : getInitials(getNameFromId(lead)) }}
+                      </span>
+                      <br v-if="index !== props.row.technicalLeads.length - 1">
+                      <q-tooltip>
+                        <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
+                        <span>{{ typeof lead === 'object' ? (lead.text || lead.name) : getNameFromId(lead) }}</span>
                       </q-tooltip>
                     </div>
                   </div>
@@ -1224,7 +1259,7 @@ const columns = ref([
   { name: "projectCoordinator.id", label: "PC", field: "projectCoordinator.id", align: "center", sortable: false, default: true, tooltip: "Project Coordinators" },
   { name: "projectLeads", label: "PL", field: row => row.projectLeads.join(", "), align: "center", sortable: false, default: true, tooltip: "Project Leads" },
   { name: "projectManager", label: "PM", field: "projectManager", align: "center", sortable: false, default: true, tooltip: "Project Manager" },
-  { name: "technicalLead", label: "TL", field: "technicalLead", align: "center", sortable: false, default: true, tooltip: "Technical Lead" },
+  { name: "technicalLeads", label: "TL", field: "technicalLeads", align: "center", sortable: false, default: true, tooltip: "Technical Lead" },
   { name: "projectPriority.dropDownValue", label: "Priority", field: "projectPriority.dropDownValue", align: "left", sortable: true, default: true },
   { name: "projectStatus.dropDownValue", label: "Status", field: "projectStatus.dropDownValue", align: "left", sortable: true, default: true, tooltip: "Indicates the current stage or state of the project in its lifecycle." },
   { name: "projectType.dropDownValue", label: "Type", field: "projectType.dropDownValue", align: "center", sortable: true, default: false },
@@ -1286,7 +1321,7 @@ const getAllProjectList = async ({ pagination: p }) => {
       const coordinators = [];
 
       let manager = null;
-      let technicalLead = null;
+      const technicalLeads = [];
 
       for (let j = 0; j < mappings.length; j++) {
         const m = mappings[j];
@@ -1316,7 +1351,7 @@ const getAllProjectList = async ({ pagination: p }) => {
           } else if (roleName === "Project Manager") {
             manager = empObj;
           } else if (roleName === "Technical Lead") {
-            technicalLead = empObj;
+            technicalLeads.push(empObj);
           }
         }
       }
@@ -1350,7 +1385,7 @@ const getAllProjectList = async ({ pagination: p }) => {
         projectLeads: leads,
         projectCoordinators: coordinators,
         projectManager: manager,
-        technicalLead,
+        technicalLeads,
         projectTags: tags,
         showCustomerName
       };
@@ -1398,6 +1433,8 @@ const {
     statusId: null,
     projectCoordinatorIds: [],
     projectLeadsIds: [],
+    projectManagerIds: [],
+    technicalLeadIds: [],
     projectPriorityIds: [],
     projectTypeIds: [],
     customerIds: [],
@@ -1632,6 +1669,8 @@ const onAdvanceClear = () => {
     statusId: null,
     projectCoordinatorIds: [],
     projectLeadsIds: [],
+    projectManagerIds: [],
+    technicalLeadIds: [],
     projectPriorityIds: [],
     projectTypeIds: [],
     customerIds: [],
@@ -1677,6 +1716,8 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectCategoryIds, projectCategoriesDropdown.list, "Category"),
   ...mapFilterToLabel(search.value.projectCoordinatorIds, activeEmployeesDropdown.list, "Coordinator"),
   ...mapFilterToLabel(search.value.projectLeadsIds, activeEmployeesDropdown.list, "Leads"),
+  ...mapFilterToLabel(search.value.projectManagerIds, activeEmployeesDropdown.list, "Manager"),
+  ...mapFilterToLabel(search.value.technicalLeadIds, activeEmployeesDropdown.list, "Technical Lead"),
   ...mapFilterToLabel(search.value.projectStatusIds, statusListForSearch, "Status"),
   ...mapFilterToLabel(search.value.projectPriorityIds, projectPrioritiesDropdown.list, "Priority"),
   ...mapFilterToLabel(search.value.projectTypeIds, projectTypesDropdown.list, "Type"),
@@ -1697,6 +1738,10 @@ const onClearFilters = (key) => {
     search.value.projectCoordinatorIds = [];
   } else if (key === "Leads") {
     search.value.projectLeadsIds = [];
+  } else if (key === "Manager") {
+    search.value.projectManagerIds = [];
+  } else if (key === "Technical Lead") {
+    search.value.technicalLeadIds = [];
   } else if (key === "Status") {
     search.value.projectStatusIds = [];
   } else if (key === "Active/Inactive") {
@@ -1720,6 +1765,8 @@ const getFilterCount = (key) => {
   case "Category": return search.value.projectCategoryIds?.length || 0;
   case "Coordinator": return search.value.projectCoordinatorIds?.length || 0;
   case "Leads": return search.value.projectLeadsIds?.length || 0;
+  case "Manager": return search.value.projectManagerIds?.length || 0;
+  case "Technical Lead": return search.value.technicalLeadIds?.length || 0;
   case "Status": return search.value.projectStatusIds?.length || 0;
   case "Priority": return search.value.projectPriorityIds?.length || 0;
   case "Type": return search.value.projectTypeIds?.length || 0;

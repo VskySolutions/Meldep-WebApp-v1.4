@@ -684,7 +684,20 @@
                               </div>
                               <div class="col-xxl-7 col-xl-6 col-lg-12 col-md-12 col-sm-12 col-xs-12 text-end">
                                 <div class="LastUpdatedBy text-capitalize q-md-mt-xs">
-                                  Last Updated:- {{ line?.expectedDescriptionUpdatedBy?.person?.firstName + ' '+ line?.expectedDescriptionUpdatedBy?.person?.lastName + '('+ line?.expectedDescriptionUpdatedOnUtc +')' }}
+                                  <!-- Last Updated:- {{ line?.expectedDescriptionUpdatedBy?.person?.firstName + ' '+ line?.expectedDescriptionUpdatedBy?.person?.lastName + '('+ line?.expectedDescriptionUpdatedOnUtc +')' }} -->
+                                  <div>
+                                    Created By:-
+                                    {{ line?.expectedDescriptionCreatedBy?.person?.firstName + ' ' +
+                                      line?.expectedDescriptionCreatedBy?.person?.lastName +
+                                      '(' + line?.expectedDescriptionCreatedOnUtc + ')' }}
+                                  </div>
+
+                                  <div>
+                                    Last Updated:-
+                                    {{ line?.expectedDescriptionUpdatedBy?.person?.firstName + ' ' +
+                                      line?.expectedDescriptionUpdatedBy?.person?.lastName +
+                                      '(' + line?.expectedDescriptionUpdatedOnUtc + ')' }}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -737,7 +750,20 @@
                           />
                         </div>
                         <div v-if="line.actualDescriptionUpdatedOnUtc" class="LastUpdatedBy text-capitalize text-end">
-                          Last Updated:- {{ line?.actualDescriptionUpdatedBy?.person?.firstName + ' '+ line?.actualDescriptionUpdatedBy?.person?.lastName + '('+ line?.actualDescriptionUpdatedOnUtc +')' }}
+                          <!-- Last Updated:- {{ line?.actualDescriptionUpdatedBy?.person?.firstName + ' '+ line?.actualDescriptionUpdatedBy?.person?.lastName + '('+ line?.actualDescriptionUpdatedOnUtc +')' }} -->
+                           <div>
+                              Created By:-
+                              {{ line?.actualDescriptionCreatedBy?.person?.firstName + ' ' +
+                                line?.actualDescriptionCreatedBy?.person?.lastName +
+                                '(' + line?.actualDescriptionCreatedOnUtc + ')' }}
+                            </div>
+
+                            <div>
+                              Last Updated:-
+                              {{ line?.actualDescriptionUpdatedBy?.person?.firstName + ' ' +
+                                line?.actualDescriptionUpdatedBy?.person?.lastName +
+                                '(' + line?.actualDescriptionUpdatedOnUtc + ')' }}
+                            </div>
                         </div>
                       </template>
                     </td>

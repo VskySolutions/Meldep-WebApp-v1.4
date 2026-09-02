@@ -21,6 +21,8 @@ namespace Vsky.Services.Projects
             List<string> teamMemberIds,
             List<string> coordinatorIds,
             List<string> leadIds,
+            List<string> projectManagerIds,
+            List<string> technicalLeadIds,
             List<string> priorityIds,
             List<string> typeIds,
             int status,

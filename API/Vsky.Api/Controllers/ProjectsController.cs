@@ -17,6 +17,7 @@ using Vsky.Services.AzureBlobImage;
 using Vsky.Services.Common;
 using Vsky.Services.DailyPlanners;
 using Vsky.Services.DropDowns;
+using Vsky.Services.Employees;
 using Vsky.Services.Expences;
 using Vsky.Services.HelpDesks;
 using Vsky.Services.Issues;
@@ -87,6 +88,8 @@ namespace Vsky.Api.Controllers
         private readonly IProjectsPinnedService _projectsPinnedService;
         private readonly IProjectsColorService _projectsColorService;
         private readonly IExpenseAdvanceRequestFilesService _expenseAdvanceRequestFilesService;
+        private readonly ISitesProjectRolesService _sitesProjectRolesService;
+        private readonly IEmployeeService _employeeService;
         #endregion
 
         #region Services Initializations
@@ -132,7 +135,9 @@ namespace Vsky.Api.Controllers
             ITimesheetLinesService timesheetLinesService,
             IProjectsPinnedService projectsPinnedService,
             IProjectsColorService projectsColorService,
-            IExpenseAdvanceRequestFilesService expenseAdvanceRequestFilesService
+            IExpenseAdvanceRequestFilesService expenseAdvanceRequestFilesService,
+            ISitesProjectRolesService sitesProjectRolesService,
+            IEmployeeService employeeService
         )
         {
             _globalVariable = globalVariable;
@@ -178,6 +183,8 @@ namespace Vsky.Api.Controllers
             _projectsPinnedService = projectsPinnedService;
             _projectsColorService = projectsColorService;
             _expenseAdvanceRequestFilesService = expenseAdvanceRequestFilesService;
+            _sitesProjectRolesService = sitesProjectRolesService;
+            _employeeService = employeeService;
         }
         #endregion
 
@@ -212,6 +219,8 @@ namespace Vsky.Api.Controllers
                     searchModel.ProjectTeamMemberIds,
                     searchModel.ProjectCoordinatorIds,
                     searchModel.ProjectLeadsIds,
+                    searchModel.ProjectManagerIds,
+                    searchModel.TechnicalLeadIds,
                     searchModel.ProjectPriorityIds,
                     searchModel.ProjectTypeIds,
                     Status,
@@ -1087,13 +1096,36 @@ namespace Vsky.Api.Controllers
                         if (model.ProjectEmployeeMappings != null &&
                             model.ProjectEmployeeMappings.Any())
                         {
+                            var delegateRole =
+                                await _sitesProjectRolesService
+                                    .GetSiteProjectRoleByName(SiteId, "Delegate");
+
+                            var projectCoordinatorRole =
+                                await _sitesProjectRolesService
+                                    .GetSiteProjectRoleByName(SiteId, "Project Coordinator");
+
+                            var projectManagerRole =
+                                await _sitesProjectRolesService
+                                    .GetSiteProjectRoleByName(SiteId, "Project Manager");
+
+                            string delegateRoleId = delegateRole?.Id;
+                            string projectCoordinatorRoleId = projectCoordinatorRole?.Id;
+                            string projectManagerRoleId = projectManagerRole?.Id;
+
+                            // Collect PC/PM employee IDs from the current request.
+                            // HashSet prevents duplicate users when the same employee
+                            // has both Project Coordinator and Project Manager roles.
+                            var pcPmEmployeeIds = new HashSet<string>();
+
                             foreach (var item in model.ProjectEmployeeMappings)
                             {
                                 if (string.IsNullOrWhiteSpace(item.EmployeeId))
                                     continue;
 
                                 // PROJECT EMPLOYEE MAPPING
-                                var projectEmployeeMapping = await _projectEmployeeMappingService.GetProjectEmployeeById(item.Id);
+                                var projectEmployeeMapping =
+                                    await _projectEmployeeMappingService
+                                        .GetProjectEmployeeById(item.Id);
 
                                 if (projectEmployeeMapping != null)
                                 {
@@ -1101,12 +1133,12 @@ namespace Vsky.Api.Controllers
                                     projectEmployeeMapping.ProjectId = id;
                                     projectEmployeeMapping.EmployeeId = item.EmployeeId;
                                     projectEmployeeMapping.ProductivityFactor = item.ProductivityFactor;
-
                                     projectEmployeeMapping.UpdatedById = LoggedUserId;
                                     projectEmployeeMapping.UpdatedOnUtc = GetDateTime;
                                     projectEmployeeMapping.Deleted = item.Deleted;
 
-                                    _projectEmployeeMappingService.UpdateProjectEmployees(projectEmployeeMapping);
+                                    _projectEmployeeMappingService
+                                        .UpdateProjectEmployees(projectEmployeeMapping);
                                 }
                                 else
                                 {
@@ -1131,27 +1163,48 @@ namespace Vsky.Api.Controllers
                                         .InsertProjectEmployees(projectEmployeeMapping);
                                 }
 
-                                // Get actual ProjectEmployeeMapping Id
-                                var projectEmployeeMappingId = projectEmployeeMapping.Id;
+                                // GET PROJECT EMPLOYEE MAPPING ID
+                                var projectEmployeeMappingId =
+                                    projectEmployeeMapping.Id;
 
-                                // Get selected role IDs from the request.
-                                var selectedRoleIds = item.SiteProjectRoleIds?
-                                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                                    .Distinct()
-                                    .ToList()
+                                // GET SELECTED ROLE IDS
+                                var selectedRoleIds =
+                                    item.SiteProjectRoleIds?
+                                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                                        .Distinct()
+                                        .ToList()
                                     ?? new List<string>();
 
-                                // Get ALL role mappings, including soft-deleted mappings.
-                                // This is required so previously deleted roles can be restored.
+                                // COLLECT PC / PM EMPLOYEES
+                                if (!item.Deleted)
+                                {
+                                    bool isPcOrPm =
+                                        selectedRoleIds.Contains(projectCoordinatorRoleId) ||
+                                        selectedRoleIds.Contains(projectManagerRoleId);
+
+                                    if (isPcOrPm)
+                                    {
+                                        pcPmEmployeeIds.Add(item.EmployeeId);
+                                    }
+                                }
+
+                                // GET EXISTING ROLE MAPPINGS
                                 var existingRoleMappings =
                                     _projectEmployeeRoleMappingService
-                                        .GetRoleMappingByProjectEmployeeMappingId(projectEmployeeMappingId)
-                                        ?? new List<ProjectEmployeeRoleMapping>();
+                                        .GetRoleMappingByProjectEmployeeMappingId(
+                                            projectEmployeeMappingId)
+                                    ?? new List<ProjectEmployeeRoleMapping>();
+
+                                bool hadActiveDelegateRole =
+                                    !string.IsNullOrWhiteSpace(delegateRoleId) &&
+                                    existingRoleMappings.Any(x =>
+                                        x.SiteProjectRoleId == delegateRoleId &&
+                                        !x.Deleted);
 
                                 // DELETE / SOFT DELETE OLD ROLE MAPPINGS
                                 foreach (var existingRole in existingRoleMappings)
                                 {
-                                    // If employee mapping is deleted, delete all active roles.
+                                    // Employee mapping is deleted
                                     if (item.Deleted)
                                     {
                                         if (!existingRole.Deleted)
@@ -1166,10 +1219,11 @@ namespace Vsky.Api.Controllers
                                         continue;
                                     }
 
-                                    // Employee mapping is active.
-                                    // Delete only active roles that are no longer selected.
+                                    // Employee is active.
+                                    // Delete roles which are no longer selected.
                                     if (!existingRole.Deleted &&
-                                        !selectedRoleIds.Contains(existingRole.SiteProjectRoleId))
+                                        !selectedRoleIds.Contains(
+                                            existingRole.SiteProjectRoleId))
                                     {
                                         existingRole.UpdatedById = LoggedUserId;
                                         existingRole.UpdatedOnUtc = GetDateTime;
@@ -1184,14 +1238,14 @@ namespace Vsky.Api.Controllers
                                 {
                                     foreach (var roleId in selectedRoleIds)
                                     {
-                                        var existingRole = existingRoleMappings
-                                            .FirstOrDefault(x =>
+                                        var existingRole =
+                                            existingRoleMappings.FirstOrDefault(x =>
                                                 x.SiteProjectRoleId == roleId);
 
+                                        // ROLE ALREADY EXISTS
                                         if (existingRole != null)
                                         {
-                                            // Role exists but was previously soft-deleted.
-                                            // Restore the existing record instead of inserting a duplicate.
+                                            // Previously deleted -> restore it
                                             if (existingRole.Deleted)
                                             {
                                                 existingRole.Deleted = false;
@@ -1200,24 +1254,57 @@ namespace Vsky.Api.Controllers
 
                                                 _projectEmployeeRoleMappingService
                                                     .UpdateProjectEmployeeRole(existingRole);
+
+                                                // Delegate was newly restored
+                                                if (roleId == delegateRoleId &&
+                                                    !hadActiveDelegateRole)
+                                                {
+                                                    await SendDelegateNotifications(
+                                                        SiteId,
+                                                        entity,
+                                                        item.EmployeeId,
+                                                        LoggedUserId,
+                                                        GetDateTime,
+                                                        pcPmEmployeeIds);
+                                                }
                                             }
 
                                             continue;
                                         }
 
-                                        // Role doesn't exist at all, so create it.
-                                        var newRoleMapping = new ProjectEmployeeRoleMapping
-                                        {
-                                            ProjectEmployeeMappingId = projectEmployeeMappingId,
-                                            SiteProjectRoleId = roleId,
-                                            CreatedById = LoggedUserId,
-                                            CreatedOnUtc = GetDateTime,
-                                            UpdatedById = LoggedUserId,
-                                            UpdatedOnUtc = GetDateTime
-                                        };
+                                        // NEW ROLE MAPPING
+                                        var newRoleMapping =
+                                            new ProjectEmployeeRoleMapping
+                                            {
+                                                ProjectEmployeeMappingId =
+                                                    projectEmployeeMappingId,
+
+                                                SiteProjectRoleId = roleId,
+
+                                                CreatedById = LoggedUserId,
+                                                CreatedOnUtc = GetDateTime,
+
+                                                UpdatedById = LoggedUserId,
+                                                UpdatedOnUtc = GetDateTime,
+
+                                                Deleted = false
+                                            };
 
                                         _projectEmployeeRoleMappingService
                                             .InsertProjectEmployeeRole(newRoleMapping);
+
+                                        // NEW DELEGATE ROLE
+                                        if (roleId == delegateRoleId &&
+                                            !hadActiveDelegateRole)
+                                        {
+                                            await SendDelegateNotifications(
+                                                SiteId,
+                                                entity,
+                                                item.EmployeeId,
+                                                LoggedUserId,
+                                                GetDateTime,
+                                                pcPmEmployeeIds);
+                                        }
                                     }
                                 }
                             }
@@ -3178,6 +3265,119 @@ namespace Vsky.Api.Controllers
             _projectService.UpdateProject(entity);
 
             return true;
+        }
+        #endregion
+
+        #region private function for send system notification
+
+        private async Task SendDelegateNotifications(
+            string siteId,
+            Project entity,
+            string delegateEmployeeId,
+            string assignedByUserId,
+            DateTime getDateTime,
+            HashSet<string> pcPmEmployeeIds)
+        {
+            // GET DELEGATE USER ID
+            var delegateUserId =
+                _commonService.GetLoggeduserIdByEmployeeId(
+                    siteId,
+                    delegateEmployeeId);
+
+            if (string.IsNullOrWhiteSpace(delegateUserId))
+                return;
+
+            // Delegate cannot be the assigning user
+            if (delegateUserId == assignedByUserId)
+                return;
+
+            // NOTIFY DELEGATE
+            var delegateNotification =
+                await _masterNotificationService
+                    .GetMasterNotificationByNumber(
+                        siteId,
+                        "DelegateAssigned",
+                        assignedByUserId);
+
+            if (delegateNotification != null)
+            {
+                string message =
+                    delegateNotification.Message
+                        .Replace("[Project Name]", entity.Name);
+
+                _notificationService.AddNotification(
+                    siteId,
+                    delegateNotification.Title,
+                    message,
+                    delegateNotification.Type,
+                    assignedByUserId,
+                    entity.Id,
+                    "/project",
+                    delegateUserId,
+                    assignedByUserId,
+                    getDateTime);
+            }
+
+            // GET PC / PM USER IDS
+            var pcPmUserIds = new HashSet<string>();
+
+            foreach (var employeeId in pcPmEmployeeIds)
+            {
+                if (string.IsNullOrWhiteSpace(employeeId))
+                    continue;
+
+                var userId =
+                    _commonService.GetLoggeduserIdByEmployeeId(
+                        siteId,
+                        employeeId);
+
+                if (string.IsNullOrWhiteSpace(userId))
+                    continue;
+
+                // Delegate should not receive PC/PM notification
+                if (userId == delegateUserId)
+                    continue;
+
+                pcPmUserIds.Add(userId);
+            }
+
+            // GET PC / PM NOTIFICATION TEMPLATE
+            var assignerNotification =
+                await _masterNotificationService
+                    .GetMasterNotificationByNumber(
+                        siteId,
+                        "DelegateAssignedByMe",
+                        assignedByUserId);
+
+            if (assignerNotification == null)
+                return;
+
+            // NOTIFY PC / PM
+            var delegateName =
+                await _employeeService
+                    .GetEmployeeNameById(delegateEmployeeId);
+
+            foreach (var recipientUserId in pcPmUserIds)
+            {
+                string message =
+                    assignerNotification.Message
+                        .Replace("[Project Name]", entity.Name)
+                        .Replace(
+                            "[Delegate Name]",
+                            delegateName ?? delegateEmployeeId);
+
+                _notificationService.AddNotification(
+                    siteId,
+                    assignerNotification.Title,
+                    message,
+                    assignerNotification.Type,
+                    assignedByUserId,
+                    entity.Id,
+                    "/project",
+                    recipientUserId,
+                    assignedByUserId,
+                    getDateTime);
+            }
         }
         #endregion
     }

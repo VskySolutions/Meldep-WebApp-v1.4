@@ -9,6 +9,10 @@ namespace Vsky.Services.Projects
         #region GetAllSiteProjectRolesListForDropdown
         Task<List<SitesProjectRoles>> GetAllSiteProjectRolesListForDropdown(string siteId);
         #endregion
+
+        #region GetSiteProjectRoleByName
+        Task<SitesProjectRoles> GetSiteProjectRoleByName(string siteId, string name);
+        #endregion
     }
 }
 

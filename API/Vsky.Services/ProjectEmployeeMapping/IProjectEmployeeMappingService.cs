@@ -46,6 +46,7 @@ namespace Vsky.Services.ProjectEmployeeMappings
 
         #region GetProjectCharterEmployeeByProjectId
         // Title: GetProjectCharterEmployeeByProjectId
+        Task<List<ProjectEmployeeMapping>> GetProjectEmployeesByProjectId(string projectId);
         Task<List<CommonDropDown>> GetProjectCharterEmployeeByProjectId(string projectId);
         Task<List<CommonDropDown>> GetProjectEmployeesByProjectIdAndReturnUserId(string projectId);
         #endregion

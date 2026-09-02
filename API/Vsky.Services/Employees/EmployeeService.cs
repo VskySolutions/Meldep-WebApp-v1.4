@@ -391,6 +391,13 @@ namespace Vsky.Services.Employees
         {
             return await _employeeRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == SiteId && m.EmployeeStatuses.Any(es => es.EmployeeStatusId == statusId) && m.Id == assignedToId).FirstOrDefaultAsync();
         }
+        public async Task<string> GetEmployeeNameById(string id)
+        {
+            return await _employeeRepository.TableNoTracking
+                .Where(x => !x.Deleted && x.Id == id)
+                .Select(x => (x.Person.FirstName + " " + x.Person.LastName).Trim())
+                .FirstOrDefaultAsync();
+        }
         #endregion
 
         #region GetAllEmployeesByEmployementType

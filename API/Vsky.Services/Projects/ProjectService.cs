@@ -76,6 +76,8 @@ namespace Vsky.Services.Projects
             List<string> teamMemberIds,
             List<string> coordinatorIds,
             List<string> leadIds,
+            List<string> projectManagerIds,
+            List<string> technicalLeadIds,
             List<string> priorityIds,
             List<string> typeIds,
             int status,
@@ -128,6 +130,32 @@ namespace Vsky.Services.Projects
                         m.ProjectEmployeeRoleMappings.Any(r =>
                             !r.Deleted &&
                             r.SitesProjectRoles.MasterProjectRoles.Name == "Project Lead"
+                        )
+                    )
+                );
+            }
+            if (projectManagerIds?.Any() == true)
+            {
+                query = query.Where(x =>
+                    x.ProjectEmployeeMappings.Any(m =>
+                        projectManagerIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Project Manager"
+                        )
+                    )
+                );
+            }
+            if (technicalLeadIds?.Any() == true)
+            {
+                query = query.Where(x =>
+                    x.ProjectEmployeeMappings.Any(m =>
+                        technicalLeadIds.Contains(m.EmployeeId) &&
+                        !m.Deleted &&
+                        m.ProjectEmployeeRoleMappings.Any(r =>
+                            !r.Deleted &&
+                            r.SitesProjectRoles.MasterProjectRoles.Name == "Technical Lead"
                         )
                     )
                 );

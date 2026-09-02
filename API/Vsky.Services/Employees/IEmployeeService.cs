@@ -39,6 +39,7 @@ namespace Vsky.Services.Employees
 
         #region GetAllEmployeeByStatusId
         Task<Employee> GetActiveEmployeeByStatusId(string SiteId, string statusId, string assignedToId);
+        Task<string> GetEmployeeNameById(string id);
         #endregion
 
         #region GetAllEmployeesByEmployementType

@@ -223,6 +223,13 @@ namespace Vsky.Services.ProjectEmployeeMappings
         #endregion
 
         #region
+        public async Task<List<ProjectEmployeeMapping>> GetProjectEmployeesByProjectId(string projectId)
+        {
+            return await _projectEmployeeMappingRepository.TableNoTracking
+                .Where(x => x.ProjectId == projectId && !x.Deleted)
+                .ToListAsync();
+        }
+
         public async Task<List<CommonDropDown>> GetProjectCharterEmployeeByProjectId(string projectId)
         {
             if (string.IsNullOrEmpty(projectId))
@@ -247,7 +254,6 @@ namespace Vsky.Services.ProjectEmployeeMappings
 
             return list;
         }
-
         public async Task<List<CommonDropDown>> GetProjectEmployeesByProjectIdAndReturnUserId(string projectId)
         {
             if (string.IsNullOrEmpty(projectId))
