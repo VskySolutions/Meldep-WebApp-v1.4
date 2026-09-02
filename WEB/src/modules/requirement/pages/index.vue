@@ -679,17 +679,28 @@
                   {{ props.row.approvalStatusDropDown.dropDownValue }}
               </q-td>
               <q-td
-                v-if="selectedColumnNames.includes('lastNote')"
-                class="common-q-td hoverable-cell"
+                  v-if="selectedColumnNames.includes('lastNote')"
+                  class="common-q-td hoverable-cell answer-cell"
+                  :style="{
+                    width: (resizeWidths?.lastNote || 120) + 'px',
+                    minWidth: '80px',
+                    maxWidth: (resizeWidths?.lastNote || 120) + 'px'
+                  }"
               >
                 <span
+                  class="answer-text"
                   @click="onNoteTimelineView(
-                  props.row.id,
-                  'Requirement',
-                  `${props.row.project.name} : ${props.row.title}`
+                    props.row.id,
+                   'Requirement',
+                    `${props.row.project.name} : ${props.row.title}`
                   )"
-                >
-                  {{ truncateText(props.row.lastNote) }}
+                  >
+                    {{
+                      getAnswerText(
+                        props.row.lastNote
+                      )
+                    }}
+
                   <q-tooltip>
                     View Notes
                   </q-tooltip>
@@ -1108,6 +1119,20 @@ const getAllRequirement = async ({ pagination: p }) => {
     searchLoader.value = false;
   }
 };
+
+const getAnswerText = (htmlText) => {
+  if (!htmlText) return "";
+
+  const textarea = document.createElement("textarea");
+
+  textarea.innerHTML = htmlText
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ");
+
+  return textarea.value
+    .replace(/\s+/g, " ")
+    .trim();
+};
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
@@ -1174,15 +1199,6 @@ function getAllRequirementGroupListForFilter (val, update, abort) {
       requirementGroupList.value = requirementGroupListFilter.value.filter(v => v.text.toLowerCase().includes(needle));
     }
   });
-}
-
-// truncate text after 60 characters
-const truncateText = (htmlText, limit = 60) => {
-  const plainText = htmlText?.replace(/<[^>]*>/g, '')?.replace(/&nbsp;/g, ' ') || ''
-
-  return plainText.length > limit
-    ? plainText.substring(0, limit) + '...'
-    : plainText
 }
 
 // Need to update
@@ -1775,5 +1791,17 @@ onMounted(async () =>  {
 <style scoped>
 .table-requirement .Custom-DataTable {
   min-width: max-content;
+}
+.answer-cell {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.answer-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
 }
 </style>
