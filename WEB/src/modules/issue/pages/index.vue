@@ -236,15 +236,25 @@
                 <q-th
                   v-for="col in props.cols"
                   :key="col.name"
-                  :props="props"
                   :style="{
                     width: (resizeWidths?.[col.name] || 120) + 'px',
                     minWidth: '80px',
                     position: 'relative'
                   }"
-                  @click="!isResizing && col.sortable"
                 >
                   {{ col.label }}
+                  <!-- Sort icon only --> 
+                  <q-icon
+                    v-if="col.sortable" 
+                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
+                    size="16px" 
+                    class="cursor-pointer q-ml-sm"
+                    @click.stop="sortColumn(col)"
+                  >
+                     <q-tooltip>
+                      {{ pagination.sortBy === col.name ? (pagination.descending ? 'Sort Ascending' : 'Sort Descending') : 'Sort' }}
+                    </q-tooltip>
+                  </q-icon>
                   <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
                 </q-th>
                 <q-th auto-width class="text-center">Actions</q-th>
@@ -515,6 +525,7 @@
     @apply="applyMultiSort"
   />
 </template>
+
 <script setup>
 // Import libraries
 import { ref, onMounted, watch, computed } from "vue";
@@ -666,6 +677,19 @@ const refreshIssueList = () => {
   getAllIssue({ pagination: pagination.value });
 };
 
+const sortColumn = (col) => {
+  if (!col.sortable) return;
+  if (pagination.value.sortBy === col.name) {
+    // Same column → toggle direction
+    pagination.value.descending = !pagination.value.descending;
+  }
+  else {
+    // New column → ascending 
+      pagination.value.sortBy = col.name;
+      pagination.value.descending = false;
+  } 
+  getAllIssue({ pagination: pagination.value });
+};
 // ------------------------------------------------------------------------------------
 // Advance Filter :- On Submit & Cancel
 // ------------------------------------------------------------------------------------

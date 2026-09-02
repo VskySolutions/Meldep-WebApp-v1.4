@@ -386,6 +386,33 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GetAllCustomerContactListByProjectIdForDropdown
+        [HttpGet("project-customer-contact-dropdown/list")]
+        public async Task<IActionResult> GetAllCustomerContactListByProjectIdForDropdown(string projectId)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+
+                var status = await _dropDownService.GetByName(SiteId, "Converted");
+
+                var list = await _projectService
+                    .GetCustomerContactByProjectId(
+                        SiteId,
+                        projectId);
+
+                var model = _mapper.Map<List<CompanyContactsModels>>(list);
+
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region GetProjectById
         // Title: GetProjectById
         // Description: This endpoint retrieves the details of a specific project based on its unique identifier (ID). 
@@ -651,6 +678,7 @@ namespace Vsky.Api.Controllers
                             {
                                 SeoFilename = Path.GetFileName(file.FileName),
                                 MimeType = file.ContentType,
+
                                 VirtualPath = fileUrl, // Azure URL
                                 ModuleId = ProjectId,
                                 Module = entity.Name,

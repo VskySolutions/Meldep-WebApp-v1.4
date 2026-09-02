@@ -162,6 +162,7 @@
       class="req-dashboard-table"
       separator="cell"
       no-data-label="No data available"
+      @request="getAllTimesheetByRequirementId"
     >
       <template #header="props">
         <q-tr :props="props" class="bg-primary text-white">
@@ -195,7 +196,7 @@
               v-if="prevEmployee !== props.row.employeeName"
               :set="prevEmployee = props.row.employeeName"
             >
-              {{ props.row.timesheet?.user?.person?.fullName }}
+              {{ props.row.timesheet?.employee?.person?.fullName }}
             </span>
           </q-td>
 
@@ -254,9 +255,9 @@ const siteId = computed(() => authStore.user?.siteId);
 const rows = ref([]);
 
 const columns = [
-  { name: 'timesheetDate', label: 'DATE', field: 'timesheetDate', align: 'left', sortable: true },
-  { name: 'employeeName', label: 'EMPLOYEE', field: 'employeeName', align: 'left', sortable: true },
-  { name: 'taskName', label: 'TASK', field: 'taskName', align: 'left', sortable: true },
+  { name: 'timesheet.timesheetDate', label: 'DATE', field: 'timesheet.timesheetDate', align: 'left', sortable: true },
+  { name: 'timesheet.employee.person.fullName', label: 'EMPLOYEE', field: 'timesheet.employee.person.fullName', align: 'left', sortable: true },
+  { name: 'task.name', label: 'TASK', field: 'task.name', align: 'left', sortable: true },
   { name: 'hours', label: 'HOURS', field: 'hours', align: 'right', sortable: true }
 ]
 
@@ -284,14 +285,16 @@ const getAllTimesheetByRequirementId = async ({ pagination: p = pagination.value
     };
 
     const resp = await requirementCenterService.getAllTimesheetByRequirementId(payload);
-    rows.value = resp || [];
+    rows.value = resp.data || [];
+
+    console.log("timesheet", rows.value);
 
     Object.assign(pagination.value, {
       page,
       rowsPerPage,
       sortBy,
       descending,
-      rowsNumber: rows.value.total
+      rowsNumber: resp.total || 0
     });
     saveDataTableState({
       search: search.value,
@@ -443,8 +446,9 @@ const appliedFilters = computed(() => ({
 
 watch(
   () => props.requirementId,
-    async (id) => {
-      await getAllTimesheetByRequirementId(id);
+    async () => {
+      pagination.value.page = 1;
+      await getAllTimesheetByRequirementId({pagination: pagination.value});
     },
   {
     immediate: true

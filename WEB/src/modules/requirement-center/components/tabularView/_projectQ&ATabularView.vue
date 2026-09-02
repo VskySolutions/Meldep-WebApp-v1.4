@@ -83,6 +83,7 @@
       separator="cell"
       no-data-label="No data available"
       :rows-per-page-options="[20, 50, 100, 200, 500]"
+      @request="getProjectQAByRequirementId"
     >
       <template #header="props">
         <q-tr :props="props" class="bg-primary text-white">
@@ -210,6 +211,10 @@ const getProjectQAByRequirementId = async ({ pagination: p }) => {
   }
 };
 
+const refreshProjectQAList = () => {
+  getProjectQAByRequirementId({ pagination: pagination.value });
+};
+
 const {
   search,
   pagination,
@@ -267,10 +272,6 @@ const {
 } = projectModule();
 
 const { requirementsByProjectModuleIdForDropdown } = requirementModule();
-
-const refreshProjectQAList = () => {
-  getProjectQAByRequirementId({ pagination: pagination.value });
-};
 
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Applied Filter Labels.

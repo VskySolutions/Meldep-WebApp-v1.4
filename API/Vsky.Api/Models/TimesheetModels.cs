@@ -51,6 +51,7 @@ namespace Vsky.Api.Models
     public record TimesheetSearchModel : BaseSearchModel
     {
         public string CreatedBy { get; set; }
+        public string RequirementId { get; set; }
         public string EmployeeId { get; set; }
         public string ProjectId { get; set; }
         public string ProjectModuleId { get; set; }

@@ -82,7 +82,7 @@ namespace Vsky.Services.Timesheets
             int pageSize = int.MaxValue,
             bool lookup = false
         );
-        Task<List<TimesheetLines>> GetAllTimesheetsByRequirementId(
+        IPagedList<TimesheetLines> GetAllTimesheetsByRequirementId(
           string siteId,
           string requirementId,
           string createdBy,

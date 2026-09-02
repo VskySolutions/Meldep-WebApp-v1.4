@@ -125,6 +125,9 @@ export default {
   },
   getProjectSwimlanesById (id) {
     return http.get(`project-swimlane/get-project-swimlanes-by-id/${id}`).then(response => response.data);
+  },  
+  getAllCustomerContactListByProjectIdForDropdown (projectId) {
+    return http.get(`/projects/project-customer-contact-dropdown/list?projectId=${projectId}`).then(response => response.data);
   },
   saveProjectSwimLane (projectSwlimLaneModelList) {
     return http.post("/project-swimlane/addedit-project-swimlanes", projectSwlimLaneModelList).then(response => response.data);

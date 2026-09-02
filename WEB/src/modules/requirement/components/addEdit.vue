@@ -60,7 +60,7 @@
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-12 col-md-12">
-                  <label class="q-mb-xs text-black">Requirement Title<span class="required">*</span></label>
+                  <label class="q-mb-xs text-black">Requirement<span class="required">*</span></label>
                   <div>
                     <q-input
                       v-model="model.title"
@@ -136,8 +136,8 @@
                     label="Customer Name"
                     :required="false"
                     :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
-                    :options="customerContactDropdownSingleSelect.list.value"
-                    :filter="customerContactDropdownSingleSelect.filter"
+                    :options="customerContactByProjectIdDropdownSingleSelect.list.value"
+                    :filter="customerContactByProjectIdDropdownSingleSelect.filter"
                   />
                 </div>
               </div>
@@ -283,6 +283,27 @@
                       :dense="true"
                       :readonly="readonlyRequirement != ''"
                       maxlength="128"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">                
+                <div class="col-12">
+                  <div class="form-group">
+                    <label class="q-mb-xs text-black">Short Description</label>
+                    <div
+                      v-if="readonlyRequirement !== ''"
+                      class="readonly-description q-pa-sm q-mb-sm q-field__native q-input__control bg-grey-2 text-black RichTextEditor"
+                    >
+                      <!-- Description text -->
+                      <span v-html="model.shortDescription" />
+                    </div>
+                    <q-editor
+                      v-else
+                      v-model="model.shortDescription"
+                      :dense="$q.screen.lt.md"
+                      :toolbar="toolbar"
+                      :fonts="fonts"
                     />
                   </div>
                 </div>
@@ -694,7 +715,7 @@ import projectModuleOfProjectModule from "src/modules/project-modules/utils/drop
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectTaskModule from "src/modules/project-tasks/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
-import customerModule from "src/modules/customer/utils/dropdowns.js";
+// import customerModule from "src/modules/customer/utils/dropdowns.js";
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -785,6 +806,7 @@ const model = ref({
   approvalStatus: "",
   closeDateStr: format(new Date(), "MM/dd/yyyy"),
   description: "",
+  shortDescription: "",
   editingStatus: 0,
   status: {
     dropDownValue: ""
@@ -862,6 +884,7 @@ const getRequirement = () => {
     model.value.actualEndDateStr = resp.actualEndDate ? format(resp.actualEndDate, "MM/dd/yyyy") : "";
     model.value.closeDateStr = resp.closeDate ? format(resp.closeDate, "MM/dd/yyyy") : "";
     model.value.description = resp.description ? resp.description : "";
+    model.value.shortDescription = resp.shortDescription ? resp.shortDescription : "";
     rows.value = resp.filePathDetails.map(item => ({
       ...item,
       editing: false,
@@ -963,10 +986,10 @@ function getEmployee (value) {
 // Advance Filter :- All Dropdowns
 // ------------------------------------------------------------------------------------
 
-const { projectNameDropdownSingleSelect } = projectModule();
+const { projectNameDropdownSingleSelect, customerContactByProjectIdDropdownSingleSelect } = projectModule();
 const { projectModulesByProjectIdForDropdownSingleSelect } = projectModuleOfProjectModule();
 const { activeEmployeesDropdownSingleSelect } = employeeModule();
-const { customerContactDropdownSingleSelect } = customerModule();
+// const { customerContactDropdownSingleSelect } = customerModule();
 const {
   requirementIdentifiedUserTypeDropdownSingleSelect,
   requirementStatusDropdownSingleSelect,
@@ -1162,6 +1185,30 @@ watch(
   { immediate: true }
 );
 
+watch(() => model.value.projectId, async (newValue, oldValue) => {
+  if (newValue === oldValue && oldValue !== undefined) return;
+
+  const oldProjectId = Array.isArray(oldValue)
+    ? oldValue[0]
+    : oldValue;
+
+  // No project selected
+  if (!newValue) {
+    model.value.identifiedCustomerId = null;
+    customerContactByProjectIdDropdownSingleSelect.list.value = null;
+    return;
+  }
+  // Project changed
+  if (oldProjectId !== undefined && newValue !== oldProjectId) {
+    model.value.identifiedCustomerId = null;
+  }
+
+  // Clear customer dropdown
+  // customerContactByProjectIdDropdownSingleSelect.list.value = null;
+  await customerContactByProjectIdDropdownSingleSelect.load(newValue);
+
+}, { immediate: true });
+
 // ----------------------------------------------------------------------------------------------------------------
 // On page load
 // ----------------------------------------------------------------------------------------------------------------
@@ -1172,7 +1219,6 @@ onMounted(async () => {
   workspaceForDropdownSingleSelect.load("Workspace");
   requirementTypeDropdownSingleSelect.load("Requirement Type");
   activeEmployeesDropdownSingleSelect.load();
-  customerContactDropdownSingleSelect.load();
 
   await requirementStatusDropdownSingleSelect.load("Requirement Status");
   await requirementIdentifiedUserTypeDropdownSingleSelect.load("Requirement Identifier");

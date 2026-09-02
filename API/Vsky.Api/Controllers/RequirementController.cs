@@ -311,6 +311,17 @@ namespace Vsky.Api.Controllers
                             );
                     }
 
+                    if (!string.IsNullOrEmpty(model.ShortDescription))
+                    {
+                        entity.ShortDescription = await _azureBlobImageServices
+                            .ProcessHtmlAndManageImagesAsync(
+                                model.ShortDescription,
+                                SiteData.Name,
+                                "requirements",
+                                entity.RequirementNumber.ToString()
+                            );
+                    }
+
                     if (model.PriorityId != null)
                         entity.PriorityId = model.PriorityId;
 
@@ -527,6 +538,18 @@ namespace Vsky.Api.Controllers
                                 "requirements",
                                 entity.RequirementNumber.ToString(),
                                 entity.Description
+                            );
+                    }
+
+                    if (!string.IsNullOrEmpty(model.ShortDescription))
+                    {
+                        entity.ShortDescription = await _azureBlobImageServices
+                            .ProcessHtmlAndManageImagesAsync(
+                                model.ShortDescription,
+                                SiteData.Name,
+                                "requirements",
+                                entity.RequirementNumber.ToString(),
+                                entity.ShortDescription
                             );
                     }
 

@@ -115,6 +115,7 @@
       class="req-dashboard-table"
       separator="cell"
       no-data-label="No data available"
+      @request="getProjectActionItemsByRequirementId"
     >
       <template #header="props">
         <q-tr :props="props" class="bg-primary text-white">

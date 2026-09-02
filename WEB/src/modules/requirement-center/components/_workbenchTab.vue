@@ -9,6 +9,18 @@
         align="left"
         inline-label
       >
+        <q-tab name="requirementDescription">
+          <div class="row items-center no-wrap">
+            Requirement Description
+          </div>
+        </q-tab>
+
+        <q-tab name="requirementFiles">
+          <div class="row items-center no-wrap">
+            Requirement Files
+          </div>
+        </q-tab>
+
         <q-tab name="qAndA">
           <div class="row items-center no-wrap">
             Project Questions Answers 
@@ -16,7 +28,7 @@
               rounded
               color="grey-3"
               text-color="black"
-              class="q-ml-xs"
+              class="q-ml-xs hidden"
             >
               {{ props.projectQACount }}
             </q-badge>
@@ -30,7 +42,7 @@
               rounded
               color="grey-3"
               text-color="black"
-              class="q-ml-xs"
+              class="q-ml-xs hidden"
             >
               {{ props.projectActionItemsCount }}
             </q-badge>
@@ -44,7 +56,7 @@
               rounded
               color="grey-3"
               text-color="black"
-              class="q-ml-xs"
+              class="q-ml-xs hidden"
             >
               {{ props.taskCount }}
             </q-badge>
@@ -54,7 +66,7 @@
         <q-tab name="timesheet">
           <div class="row items-center no-wrap">
             Timesheet
-            <q-badge rounded color="grey-3" text-color="black" class="q-ml-xs">
+            <q-badge rounded color="grey-3" text-color="black" class="q-ml-xs hidden">
               {{ props.timesheetCount }}
             </q-badge>
           </div>
@@ -63,7 +75,7 @@
         <q-tab name="testCases">
           <div class="row items-center no-wrap">
             Test Cases
-            <q-badge rounded color="grey-3" text-color="black" class="q-ml-xs">
+            <q-badge rounded color="grey-3" text-color="black" class="q-ml-xs hidden">
               {{ props.testCaseCount }}
             </q-badge>
           </div>
@@ -72,9 +84,15 @@
         <q-tab name="issues">
           <div class="row items-center no-wrap">
             Issues
-            <q-badge rounded color="grey-3" text-color="black" class="q-ml-xs">
+            <q-badge rounded color="grey-3" text-color="black" class="q-ml-xs hidden">
               {{ props.issueCount }}
             </q-badge>
+          </div>
+        </q-tab>
+
+        <q-tab name="requirementInfo">
+          <div class="row items-center no-wrap">
+            Requirement Info
           </div>
         </q-tab>
       </q-tabs>
@@ -91,6 +109,24 @@
           animated
           keep-alive
         >
+          <q-tab-panel name="requirementDescription" class="q-pa-none">
+            <RequirementDescriptionDetails
+              :requirement-id="requirementId"
+              :project-id="projectId"
+              :active-tab="leftTab"
+              @select="selectedReqDescription = $event"
+            />
+          </q-tab-panel>
+
+          <q-tab-panel name="requirementFiles" class="q-pa-none">
+            <RequirementFilesTabularView
+              :requirement-id="requirementId"
+              :project-id="projectId"
+              :active-tab="leftTab"
+              @select="selectedReqFiles = $event"
+            />
+          </q-tab-panel>
+
           <q-tab-panel name="qAndA" class="q-pa-none">
             <ProjectQATabularView
               :requirement-id="requirementId"
@@ -149,6 +185,14 @@
               @count="issueCount = $event"
             />
           </q-tab-panel>
+
+          <q-tab-panel name="requirementInfo" class="q-pa-none">
+            <RequirementInfoDetails
+              :requirement-id="requirementId"
+              :active-tab="leftTab"
+              @select="selectedRequirementInfo = $event"
+            />
+          </q-tab-panel>
         </q-tab-panels>
       </div>
     </div>
@@ -158,13 +202,15 @@
 <script setup>
 import { ref } from 'vue';
 
-import IssueList from './list/_issueList.vue';
 import ProjectQATabularView from './tabularView/_projectQ&ATabularView.vue';
 import ProjectActionItemsTabularView from './tabularView/_projectActionItemsTabularView.vue';
 import TaskTabularView from './tabularView/_taskTabularView.vue';
 import TimesheetTabularView from './tabularView/_timesheetTabularView.vue';
 import TestCaseTabularView from './tabularView/_testCaseTabularView.vue';
 import IssueTabularView from './tabularView/_issueTabularView.vue';
+import RequirementDescriptionDetails from './details/_requirementDescriptionDetails.vue';
+import RequirementInfoDetails from './details/_requirementInfoDetails.vue';
+import RequirementFilesTabularView from './tabularView/_requirementFilesTabularView.vue';
 
 const props = defineProps({
   requirementId: String,
@@ -195,13 +241,15 @@ const props = defineProps({
   }
 });
 
-const leftTab = ref('qAndA');
+const leftTab = ref('requirementDescription');
 const selectedTask = ref(null);
 const selectedTestCase = ref(null);
 const selectedIssue = ref(null);
 const selectedGroup = ref(null);
 const selectedQA = ref(null);
+const selectedReqDescription = ref(null);
 const selectedActionItems = ref(null);
+const selectedReqFiles = ref(null);
 const timesheetSearchModel = ref({});
 
 const onSelectGroup = group => {

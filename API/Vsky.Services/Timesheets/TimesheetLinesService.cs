@@ -710,7 +710,7 @@ namespace Vsky.Services.Timesheets
             return query;
         }
 
-        public async Task<List<TimesheetLines>> GetAllTimesheetsByRequirementId(
+        public IPagedList<TimesheetLines> GetAllTimesheetsByRequirementId(
           string siteId,
           string requirementId,
           string createdBy,
@@ -744,6 +744,22 @@ namespace Vsky.Services.Timesheets
                 thisWeek,
                 lastNumberOfWeeks);
 
+            //query = query
+            //        .OrderByDescending(x => x.Timesheet.TimesheetDate)
+            //        .ThenBy(x => x.Timesheet.Employee.Person.FirstName)
+            //        .ThenBy(x => x.Timesheet.Employee.Person.LastName)
+            //        .ThenBy(x => x.Task.Name);
+
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+                query = query.OrderBy(orderBy);
+            }
+            else
+            {
+                query = query.OrderByDescending(x => x.CreatedOnUtc);
+            }
+
             query = query
                 .Select(x => new TimesheetLines
                 {
@@ -773,18 +789,17 @@ namespace Vsky.Services.Timesheets
                     {
                         TimesheetDate = x.Timesheet.TimesheetDate,
 
-                        User = new ApplicationUser
+                        Employee = new Employee
                         {
-                            Id = x.Timesheet.User.Id,
-                            UserName = x.Timesheet.User.UserName,
+                            Id = x.Timesheet.Employee.Id,
 
                             Person = new Person
                             {
-                                Id = x.Timesheet.User.PersonId,
-                                FirstName = x.Timesheet.User.Person.FirstName,
-                                LastName = x.Timesheet.User.Person.LastName,
-                                FullName = x.Timesheet.User.Person.FirstName + " " +
-                                           x.Timesheet.User.Person.LastName
+                                Id = x.Timesheet.Employee.PersonId,
+                                FirstName = x.Timesheet.Employee.Person.FirstName,
+                                LastName = x.Timesheet.Employee.Person.LastName,
+                                FullName = x.Timesheet.Employee.Person.FirstName + " " +
+                                           x.Timesheet.Employee.Person.LastName
                             }
                         }
                     }

@@ -1,31 +1,40 @@
 <template>
   <q-page class="q-pa-md">
     <!-- Breadcrumb -->
-    <q-card class="breadcrumSection requirement6 flex justify-between items-center">
-      <q-card-section class="card-header with-tools flex justify-between items-center">
-        <q-breadcrumbs class="text-brown text-weight-bold text-h3">
-          <template #separator>
-            <q-icon size="1.5em" name="o_chevron_right" color="primary" />
-          </template>
-          <q-breadcrumbs-el label="SDLC" />
-          <q-breadcrumbs-el label="Requirements" clickable :to="fromPage" />
-          <q-breadcrumbs-el label="Requirement Center" />
-        </q-breadcrumbs>
-      </q-card-section>
-      <div>
-        <q-btn
-          icon="o_chevron_left"
-          outline
-          label="Back to Requirements"
-          no-caps
-          class="text-primary btnRounded q-mr-lg"
-          @click="$router.back()"
-        />
+     <div class="row q-col-gutter-x-md">
+      <div class="col">
+        <q-card class="breadcrumSection project6 flex justify-between items-center">
+          <q-card-section class="card-header with-tools flex justify-between items-center">
+            <div class="flex items-center">
+              <q-breadcrumbs class="text-brown text-weight-bold text-h3">
+                <template #separator>
+                  <q-icon size="1.5em" name="o_chevron_right" color="primary" />
+                </template>
+                <q-breadcrumbs-el label="SDLC" />
+                <q-breadcrumbs-el label="Requirements" clickable :to="fromPage" />
+                <q-breadcrumbs-el label="Requirement Center" />
+                <q-breadcrumbs-el :label="requirement.project?.name" />
+                <q-breadcrumbs-el :label="requirement.title" />
+                
+              </q-breadcrumbs>
+            </div>
+          </q-card-section>
+          <div>
+            <q-btn
+              icon="o_chevron_left"
+              outline
+              label="Back to Requirements"
+              no-caps
+              class="text-primary btnRounded q-mr-lg"
+              @click="$router.back()"
+            />
+          </div>
+        </q-card>
       </div>
-    </q-card>
+     </div>
 
     <!-- Requirement Header -->
-    <q-card flat bordered class="q-mt-md q-pa-lg requirement-header">
+    <q-card flat bordered class="q-mt-md q-pa-lg requirement-header hidden">
       <div class="row no-wrap items-start">
         <q-avatar
           rounded
@@ -219,7 +228,7 @@ import requirementService from "modules/requirement/requirement.service";
 
 // Props values i.e. come from query string
 const requirementId = history.state?.requirementId;
-const tab = ref('dashboard');
+const tab = ref('workbench');
 const requirement = ref({
   status:{
     dropDownValue: ""

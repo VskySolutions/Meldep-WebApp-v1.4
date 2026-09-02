@@ -26,6 +26,7 @@ namespace Vsky.Api.Models
         public string PriorityId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
+        public string ShortDescription { get; set; }
         public DateTime? IdentifiedDate { get; set; }
         public string IdentifiedDateStr { get; set; }
         public DateTime? CloseDate { get; set; }

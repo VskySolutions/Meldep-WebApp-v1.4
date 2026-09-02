@@ -363,7 +363,6 @@ namespace Vsky.Services.Companies
         }
         #endregion
 
-
         #region InsertCompanyContact
         public void InsertCompanyContact(CompanyContacts entity)
         {

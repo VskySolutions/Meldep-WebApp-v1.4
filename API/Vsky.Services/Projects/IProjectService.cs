@@ -68,6 +68,13 @@ namespace Vsky.Services.Projects
         Task<List<CommonDropDown>> GetProjectsListForDropdown(string SiteId, string LoggedUserId, string employeeId, bool isTemplate, string ActiveStatus, bool isAllProject);
         #endregion
 
+        #region GetCustomerContactByProjectId
+        Task<List<CompanyContacts>> GetCustomerContactByProjectId(
+            string siteId,
+            string projectId
+        );
+        #endregion
+
         #region GetProjectDetailsById
         Task<Project> GetProjectDetailsById(string id);
         #endregion

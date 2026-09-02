@@ -531,7 +531,6 @@ namespace Vsky.Services.Requirements
         }
         #endregion
 
-
         #region GetLastRequirementNumber
         // Title: GetLastRequirementNumber
         // Description: This method retrieves the highest RequirementNumber by ordering the records in descending order, or returns 1 if no record exists.
@@ -566,6 +565,7 @@ namespace Vsky.Services.Requirements
                 IdentifiedDate = x.IdentifiedDate,
                 CloseDate = x.CloseDate,
                 Description = x.Description,
+                ShortDescription = x.ShortDescription,
                 Notes = x.Notes,
                 EditingStatus = x.EditingStatus,
                 ApprovalStatus = x.ApprovalStatus,

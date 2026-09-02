@@ -533,6 +533,46 @@ namespace Vsky.Services.Projects
         }
         #endregion
 
+        #region GetCustomerContactByProjectId
+        public async Task<List<CompanyContacts>> GetCustomerContactByProjectId(
+            string siteId,
+            string projectId
+        )
+        {
+            var data = await _projectRepository.TableNoTracking
+                .Where(x =>
+                    !x.Deleted &&
+                    x.SiteId == siteId &&
+                    x.Id == projectId &&
+                    x.CompanyContact != null &&
+                    !x.CompanyContact.Deleted &&
+                    x.Customer != null &&
+                    !x.Customer.Deleted)
+                .Select(x => new
+                {
+                    PersonId = x.CompanyContact.Person.Id,
+                    FullName =
+                        (x.CompanyContact.Person.FirstName ?? "") +
+                        " " +
+                        (x.CompanyContact.Person.LastName ?? ""),
+                    CompanyName = x.Customer.Name
+                })
+                .ToListAsync();
+
+            return data
+                .Select(x => new CompanyContacts
+                {
+                    Person = new Person
+                    {
+                        Id = x.PersonId,
+                        FullName = $"{x.FullName}"
+                    }
+                })
+                .OrderBy(x => x.Person.FullName)
+                .ToList();
+        }
+        #endregion
+
         #region GetProjectDetailsById
         // Title: GetProjectDetailsById
         // Description: The method selects relevant fields from the project entity, including related entities such as nd employee mappings, and returns a `Project` object with these details. 

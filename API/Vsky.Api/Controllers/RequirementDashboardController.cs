@@ -254,13 +254,13 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("timesheet-tabular-list")]
-        public async Task<IActionResult> GetAllTimesheetsByRequirementId(RequirementCenterTimesheetSearchModel searchModel)
+        public async Task<IActionResult> GetAllTimesheetsByRequirementId(TimesheetSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
             var siteId = _globalVariable.SiteId;
 
             var createdBy = searchModel.CreatedBy == "Created By Me" ? LoggedUserId : "";
-            var result = await _timesheetLinesService.GetAllTimesheetsByRequirementId(
+            var list = _timesheetLinesService.GetAllTimesheetsByRequirementId(
                 siteId,
                 searchModel.RequirementId,
                 createdBy,
@@ -279,8 +279,15 @@ namespace Vsky.Api.Controllers
                 searchModel.PageSize
             );
 
-            var model = _mapper.Map<List<TimesheetLinesModel>>(result);
-            return Ok(model);
+            var model = _mapper.Map<List<TimesheetLinesModel>>(list);
+
+            return Ok(new TimesheetLinesListModel
+            {
+                Data = model,
+                Total = list.TotalCount
+            });
+
+            //return Ok(model);
         }
         #endregion
         #endregion
