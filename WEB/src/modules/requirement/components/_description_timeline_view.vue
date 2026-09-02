@@ -49,14 +49,6 @@
               </div>
             </div>
           </template>
-          <!-- <template v-else>
-            <div class="note-wrapper cursor-pointer RichTextEditor" @click="startEditingResponseLogDescription(responseLogDescription)">
-              <span class="text-black note-text" v-html="responseLogDescription.description"/>
-              <q-tooltip  v-if="responseLogDescription.isRequirementDescription || storedUser === responseLogDescription.createdBy?.userName">
-                Click to edit
-              </q-tooltip>
-            </div>
-          </template> -->
           <template v-else>
             <div
               class="note-wrapper cursor-pointer RichTextEditor full-width q-pa-sm"
@@ -230,7 +222,7 @@ const handleEditorBlur = (event) => {
 };
 
 // Get all descriptions and change logs
-const getAllRequirementDescriptionsById = async () => {
+const getAllRequirementDescriptionsById = async (openDraft = false) => {
   if (!props.id) return;
 
   loading.value = true;
@@ -287,14 +279,16 @@ const getAllRequirementDescriptionsById = async () => {
     );
 
     allResponseLogDescriptions.value = responseLogDescriptions;
-    const draftRequirement = responseLogDescriptions.find(
-    item =>
-      item.isRequirementDescription &&
-      item.editingStatus === 1
-    );
+    if (openDraft) {
+      const draftRequirement = responseLogDescriptions.find(
+        item =>
+          item.isRequirementDescription &&
+          item.editingStatus === 1
+      );
 
-    if (draftRequirement) {
-      editRequirementDescription(draftRequirement);
+      if (draftRequirement) {
+        editRequirementDescription(draftRequirement);
+      }
     }
   } catch (error) {
     console.error(
@@ -338,7 +332,7 @@ const onResponseLogDescriptionDelete = (item) => {
     () => {
       requirementService.deleteRequirementChangeLog(item.id).then(() => {
         notifySuccess({ message: "Description deleted successfully." });
-        getAllRequirementDescriptionsById();
+        getAllRequirementDescriptionsById(false);
       });
     },
     () => {}
@@ -423,7 +417,7 @@ const submitResponseLogDescription = async (responseLogDescriptionItem = null) =
     }
 
     // Reload descriptions
-    await getAllRequirementDescriptionsById();
+    await getAllRequirementDescriptionsById(false);
 
   } catch (error) {
     console.error("Error in submitting the description:", error);
@@ -442,7 +436,7 @@ watch(
   () => props.id,
   (newId) => {
     if (newId) {
-      getAllRequirementDescriptionsById();
+      getAllRequirementDescriptionsById(true);
     }
   },
   { immediate: true }
@@ -450,7 +444,7 @@ watch(
 
 // On page rendering
 onMounted(() => {
-  getAllRequirementDescriptionsById();
+  getAllRequirementDescriptionsById(true);
 });
 
 </script>

@@ -12,8 +12,9 @@
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator inline-label mobile-arrows>
             <q-tab name="1_tab" label="Manage Description" class="q-px-lg q-mr-md" />
             <q-tab name="2_tab" label="View Description" class="q-px-lg" :disable="disableTab" />
-            <q-tab name="3_tab" label="Requirement Info." class="q-px-lg" :disable="disableTab" />
-            <q-tab name="4_tab" label="Document Reference List" class="q-px-lg" :disable="disableTab" />
+            <q-tab name="3_tab" label="Short Description" class="q-px-lg" :disable="disableTab" />
+            <q-tab name="4_tab" label="Requirement Info." class="q-px-lg" :disable="disableTab" />
+            <q-tab name="5_tab" label="Document Reference List" class="q-px-lg" :disable="disableTab" />
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated>
@@ -28,6 +29,16 @@
               />
             </q-tab-panel>
             <q-tab-panel name="3_tab">
+              <fieldset>
+                <legend>Short Description</legend>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="text-black RichTextEditor">
+                    <span v-html="model.shortDescription || '-'"></span>
+                  </div>
+                </div>
+              </fieldset>
+            </q-tab-panel>
+            <q-tab-panel name="4_tab">
               <fieldset>
                 <legend>Requirement Info.</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
@@ -221,7 +232,7 @@
                   </fieldset>
                 </fieldset>
               </q-tab-panel>
-              <q-tab-panel name="4_tab">
+              <q-tab-panel name="5_tab">
                  <fieldset class="q-mb-lg">
                     <legend>Document Reference List</legend>
                     <q-table
@@ -316,6 +327,7 @@ const model = ref({
   description: "",
   createdOnUtc: "",
   lastNote: "",
+  shortDescription: "",
   project: {
     name: ""
   },

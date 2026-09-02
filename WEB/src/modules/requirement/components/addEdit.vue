@@ -287,7 +287,7 @@
                   </div>
                 </div>
               </div>
-              <div class="row q-col-gutter-x-md q-mb-md">                
+              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">
                   <div class="form-group">
                     <label class="q-mb-xs text-black">Short Description</label>
@@ -496,7 +496,7 @@
                       v-for="col in props.cols"
                       :key="col.name" :props="props"
                     >{{ col.label }}
-                      <span v-if="['requirementLogDate','employeeId'].includes(col.name)" class="required">*</span>
+                      <span v-if="['requirementLogDate','employeeId', 'description'].includes(col.name)" class="required">*</span>
                     </q-th>
                     <q-th auto-width class="text-center">Actions</q-th>
                   </q-tr>
@@ -560,7 +560,18 @@
                         :toolbar="toolbar"
                         :fonts="fonts"
                         style="width: 350px;"
+                        @blur="editingLogRowV$.description.$touch()"
                       />
+                      <div
+                        v-if="
+                          mode === 'addChangeLog' &&
+                          editingLogRowV$.description.$dirty &&
+                          editingLogRowV$.description.$error
+                        "
+                        class="text-negative text-caption q-mt-xs"
+                      >
+                        {{ editingLogRowV$.description.$errors[0].$message }}
+                      </div>
                     </q-td>
                     <q-td auto-width class="text-center">
                       <q-icon name="o_save" size="xs" class="cursor-pointer q-mr-lg" @click="onSave()">
@@ -606,7 +617,7 @@
                       <span
                         v-else :class="props.row.deleted ? 'text-delete' : ''"
                       >
-                        <span> {{ props.row.createdOnUtc }}
+                        <span> {{ props.row.requirementLogDateStr }}
                         </span>
                       </span>
                     </q-td>
@@ -648,12 +659,24 @@
                         :dense="$q.screen.lt.md"
                         :toolbar="toolbar"
                         :fonts="fonts"
+                        :error="editingLogRowV$.description.$error" :error-message="editingLogRowV$.description.$errors[0]?.$message" @blur="editingLogRowV$.description.$touch"
                       />
                       <span
                         v-else :class="props.row.deleted ? 'text-delete RichTextEditor' : 'RichTextEditor'"
                         style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 350px;"
                         v-html="props.row.description"
                       />
+                      <div
+                        v-if="
+                          mode === 'editLog' &&
+                          props.row.id === activeRowId &&
+                          editingLogRowV$.description.$dirty &&
+                          editingLogRowV$.description.$error
+                        "
+                        class="text-negative text-caption q-mt-xs"
+                      >
+                        {{ editingLogRowV$.description.$errors[0].$message }}
+                      </div>
                     </q-td>
                     <q-td auto-width class="text-center">
                       <template v-if="mode == 'editLog' && editingLogRow && props.row.id === activeRowId">
@@ -849,12 +872,40 @@ const editingRowrules = {
 // ----------------------------------------------------------------------------------------------------------------
 // Requirement Change Log - Validation Rules
 // ----------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------
+// Response Change Log - Validation Rules
+// ----------------------------------------------------------------------------------------------------------------
+function stripHtml(html = "") {
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+}
 
-const editingLogRowrules = {
+function hasImage(html = "") {
+  return /<img\b[^>]*>/i.test(html);
+}
+
+const requiredEditor = helpers.withMessage(
+  "Description is required",
+  (value) => {
+    if (!value) return false;
+
+    const text = stripHtml(value);
+    const imageExists = hasImage(value);
+
+    return text.length > 0 || imageExists;
+  }
+);
+
+const editingLogRowRules = {
   employeeId: { required: helpers.withMessage("Change By Name is required", required), minLength: minLength(1), maxLength: maxLength(200) },
   requirementLogDateStr: {
     required: helpers.withMessage("Date is required", required),
     isDate: helpers.withMessage("Date is invalid", isDate)
+  },
+  description: {
+    requiredEditor
   }
 };
 
@@ -1012,7 +1063,7 @@ const identifiedUserTypeText = computed(() => {
 
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 const editingRowV$ = useVuelidate(editingRowrules, editingRow, { $lazy: true, $autoDirty: true });
-const editingLogRowV$ = useVuelidate(editingLogRowrules, editingLogRow, { $lazy: true, $autoDirty: true });
+const editingLogRowV$ = useVuelidate(editingLogRowRules, editingLogRow, { $lazy: true, $autoDirty: true });
 
 
 function disablePlannedDatesBeforeStartDate (date) {
@@ -1071,11 +1122,15 @@ async function onSave () {
     }
     // check duplicate row
     let isDuplicate = 0;
-    logrows.value.forEach((item, index) => {
-      if (item.requirementName?.trim().toLowerCase() === editingLogRow.value.requirementName?.trim().toLowerCase()) {
-        isDuplicate = 1;
-      }
-    });
+    const requirementName = editingLogRow.value.requirementName?.trim();
+    if (requirementName) {
+      logrows.value.forEach((item, index) => {
+        const existingRequirementName = item.requirementName?.trim();
+        if (existingRequirementName && existingRequirementName.toLowerCase() === requirementName.toLowerCase()) {
+          isDuplicate = 1;
+        }
+      });
+    }
     if (isDuplicate === 0) {
       const newRow = {
         id: uid(),
