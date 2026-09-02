@@ -1,45 +1,26 @@
 <template>
   <q-card flat bordered class="dashboard-card" style="border: 0.5px solid #1b75ab;">
-    <div class="row q-col-gutter-lg q-mt-sm">
-      <div class="col-10 q-ml-md">
-        <!-- <div class="text-caption text-grey q-mb-sm">Description</div> -->
-          <q-table
-            v-if="changeLogRows && changeLogRows.length > 0"
-            ref="tableRef"
-            v-model:pagination="changeLogPagination"
-            bordered
-            class="no-shadow"
-            :loading="loading"
-            :rows="changeLogRows"
-            :columns="chnageLogColumns"
-            row-key="id"
-            separator="cell"
-            no-data-label="No data available"
-            binary-state-sort
-            :rows-per-page-options="[20, 50, 100, 200, 500]"
-          >
-            <template #header="props">
-              <q-tr :props="props" class="bg-primary text-white">
-                <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-              </q-tr>
-            </template>
-
-            <template #body="props">
-              <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                <q-td>
-                  <div class="row items-center">
-                    <div>{{ props.row.createdOnUtc }}</div>
-                  </div>
-                </q-td>
-                <q-td>{{ props.row.employee.person.fullName }}</q-td>
-                <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.requirementName }}</q-td>
-                <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 40%;"><div class="RichTextEditor" v-html="props.row.description" /></q-td>
-              </q-tr>
-            </template>
-          </q-table>
-          <div class="text-black RichTextEditor">
-            <span v-html="model.description" />
+    <div class="col scroll q-px-sm" style="overflow-y: auto; flex-grow: 1; height: 64vh; display: flex; flex-direction: column-reverse;">
+      <q-timeline color="secondary">
+        <q-timeline-entry
+          v-for="(responseLogDescription, index) in allResponseLogDescriptions"
+          :key="index"
+          :subtitle="`${responseLogDescription.createdOnUtc} - ${responseLogDescription.createdBy?.person?.fullName}`"
+          :icon="done_all"
+          :color="'primary'"
+        >          
+        <div v-if="allResponseLogDescriptions.length" class="fs-14 note-row">
+          <div class="note-wrapper">
+            <div
+              class="text-black note-text"
+              v-html="responseLogDescription.description || ''"
+            />
           </div>
+        </div>
+        </q-timeline-entry>
+      </q-timeline>
+      <div v-if="allResponseLogDescriptions.length === 0">
+        <h5 class="text-center text-grey">No Descriptions Available</h5>
       </div>
     </div>
   </q-card>
@@ -48,58 +29,129 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import _ from "lodash";
+
 import requirementService from "modules/requirement/requirement.service";
 
+// Props values i.e. come from query string
 const props = defineProps({
-  requirementId: {
-    type: String,
-    required: true
-  }
+  requirementId: { type: String, default: "" }
 });
 
-const loading = ref(false);
-const changeLogRows = ref([]);
-const changeLogPagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
-const chnageLogColumns = [
-  { name: "requirementLogDate", label: "Change Date", field: "requirementLogDate", align: "left", sortable: true },
-  { name: "employee.person.fullName", label: "Changed By", field: "employee.person.fullName", align: "left", sortable: true },
-  { name: "requirementName", label: "Requirement", field: "requirementName", align: "left", sortable: true },
-  { name: "description", label: "Description", field: "description", align: "left", sortable: false }
-];
+// common variables
+const loading = ref(true);
+const allResponseLogDescriptions = ref([]);
 
+// Get all descriptions and change logs
+const getAllRequirementDescriptionsById = async () => {
+  if (!props.requirementId) return;
 
-const model = ref({
-  description: {}
-});
-
-
-// get get Requirement on edit mode
-const getRequirement = () => {
   loading.value = true;
-  requirementService.getRequirementDetails(props.requirementId).then((resp) => {
-    model.value = _.cloneDeep(resp);
 
-    changeLogRows.value = resp.requirementChangeLog.map(item => ({
-      ...item,
-      editing: false,
-      flag: "Edit"
-    }));
-  }).finally(() => {
+  try {
+    const resp = await requirementService.getAllRequirementDescriptionsById(
+      props.requirementId, false
+    );
+
+    const requirementsList = resp.requirementList || [];
+    const responseLogDescriptions = [];
+
+    requirementsList.forEach((requirement) => {
+      const requirementDescription = requirement.description
+        ?.replace(/<[^>]*>/g, "")
+        .trim();
+
+      // Add requirement only when description exists
+      if (requirementDescription) {
+        responseLogDescriptions.push({
+          id: requirement.id,
+          description: requirement.description,
+          createdOnUtc: requirement.createdOnUtc,
+          createdById: requirement.createdById,
+          createdBy: requirement.createdBy,
+          editingStatus: requirement.editingStatus,
+          isRequirementDescription: true
+        });
+      }
+
+      // Add change logs only when description exists
+      (requirement.requirementChangeLog || []).forEach((responseLogDescriptionItem) => {
+        const responseLogDescriptionText = responseLogDescriptionItem.description
+          ?.replace(/<[^>]*>/g, "")
+          .trim();
+
+        if (responseLogDescriptionText) {
+          responseLogDescriptions.push({
+            id: responseLogDescriptionItem.id,
+            description: responseLogDescriptionItem.description,
+            createdOnUtc: responseLogDescriptionItem.createdOnUtc,
+            createdById: responseLogDescriptionItem.createdById,
+            createdBy: responseLogDescriptionItem.createdBy,
+            isRequirementDescription: false
+          });
+        }
+      });
+    });
+
+    responseLogDescriptions.sort(
+      (a, b) =>
+        new Date(a.createdOnUtc).getTime() -
+        new Date(b.createdOnUtc).getTime()
+    );
+
+    allResponseLogDescriptions.value = responseLogDescriptions;
+
+  } catch (error) {
+    console.error(
+      "Error while loading requirement descriptions:",
+      error
+    );
+  } finally {
     loading.value = false;
-  });
+  }
 };
 
+// Watch requirement ID
 watch(
   () => props.requirementId,
-  async () => {
-    await getRequirement();
+  (newId) => {
+    if (newId) {
+      getAllRequirementDescriptionsById();
+    }
   },
-  {
-    immediate: true
-  }
+  { immediate: true }
 );
 
-onMounted(async () => {
-  await getRequirement();
+// On page rendering
+onMounted(() => {
+  getAllRequirementDescriptionsById();
 });
+
 </script>
+<style scoped>
+.note-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.note-row .label {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.note-text {
+  display: inline-block; /* shrink-wraps to text width */
+}
+.note-row .q-btn {
+  visibility: hidden; /* hide by default */
+}
+
+.note-row:hover .q-btn {
+  visibility: visible; /* show when row hovered */
+}
+.notes-box-shadow {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2), 0 2px 2px rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12) !important;
+  background-color: #fff;
+  border-radius: 4px 4px 4px 4px !important;
+}
+</style>

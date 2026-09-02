@@ -98,7 +98,7 @@
                       />
                       <div class="row items-center q-mb-sm">
                         <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                          <label class="Cutomlabel q-mt-sm fs-13">Requirement Title</label>
+                          <label class="Cutomlabel q-mt-sm fs-13">Requirement</label>
                         </div>
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
                           <q-input v-model="search.name" fill-input class="q-mx-sm w-100 h-auto" :dense="true" />
@@ -365,15 +365,25 @@
                 <q-th
                   v-for="col in props.cols"
                   :key="col.name"
-                  :props="props"
                   :style="{
                     width: (resizeWidths?.[col.name] || 120) + 'px',
                     minWidth: '80px',
                     position: 'relative'
                   }"
-                  @click="!isResizing && col.sortable"
                 >
                   {{ col.label }}
+                  <!-- Sort icon only --> 
+                  <q-icon
+                    v-if="col.sortable" 
+                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
+                    size="16px" 
+                    class="cursor-pointer q-ml-sm"
+                    @click.stop="sortColumn(col)"
+                  >
+                     <q-tooltip>
+                      {{ pagination.sortBy === col.name ? (pagination.descending ? 'Sort Ascending' : 'Sort Descending') : 'Sort' }}
+                    </q-tooltip>
+                  </q-icon>
                   <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
                 </q-th>
               <q-th auto-width class="text-center">Actions</q-th>
@@ -1151,6 +1161,20 @@ const refreshRequirementTagDropdown = () => {
   requirementTagsDropdown.load();
 };
 
+const sortColumn = (col) => {
+  if (!col.sortable) return;
+  if (pagination.value.sortBy === col.name) {
+    // Same column → toggle direction
+    pagination.value.descending = !pagination.value.descending;
+  }
+  else {
+    // New column → ascending 
+      pagination.value.sortBy = col.name;
+      pagination.value.descending = false;
+  } 
+  refreshRequirementList();
+};
+
 // Search records as per parameters
 const onAdvanceSearch = () => {
   refreshRequirementList();
@@ -1392,7 +1416,7 @@ function onBulkRequirementsConvertToTask (requirementIds) {
   if (taskNames.length > 0) {
     message += "<br/><br/><b>Already created task(s):</b><br/>";
     message += "<table style='width:100%; border-collapse:collapse;' border='1' cellspacing='0' cellpadding='5'>";
-    message += "<tr><th>Requirement Title</th><th>Task Numbers</th></tr>";
+    message += "<tr><th>Requirement</th><th>Task Numbers</th></tr>";
 
     taskNames.forEach(name => {
       const taskNumbers = createdTasks[name].map(num => `#${num}`).join(", ");
@@ -1629,7 +1653,7 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.identifiedEmployeeIds, activeEmployeesDropdown.list, "Employee Name"),
   ...mapFilterToLabel(search.value.requirementTagIds, requirementTagsDropdown.list, "Tags"),
   ...(search.value.requirementNumber > 0 ? { "Requirement Id": search.value.requirementNumber } : {}),
-  ...(search.value.name ? { "Requirement Title": search.value.name } : {}),
+  ...(search.value.name ? { Requirement: search.value.name } : {}),
   ...(search.value.fromDate ? { "Created From Date": search.value.fromDate } : {}),
   ...(search.value.toDate ? { "Created To Date": search.value.toDate } : {})
 }));
@@ -1669,7 +1693,7 @@ function onClearFilters (key) {
     search.value.identifiedEmployeeIds = [];
   } else if (key === "Customer Name") {
     search.value.identifiedCustomerIds = [];
-  } else if (key === "Requirement Title") {
+  } else if (key === "Requirement") {
     search.value.name = "";
   } else if (key === "Created From Date") {
     search.value.fromDate = "";
@@ -1701,8 +1725,19 @@ watch(() => search.value.projectIds, (newValue, oldValue) => {
 watch(() => search.value.projectIds, async (newValue, oldValue) => {
   if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
 
-  search.value.projectModuleIds = [];
+  if (!newValue?.length) {
+    search.value.projectModuleIds = [];
+    return;
+  }
+
+  const isInitialLoad = !oldValue;
+  // search.value.projectModuleIds = [];
   await projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
+  
+  // Clear modules only when project was changed by the user
+  if (!isInitialLoad) {
+    search.value.projectModuleIds = [];
+  }
 }, { immediate: true });
 
 watch(selectedField, (newVal) => {

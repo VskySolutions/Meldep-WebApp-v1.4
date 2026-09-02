@@ -280,6 +280,27 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                     GoLiveDate = x.Project.GoLiveDate
                 },
                 LastAnswer = x.ProjectQuestionsAnswersResponseLog.Where(p => !p.Deleted).OrderByDescending(p => p.CreatedOnUtc).Select(p => p.Description).FirstOrDefault(),
+
+                ProjectQuestionsAnswersResponseLog = x.ProjectQuestionsAnswersResponseLog
+                .Where(d => !d.Deleted)
+                .OrderByDescending(d => d.CreatedOnUtc)
+                .Select(d => new ProjectQuestionsAnswersResponseLog
+                {
+                    Id = d.Id,
+                    Description = d.Description,
+                    CreatedOnUtc = d.CreatedOnUtc,
+                    CreatedBy = new ApplicationUser
+                    {
+                        Id = d.CreatedBy.Id,
+                        Person = new Person
+                        {
+                            Id = d.CreatedBy.PersonId,
+                            FullName =
+                                d.CreatedBy.Person.FirstName + " " +
+                                d.CreatedBy.Person.LastName
+                        }
+                    }
+                }).ToList()
             });
 
             var list = await query.ToListAsync();

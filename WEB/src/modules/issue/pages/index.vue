@@ -688,8 +688,9 @@ const sortColumn = (col) => {
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
   } 
-  getAllIssue({ pagination: pagination.value });
+  refreshIssueList();
 };
+
 // ------------------------------------------------------------------------------------
 // Advance Filter :- On Submit & Cancel
 // ------------------------------------------------------------------------------------

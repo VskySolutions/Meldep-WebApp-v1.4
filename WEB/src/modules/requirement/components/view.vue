@@ -43,7 +43,7 @@
                 <legend>Requirement Info.</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">
-                    <div class="q-mb-xs">Requirement Title :</div>
+                    <div class="q-mb-xs">Requirement :</div>
                     <div class="text-black">{{ model.title }}</div>
                   </div>
                 </div>

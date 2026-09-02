@@ -11,7 +11,7 @@
                   <q-icon size="1.5em" name="o_chevron_right" color="primary" />
                 </template>
                 <q-breadcrumbs-el label="SDLC" />
-                <q-breadcrumbs-el label="Requirements" clickable :to="fromPage" />
+                <q-breadcrumbs-el label="Requirements" clickable to="/requirement" />
                 <q-breadcrumbs-el label="Requirement Center" />
                 <q-breadcrumbs-el :label="requirement.project?.name" />
                 <q-breadcrumbs-el :label="requirement.title" />
@@ -23,7 +23,7 @@
             <q-btn
               icon="o_chevron_left"
               outline
-              label="Back to Requirements"
+              label="Back"
               no-caps
               class="text-primary btnRounded q-mr-lg"
               @click="$router.back()"

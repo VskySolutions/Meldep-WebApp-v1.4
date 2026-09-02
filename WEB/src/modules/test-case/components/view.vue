@@ -44,7 +44,7 @@
                     <div class="text-black q-mb-sm">{{ model.projectModule?.name || "-" }}</div>
                   </div>
                   <div class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Requirement Title</div>
+                    <div class="q-mb-xs">Requirement</div>
                     <div class="text-black q-mb-sm">{{ model.requirement?.title || "-" }}</div>
                   </div>
                 </div>

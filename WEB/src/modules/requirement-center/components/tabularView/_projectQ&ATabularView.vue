@@ -96,20 +96,62 @@
           </q-th>
         </q-tr>
       </template>
-
       <template #body="props">
-        <q-tr :props="props">
-
-          <q-td style="width:40%;" class="cursor-pointer hoverable-cell" @click="onQuestionAnswersView(props.row.id)">
+        <!-- Original description row -->
+        <q-tr
+          v-if="props.row.description"
+          :props="props"
+        >
+          <q-td
+            style="width:40%;"
+            class="cursor-pointer hoverable-cell"
+            @click="onQuestionAnswersView(props.row.id)"
+          >
             {{ props.row.title }}
           </q-td>
 
           <q-td style="width:60%;">
-            <p v-html="props.row.lastAnswer ? props.row.lastAnswer : props.row.description" />
+            <div v-html="props.row.description"></div>
+          </q-td>
+        </q-tr>
+        <!-- Response answer rows -->
+        <q-tr
+          v-for="(answer) in props.row.projectQuestionsAnswersResponseLog"
+          :key="answer.id"
+          :props="props"
+        >
+          <!-- Don't repeat question -->
+          <q-td
+            style="width:40%;"
+          >
           </q-td>
 
+          <q-td style="width:60%;">
+            <div v-html="answer.description"></div>
+          </q-td>
+        </q-tr>
+        <!-- No answer -->
+        <q-tr
+          v-if="
+            !props.row.description &&
+            !props.row.projectQuestionsAnswersResponseLog?.length
+          "
+          :props="props"
+        >
+          <q-td
+            style="width:40%;"
+            class="cursor-pointer hoverable-cell"
+            @click="onQuestionAnswersView(props.row.id)"
+          >
+            {{ props.row.title }}
+          </q-td>
+
+          <q-td style="width:60%;" class="text-grey">
+            No answer available
+          </q-td>
         </q-tr>
       </template>
+
     </q-table>
   </q-card>
 </template>

@@ -18,7 +18,7 @@
           <q-item>
             <q-item-section>
               <div class="text-caption text-grey">
-                Requirement Title
+                Requirement
               </div>
               <div class="q-mb-sm">
                 {{ model.title || "-" }}
