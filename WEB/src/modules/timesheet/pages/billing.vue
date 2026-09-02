@@ -396,6 +396,11 @@ function onChangeBillableHrs(id, billableHrs, actualHours) {
     notifyError({
       message: "Billable hours cannot be greater than actual hours."
     });
+     // Restore previous value
+    rows.value[rowIndex].billableHours =
+      rows.value[rowIndex].originalBillableHours || "00:00";
+
+    rows.value = [...rows.value];
     return;
   }
   rows.value = [...rows.value];
