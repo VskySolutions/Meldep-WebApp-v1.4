@@ -69,6 +69,10 @@ namespace Vsky.Services.Requirements
         Task<Requirement> GetRequirementByName(string title, string ProjectId, string ProjectModuleId = null, string id = null);
         #endregion
 
+        #region GetAllRequirementDescriptionsById
+        Task<List<Requirement>> GetAllRequirementDescriptionsById(string siteId, string id, bool latestOnTop);
+        #endregion
+
         #region InsertRequirement
         void InsertRequirement(Requirement entity);
         #endregion

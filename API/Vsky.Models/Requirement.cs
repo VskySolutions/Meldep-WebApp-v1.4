@@ -8,7 +8,11 @@ using Vsky.Core;
 
 namespace Vsky.Models
 {
-
+    public class RequirementsList
+    {
+        public virtual ICollection<Requirement> RequirementList { get; set; } = new List<Requirement>();
+        public int Total { get; set; }
+    }
     public class Requirement : BaseEntity
     {
         public string SiteId { get; set; }

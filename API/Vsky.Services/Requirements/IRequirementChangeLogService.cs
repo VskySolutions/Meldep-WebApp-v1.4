@@ -19,12 +19,24 @@ namespace Vsky.Services.Requirements
         void InsertRequirementChangeLogList(IList<RequirementChangeLog> entity);
         #endregion
 
+        #region InsertRequirementChangeLogList
+        void InsertRequirementChangeLog(RequirementChangeLog entity);
+        #endregion
+
         #region UpdateRequirementChangeLogList
         void UpdateRequirementChangeLogList(IList<RequirementChangeLog> entity);
         #endregion
 
+        #region UpdateRequirementChangeLog
+        void UpdateRequirementChangeLog(RequirementChangeLog entity);
+        #endregion
+
         #region DeleteRequirementChangeLogList
         void DeleteRequirementChangeLogList(List<RequirementChangeLog> entity);
+        #endregion
+
+        #region DeleteRequirementChangeLog
+        void DeleteRequirementChangeLog(RequirementChangeLog entity);
         #endregion
     }
 }

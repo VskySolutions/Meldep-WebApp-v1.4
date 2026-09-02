@@ -31,5 +31,7 @@ public class RequirementChangeLog : BaseEntity
 
     public virtual Requirement Requirement { get; set; }
     public virtual Employee Employee { get; set; }
+    public virtual ApplicationUser CreatedBy { get; set; }
+    public virtual ApplicationUser UpdatedBy { get; set; }
 }
 

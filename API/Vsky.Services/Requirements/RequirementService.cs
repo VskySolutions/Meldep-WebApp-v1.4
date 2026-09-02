@@ -772,6 +772,83 @@ namespace Vsky.Services.Requirements
 
         #endregion
 
+        #region GetAllRequirementDescriptionsById
+        public async Task<List<Requirement>> GetAllRequirementDescriptionsById(string siteId, string id, bool latestOnTop)
+        {
+            var query = _requirementRepository.TableNoTracking
+                .Where(x => !x.Deleted && x.SiteId == siteId && x.Id == id);
+
+            return await query
+                .Select(x => new Requirement
+                {
+                    Id = x.Id,
+                    Description = x.Description,
+                    CreatedById = x.CreatedById,
+                    CreatedOnUtc = x.CreatedOnUtc,
+                    EditingStatus = x.EditingStatus,
+                    RequirementChangeLog = latestOnTop
+                                        ? x.RequirementChangeLog
+                                            .Where(d => !d.Deleted)
+                                            .OrderByDescending(d => d.CreatedOnUtc)
+                                            .ThenByDescending(d => d.Id)
+                                            .Select(d => new RequirementChangeLog
+                                            {
+                                                Id = d.Id,
+                                                Description = d.Description,
+                                                CreatedById = d.CreatedById,
+                                                CreatedOnUtc = d.CreatedOnUtc,
+                                                CreatedBy = new ApplicationUser
+                                                {
+                                                    Id = d.CreatedBy.Id,
+                                                    UserName = d.CreatedBy.UserName,
+                                                    Person = new Person
+                                                    {
+                                                        Id = d.CreatedBy.PersonId,
+                                                        FullName = d.CreatedBy.Person.FirstName + " " +
+                                                                   d.CreatedBy.Person.LastName
+                                                    }
+                                                }
+                                            })
+                                            .ToList()
+                                        : x.RequirementChangeLog
+                                            .Where(d => !d.Deleted)
+                                            .OrderBy(d => d.CreatedOnUtc)
+                                            .ThenBy(d => d.Id)
+                                            .Select(d => new RequirementChangeLog
+                                            {
+                                                Id = d.Id,
+                                                Description = d.Description,
+                                                CreatedById = d.CreatedById,
+                                                CreatedOnUtc = d.CreatedOnUtc,
+                                                CreatedBy = new ApplicationUser
+                                                {
+                                                    Id = d.CreatedBy.Id,
+                                                    UserName = d.CreatedBy.UserName,
+                                                    Person = new Person
+                                                    {
+                                                        Id = d.CreatedBy.PersonId,
+                                                        FullName = d.CreatedBy.Person.FirstName + " " +
+                                                                   d.CreatedBy.Person.LastName
+                                                    }
+                                                }
+                                            })
+                                            .ToList(),
+
+                    CreatedBy = new ApplicationUser
+                    {
+                        Id = x.CreatedBy.Id,
+                        UserName = x.CreatedBy.UserName,
+                        Person = new Person
+                        {
+                            FullName = x.CreatedBy.Person.FirstName + " " +
+                                       x.CreatedBy.Person.LastName
+                        }
+                    }
+                })
+                .ToListAsync();
+        }
+        #endregion
+
         #region InsertRequirement
         // Title: InsertRequirement
         // Description: This method inserts a new Requirement entity into the repository. It takes a Requirement object as input and uses the _requirementRepository to handle the insertion operation.

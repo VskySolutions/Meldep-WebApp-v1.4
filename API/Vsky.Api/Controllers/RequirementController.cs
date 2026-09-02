@@ -23,6 +23,8 @@ using Vsky.Services.RequirementsColor;
 using Vsky.Services.RequirementsPinned;
 using Vsky.Services.Sites;
 using Vsky.Services.SitesModifiedLog;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using static Dapper.SqlMapper;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Vsky.Api.Controllers
@@ -225,6 +227,30 @@ namespace Vsky.Api.Controllers
                 {
                     description
                 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetAllRequirementDescriptionsById
+        [HttpGet("requirement-change-log")]
+        public async Task<IActionResult> GetAllRequirementDescriptionsById(string id, bool latestOnTop = false)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var list = await _requirementService.GetAllRequirementDescriptionsById(SiteId, id, latestOnTop);
+
+                var model = new RequirementsList
+                {
+                    RequirementList = list
+                };
+
+                return Ok(model);
             }
             catch (Exception ex)
             {
@@ -702,6 +728,31 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region DeleteRequirementChangeLog
+        // Title: DeleteRequirementChangeLog
+        // Description: This endpoint deletes a test case based on the provided Requirement Change Log ID. It first retrieves the Requirement Change Log entity by ID, checks if it exists, and if so, deletes the Requirement Change Log. If the Requirement Change Log is not found, it returns a BadRequest response with an error message.
+        [HttpDelete("requirement-change-log/{id}")]
+        public async Task<IActionResult> DeleteRequirementChangeLog(string id)
+        {
+            try
+            {
+                // Fetch the Requirement Change Log entity by its ID
+                var entity = await _requirementChangeLogService.GetRequirementChangeLogById(id);
+                // If no Requirement is found, return a BadRequest response with an error message
+                if (entity == null)
+                    return BadRequest(new BadRequestError("No requirement change log found with the specified id."));
+
+                _requirementChangeLogService.DeleteRequirementChangeLog(entity);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region CreateTags
         [HttpPost("tags")]
         public async Task<IActionResult> CreateTags(TagModels model)
@@ -977,6 +1028,114 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region UpdateRequirementDescription
+
+        // Title: UpdateRequirementDescription
+        // Description: This endpoint updates only the description of an existing Requirement Change Log.
+        [HttpPut("requirementDescription")]
+        public async Task<IActionResult> UpdateRequirementDescription(RequirementModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var existingRequirement = await _requirementService.GetRequirementById(model.Id);
+                    if (existingRequirement == null)
+                        return BadRequest(new BadRequestError("No Requirement found with the specified id."));
+
+                    existingRequirement.Description = model.Description;
+
+                    _requirementService.UpdateRequirement(existingRequirement);
+
+                    return NoContent();
+                }
+
+                return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region AddEditRequirementChangeLogDescription
+        [HttpPost("requirement-change-log/add-edit-description")]
+        public async Task<IActionResult> AddEditRequirementChangeLogDescription(RequirementChangeLogModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var LoggedUserId = User.GetLoggedInUserId<string>();
+                    var SiteId = _globalVariable.SiteId;
+                    var SiteData = await _siteService.GetById(SiteId);
+                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                    var requirement = await _requirementService.GetRequirementById(model.RequirementId);
+
+                    if (requirement == null)
+                        return NotFound("Requirement not found.");
+
+                    var existingChangeLog = await _requirementChangeLogService.GetRequirementChangeLogById(model.Id);
+                    if (existingChangeLog != null)
+                    {
+                        existingChangeLog.EmployeeId = model.EmployeeId;
+
+                        if (!string.IsNullOrEmpty(model.Description))
+                        {
+                            existingChangeLog.Description = await _azureBlobImageServices
+                                .ProcessHtmlAndManageImagesAsync(
+                                    model.Description,
+                                    SiteData.Name,
+                                    "requirements",
+                                    requirement.RequirementNumber.ToString(),
+                                    existingChangeLog.Description
+                                );
+                        }
+                        existingChangeLog.RequirementLogDate = GetDateTime;
+                        existingChangeLog.UpdatedById = LoggedUserId;
+                        existingChangeLog.UpdatedOnUtc = GetDateTime;
+                        _requirementChangeLogService.UpdateRequirementChangeLog(existingChangeLog);
+
+                    }
+                    else
+                    {
+                        var data = _mapper.Map<RequirementChangeLog>(model);
+                        data.RequirementId = model.RequirementId; 
+                        data.EmployeeId = model.EmployeeId;
+
+                        if (!string.IsNullOrEmpty(model.Description))
+                        {
+                            data.Description = await _azureBlobImageServices
+                                .ProcessHtmlAndManageImagesAsync(
+                                    model.Description,
+                                    SiteData.Name,
+                                    "requirements",
+                                    requirement.RequirementNumber.ToString()
+                                );
+                        }
+
+                        data.RequirementLogDate = GetDateTime;
+                        data.CreatedById = LoggedUserId;
+                        data.UpdatedById = LoggedUserId;
+                        data.CreatedOnUtc = GetDateTime;
+                        data.UpdatedOnUtc = GetDateTime;
+                        _requirementChangeLogService.InsertRequirementChangeLog(data);
+                        
+                    }
+                    return NoContent();
+                }
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region private functions for requirement
         private async Task<bool> UpdateRequirementDetails(string requirementId, object data, string flag)
         {
@@ -994,7 +1153,7 @@ namespace Vsky.Api.Controllers
                 case "status":
                     if (data is string statusId)
                         entity.StatusId = statusId;
-                        entity.CloseDate = GetDateTime;
+                    entity.CloseDate = GetDateTime;
                     break;
 
                 case "priority":

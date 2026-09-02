@@ -3171,8 +3171,6 @@ async function loadRequirements(projectId, moduleId) {
   }
 }
 
-console.log(storedModuleName.value);
-
 function onSortByRequirement (SortBy, order) {
   requirementPagination.value.sortBy = selectedSortByRequirement.value;
   requirementPagination.value.descending = selectedSortOrderByRequirement.value;

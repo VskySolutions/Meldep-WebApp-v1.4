@@ -10,59 +10,24 @@
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator inline-label mobile-arrows>
-            <q-tab name="1_tab" label="Description" class="q-px-lg q-mr-md" />
-            <q-tab name="2_tab" label="Requirement Info." class="q-px-lg" :disable="disableTab" />
+            <q-tab name="1_tab" label="Manage Description" class="q-px-lg q-mr-md" />
+            <q-tab name="2_tab" label="View Description" class="q-px-lg" :disable="disableTab" />
+            <q-tab name="3_tab" label="Requirement Info." class="q-px-lg" :disable="disableTab" />
+            <q-tab name="4_tab" label="Document Reference List" class="q-px-lg" :disable="disableTab" />
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel name="1_tab">
-              <fieldset>
-                <legend>Description</legend>
-                  <div class="row q-col-gutter-x-md q-mb-md">
-                    <div class="col-12">
-                      <!-- <div class="q-mb-xs">Requirement Description :</div> -->
-                      <q-table
-                        v-if="changeLogRows && changeLogRows.length > 0"
-                        ref="tableRef"
-                        v-model:pagination="changeLogPagination"
-                        bordered
-                        class="no-shadow"
-                        :loading="loading"
-                        :rows="changeLogRows"
-                        :columns="chnageLogColumns"
-                        row-key="id"
-                        separator="cell"
-                        no-data-label="No data available"
-                        binary-state-sort
-                        :rows-per-page-options="[20, 50, 100, 200, 500]"
-                      >
-                        <template #header="props">
-                          <q-tr :props="props" class="bg-primary text-white">
-                            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-                          </q-tr>
-                        </template>
-
-                        <template #body="props">
-                          <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                            <q-td>
-                              <div class="row items-center">
-                                <div>{{ props.row.createdOnUtc }}</div>
-                              </div>
-                            </q-td>
-                            <q-td>{{ props.row.employee.person.fullName }}</q-td>
-                            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.requirementName }}</q-td>
-                            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 40%;"><div class="RichTextEditor" v-html="props.row.description" /></q-td>
-                          </q-tr>
-                        </template>
-                      </q-table>
-                      <div class="text-black RichTextEditor">
-                        <span v-html="model.description" />
-                      </div>
-                    </div>
-                  </div>
-              </fieldset>
+              <viewDescriptionTimeLineView
+                :id="selectedRequirementId"
+              />
             </q-tab-panel>
             <q-tab-panel name="2_tab">
+              <viewDescriptionSimpleView
+                :id="selectedRequirementId"
+              />
+            </q-tab-panel>
+            <q-tab-panel name="3_tab">
               <fieldset>
                 <legend>Requirement Info.</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
@@ -222,40 +187,7 @@
                       <div class="text-black">{{ model.updatedOnUtc }}</div>
                     </div>
                   </div>
-                  <fieldset class="q-mb-lg">
-                    <legend>Document Reference List</legend>
-                    <q-table
-                      ref="tableRef"
-                      v-model:pagination="pagination"
-                      bordered class="no-shadow"
-                      :loading="loading"
-                      :rows="rows"
-                      :columns="columns"
-                      row-key="id"
-                      separator="cell"
-                      no-data-label="No data available"
-                      binary-state-sort
-                      :rows-per-page-options="[20, 50, 100, 200, 500]"
-                    >
-                      <template #header="props">
-                        <q-tr :props="props" class="bg-primary text-white">
-                          <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-                        </q-tr>
-                      </template>
-                      <template #body="props">
-                        <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
-                            <a :href="props.row.filePath" target="_blank" class="text-bluee">
-                              {{ props.row.filePath }}
-                            </a>
-                          </q-td>
-                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.fileName }}</q-td>
-                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 30%;">{{ props.row.note }}</q-td>
-                        </q-tr>
-                      </template>
-                    </q-table>
-                  </fieldset>
-                  <fieldset v-if="changeLogRows && changeLogRows.length === 0" class="q-mb-lg">
+                  <fieldset v-if="changeLogRows && changeLogRows.length === 0" class="q-mb-lg hidden">
                     <legend>Requirement Change Log</legend>
                     <q-table
                       ref="tableRef"
@@ -289,6 +221,41 @@
                   </fieldset>
                 </fieldset>
               </q-tab-panel>
+              <q-tab-panel name="4_tab">
+                 <fieldset class="q-mb-lg">
+                    <legend>Document Reference List</legend>
+                    <q-table
+                      ref="tableRef"
+                      v-model:pagination="pagination"
+                      bordered class="no-shadow"
+                      :loading="loading"
+                      :rows="rows"
+                      :columns="columns"
+                      row-key="id"
+                      separator="cell"
+                      no-data-label="No data available"
+                      binary-state-sort
+                      :rows-per-page-options="[20, 50, 100, 200, 500]"
+                    >
+                      <template #header="props">
+                        <q-tr :props="props" class="bg-primary text-white">
+                          <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+                        </q-tr>
+                      </template>
+                      <template #body="props">
+                        <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
+                            <a :href="props.row.filePath" target="_blank" class="text-bluee">
+                              {{ props.row.filePath }}
+                            </a>
+                          </q-td>
+                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.fileName }}</q-td>
+                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 30%;">{{ props.row.note }}</q-td>
+                        </q-tr>
+                      </template>
+                    </q-table>
+                  </fieldset>
+              </q-tab-panel>
             </q-tab-panels>
           </div>
         </div>
@@ -302,8 +269,13 @@
 import { useDialogPluginComponent, useQuasar, QBtn } from "quasar";
 import { ref, onMounted, watch } from "vue";
 import _ from "lodash";
+
 import requirementService from "../requirement.service";
 import viewProjectTask from "modules/project-tasks/components/view.vue";
+
+import viewDescriptionTimeLineView from "src/modules/requirement/components/_description_timeline_view.vue";
+import viewDescriptionSimpleView from "src/modules/requirement/components/_description_simple_view.vue";
+
 
 // Props values i.e. come from query string
 const props = defineProps({ id: { type: String, default: "" } });
@@ -312,6 +284,7 @@ const changeLogRows = ref([]);
 const $q = useQuasar();
 
 // Common variables
+const selectedRequirementId = ref(props.id);
 const loading = ref(true);
 const tab = ref("1_tab");
 const pagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });

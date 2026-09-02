@@ -53,12 +53,30 @@ namespace Vsky.Services.Requirements
         }
         #endregion
 
+        #region InsertRequirementChangeLog
+        // Title: InsertRequirementChangeLog
+        // Description: This method inserts a new RequirementChangeLog entity into the repository. It takes a RequirementChangeLog object as input and uses the _requirementChangeLogRepository to handle the insertion operation.
+        public void InsertRequirementChangeLog(RequirementChangeLog entity)
+        {
+            _requirementChangeLogRepository.Insert(entity);
+        }
+        #endregion
+
         #region UpdateRequirementChangeLogList
         // Title: UpdateRequirementChangeLogList
         // Description: This method updates the specified RequirementChangeLog entity in the repository. It takes a RequirementChangeLog object as input and uses the repository's Update method to persist changes to the data source.
         public void UpdateRequirementChangeLogList(IList<RequirementChangeLog> entities)
         {
             _requirementChangeLogRepository.Update(entities);
+        }
+        #endregion
+
+        #region UpdateRequirementChangeLog
+        // Title: UpdateRequirementChangeLog
+        // Description: This method updates the specified RequirementChangeLog entity in the repository. It takes a RequirementChangeLog object as input and uses the repository's Update method to persist changes to the data source.
+        public void UpdateRequirementChangeLog(RequirementChangeLog entity)
+        {
+            _requirementChangeLogRepository.Update(entity);
         }
         #endregion
 
@@ -75,6 +93,17 @@ namespace Vsky.Services.Requirements
             }
             _requirementChangeLogRepository.Update(list);
         }
+        #endregion
+
+        #region DeleteRequirementChangeLog
+        // Title: DeleteRequirementChangeLog
+        // Description: Marks the specified RequirementChangeLog entity as deleted by setting its `Deleted` property to true. 
+        public void DeleteRequirementChangeLog(RequirementChangeLog entity)
+        {
+            entity.Deleted = true;
+            _requirementChangeLogRepository.Update(entity);
+        }
+
         #endregion
     }
 }

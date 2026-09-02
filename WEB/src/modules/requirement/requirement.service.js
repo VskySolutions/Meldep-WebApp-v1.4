@@ -24,6 +24,11 @@ export default {
   getAllRequirementTagListForDropdown () {
     return http.get("/requirement/requirementTags/dropdown/list").then(response => response.data);
   },
+
+  getAllRequirementDescriptionsById (id, latestOnTop) {
+    return http.get(`/requirement/requirement-change-log/?id=${id}&latestOnTop=${latestOnTop}`).then(response => response.data);
+  },
+
   saveRequirement (id, model) {
     if (id) {
       return http.put(`/requirement/${id}`, model).then(response => response.data);
@@ -31,22 +36,40 @@ export default {
       return http.post("/requirement", model).then(response => response.data);
     }
   },
+
   saveTags (model) {
     return http.post("/requirement/tags", model).then(response => response.data);
   },
+
+  saveResponseLogDescription (model) {
+    return http.post("/requirement/requirement-change-log/add-edit-description", model).then(response => response.data);
+  },
+
   updateRequirementStatus (model) {
     return http.post("/requirement/updateRequirementStatus", model).then(response => response.data);
   },
+
   updateRequirementPriority (model) {
     return http.post("/requirement/updateRequirementPriority", model).then(response => response.data);
   },
+
   updateRequirementIsPinned (id, pinstatus) {
     return http.put(`/requirement/pinstatus/${id}/${pinstatus}`).then(response => response.data);
   },
+
   updateRequirementColor (id, requirementColor) {
     return http.put(`/requirement/requirementColor/${id}/${requirementColor}`).then(response => response.data);
   },
+
+  updateRequirementDescription(model) {
+    return http.put("/requirement/requirementDescription", model).then(response => response.data);
+  },
+
   deleteRequirement (id) {
     return http.delete(`/requirement/${id}`).then(response => response.data);
+  },
+
+  deleteRequirementChangeLog (id) {
+    return http.delete(`/requirement/requirement-change-log/${id}`).then(response => response.data);
   }
 };
