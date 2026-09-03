@@ -74,32 +74,6 @@
               :error="v$.subCategoryId.$error"
               :error-message="v$.subCategoryId.$errors[0]?.$message"
             />
-            <!-- <div class="col-12 col-sm-6 col-md-4">
-              <div class="row items-end no-wrap full-width">
-                <div class="col">
-                <formSingleSelectDropdown
-                  v-if="props.id"
-                  v-model="model.statusId"
-                  label="Status"
-                  :options="sopProcessStatusDropdownSingleSelect.list.value"
-                  :filter="sopProcessStatusDropdownSingleSelect.filter"
-                  readonly
-                  :error="v$.statusId.$error"
-                  :error-message="v$.statusId.$errors[0]?.$message"
-                />
-                </div>
-                <div v-if="model.statusId && props.id" class="q-pl-sm q-pb-sm flex flex-center">
-                  <q-icon
-                    name="o_history"
-                    class="cursor-pointer q-ml-sm"
-                    size="xs"
-                    @click.stop="onSOPProcessStatusLog(model.id)"
-                  >
-                    <q-tooltip>Data Change Log</q-tooltip>
-                  </q-icon>
-                </div>
-              </div>
-            </div> -->
             <div class="col-xxl-2 col-lg-2 col-md-2 col-sm-2 col-xs-12">
               <div class="label text-black">Version<span class="required">*</span></div>
               <q-input
@@ -192,27 +166,7 @@
               @click="onConfirmApprove"
             />
           </template>
-          <!-- <template v-else-if="canAdd && (!props.id || canEditDraft)">
-            <q-btn
-              label="Save & Close"
-              color="primary"
-              class="actionBtn"
-              :loading="processingSave"
-              no-caps
-              :disable="isReadOnlyMode"
-              @click="onSubmit('save')"
-            />
-            <q-btn
-              color="primary"
-              label="Save & Submit"
-              class="actionBtn"
-              :loading="processingSubmit"
-              no-caps
-              :disable="isReadOnlyMode"
-              @click="onSubmit('submit')"
-            />
-          </template> -->
-          <template v-if="isPublished && canAdd && canEditDraft">
+          <template v-if="isPublished && canAdd && canEditPublished">
             <q-btn
               color="primary"
               label="Save & Revert to Draft"
@@ -222,8 +176,13 @@
               @click="onSaveRevertToDraft"
             />
           </template>
-
-          <template v-else-if="canAdd && (!props.id || canEditDraft)">
+          <template
+            v-else-if="
+              !props.id
+                ? canAdd
+                : canEditDraft
+            "
+          >
             <q-btn
               color="primary"
               label="Save & Close"
@@ -295,11 +254,6 @@ const model = ref({
   isActive: true
 });
 
-const isPublished = computed(() => {
-  return (
-    model.value?.statusText?.toLowerCase() === "published"
-  );
-});
 // check login user role
 const authStore = useAuthStore();
 const user = authStore.user;
@@ -323,6 +277,12 @@ const currentStatus = computed(() =>
   model.value.statusText?.toLowerCase() || ""
 );
 
+const isPublished = computed(() => {
+  return (
+    model.value?.statusText?.toLowerCase() === "published"
+  );
+});
+
 // Add Mode Permission
 const canAdd = computed(() =>
   role === "editor" || role === "both"
@@ -335,38 +295,37 @@ const canApprove = computed(() =>
   currentStatus.value === "submitted"
 );
 
-// Editor can edit only draft1
+// Editor can edit only draft
 const canEditDraft = computed(() =>
   !!props.id &&
-  (role === "editor" || role === "both") &&
-  (currentStatus.value === "draft" || currentStatus.value === "published")
+  (
+    role === "editor" ||
+    role === "approver" ||
+    role === "both"
+  ) &&
+  currentStatus.value === "draft"
 );
 
-// field ReadOnly Logic
-const isReadOnlyMode = computed(() => {
-  // Add mode
+const canEditPublished = computed(() =>
+  !!props.id &&
+  (role === "editor" || role === "both") &&
+  currentStatus.value === "published"
+);
+
+const canEditForm = computed(() => {
   if (!props.id) {
-    return !canAdd.value;
+    return canAdd.value;
   }
 
-  // Draft editable by editor/both
-  if (canEditDraft.value) {
-    return false;
-  }
-
-  // Submitted editable only by approver/both
-  if (canApprove.value) {
-    return false;
-  }
-
-  // status Published then enable
-  if (currentStatus.value === "published") {
-    return false;
-  }
-
-  // Approved / Archived = locked
-  return true;
+  return (
+    canEditDraft.value ||
+    canEditPublished.value ||
+    canApprove.value
+  );
 });
+
+// field ReadOnly Logic
+const isReadOnlyMode = computed(() => !canEditForm.value);
 
 const getSOPProcessInDetailsById = (ProcessId) => {
   loading.value = true;
@@ -394,15 +353,6 @@ const onSaveRevertToDraft = () => {
     }
   );
 };
-
-// const getNextSOPProcessVersion = () => {
-//   sopProcessService.getNextSOPProcessVersion().then((resp) => {
-//     const version = model.value.version ? model.value.version : resp
-//     model.value.version = version;
-//   }).finally(() => {
-//     loading.value = false;
-//   });
-// };
 
 function getSubCategoriesByCategoryId (categoryId) {
   model.value.subCategoryId = "";
@@ -566,7 +516,6 @@ onMounted(async () => {
 
   // Set Default values for advance filter
   if (model.value.statusId === null || model.value.statusId === undefined) model.value.statusId = setSOPProcessStatus.value;
-  // getNextSOPProcessVersion();
 });
 </script>
 <style>
