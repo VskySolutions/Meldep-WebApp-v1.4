@@ -9,7 +9,16 @@
         :color="'primary'"
       >
         <div class="fs-14 note-row">
-          <template  v-if="editingResponseLogDescriptionId === responseLogDescription.id && (responseLogDescription.isRequirementDescription || storedUser === responseLogDescription.createdBy?.userName )">
+          <template  v-if="editingResponseLogDescriptionId === responseLogDescription.id && (
+            (
+              responseLogDescription.isRequirementDescription &&
+              responseLogDescription.editingStatus === 1
+            ) ||
+            (
+              !responseLogDescription.isRequirementDescription &&
+              storedUser === responseLogDescription.createdBy?.userName
+            )
+          )">
             <div class="relative">
               <div class="col-11">
                 <q-editor
@@ -64,9 +73,15 @@
               ></span>
 
               <q-tooltip
-                v-if="
-                  responseLogDescription.isRequirementDescription ||
-                  storedUser === responseLogDescription.createdBy?.userName
+                 v-if="
+                  (
+                    responseLogDescription.isRequirementDescription &&
+                    responseLogDescription.editingStatus === 1
+                  ) ||
+                  (
+                    !responseLogDescription.isRequirementDescription &&
+                    storedUser === responseLogDescription.createdBy?.userName
+                  )
                 "
               >
                 Click to edit

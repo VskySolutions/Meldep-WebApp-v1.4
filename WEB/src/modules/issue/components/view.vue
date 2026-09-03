@@ -8,114 +8,125 @@
       <q-separator />
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
-          <fieldset>
-            <legend>Issue Info</legend>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Issue Number</div>
-                <div class="text-black">
-                  {{ model.issueNumber }}
+          <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator>
+            <q-tab name="1_tab" label="Description" class="q-px-lg q-mr-md" />
+            <q-tab name="2_tab" label="Issue Info." class="q-px-lg q-mr-md" />
+          </q-tabs>
+          <q-separator />
+          <q-tab-panels v-model="tab" animated class="q-mt-xs">
+            <q-tab-panel name="1_tab">
+              <fieldset>
+                <legend>Description</legend>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="text-black RichTextEditor">
+                    <span v-html="model.description || '-'"></span>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12">
-                <div class="q-mb-xs">Issue Name</div>
-                <div class="text-black">
-                  {{ model.name }}
+              </fieldset>
+            </q-tab-panel>
+            <q-tab-panel name="2_tab">
+               <fieldset>
+                <legend>Issue Info</legend>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Issue Number</div>
+                    <div class="text-black">
+                      {{ model.issueNumber }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Project Name</div>
-                <div class="text-black">
-                  {{ model.project?.name || "-" }}
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12">
+                    <div class="q-mb-xs">Issue Name</div>
+                    <div class="text-black">
+                      {{ model.name }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Project Module</div>
-                <div class="text-black">
-                  {{ model.projectModule?.name || "-" }}
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Project Name</div>
+                    <div class="text-black">
+                      {{ model.project?.name || "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Project Module</div>
+                    <div class="text-black">
+                      {{ model.projectModule?.name || "-" }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Requirement</div>
-                <div class="text-black">
-                  {{ model.requirement?.title || "-" }}
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Requirement</div>
+                    <div class="text-black">
+                      {{ model.requirement?.title || "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Area</div>
+                    <div class="text-black">
+                      {{ model.area?.dropDownValue || "-" }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Area</div>
-                <div class="text-black">
-                  {{ model.area?.dropDownValue || "-" }}
-                </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Workspace</div>
-                <div class="text-black">
-                  {{ model.workspace?.dropDownValue || "-" }}
-                </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Task</div>
-                <div class="text-black">
-                  <span v-if="model.projectTaskRelatedMappings?.length">
-                    <template v-for="(item, index) in model.projectTaskRelatedMappings" :key="index">
-                      <span class="hoverable-cell" style="cursor: pointer;" @click="onViewTask(item.taskId)">
-                        #{{ item.projectTask?.projectTaskNumber }}
-                        <span v-if="item.projectTask?.status">
-                          ({{ item.projectTask.status.dropDownValue }})
-                        </span>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Workspace</div>
+                    <div class="text-black">
+                      {{ model.workspace?.dropDownValue || "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Task</div>
+                    <div class="text-black">
+                      <span v-if="model.projectTaskRelatedMappings?.length">
+                        <template v-for="(item, index) in model.projectTaskRelatedMappings" :key="index">
+                          <span class="hoverable-cell" style="cursor: pointer;" @click="onViewTask(item.taskId)">
+                            #{{ item.projectTask?.projectTaskNumber }}
+                            <span v-if="item.projectTask?.status">
+                              ({{ item.projectTask.status.dropDownValue }})
+                            </span>
+                          </span>
+                          <span v-if="index < model.projectTaskRelatedMappings.length - 1">, </span>
+                        </template>
                       </span>
-                      <span v-if="index < model.projectTaskRelatedMappings.length - 1">, </span>
-                    </template>
-                  </span>
-                  <span v-else>-</span>
+                      <span v-else>-</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Assign To</div>
-                <div class="text-black">
-                  {{ model.employee?.person?.fullName || "-" }}
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Assign To</div>
+                    <div class="text-black">
+                      {{ model.employee?.person?.fullName || "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Issue Priority</div>
+                    <div class="text-black">
+                      {{ model.priority?.dropDownValue || "-" }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Issue Priority</div>
-                <div class="text-black">
-                  {{ model.priority?.dropDownValue || "-" }}
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Reported By</div>
+                    <div class="text-black">
+                      {{ model.reportedBy?.person?.fullName || "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Created Date</div>
+                    <div class="text-black">
+                      {{ model.createdOnUtc }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Reported By</div>
-                <div class="text-black">
-                  {{ model.reportedBy?.person?.fullName || "-" }}
-                </div>
-              </div>
-              <div class="col-12 col-sm-6 col-md-6">
-                <div class="q-mb-xs">Created Date</div>
-                <div class="text-black">
-                  {{ model.createdOnUtc }}
-                </div>
-              </div>
-            </div>
-            <div class="row q-col-gutter-x-md q-mb-md">
-              <div class="col-12">
-                <div class="q-mb-xs">Description:</div>
-                <div class="text-black Customeditor RichTextEditor">
-                  <p style="max-height: 300px; overflow-y: auto;" v-html="model.description ? model.description : '-'" />
-                </div>
-              </div>
-            </div>
-          </fieldset>
+              </fieldset>
+            </q-tab-panel>
+          </q-tab-panels>
         </div>
       </div>
     </q-card>
@@ -140,6 +151,7 @@ const { dialogRef, onDialogHide } = useDialogPluginComponent();
 
 // Props values i.e. come from query string
 const props = defineProps({ id: { type: String, default: "" } });
+const tab = ref("1_tab");
 
 // Define model values
 const model = ref({
