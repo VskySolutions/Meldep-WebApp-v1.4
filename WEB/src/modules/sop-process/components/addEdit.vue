@@ -335,7 +335,7 @@ const canApprove = computed(() =>
   currentStatus.value === "submitted"
 );
 
-// Editor can edit only draft
+// Editor can edit only draft1
 const canEditDraft = computed(() =>
   !!props.id &&
   (role === "editor" || role === "both") &&

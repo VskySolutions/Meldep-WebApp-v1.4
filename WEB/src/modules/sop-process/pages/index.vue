@@ -597,7 +597,7 @@ const role =
         ? "editor"
         : "";
 
-// permissions
+// permission
 const canEdit = (row) =>
   role === "both" && loggedUserId === row.originalCreatedById ||
   (role === "editor" && loggedUserId === row.originalCreatedById);
