@@ -53,13 +53,20 @@ const getAllRequirementDescriptionsById = async () => {
     const requirementsList = resp.requirementList || [];
     const responseLogDescriptions = [];
 
-    requirementsList.forEach((requirement) => {
-      const requirementDescription = requirement.description
-        ?.replace(/<[^>]*>/g, "")
+    const hasDescription = (description) => {
+      if (!description) return false;
+
+      const text = description
+        .replace(/<br\s*\/?>/gi, "")
+        .replace(/&nbsp;/gi, "")
+        .replace(/<[^>]*>/g, "")
         .trim();
 
-      // Add requirement only when description exists
-      if (requirement.editingStatus === 1 || requirementDescription) {
+      return text.length > 0;
+    };
+
+    requirementsList.forEach((requirement) => {
+      if (hasDescription(requirement.description)) {
         responseLogDescriptions.push({
           id: requirement.id,
           description: requirement.description,
@@ -73,20 +80,16 @@ const getAllRequirementDescriptionsById = async () => {
 
       // Add change logs only when description exists
       (requirement.requirementChangeLog || []).forEach((responseLogDescriptionItem) => {
-        const responseLogDescriptionText = responseLogDescriptionItem.description
-          ?.replace(/<[^>]*>/g, "")
-          .trim();
-
-        if (responseLogDescriptionText) {
-          responseLogDescriptions.push({
-            id: responseLogDescriptionItem.id,
-            description: responseLogDescriptionItem.description,
-            createdOnUtc: responseLogDescriptionItem.createdOnUtc,
-            createdById: responseLogDescriptionItem.createdById,
-            createdBy: responseLogDescriptionItem.createdBy,
-            isRequirementDescription: false
-          });
-        }
+        if (hasDescription(responseLogDescriptionItem.description)) {
+            responseLogDescriptions.push({
+              id: responseLogDescriptionItem.id,
+              description: responseLogDescriptionItem.description,
+              createdOnUtc: responseLogDescriptionItem.createdOnUtc,
+              createdById: responseLogDescriptionItem.createdById,
+              createdBy: responseLogDescriptionItem.createdBy,
+              isRequirementDescription: false
+            });
+          }
       });
     });
 

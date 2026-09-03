@@ -29,7 +29,7 @@
                   round
                   dense
                   :loading="responseLogDescriptionEditProcessing"
-                  :disable="responseLogDescriptionEditProcessing || processing"
+                  :disable="responseLogDescriptionEditProcessing || processing || !hasResponseLogDescriptionContent(true)"
                   flat
                   @click="submitResponseLogDescription(responseLogDescription)"
                 >
@@ -119,7 +119,7 @@
           round
           flat
           :loading="processing"
-          :disable=" isDraftRequirement || !hasResponseLogDescriptionContent  || processing || responseLogDescriptionEditProcessing"
+          :disable=" isDraftRequirement || !hasResponseLogDescriptionContent(false)  || processing || responseLogDescriptionEditProcessing"
           @click="submitResponseLogDescription()"
         />
       </div>
@@ -160,9 +160,13 @@ const editingResponseLogDescriptionId  = ref(null);
 const editingResponseLogDescriptionValue  = ref("");
 const originalResponseLogDescriptionValue  = ref("");
 
-const hasResponseLogDescriptionContent = computed(() => {
-  return !isEditorEmpty(responseLogDescription.value);
-});
+const hasResponseLogDescriptionContent = (isEdit = false) => {
+  const description = isEdit
+    ? editingResponseLogDescriptionValue.value
+    : responseLogDescription.value;
+
+  return !isEditorEmpty(description);
+};
 
 const isEditorEmpty = (html = "") => {
   return html

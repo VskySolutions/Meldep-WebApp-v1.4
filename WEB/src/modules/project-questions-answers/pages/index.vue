@@ -379,7 +379,7 @@ const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: true },
   { name: "title", label: "Question", field: "title", align: "left", sortable: true, default: true },
-  { name: "lastAnswer", label: "Answer", field: "lastAnswer", align: "left", sortable: true, default: true },
+  { name: "lastAnswer", label: "Answer", field: "lastAnswer", align: "left", sortable: false, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: false },
   { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: true },
