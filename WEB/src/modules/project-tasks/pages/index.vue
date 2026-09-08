@@ -172,7 +172,7 @@
                   label="Add"
                   no-caps
                   class="text-primary btnRounded q-ml-xs"
-                  @click="onProjectTaskAdd(refreshProjectTaskList, null, search.projectIds?.[0], search.projectModuleIds?.[0])"
+                  @click="onProjectTaskAdd(refreshProjectTaskList, null, search.projectIds?.[0], search.projectModuleIds?.[0], search.requirementIds?.[0])"
                 >
                   <q-tooltip>Add Project Task</q-tooltip>
                 </q-btn>

@@ -17,6 +17,7 @@
                   <formSingleSelectDropdown
                     v-model="model.projectId"
                     label="Project Name"
+                    :class="readonlyProject !== '' ? 'edit_tasks' : ''"
                     :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement' && readonlyProject != ''"
                     :options="projectNameDropdownSingleSelect.list.value"
                     :filter="projectNameDropdownSingleSelect.filter"

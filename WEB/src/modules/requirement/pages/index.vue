@@ -266,7 +266,7 @@
                   label="Create Requirement"
                   no-caps
                   class="text-primary btnRounded"
-                  @click="onRequirementAdd(null, null, refreshRequirementList, null)"
+                  @click="onRequirementAdd(search.projectIds?.[0], search.projectModuleIds?.[0], refreshRequirementList, null)"
                 />
                 <q-btn
                   icon="o_checklist"
@@ -372,11 +372,11 @@
                   }"
                 >
                   {{ col.label }}
-                  <!-- Sort icon only --> 
+                  <!-- Sort icon only -->
                   <q-icon
-                    v-if="col.sortable" 
-                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                    size="16px" 
+                    v-if="col.sortable"
+                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                    size="16px"
                     class="cursor-pointer q-ml-sm"
                     @click.stop="sortColumn(col)"
                   >
@@ -1168,10 +1168,10 @@ const sortColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
-  } 
+  }
   refreshRequirementList();
 };
 
@@ -1733,7 +1733,7 @@ watch(() => search.value.projectIds, async (newValue, oldValue) => {
   const isInitialLoad = !oldValue;
   // search.value.projectModuleIds = [];
   await projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
-  
+
   // Clear modules only when project was changed by the user
   if (!isInitialLoad) {
     search.value.projectModuleIds = [];

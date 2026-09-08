@@ -220,7 +220,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="row q-col-gutter-x-md q-mb-lg">
+                    <div class="row q-col-gutter-x-md q-mb-lg hidden">
                       <div class="col-12 q-mb-xs text-black">Project Files</div>
                       <!-- File Uploader -->
                       <div class="col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12">
@@ -266,12 +266,136 @@
                         </div>
                       </div>
                     </div>
-                    <div align="center" class="q-gutter-sm justify-center">
-                      <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="confirmProjectClose" />
-                      <q-btn v-if="tab === '1_tab'" label="Save & Next" type="submit" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps />
-                      <q-btn label="Save & Close" type="button" color="primary" class="actionBtn hidden" :loading="processingClose" :disable="processingClose" no-caps @click="onSubmitClose()" />
-                    </div>
                   </fieldset>
+                  <fieldset class="q-mt-lg">
+                    <legend>Document Reference List</legend>
+                    <div class="flex items-center justify-end q-mb-md">
+                      <q-btn color="primary" icon="o_add" label="Add" no-caps @click="onAddDocumentReference" />
+                    </div>
+                    <q-table
+                      ref="tableRef"
+                      v-model:pagination="pagination"
+                      bordered
+                      class="no-shadow"
+                      :loading="loading"
+                      :rows="rows"
+                      :columns="documentReferenceColumns"
+                      row-key="id"
+                      separator="cell"
+                      no-data-label="No data available"
+                      binary-state-sort
+                    >
+                      <template #header="props">
+                        <q-tr :props="props" class="bg-primary text-white">
+                          <q-th
+                            v-for="col in props.cols"
+                            :key="col.name" :props="props"
+                          >
+                            {{ col.label }}
+                            <span v-if="['filePath','fileName'].includes(col.name)" class="required">*</span>
+                          </q-th>
+                          <q-th auto-width class="text-center">Actions</q-th>
+                        </q-tr>
+                      </template>
+                      <template #top-row>
+                        <q-tr v-if="mode == 'addDocumentReference' && editingRow" class="row-highlight">
+                          <q-td>
+                            <div>
+                              <q-input
+                                v-model="editingRow.filePath"
+                                outlined
+                                stack-label
+                                hide-bottom-space
+                                :dense="true"
+                                :error="editingRowV$.filePath.$error"
+                                :error-message="editingRowV$.filePath.$errors[0]?.$message"
+                                @blur="editingRowV$.filePath.$touch"
+                              />
+                            </div>
+                          </q-td>
+                          <q-td>
+                            <div>
+                              <q-input
+                                v-model="editingRow.fileName"
+                                outlined
+                                stack-label
+                                hide-bottom-space
+                                :dense="true"
+                                :error="editingRowV$.fileName.$error"
+                                :error-message="editingRowV$.fileName.$errors[0]?.$message"
+                                @blur="editingRowV$.fileName.$touch"
+                              />
+                            </div>
+                          </q-td>
+                          <q-td style="width: 350px;">
+                            <div>
+                              <q-input
+                                v-model="editingRow.note"
+                                outlined
+                                stack-label
+                                type="textarea"
+                                hide-bottom-space
+                                :dense="true"
+                                maxlength="500"
+                              />
+                            </div>
+                          </q-td>
+                          <q-td auto-width class="text-center">
+                            <q-icon name="o_save" size="xs" class="cursor-pointer q-mr-lg" @click="onSave()">
+                              <q-tooltip>Save</q-tooltip>
+                            </q-icon>
+                            <q-icon name="o_cancel" size="xs" color="red" class="cursor-pointer" @click="onCancel">
+                              <q-tooltip>Cancel</q-tooltip>
+                            </q-icon>
+                          </q-td>
+                        </q-tr>
+                      </template>
+                      <template #body="props">
+                        <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                          <q-td class="text-left" style="width: 40%;">
+                            <span
+                              :class="props.row.deleted ? 'text-delete' : ''"
+                              style="white-space: normal; word-break: break-word;"
+                            >
+                              <a :href="props.row.filePath" target="_blank" class="text-bluee">
+                                {{ props.row.filePath }}
+                              </a>
+                            </span>
+                          </q-td>
+                          <q-td class="text-left" style="width: 25%;">
+                            <span
+                              :class="props.row.deleted ? 'text-delete' : ''"
+                              style="white-space: normal; word-break: break-word;"
+                            >
+                              {{ props.row.fileName }}
+                            </span>
+                          </q-td>
+                          <q-td class="text-left">
+                            <span
+                              :class="props.row.deleted ? 'text-delete' : ''"
+                              style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
+                              v-html="props.row.note"
+                            />
+                          </q-td>
+                          <q-td auto-width class="text-center">
+                            <template>
+                              <q-icon v-if="!props.row.deleted" name="o_delete_outline" color="red" size="xs" class="cursor-pointer" @click="onDeleteDocumentReference(props.row)">
+                                <q-tooltip>Delete</q-tooltip>
+                              </q-icon>
+                              <q-icon v-if="props.row.deleted" name="o_redo" size="xs" class="cursor-pointer" @click="onUndo(props.row)">
+                                <q-tooltip>Undo</q-tooltip>
+                              </q-icon>
+                            </template>
+                          </q-td>
+                        </q-tr>
+                      </template>
+                    </q-table>
+                  </fieldset>
+                  <div align="center" class="q-gutter-sm justify-center">
+                    <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="confirmProjectClose" />
+                    <q-btn v-if="tab === '1_tab'" label="Save & Next" type="submit" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps />
+                    <q-btn label="Save & Close" type="button" color="primary" class="actionBtn hidden" :loading="processingClose" :disable="processingClose" no-caps @click="onSubmitClose()" />
+                  </div>
                 </q-tab-panel>
                 <q-tab-panel name="2_tab">
                   <fieldset class="q-mb-lg">
@@ -375,7 +499,7 @@
                         </template>
                       </q-table>
                     </div>
-                    <div align="center" class="q-gutter-sm justify-center q-mt-sm">
+                    <div align="center" class="q-gutter-sm justify-center q-mt-md">
                       <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="confirmProjectClose" />
                       <q-btn v-if="tab === '1_tab'" label="Save & Next" type="submit" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps />
                       <q-btn label="Save & Close" type="button" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps @click="onSubmitClose()" />
@@ -434,8 +558,11 @@ const props = defineProps({ id: { type: String, default: "" }, isCharter: { type
 const tab = ref(props.isCharter ? "2_tab" : "1_tab");
 const loading = ref(true);
 const processing = ref(false);
+const activeRowId = ref(null);
 const processingClose = ref(false);
 const isFilesValid = ref(true);
+const mode = ref(null);
+const editingRow = ref(null);
 const defaultRoles = [
   "Project Manager",
   "Project Coordinator",
@@ -485,6 +612,12 @@ const columns = ref([
     field: "notes",
     tooltip: "Manage project-related notes."
   }
+]);
+
+const documentReferenceColumns = ref([
+  { name: "filePath", label: "File Path", field: "filePath", align: "left", sortable: true },
+  { name: "fileName", label: "File Name", field: "fileName", align: "left", sortable: true },
+  { name: "note", label: "Notes", field: "note", align: "left", sortable: true }
 ]);
 
 // Define model values
@@ -919,6 +1052,17 @@ function validateMandatoryProjectRoles() {
   return true;
 }
 
+// ----------------------------------------------------------------------------------------------------------------
+// Document Reference List - Validation Rules
+// ----------------------------------------------------------------------------------------------------------------
+
+const editingRowrules = {
+  filePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1), maxLength: maxLength(200) },
+  fileName: { required: helpers.withMessage("File Name is required", required) }
+};
+
+const editingRowV$ = useVuelidate(editingRowrules, editingRow, { $lazy: true, $autoDirty: true });
+
 let projectId = props.id;
 let disableTab = true;
 if (projectId) {
@@ -1103,6 +1247,16 @@ function onAddProjectCharter() {
   syncRowValidations();
 }
 
+function onAddDocumentReference () {
+  mode.value = "addDocumentReference";
+  editingRow.value = {
+    filePath: "",
+    fileName: "",
+    note: ""
+  };
+  activeRowId.value = null;
+}
+
 const onDeleteProjectCharter = (row) => {
   zwConfirmDelete(
     { data: "This Employee's project access will be removed as well." },
@@ -1117,6 +1271,93 @@ const onDeleteProjectCharter = (row) => {
     }
   );
 };
+
+function onDeleteDocumentReference (item) {
+  item.deleted = true;
+  const rowIndex = rows.value.findIndex((row) => row.id === item.id);
+  if (rowIndex !== -1) {
+    rows.value.splice(rowIndex, 1, {
+      ...rows.value[rowIndex],
+      id: item.id,
+      fileName: item.fileName,
+      filePath: item.filePath,
+      note: item.note,
+      flag: "Delete"
+    });
+  }
+  activeRowId.value = item.id;
+}
+
+function onCancel () {
+  mode.value = null;
+  editingRow.value = null;
+  editingLogRow.value = null;
+  activeRowId.value = null;
+}
+
+function onUndo (item) {
+  item.deleted = false;
+  activeRowId.value = null;
+}
+
+async function onSave () {
+  if (mode.value === "addDocumentReference") {
+    if (!await editingRowV$.value.$validate()) {
+      return;
+    }
+    // check duplicate row
+    let isDuplicate = 0;
+    rows.value.forEach((item, index) => {
+      if (item.fileName.toLowerCase() === editingRow.value.fileName.toLowerCase()) {
+        isDuplicate = 1;
+      }
+    });
+    if (isDuplicate === 0) {
+      const newRow = {
+        id: uid(),
+        fileName: editingRow.value.fileName,
+        filePath: editingRow.value.filePath,
+        note: editingRow.value.note,
+        flag: "New"
+      };
+      rows.value.unshift(newRow);
+      mode.value = null;
+      activeRowId.value = null;
+    } else {
+      notifyError({ message: "Duplicate File Name." });
+    }
+  } else if (mode.value === "addChangeLog") {
+    if (!await editingLogRowV$.value.$validate()) {
+      return;
+    }
+    // check duplicate row
+    let isDuplicate = 0;
+    const requirementName = editingLogRow.value.requirementName?.trim();
+    if (requirementName) {
+      logrows.value.forEach((item, index) => {
+        const existingRequirementName = item.requirementName?.trim();
+        if (existingRequirementName && existingRequirementName.toLowerCase() === requirementName.toLowerCase()) {
+          isDuplicate = 1;
+        }
+      });
+    }
+    if (isDuplicate === 0) {
+      const newRow = {
+        id: uid(),
+        employeeId: editingLogRow.value.employeeId,
+        requirementLogDateStr: editingLogRow.value.requirementLogDateStr,
+        requirementName: editingLogRow.value.requirementName,
+        description: editingLogRow.value.description,
+        flag: "New"
+      };
+      logrows.value.unshift(newRow);
+      mode.value = null;
+      activeRowId.value = null;
+    } else {
+      notifyError({ message: "Duplicate Requirement Name." });
+    }
+  }
+}
 
 function disableProjectDatesBeforeStartDate (date) {
   // If no Start Date is set, allow all dates

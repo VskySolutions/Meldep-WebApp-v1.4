@@ -69,6 +69,27 @@
                           </div>
                         </div>
                       </div>
+                      <div class="row items-center q-mb-sm">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel q-mt-sm fs-13">Week Filter</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <q-select
+                            v-model="search.weekFilter"
+                            class="q-mx-sm w-100 h-auto"
+                            stack-label
+                            clearable
+                            hide-bottom-space
+                            use-input
+                            :dense="true"
+                            :options="weekFilterList"
+                            emit-value
+                            map-options
+                            :popup-content-class="customPopupContentClass"
+                            @update:model-value="updateDates"
+                          />
+                        </div>
+                      </div>
                       <singleSelectDropdown
                         v-model="search.projectId"
                         label="Project Name"
@@ -279,6 +300,7 @@ const defaultToDate = format(new Date(currentYear, 11, 31), "MM/dd/yyyy");
 // local storage values
 const localStorageKey = "Billing Timesheet";
 const filterLocalStorage = getLocalStorage(localStorageKey);
+const weekFilterList = ref(["Last Week", "This Week", "Last Month", "This Month"]);
 const pagination = ref(filterLocalStorage?.pagination || { sortBy: "", descending: true, rowsPerPage: 20, page: 1 });
 
 // Get billable timesheets list to table
@@ -373,6 +395,75 @@ function totalBillableHours() {
 
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
+
+// Function to calculate dates
+const calculateLastWeekDates = () => {
+  const weekFromDate = new Date();
+  const weekToDate = new Date();
+  const currentDay = weekFromDate.getDay();
+  // console.log(weekFromDate);
+  // Calculate last week's Monday and Saturday
+  const lastMondayOffset = (currentDay === 0 ? -6 : 1) - currentDay;
+  const lastSaturdayOffset = 6 - currentDay - (currentDay === 0 ? 7 : 0);
+
+  weekFromDate.setDate(weekFromDate.getDate() + lastMondayOffset - 7); // Last Monday
+  weekToDate.setDate(weekToDate.getDate() + lastSaturdayOffset - 7); // Last Saturday
+
+  return { fromDate: weekFromDate, toDate: weekToDate };
+};
+
+const calculateThisWeekDates = () => {
+  const today = new Date();
+  const currentDay = today.getDay();
+  const mondayOffset = (currentDay === 0 ? -6 : 1) - currentDay;
+
+  const fromDate = new Date(today);
+  const toDate = new Date(today);
+
+  fromDate.setDate(today.getDate() + mondayOffset); // Monday of this week
+  toDate.setDate(fromDate.getDate() + 5); // Saturday of this week
+
+  return { fromDate, toDate };
+};
+
+const calculateThisMonthDates = () => {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1); // 1st of this month
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Last day of this month
+
+  return { fromDate: firstDay, toDate: lastDay };
+};
+
+const calculateLastMonthDates = () => {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1); // 1st day of last month
+  const lastDay = new Date(today.getFullYear(), today.getMonth(), 0 ); // Last day of last month
+  return { fromDate: firstDay, toDate: lastDay };
+};
+// Function to update dates based on the selected filter
+const updateDates = (weekFilter) => {
+  let dates;
+
+  switch (weekFilter) {
+  case "Last Week":
+    dates = calculateLastWeekDates();
+    break;
+  case "This Week":
+    dates = calculateThisWeekDates();
+    break;
+  case "This Month":
+    dates = calculateThisMonthDates();
+    break;
+  case "Last Month":
+    dates = calculateLastMonthDates();
+    break;
+  default:
+    dates = { fromDate: "", toDate: "" };
+  }
+
+  search.value.fromDate = format(dates.fromDate, "MM/dd/yyyy");
+  search.value.toDate = format(dates.toDate, "MM/dd/yyyy");
+};
 
 function onChangeBillableHrs(id, billableHrs, actualHours) {
   if (validateHours(billableHrs) !== true) {
@@ -522,6 +613,7 @@ const search = ref({
 const onAdvanceClear = () => {
   search.value.fromDate = defaultFromDate;
   search.value.toDate = defaultToDate;
+  search.value.weekFilter = "";
   search.value.projectId = null;
   search.value.projectModuleIds = [];
   search.value.projectTaskIds = [];
@@ -557,6 +649,7 @@ const mapSingleFilterToLabel = (id, list, label) => {
 const appliedFilters = computed(() => ({
   ...(search.value.fromDate ? { "Start Date": search.value.fromDate } : {}),
   ...(search.value.toDate ? { "End Date": search.value.toDate } : {}),
+  ...mapSingleFilterToLabel(search.value.weekFilter, weekFilterList, "Week Filter"),
   ...mapSingleFilterToLabel(search.value.projectId, projectNameDropdownSingleSelect.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
   ...mapFilterToLabel(search.value.projectTaskIds, projectTasksByProjectIdAndModuleIdForDropdown.list, "Project Task"),
@@ -569,6 +662,8 @@ function onClearFilters (key) {
     search.value.fromDate = "";
   } else if (key === "End Date") {
     search.value.toDate = "";
+  } else if (key === "Week Filter") {
+    search.value.weekFilter = "";
   } else if (key === "Project Name") {
     search.value.projectId = "";
   } else if (key === "Project Module") {

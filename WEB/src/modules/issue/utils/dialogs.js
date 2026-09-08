@@ -32,7 +32,9 @@ export function onIssueStatusLog (id) {
     .onDismiss(() => { activeRowId.value = id; });
 }
 
-export function onIssueAdd (refresh) {
+export function onIssueAdd (
+  refresh
+) {
   $q.dialog({
     component: addEditIssue,
     componentProps: {}

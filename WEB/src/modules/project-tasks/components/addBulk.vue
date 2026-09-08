@@ -345,7 +345,7 @@ defineEmits([...useDialogPluginComponent.emits]);
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 // Props values i.e. come from query string
-const props = defineProps({ id: { type: String, default: "" }, projectIdAttr: { type: String, default: "" }, moduleIdAttr: { type: String, default: "" }, startDate: { type: String, default: "" }, endDate: { type: String, default: "" } });
+const props = defineProps({ id: { type: String, default: "" }, projectIdAttr: { type: String, default: "" }, moduleIdAttr: { type: String, default: "" }, requirementIdAttr: { type: String, default: "" }, startDate: { type: String, default: "" }, endDate: { type: String, default: "" } });
 
 const readonlyProject = props.projectIdAttr ? "readonly" : "";
 const readonlyProjectModule = props.moduleIdAttr ? "readonly" : "";
@@ -364,7 +364,8 @@ const columns = ref([
 // Define model values
 const model = ref({
   projectId: props.projectIdAttr,
-  projectModuleId: props.moduleIdAttr
+  projectModuleId: props.moduleIdAttr,
+  requirementId: props.requirementIdAttr
 });
 
 const editingRow = ref({

@@ -35,6 +35,7 @@ export function onProjectTaskAdd (
   refreshProjectTaskNameDropdown,
   projectId,
   moduleId,
+  requirementId,
   startDate,
   endDate
 ) {
@@ -42,6 +43,7 @@ export function onProjectTaskAdd (
 
   if (projectId) componentProps.projectIdAttr = projectId;
   if (moduleId) componentProps.moduleIdAttr = moduleId;
+  if (requirementId) componentProps.requirementIdAttr = requirementId;
   if (startDate) componentProps.startDate = startDate;
   if (endDate) componentProps.endDate = endDate;
 
@@ -58,6 +60,7 @@ export function onProjectTaskAdd (
 export function onProjectTaskAddBulk (
   projectId,
   moduleId,
+  requirementId,
   startDate,
   endDate,
   refresh,
@@ -67,6 +70,7 @@ export function onProjectTaskAddBulk (
 
   if (projectId) componentProps.projectIdAttr = projectId;
   if (moduleId) componentProps.moduleIdAttr = moduleId;
+  if (requirementId) componentProps.requirementIdAttr = requirementId;
   if (startDate) componentProps.startDate = startDate;
   if (endDate) componentProps.endDate = endDate;
 

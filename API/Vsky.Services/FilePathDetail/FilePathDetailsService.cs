@@ -53,7 +53,7 @@ namespace Vsky.Services.FilePathDetail
             query = query.Select(x => new FilePathDetails
             {
                 Id = x.Id,
-                ModuleName = x.ModuleName,
+                Module = x.Module,
                 FilePath = x.FilePath,
                 FileName = x.FileName,
                 Requirement = new Requirement

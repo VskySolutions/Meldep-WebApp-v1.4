@@ -503,7 +503,7 @@ const filterLocalStorage = getLocalStorage(localStorageKey);
 const tableRef = ref();
 const rows = ref([]);
 const createdByList = ref(["Created By Me", "View All"]);
-const weekFilterList = ref(["Last Week", "This Week", "This Month"]);
+const weekFilterList = ref(["Last Week", "This Week", "Last Month", "This Month"]);
 const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, checkedStatus: true, type: "P", default: true },
   { name: "projectModule.name", label: "Module Name", field: "projectModule.name", align: "left", sortable: true, checkedStatus: true, type: "PM", default: true },
@@ -730,6 +730,13 @@ const calculateThisMonthDates = () => {
   return { fromDate: firstDay, toDate: lastDay };
 };
 
+const calculateLastMonthDates = () => {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1); // 1st day of last month
+  const lastDay = new Date(today.getFullYear(), today.getMonth(), 0 ); // Last day of last month
+  return { fromDate: firstDay, toDate: lastDay };
+};
+
 // Function to update dates based on the selected filter
 const updateDates = (weekFilter) => {
   let dates;
@@ -743,6 +750,9 @@ const updateDates = (weekFilter) => {
     break;
   case "This Month":
     dates = calculateThisMonthDates();
+    break;
+  case "Last Month":
+    dates = calculateLastMonthDates();
     break;
   default:
     dates = { fromDate: "", toDate: "" };

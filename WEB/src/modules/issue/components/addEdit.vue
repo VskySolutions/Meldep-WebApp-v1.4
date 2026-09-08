@@ -244,7 +244,7 @@ const model = ref({
     props.moduleIdAttr ||
     props.taskModuleId ||
     selectedProjectModuleId,
-  requirementId: selectedRequirementId,
+  requirementId:  props.requirementIdAttr || selectedRequirementId,
   reportedById: user?.employeeId ? user.employeeId : "",
   employeeId: "",
   dueDateStr: "",
@@ -415,6 +415,7 @@ onMounted(async () => {
 
   const projectIds = searchStorage?.search?.projectIds || [];
   const moduleIds = searchStorage?.search?.projectModuleIds || [];
+  const requirementIds = searchStorage?.search?.requirementIds || [];
 
   if (projectIds.length) {
     selectedProjectId =
@@ -439,6 +440,21 @@ onMounted(async () => {
         ) || null;
 
       model.value.projectModuleId = selectedProjectModuleId;
+    }
+
+    if (selectedProjectModuleId && requirementIds.length) {
+      await requirementByProjectModuleIdForDropdownSingleSelect.load(
+        selectedProjectModuleId
+      );
+
+      selectedRequirementId =
+        requirementIds.find(id =>
+          requirementByProjectModuleIdForDropdownSingleSelect.list.value.some(
+            x => x.value === id
+          )
+        ) || null;
+
+      model.value.requirementId = selectedRequirementId;
     }
   }
 });

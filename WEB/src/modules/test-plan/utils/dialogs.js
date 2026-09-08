@@ -21,9 +21,11 @@ export function onTestPlanView (id) {
 }
 
 export function onTestPlanAdd (refresh) {
+  // const componentProps = {};
+  //if (projectId) componentProps.projectIdAttr = projectId;
   $q.dialog({
     component: addEditTestPlan,
-    componentProps: {}
+    componentProps : {}
   }).onOk(() => {
     refresh();
   })

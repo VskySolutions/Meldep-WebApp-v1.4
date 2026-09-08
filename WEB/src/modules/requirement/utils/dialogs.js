@@ -26,6 +26,7 @@ export function onRequirementAdd (
   refresh,
   refreshProjectModulesList
 ) {
+  debugger;
   const componentProps = {};
 
   if (projectId) componentProps.projectIdAttr = projectId;

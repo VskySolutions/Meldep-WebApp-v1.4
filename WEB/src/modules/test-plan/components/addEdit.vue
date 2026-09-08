@@ -113,7 +113,8 @@
 // Import libraries
 import { useDialogPluginComponent, useQuasar } from "quasar";
 import useVuelidate from "@vuelidate/core";
-import { ref, watch, onMounted } from "vue";
+import { useAuthStore } from "stores/auth";
+import { ref, watch, onMounted, computed } from "vue";
 import _ from "lodash";
 import { required, helpers, minLength, maxLength } from "@vuelidate/validators";
 import { notifySuccess, notifyError, getLocalStorage } from "assets/utils";
@@ -127,6 +128,9 @@ import employeeModule from "src/modules/employee/utils/dropdowns.js";
 import projectTaskModule from "src/modules/project-tasks/utils/dropdowns.js";
 
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
+
+// Shared DataTable Features
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
 // ----------------------------------------------------------------------------------------------------------------
 // Define emits
@@ -148,6 +152,8 @@ const props = defineProps({ id: { type: String, default: "" }, projectIdAttr: { 
 const loading = ref(true);
 const processing = ref(false);
 const $q = useQuasar();
+const authStore = useAuthStore();
+const user = authStore.user;
 const { fonts, toolbar } = getEditorConfig($q);
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -156,15 +162,30 @@ const { fonts, toolbar } = getEditorConfig($q);
 
 const localStorageKey = "Test Plan";
 const filterLocalStorage = getLocalStorage(localStorageKey);
-const projectIds = filterLocalStorage ? filterLocalStorage.projectIds[0] : [];
+// const projectIds = filterLocalStorage ? filterLocalStorage.projectIds[0] : [];
+const localStorageProjectId =
+  filterLocalStorage?.projectIds?.[0] || [];
 
+const currentSiteId = computed(() => user?.siteId || null);
+const { getTableState } = useSiteTableState({
+  storageKey: "testPlan-Index",
+  siteId: currentSiteId
+});
+
+const searchStorage = getTableState();
+let selectedProjectId = null;
 // ----------------------------------------------------------------------------------------------------------------
 // Define model
 // ----------------------------------------------------------------------------------------------------------------
 
 const model = ref({
   // projectId: "",
-  projectId: props.projectIdAttr !== "" ? props.projectIdAttr : (props.projectIdValue !== "" ? props.projectIdValue : (projectIds !== "" ? projectIds : null)),
+  // projectId: props.projectIdAttr !== "" ? props.projectIdAttr : (props.projectIdValue !== "" ? props.projectIdValue : (projectIds !== "" ? projectIds : null)),
+  projectId: props.projectIdAttr ||
+    props.projectIdValue ||
+    localStorageProjectId ||
+    selectedProjectId ||
+    null,
   name: "",
   planMakerId: "",
   planReviewerId: "",
@@ -249,11 +270,21 @@ watch(() => props.id, (newValue, oldValue) => {
 // On page load
 // ----------------------------------------------------------------------------------------------------------------
 
-onMounted(() => {
-  projectNameDropdownSingleSelect.load();
+onMounted(async () => {
+  await projectNameDropdownSingleSelect.load();
   areaForDropdownSingleSelect.load("Area");
   workspaceForDropdownSingleSelect.load("Workspace");
   activeEmployeesDropdownSingleSelect.load();
+  const projectIds = searchStorage?.search?.projectIds || [];
+  if (projectIds.length) {
+    selectedProjectId =
+      projectIds.find(id =>
+        projectNameDropdownSingleSelect.list.value.some(x => x.value === id)
+      ) || null;
+
+    model.value.projectId = selectedProjectId;
+
+  }
 });
 
 </script>

@@ -3935,6 +3935,7 @@ const onDeleteRequirement = async (item) => {
 const onAddProjectTask = (selectedProjectId) => {
   const projectId = selectedProjectId;
   const moduleId = selectedModuleId.value;
+  const requirementId = selectedRequirementId.value;
   const startDate = ModuleStartDate;
   const endDate = ModuleEndDate;
 
@@ -3943,6 +3944,7 @@ const onAddProjectTask = (selectedProjectId) => {
     refreshProjectModulesList,
     projectId,
     moduleId,
+    requirementId,
     startDate,
     endDate
   );
@@ -3985,12 +3987,14 @@ const onDeleteTask = async (item) => {
 const onAddBulkTask = () => {
   const projectId = selectedProjectId.value;
   const moduleId = selectedModuleId.value;
+  const requirementId = selectedRequirementId.value;
   const startDate = ModuleStartDate;
   const endDate = ModuleEndDate;
 
   onProjectTaskAddBulk(
     projectId,
     moduleId,
+    requirementId,
     startDate,
     endDate,
     refreshProjectTaskList,

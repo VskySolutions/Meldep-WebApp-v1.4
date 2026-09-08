@@ -273,17 +273,23 @@ const searchStorage = getTableState();
 
 let selectedProjectId = null;
 let selectedPlanId = null;
+let selectedProjectModuleId = null;
+let selectedRequirementId = null;
 
+console.log(selectedProjectModuleId, "selectedProjectModuleId");
+console.log(selectedRequirementId, "selectedRequirementId");
 // ----------------------------------------------------------------------------------------------------------------
 // Define model
 // ----------------------------------------------------------------------------------------------------------------
 
 const model = ref({
-   projectId:
+  projectId:
     props.projectIdAttr ||
     props.projectIdValue ||
     selectedProjectId ||
     null,
+  projectModuleId: selectedProjectModuleId || null,
+  requirementId: selectedRequirementId || null,
   name: "",
   planId:
     props.testPlanIdAttr ||
@@ -490,7 +496,9 @@ onMounted(async () => {
   await projectNameDropdownSingleSelect.load();
 
   const projectIds = searchStorage?.search?.projectIds || [];
+  const projectModuleIds = searchStorage?.search?.projectModuleIds || [];
   const planIds = searchStorage?.search?.planIds || [];
+  const requirementIds = searchStorage?.search?.requirementIds || [];
 
   if (projectIds.length) {
     selectedProjectId =
@@ -499,6 +507,21 @@ onMounted(async () => {
       ) || null;
 
     model.value.projectId = selectedProjectId;
+
+    if (selectedProjectId && projectModuleIds.length) {
+      await projectModulesByProjectIdForDropdownSingleSelect.load(
+        false, false, selectedProjectId
+      );
+
+    selectedProjectModuleId =
+      projectModuleIds.find(id =>
+        projectModulesByProjectIdForDropdownSingleSelect.list.value.some(
+          x => x.value === id
+        )
+      ) || null;
+
+       model.value.projectModuleId = selectedProjectModuleId;
+    }
 
     if (selectedProjectId && planIds.length) {
       await testPlansByProjectIdForDropdownSingleSelect.load(selectedProjectId);
@@ -511,6 +534,21 @@ onMounted(async () => {
         ) || null;
 
       model.value.planId = selectedPlanId;
+    }
+
+    if (selectedProjectModuleId && requirementIds.length) {
+      await requirementByProjectModuleIdForDropdownSingleSelect.load(
+        selectedProjectModuleId
+      );
+
+      selectedRequirementId =
+        requirementIds.find(id =>
+          requirementByProjectModuleIdForDropdownSingleSelect.list.value.some(
+            x => x.value === id
+          )
+        ) || null;
+
+      model.value.requirementId = selectedRequirementId;
     }
   }
 });

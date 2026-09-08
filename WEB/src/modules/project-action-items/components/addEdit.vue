@@ -184,14 +184,18 @@ const { getTableState } = useSiteTableState({
   siteId: currentSiteId
 });
 
+const searchStorage = getTableState();
+
+let selectedProjectId = null;
+let selectedRequirementId = null;
 // ----------------------------------------------------------------------------------------------------------------
 // Define model
 // ----------------------------------------------------------------------------------------------------------------
 
 const model = ref({
   id: "",
-  projectId: props.projectIdAttr || props.projectIdValue || null,
-  requirementId: props.requirementIdAttr || "",
+  projectId: props.projectIdAttr || props.projectIdValue || selectedProjectId ||null,
+  requirementId: props.requirementIdAttr || selectedRequirementId || null,
   title: "",
   description: "",
   customerId: "",
@@ -302,18 +306,31 @@ onMounted(async () => {
 
   // selected values
   await projectNameDropdownSingleSelect.load();
-  // const projectIds = searchStorage?.search?.projectIds || [];
-  // if (projectIds.length) {
-  //   selectedProjectId =
-  //     projectIds.find(id =>
-  //       projectNameDropdownSingleSelect.list.value.some(x => x.value === id)
-  //     ) || null;
+  const projectIds = searchStorage?.search?.projectIds || [];
+  const requirementIds = searchStorage?.search?.requirementIds || [];
 
-  //   model.value.projectId = selectedProjectId;
-  // }
-  if (model.value.projectId) {
-    await requirementByProjectModuleIdForDropdownSingleSelect.load("", model.value.projectId);
+  if (projectIds.length) {
+    selectedProjectId =
+      projectIds.find(id =>
+        projectNameDropdownSingleSelect.list.value.some(x => x.value === id)
+      ) || null;
+
+    model.value.projectId = selectedProjectId;
+
+    if (selectedProjectId && requirementIds.length) {
+      await requirementByProjectModuleIdForDropdownSingleSelect.load("", selectedProjectId);
+
+      selectedRequirementId =
+        requirementIds.find(id =>
+          requirementByProjectModuleIdForDropdownSingleSelect.list.value.some(
+            x => x.value === id
+          )
+        ) || null;
+
+      model.value.requirementId = selectedRequirementId;
+    }
   }
+
   // Set "Medium" Priority as the default if it exists
   const mediumPriority = await projectActionItemPrioritySingleSelect.getValueByLabel("Medium");
   if (mediumPriority && props.id === "") {

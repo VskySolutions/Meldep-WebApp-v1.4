@@ -78,7 +78,9 @@
                       <formSingleSelectDropdown
                         v-model="model.requirementId"
                         label="Requirement"
+                        :readonly="!!readonlyRequirement"
                         :disable="!model.projectModuleId"
+                        :class="readonlyRequirement !== '' ? 'edit_tasks' : ''"
                         :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
                         :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
                         :error="v$.requirementId.$error"
@@ -560,6 +562,7 @@ const props = defineProps({
   id: { type: String, default: "" },
   projectIdAttr: { type: String, default: "" },
   moduleIdAttr: { type: String, default: "" },
+  requirementIdAttr: { type: String, default: "" },
   issueProjectId: { type: String, default: "" },
   issueModuleId: { type: String, default: "" },
   issuePriorityId: { type: String, default: "" },
@@ -584,6 +587,7 @@ if (TaskId) {
 
 const readonlyProject = props.projectIdAttr || props.issueProjectId ? "readonly" : "";
 const readonlyProjectModule = props.moduleIdAttr ? "readonly" : "";
+const readonlyRequirement = props.requirementIdAttr ? "readonly" : "";
 
 // Define model values
 const model = ref({
@@ -599,7 +603,7 @@ const model = ref({
   isIssueConverted: props.isIssueConverted,
   isRequirementConverted: props.isRequirementConverted,
   issueId: props.issueId,
-  requirementId: props.requirementId,
+  requirementId: props.requirementIdAttr !== "" ? props.requirementIdAttr : null,
   status: {
     dropDownValue: ""
   }

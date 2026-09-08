@@ -383,7 +383,7 @@ namespace Vsky.Api.Controllers
                                     continue;
 
                                 type.ModuleId = entity.Id;
-                                type.ModuleName = entity.Title;
+                                type.Module = entity.Title;
                                 type.FilePath = item.FilePath;
                                 type.FileName = item.FileName;
                                 type.Note = item.Note;
@@ -400,7 +400,7 @@ namespace Vsky.Api.Controllers
 
                                 var data = _mapper.Map<FilePathDetails>(item);
                                 data.ModuleId = entity.Id;
-                                data.ModuleName = entity.Title;
+                                data.Module = entity.Title;
                                 data.FilePath = item.FilePath;
                                 data.FileName = item.FileName;
                                 data.Note = item.Note;
@@ -575,7 +575,7 @@ namespace Vsky.Api.Controllers
                                     continue;
 
                                 type.ModuleId = entity.Id;
-                                type.ModuleName = entity.Title;
+                                type.Module = entity.Title;
                                 type.FilePath = item.FilePath;
                                 type.FileName = item.FileName;
                                 type.Note = item.Note;
@@ -592,7 +592,7 @@ namespace Vsky.Api.Controllers
                                 var data = _mapper.Map<FilePathDetails>(item);
 
                                 data.ModuleId = entity.Id;
-                                data.ModuleName = entity.Title;
+                                data.Module = entity.Title;
                                 data.FilePath = item.FilePath;
                                 data.FileName = item.FileName;
                                 data.Note = item.Note;

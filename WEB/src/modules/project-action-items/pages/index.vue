@@ -123,7 +123,7 @@
                   label="Create Project Action Item"
                   no-caps
                   class="text-primary btnRounded"
-                  @click="onProjectActionItemsAdd(search.projectIds?.[0], search.requirementIds?.[0], refreshProjectActionItemsList)"
+                  @click="onProjectActionItemsAdd(refreshProjectActionItemsList)"
                 />
                  <!-- Reset Column Width -->
                 <q-btn

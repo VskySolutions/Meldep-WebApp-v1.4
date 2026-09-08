@@ -21,16 +21,11 @@ export function onProjectActionItemsView (id) {
 }
 
 export function onProjectActionItemsAdd (
-  projectId,
-  requirementId,
   refresh
 ) {
-  const componentProps = {};
-  if (projectId) componentProps.projectIdAttr = projectId;
-  if (requirementId) componentProps.requirementIdAttr = requirementId;
   $q.dialog({
     component: addEditProjectActionItems,
-    componentProps
+    componentProps: {}
   }).onOk(() => {
     refresh();
   })
