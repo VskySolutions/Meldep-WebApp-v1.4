@@ -106,6 +106,122 @@ namespace Vsky.Services.DailyPlanners
                 );
             }
 
+            //if (!string.IsNullOrWhiteSpace(sortBy))
+            //{
+            //    if (sortBy == "dailyPlannerDate")
+            //    {
+            //        query = descending
+            //            ? query.OrderByDescending(x => x.DailyPlannerDate)
+            //            : query.OrderBy(x => x.DailyPlannerDate);
+            //    }
+            //    else
+            //    {
+            //        var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
+            //        query = query.OrderBy(orderBy);
+            //    }
+            //}
+            //else
+            //{
+            //    query = query.OrderByDescending(x => x.DailyPlannerDate);
+            //}
+            //if (!string.IsNullOrWhiteSpace(sortBy))
+            //{
+            //    switch (sortBy)
+            //    {
+            //        case "project.name":
+            //            query = descending
+            //                ? query.OrderByDescending(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.Project.Name)
+            //                    .FirstOrDefault())
+            //                : query.OrderBy(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.Project.Name)
+            //                    .FirstOrDefault());
+            //            break;
+
+            //        case "projectModule.name":
+            //            query = descending
+            //                ? query.OrderByDescending(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.ProjectModule.Name)
+            //                    .FirstOrDefault())
+            //                : query.OrderBy(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.ProjectModule.Name)
+            //                    .FirstOrDefault());
+            //            break;
+
+            //        case "projectTask.name":
+            //            query = descending
+            //                ? query.OrderByDescending(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.ProjectTask.Name)
+            //                    .FirstOrDefault())
+            //                : query.OrderBy(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.ProjectTask.Name)
+            //                    .FirstOrDefault());
+            //            break;
+
+            //        case "projectActivity.name":
+            //            query = descending
+            //                ? query.OrderByDescending(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.ProjectActivity.Name)
+            //                    .FirstOrDefault())
+            //                : query.OrderBy(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.ProjectActivity.Name)
+            //                    .FirstOrDefault());
+            //            break;
+
+            //        case "description":
+            //            query = descending
+            //                ? query.OrderByDescending(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.Description)
+            //                    .FirstOrDefault())
+            //                : query.OrderBy(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Select(l => l.Description)
+            //                    .FirstOrDefault());
+            //            break;
+
+            //        case "createdById":
+            //            query = descending
+            //                ? query.OrderByDescending(x =>
+            //                    x.Employee.Person.FirstName + " " + x.Employee.Person.LastName)
+            //                : query.OrderBy(x =>
+            //                    x.Employee.Person.FirstName + " " + x.Employee.Person.LastName);
+            //            break;
+
+            //        case "hours":
+            //            query = descending
+            //                ? query.OrderByDescending(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Sum(l => l.Hours))
+            //                : query.OrderBy(x => x.DailyPlannerLines
+            //                    .Where(l => !l.Deleted)
+            //                    .Sum(l => l.Hours));
+            //            break;
+
+            //        case "dailyPlannerDate":
+            //            query = descending
+            //                ? query.OrderByDescending(x => x.DailyPlannerDate)
+            //                : query.OrderBy(x => x.DailyPlannerDate);
+            //            break;
+
+            //        default:
+            //            query = query.OrderByDescending(x => x.DailyPlannerDate);
+            //            break;
+            //    }
+            //}
+            //else
+            //{
+            //    query = query.OrderByDescending(x => x.DailyPlannerDate);
+            //}
+
             // Apply multi-level dictionary sorting
             if (sorts != null && sorts.Count > 0)
             {

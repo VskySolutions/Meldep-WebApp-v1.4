@@ -292,20 +292,33 @@
                 <div class="col-12">
                   <div class="form-group">
                     <label class="q-mb-xs text-black">Short Description</label>
-                    <div
+                    <!-- <div
                       v-if="readonlyRequirement !== ''"
                       class="readonly-description q-pa-sm q-mb-sm q-field__native q-input__control bg-grey-2 text-black RichTextEditor"
                     >
-                      <!-- Description text -->
                       <span v-html="model.shortDescription" />
-                    </div>
-                    <q-editor
+                    </div>                     -->
+                    <q-input
+                      v-model="model.shortDescription"
+                      outlined
+                      stack-label
+                      type="textarea"
+                      hide-bottom-space
+                      :dense="true"
+                      :readonly="readonlyRequirement != ''"
+                      maxlength="200"
+                    />
+                    <!-- <q-editor
                       v-else
                       v-model="model.shortDescription"
                       :dense="$q.screen.lt.md"
                       :toolbar="toolbar"
                       :fonts="fonts"
+                      @input="limitShortDescription"
                     />
+                    <span class="text-caption text-grey">
+                      {{ shortDescriptionLength }}/200 characters
+                    </span> -->
                   </div>
                 </div>
               </div>
@@ -1165,8 +1178,15 @@ function handleSave (action) {
   onSubmit(action);
 }
 
+// const getPlainTextLength = (html) => {
+//   const div = document.createElement("div");
+//   div.innerHTML = html || "";
+//   return div.textContent?.trim().length || 0;
+// };
+
 // Submit form
 const onSubmit = async (action) => {
+  debugger;
   processing.value = true;
   try {
     if (mode.value === "addDocumentReference") {
@@ -1186,6 +1206,19 @@ const onSubmit = async (action) => {
       }
       return;
     }
+
+    // // Validate Short Description length
+    // const shortDescriptionLength = getPlainTextLength(
+    //   model.value.shortDescription
+    // );
+
+    // if (shortDescriptionLength > 200) {
+    //   notifyError({
+    //     message: "Short Description cannot exceed 200 characters."
+    //   });
+    //   return;
+    // }
+
     if (await v$.value.$validate()) {
       processing.value = true;
       model.value.filePathDetailsModel = rows.value;

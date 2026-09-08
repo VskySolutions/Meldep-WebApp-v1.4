@@ -14,6 +14,12 @@
             Requirement Description
           </div>
         </q-tab>
+        
+        <q-tab name="requirementShortDescription">
+          <div class="row items-center no-wrap">
+            Requirement Short Description
+          </div>
+        </q-tab>
 
         <q-tab name="requirementFiles">
           <div class="row items-center no-wrap">
@@ -117,6 +123,15 @@
               @select="selectedReqDescription = $event"
             />
           </q-tab-panel>
+          
+          <q-tab-panel name="requirementShortDescription" class="q-pa-none">
+            <RequirementShortDescriptionDetails
+              :requirement-id="requirementId"
+              :project-id="projectId"
+              :active-tab="leftTab"
+              @select="selectedReqDescription = $event"
+            />
+          </q-tab-panel>
 
           <q-tab-panel name="requirementFiles" class="q-pa-none">
             <RequirementFilesTabularView
@@ -211,6 +226,7 @@ import IssueTabularView from './tabularView/_issueTabularView.vue';
 import RequirementDescriptionDetails from './details/_requirementDescriptionDetails.vue';
 import RequirementInfoDetails from './details/_requirementInfoDetails.vue';
 import RequirementFilesTabularView from './tabularView/_requirementFilesTabularView.vue';
+import RequirementShortDescriptionDetails from './details/_requirementShortDescriptionDetails.vue';
 
 const props = defineProps({
   requirementId: String,

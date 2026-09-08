@@ -801,6 +801,20 @@ namespace Vsky.Services.Timesheets
                                 FullName = x.Timesheet.Employee.Person.FirstName + " " +
                                            x.Timesheet.Employee.Person.LastName
                             }
+                        },
+                        User = new ApplicationUser
+                        {
+                            Id = x.Timesheet.User.Id,
+                            UserName = x.Timesheet.User.UserName,
+
+                            Person = new Person
+                            {
+                                Id = x.Timesheet.User.PersonId,
+                                FirstName = x.Timesheet.User.Person.FirstName,
+                                LastName = x.Timesheet.User.Person.LastName,
+                                FullName = x.Timesheet.User.Person.FirstName + " " +
+                                           x.Timesheet.User.Person.LastName
+                            }
                         }
                     }
                 });

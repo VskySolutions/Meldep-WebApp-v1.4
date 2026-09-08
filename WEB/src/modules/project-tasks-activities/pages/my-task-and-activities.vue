@@ -265,7 +265,11 @@
         </template>
         <template #header="props">
           <q-tr :props="props" class="bg-primary text-white">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">
+            <q-th
+              v-for="col in props.cols"
+              :key="col.name"
+              :props="props"
+            >
               {{ col.label }}
             </q-th>
           </q-tr>
@@ -344,10 +348,35 @@
                   }"
                 >
                   <!-- @update:pagination="val => projectActivityPagination[props.row.project.id] = val" -->
-                  <template #header="props">
-                    <q-tr :props="props" class="bg-grey-4 text-black">
+                  <template #header="headerProps">
+                    <q-tr :props="headerProps" class="bg-grey-4 text-black">
                       <q-th auto-width class="text-center" :class="routeName === 'project-tast-activities'? 'hidden' : ''" />
-                      <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+                      <q-th
+                        v-for="col in headerProps.cols"
+                        :key="col.name"
+                      >
+                      {{ col.label }}
+                      <!-- Sort icon only --> 
+                      <q-icon
+                        v-if="col.sortable"
+                        :name=" projectActivityPagination[props.row.project.id]?.sortBy === col.name ? ( projectActivityPagination[props.row.project.id]?.descending ? 'o_arrow_downward' : 'o_arrow_upward' ) : 'o_unfold_more' "
+                        size="16px" 
+                        class="cursor-pointer q-ml-sm"
+                        @click.stop="sortActivityColumn(col, props.row.project.id)"
+                      >
+                        <q-tooltip>
+                          {{ 
+                            projectActivityPagination[props.row.project.id]?.sortBy === col.name 
+                              ? (
+                                  projectActivityPagination[props.row.project.id]?.descending
+                                    ? 'Sort Ascending'
+                                    : 'Sort Descending' 
+                                ) 
+                              : 'Sort'
+                          }}
+                        </q-tooltip>
+                      </q-icon>
+                    </q-th>
                       <q-th auto-width class="text-center">Actions</q-th>
                     </q-tr>
                   </template>
@@ -904,9 +933,9 @@ const columns = ref([
   { name: "projectTaskNumber", label: "Task No", field: "projectTaskNumber", align: "right", sortable: true },
   { name: "task.name", label: "Task Name", field: "task.name", align: "left", sortable: true },
   { name: "weekDates", label: "Week", field: row => row.weekDates.join(", "), align: "center", sortable: false },
-  { name: "task.status.dropDownValue", label: "Task Status", field: "task.status.dropDownValue", align: "left", sortable: true, style: "display: none", headerStyle: "display: none" },
+  // { name: "task.status.dropDownValue", label: "Task Status", field: "task.status.dropDownValue", align: "left", sortable: true, style: "display: none", headerStyle: "display: none" },
   // { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
-  { name: "assignedTo.person.firstname", label: "Activity Owner", field: "assignedTo.person.firstname", align: "left", sortable: true },
+  { name: "assignedTo.person.firstname", label: "Activity Owner", field: "assignedToId.person.firstname", align: "left", sortable: true },
   { name: "activityStatus.dropDownValue", label: "Activity Status", field: "activityStatus.dropDownValue", align: "left", sortable: true }
   // { name: "task.estimateTime", label: "Task Est. Hrs", field: "task.estimateTime", align: "left", sortable: true }
   // { name: "estimateHours", label: "Est. Hrs", field: "estimateHours", align: "right", sortable: true }
@@ -1041,6 +1070,37 @@ const isCurrentWeek = (date) => {
   currentSaturday.setHours(23, 59, 59, 999);
 
   return weekDate >= currentSunday && weekDate <= currentSaturday;
+};
+
+const sortActivityColumn = (col, projectId) => { 
+  if (!col.sortable) return; 
+  // Get pagination for this project 
+  const currentPagination = 
+    projectActivityPagination.value[projectId] || { 
+      page: 1,
+      rowsPerPage: 20,
+      sortBy: null,
+      descending: false
+    };
+  if (currentPagination.sortBy === col.name) {
+    // Same column -> toggle sorting direction 
+    currentPagination.descending = !currentPagination.descending;
+  } else {
+    // New column -> ascending
+    currentPagination.sortBy = col.name;
+    currentPagination.descending = false;
+  }
+  // Reset to first page when sorting changes
+  currentPagination.page = 1;
+  // Update pagination for this project 
+  projectActivityPagination.value = { 
+    ...projectActivityPagination.value,
+    [projectId]: { 
+      ...currentPagination
+    }
+  };
+  // Refresh activities 
+  refreshProjectTaskActivityList(projectId);
 };
 
 // ------------------------------------------------------------------------------------

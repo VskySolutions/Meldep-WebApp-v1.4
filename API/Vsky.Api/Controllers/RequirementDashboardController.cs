@@ -184,6 +184,7 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GetTimesheetDetails
         [HttpPost("timesheet-details")]
         public async Task<IActionResult> GetTimesheetDetails(RequirementCenterTimesheetSearchModel searchModel)
         {
@@ -215,6 +216,7 @@ namespace Vsky.Api.Controllers
 
             return Ok(_mapper.Map<List<TimesheetLinesModel>>(list));
         }
+        #endregion
 
         #region GetGroupedTimesheetsByRequirementId
         [HttpPost("timesheet-groups")]
@@ -252,7 +254,9 @@ namespace Vsky.Api.Controllers
             var model = _mapper.Map<List<TimesheetGroupResponse>>(result);
             return Ok(model);
         }
+        #endregion
 
+        #region GetAllTimesheetsByRequirementId
         [HttpPost("timesheet-tabular-list")]
         public async Task<IActionResult> GetAllTimesheetsByRequirementId(TimesheetSearchModel searchModel)
         {
@@ -290,6 +294,7 @@ namespace Vsky.Api.Controllers
             //return Ok(model);
         }
         #endregion
+
         #endregion
 
         #region GetProjectQAByRequirementId

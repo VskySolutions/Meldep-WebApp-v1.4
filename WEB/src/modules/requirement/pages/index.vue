@@ -1026,7 +1026,7 @@ const columns = ref([
   { name: "requirementNumber", label: "Req. No.", field: "requirementNumber", align: "right", sortable: true, default: true },
   { name: "project.name", label: "Project", field: "project.name", align: "left", sortable: true, default: true },
   { name: "projectModule.name", label: "Module", field: "projectModule.name", align: "left", sortable: true, default: false },
-  { name: "title", label: "Title", field: "title", align: "left", sortable: true, default: true },
+  { name: "title", label: "Requirement", field: "title", align: "left", sortable: true, default: true },
   { name: "projectTaskRelatedMappings", label: "Task", field: "projectTaskRelatedMappings", align: "left", sortable: false, default: false },
   { name: "editingStatus", label: "Draft/Confirmed", field: "editingStatus", align: "left", sortable: false, default: true },
   { name: "status.dropDownValue", label: "Status", field: "status.dropDownValue", align: "left", sortable: true, default: true },

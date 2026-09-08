@@ -196,7 +196,7 @@
               v-if="prevEmployee !== props.row.employeeName"
               :set="prevEmployee = props.row.employeeName"
             >
-              {{ props.row.timesheet?.employee?.person?.fullName }}
+              {{ props.row.timesheet?.user?.person?.fullName }}
             </span>
           </q-td>
 
@@ -256,12 +256,58 @@ const rows = ref([]);
 
 const columns = [
   { name: 'timesheet.timesheetDate', label: 'DATE', field: 'timesheet.timesheetDate', align: 'left', sortable: true },
-  { name: 'timesheet.employee.person.fullName', label: 'EMPLOYEE', field: 'timesheet.employee.person.fullName', align: 'left', sortable: true },
+  { name: 'timesheet.user.person.fullName', label: 'EMPLOYEE', field: 'timesheet.user.person.fullName', align: 'left', sortable: true },
   { name: 'task.name', label: 'TASK', field: 'task.name', align: 'left', sortable: true },
   { name: 'hours', label: 'HOURS', field: 'hours', align: 'right', sortable: true }
 ]
 
 const projectId = ref('');
+// const getAllTimesheetByRequirementId = async ({ pagination: p = pagination.value }) => {
+//   const { page, rowsPerPage, sortBy, descending } = p;
+
+//   try {
+//     loading.value = true;
+//     const payload = {
+//       requirementId: props.requirementId,
+//       searchText: search.value.searchText,
+//       createdBy: search.value.createdBy,
+//       employeeId: search.value.employeeId,
+//       projectTaskId: search.value.projectTaskId,
+//       activityDate: search.value.activityDate,
+//       fromDate: search.value.fromDate,
+//       toDate: search.value.toDate,
+//       weekFilter: search.value.weekFilter,
+//       page: page,
+//       pageSize: rowsPerPage,
+//       sortBy,
+//       descending,
+//       sorts: sorts.value
+//     };
+
+//     const resp = await requirementCenterService.getAllTimesheetByRequirementId(payload);
+//     rows.value = resp.data || [];
+
+//     // console.log("timesheet", rows.value);
+
+//     Object.assign(pagination.value, {
+//       page,
+//       rowsPerPage,
+//       sortBy,
+//       descending,
+//       rowsNumber: resp.total || 0
+//     });
+//     saveDataTableState({
+//       search: search.value,
+//       pagination: pagination.value,
+//       activeRowId: activeRowId.value,
+//       sorts
+//     });
+//   } finally {
+//     loading.value = false;
+//     searchLoader.value = false;
+//   }
+// };
+
 const getAllTimesheetByRequirementId = async ({ pagination: p = pagination.value }) => {
   const { page, rowsPerPage, sortBy, descending } = p;
 
@@ -287,7 +333,7 @@ const getAllTimesheetByRequirementId = async ({ pagination: p = pagination.value
     const resp = await requirementCenterService.getAllTimesheetByRequirementId(payload);
     rows.value = resp.data || [];
 
-    // console.log("timesheet", rows.value);
+    console.log("timesheet", rows.value);
 
     Object.assign(pagination.value, {
       page,

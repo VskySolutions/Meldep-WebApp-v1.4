@@ -128,15 +128,25 @@
                 <q-th
                   v-for="col in props.cols"
                   :key="col.name"
-                  :props="props"
                   :style="{
                     width: (resizeWidths?.[col.name] || 120) + 'px',
                     minWidth: '80px',
                     position: 'relative'
                   }"
-                  @click="!isResizing && col.sortable"
                 >
                   {{ col.label }}
+                  <!-- Sort icon only --> 
+                  <q-icon
+                    v-if="col.sortable" 
+                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
+                    size="16px" 
+                    class="cursor-pointer q-ml-sm"
+                    @click.stop="sortColumn(col)"
+                  >
+                     <q-tooltip>
+                      {{ pagination.sortBy === col.name ? (pagination.descending ? 'Sort Ascending' : 'Sort Descending') : 'Sort' }}
+                    </q-tooltip>
+                  </q-icon>
                   <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)"></div>
                 </q-th>
                 <q-th auto-width class="text-center">Actions</q-th>
@@ -382,8 +392,8 @@ const columns = ref([
   { name: "lastAnswer", label: "Answer", field: "lastAnswer", align: "left", sortable: false, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: true, default: false },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: false },
-  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: true },
-  { name: "updatedOnUtc", label: "Updated Date", field: "updatedOnUtc", align: "left", sortable: true, default: true }
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated Date", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 
 const defaultSearch = {
@@ -516,6 +526,20 @@ function setActiveRowIdInLocalStorage(id) {
 
 const refreshQuestionsAnswersList = () => {
   getAllQuestionAnswers({ pagination: pagination.value });
+};
+
+const sortColumn = (col) => {
+  if (!col.sortable) return;
+  if (pagination.value.sortBy === col.name) {
+    // Same column → toggle direction
+    pagination.value.descending = !pagination.value.descending;
+  }
+  else {
+    // New column → ascending 
+      pagination.value.sortBy = col.name;
+      pagination.value.descending = false;
+  } 
+  refreshQuestionsAnswersList();
 };
 
 // Search records as per parameters

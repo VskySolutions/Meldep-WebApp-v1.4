@@ -84,20 +84,46 @@
         </div>
       </q-card-section>
       <q-separator />
-      <q-separator />
       <q-table
-        ref="tableRef" v-model:pagination="pagination" :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'" :loading="loading" :rows="rows" :columns="columns" row-key="id" separator="cell"
-        no-data-label="No data available" binary-state-sort :rows-per-page-options="[20, 50, 100, 200, 500]" @request="getProjectModules"
+        ref="tableRef"
+        v-model:pagination="pagination"
+        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+        :loading="loading"
+        :rows="rows"
+        :columns="columns"
+        row-key="id"
+        separator="cell"
+        no-data-label="No data available"
+        binary-state-sort
+        :rows-per-page-options="[20, 50, 100, 200, 500]"
+        @request="getProjectModules"
       >
         <template #header="props">
           <q-tr :props="props" class="bg-primary text-white">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+            <q-th
+              v-for="col in props.cols"
+              :key="col.name"
+            >
+              {{ col.label }}
+              <!-- Sort icon only --> 
+              <q-icon
+                v-if="col.sortable" 
+                :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
+                size="16px" 
+                class="cursor-pointer q-ml-sm"
+                @click.stop="sortColumn(col)"
+              >
+                  <q-tooltip>
+                  {{ pagination.sortBy === col.name ? (pagination.descending ? 'Sort Ascending' : 'Sort Descending') : 'Sort' }}
+                </q-tooltip>
+              </q-icon>
+            </q-th>
             <q-th auto-width class="text-center">Actions</q-th>
           </q-tr>
         </template>
         <template #body="props">
           <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''" :set="(preProjectName = null, resetTracking())">
-            <q-td style="width: 5%;" class="hidden">#{{ props.row.projectModuleNumber }}</q-td>
+            <!-- <q-td style="width: 5%;" class="hidden">#{{ props.row.projectModuleNumber }}</q-td> -->
             <q-td style="width: 15%; white-space: normal;">
               <div class="row no-wrap items-center justify-between">
                 <span style="flex: 1; word-break: break-word; white-space: normal;">
@@ -279,7 +305,7 @@ const search = ref({
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
-  { name: "projectModuleNumber", label: "Project Module Number", field: "projectModuleNumber", align: "left", sortable: true, headerStyle: "width: 100px; display: none;" },
+  // { name: "projectModuleNumber", label: "Project Module Number", field: "projectModuleNumber", align: "left", sortable: true, headerStyle: "width: 100px; display: none;" },
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true },
   { name: "name", label: "Project Module Name", field: "name", align: "left", sortable: true },
   { name: "projectModuleStatus.dropDownValue", label: "Project Module Status", field: "projectModuleStatus.dropDownValue", align: "left", sortable: false },
@@ -324,6 +350,20 @@ const getProjectModules = (props) => {
     loading.value = false;
     searchLoader.value = false;
   });
+};
+
+const sortColumn = (col) => {
+  if (!col.sortable) return;
+  if (pagination.value.sortBy === col.name) {
+    // Same column → toggle direction
+    pagination.value.descending = !pagination.value.descending;
+  }
+  else {
+    // New column → ascending 
+      pagination.value.sortBy = col.name;
+      pagination.value.descending = false;
+  }
+  getProjectModules({ pagination: pagination.value });
 };
 
 // Search records as per parameters
