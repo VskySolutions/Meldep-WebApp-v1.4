@@ -27,18 +27,6 @@ namespace Vsky.Services.ProjectEmployeeMappings
         void DeleteProjectEmployees(ProjectEmployeeMapping entity);
         #endregion
 
-        #region InsertProjectEmployeeMappingList
-        void InsertProjectEmployeeMappingList(IList<ProjectEmployeeMapping> entities);
-        #endregion
-
-        #region UpdateProjectEmployeeMappingList
-        void UpdateProjectEmployeeMappingList(List<ProjectEmployeeMapping> entities);
-        #endregion
-
-        #region DeleteProjectEmployeeMappingList
-        void DeleteProjectEmployeeMappingList(List<ProjectEmployeeMapping> entities);
-        #endregion
-
         #region GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId
         // Title: GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId
         Task<List<ProjectCharterEmployee>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, string taskId, DateTime? currentDate = null);

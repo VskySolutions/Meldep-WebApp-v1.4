@@ -33,6 +33,7 @@ namespace Vsky.Api.Models
         public string CreatedById { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
 
+        public string Tab { get; set; }
         public List<IFormFile> ProjectModuleFiles { get; set; }
         public List<string> ExistingFiles { get; set; }
         public string ProjectSwimlaneId { get; set; }
@@ -59,6 +60,7 @@ namespace Vsky.Api.Models
         public virtual ICollection<ProjectTaskModel> ProjectTaskModel { get; set; } = new List<ProjectTaskModel>();
         public virtual ICollection<ProjectModuleFilesModel> ProjectModuleFilesList { get; set; } = new List<ProjectModuleFilesModel>();
         public virtual ICollection<ProjectModulesUserMapping> ProjectModulesUserMappings { get; set; } = new List<ProjectModulesUserMapping>();
+        public virtual ICollection<ProjectModuleEmployeeMapping> ProjectModuleEmployeeMappings { get; set; } = new List<ProjectModuleEmployeeMapping>();
 
     }
 

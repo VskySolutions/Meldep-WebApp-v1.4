@@ -121,25 +121,50 @@ namespace Vsky.Services.ProjectTasks
                 query = query.Where(x =>
                     x.Project.CreatedById == userId ||
                     x.CreatedById == userId ||
-                    x.Project.ProjectEmployeeMappings.Any(m =>
-                        !m.Deleted &&
-                        m.EmployeeId == employeeId &&
-                        m.ProjectEmployeeRoleMappings.Any(r =>
-                            !r.Deleted &&
-                            r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
-                                !p.Deleted &&
-                                (p.FullAccess || p.ViewOnly || p.Notes)
+                    (
+                        x.Project.ProjectEmployeeMappings.Any(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId &&
+                            m.ProjectEmployeeRoleMappings.Any(r =>
+                                !r.Deleted &&
+                                r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                                    !p.Deleted &&
+                                    (
+                                        p.FullAccess ||
+                                        p.ViewOnly ||
+                                        p.Notes
+                                    )
+                                )
+                            )
+                        )
+                        &&
+                        (
+                            // No module security - project security applies.
+                            !x.ProjectModule.ProjectModuleEmployeeMappings.Any(m =>
+                                !m.Deleted &&
+                                m.EmployeeId == employeeId &&
+                                (
+                                    m.FullAccess ||
+                                    m.ViewOnly ||
+                                    m.Notes
+                                )
+                            )
+
+                            ||
+
+                            // Module security exists - employee must have at least one module permission.
+                            x.ProjectModule.ProjectModuleEmployeeMappings.Any(m =>
+                                !m.Deleted &&
+                                m.EmployeeId == employeeId &&
+                                (
+                                    m.FullAccess ||
+                                    m.ViewOnly ||
+                                    m.Notes
+                                )
                             )
                         )
                     )
                 );
-
-                // Check if user exists in ProjectModulesUserMappings
-                bool userExistsInModule = query.Any(x => x.ProjectModule.ProjectModulesUserMappings.Any(m => !m.Deleted && m.AspNetUserId == userId));
-                if (userExistsInModule)
-                {
-                    query = query.Where(x => x.ProjectModule.ProjectModulesUserMappings.Any(m => !m.Deleted && m.AspNetUserId == userId && (m.FullAccess || m.ViewOnly || m.Notes)));
-                }
             }
 
             if (projectTaskNumber != 0) query = query.Where(x => x.ProjectTaskNumber == projectTaskNumber);
@@ -245,7 +270,6 @@ namespace Vsky.Services.ProjectTasks
                 StartDate = x.StartDate,
                 EndDate = x.EndDate,
                 Color = x.Color,
-                //SiteId = x.SiteId,
                 Description = x.Description,
                 SortOrder = x.SortOrder,
                 AssignedToId = x.AssignedToId,
@@ -258,7 +282,6 @@ namespace Vsky.Services.ProjectTasks
                     Name = x.Project.Name,
                     StartDate = x.Project.StartDate,
                     GoLiveDate = x.Project.GoLiveDate,
-                    //SiteId = x.Project.SiteId,
                     IsTemplate = x.Project.IsTemplate,
                     ProjectStatus = new DropDown
                     {
@@ -267,6 +290,7 @@ namespace Vsky.Services.ProjectTasks
                     },
                     ProjectNotesCount = _notesRepository.TableNoTracking.Count(m => !m.Deleted && m.SubModuleId == x.Project.Id && m.Type == "Projects"),
                     CurrentUserManage =
+                    x.Project.CreatedById == userId ||
                     x.CreatedById == userId ||
                     x.Project.ProjectEmployeeMappings
                         .Where(m =>
@@ -301,10 +325,9 @@ namespace Vsky.Services.ProjectTasks
                 {
                     Id = x.ProjectModule.Id,
                     Name = x.ProjectModule.Name,
-                    ProjectModulesUserMappings = x.ProjectModule.ProjectModulesUserMappings
-                    .Where(m => !m.Deleted && m.ProjectModuleId == x.ProjectModule.Id && (isAdmin || m.AspNetUserId == userId))
-                    .Take(1)
-                    .Select(m => new ProjectModulesUserMapping
+                    ProjectModuleEmployeeMappings = x.ProjectModule.ProjectModuleEmployeeMappings
+                    .Where(m => !m.Deleted && (isAdmin || m.EmployeeId == employeeId))
+                    .Select(m => new ProjectModuleEmployeeMapping
                     {
                         Id = m.Id,
                         FullAccess = m.FullAccess,
@@ -315,12 +338,12 @@ namespace Vsky.Services.ProjectTasks
                 Requirement = x.Requirement == null
                     ? null
                     : new Requirement
-                {
-                    Id = x.Requirement.Id,
-                    Title = x.Requirement.Title,
-                    RequirementNumber = x.Requirement.RequirementNumber,
-                    Status = new DropDown { DropDownValue = x.Requirement.Status.DropDownValue }
-                },
+                    {
+                        Id = x.Requirement.Id,
+                        Title = x.Requirement.Title,
+                        RequirementNumber = x.Requirement.RequirementNumber,
+                        Status = new DropDown { DropDownValue = x.Requirement.Status.DropDownValue }
+                    },
                 Status = new DropDown { Id = x.Status.Id, DropDownValue = x.Status.DropDownValue },
                 Priority = new DropDown { Id = x.Priority.Id, DropDownValue = x.Priority.DropDownValue },
                 Type = new DropDown { Id = x.Type.Id, DropDownValue = x.Type.DropDownValue },

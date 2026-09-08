@@ -1950,6 +1950,19 @@
                                   <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
                                   <q-tooltip>Add/Edit Bulk Activities</q-tooltip>
                                 </q-btn>
+                                <q-btn
+                                  v-if="hasUnsavedActivityEmployees"
+                                  size="sm"
+                                  icon="o_save"
+                                  color="primary"
+                                  label="Save"
+                                  no-caps
+                                  :loading="savingActivityEmployees"
+                                  style="padding: 3px 7px; min-height: 30px;"
+                                  @click="saveActivityEmployeeAssignments"
+                                >
+                                  <q-tooltip>Save Selected Activities</q-tooltip>
+                                </q-btn>
                               </div>
                             </div>
                             <div class="row full-width justify-between items-center">
@@ -2008,6 +2021,45 @@
                                 <!-- <q-th auto-width class="text-center" /> -->
                                 <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}<span v-if="['activityOwner'].includes(col.name) || ['activityName'].includes(col.name)" class="required">*</span></q-th>
                                 <q-th auto-width class="text-center" />
+                              </q-tr>
+                            </template>
+                            <template #top-row>
+                              <q-tr
+                                v-for="employee in getNewModuleEmployees()"
+                                :key="`new-employee-${employee.value}`"
+                                class="bg-grey-1"
+                              >
+                                <q-td colspan="100%" class="q-pa-xs">
+                                  <div class="row items-center">
+                                    <q-checkbox
+                                      :model-value="
+                                        activityEmployeeSelections[employee.value] ?? true
+                                      "
+                                      size="sm"
+                                      :disable="savingActivityEmployees"
+                                      @update:model-value="
+                                        value => {
+                                          activityEmployeeSelections[employee.value] = value;
+                                        }
+                                      "
+                                    />
+
+                                    <span
+                                      class="q-ml-sm"
+                                      style="font-size: 12px;"
+                                    >
+                                      {{ employee.text }}
+                                    </span>
+
+                                    <q-badge
+                                      color="orange"
+                                      outline
+                                      class="q-ml-sm"
+                                    >
+                                      New
+                                    </q-badge>
+                                  </div>
+                                </q-td>
                               </q-tr>
                             </template>
                             <template #body="props">
@@ -2341,7 +2393,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, watch, computed, nextTick } from "vue";
 import { notifySuccess, zwConfirmDelete, zwConfirm, notifyError } from "assets/utils";
 import { useQuasar, uid } from "quasar";
 import { useAuthStore } from "stores/auth";
@@ -2691,8 +2743,8 @@ const refreshProjectList = () => {
   getAllCustomerProjectsList({ pagination: pagination.value });
 };
 
-const refreshProjectModulesList = () => {
-  getAllProjectsModulesByProjectId({ pagination: projectModulesPagination.value });
+const refreshProjectModulesList = async () => {
+  await getAllProjectsModulesByProjectId({ pagination: projectModulesPagination.value });
 };
 
 const refreshRequirementList = async () => {
@@ -3296,6 +3348,11 @@ const getTaskListByModuleId = async (props) => {
         assignedTo: task.assignedTo,
         projectId: task.projectId,
         projectModuleId: task.projectModuleId,
+
+        projectModule: task.projectModule,
+
+        projectModuleEmployeeMappings:
+          task.projectModule?.projectModuleEmployeeMappings ?? [],
         projectActivities: task.projectActivities ? task.projectActivities.map(activity => ({ ...activity })) : [],
         totalActivitiesCount: task.totalActivitiesCount,
         totalActivityHours: task.totalActivityHours,
@@ -3334,71 +3391,226 @@ const getTaskListByModuleId = async (props) => {
   }
 };
 
+const getNewModuleEmployees = () => {
+  if (!selectedTask.value) {
+    return [];
+  }
+
+  const existingEmployeeIds = new Set(
+    projectActivities.value
+      .map(activity => normalizeEmployeeId(activity.assignedToId))
+      .filter(Boolean)
+  );
+
+  return taskModuleEmployeeOptions.value.filter(employee => {
+    const employeeId = normalizeEmployeeId(employee.value);
+
+    return employeeId && !existingEmployeeIds.has(employeeId);
+  });
+};
+
+const activityEmployeeSelections = ref({});
+
+const initializeActivityEmployeeSelections = () => {
+  const selections = {};
+
+  getNewModuleEmployees().forEach(employee => {
+    selections[normalizeEmployeeId(employee.value)] = true;
+  });
+
+  activityEmployeeSelections.value = selections;
+};
+
+const hasUnsavedActivityEmployees = computed(() =>
+  Object.values(activityEmployeeSelections.value).some(
+    selected => selected === true
+  )
+);
+
+const resetActivityEmployeeState = () => {
+  activityEmployeeSelections.value = {};
+};
+
+const refreshActivityEmployeeState = async () => {
+  resetActivityEmployeeState();
+
+  await nextTick();
+
+  initializeActivityEmployeeSelections();
+};
+const savingActivityEmployees = ref(false);
+
+const saveActivityEmployeeAssignments = async () => {
+  savingActivityEmployees.value = true;
+
+  try {
+    const newEmployees = getNewModuleEmployees().filter(employee => {
+      const employeeId = normalizeEmployeeId(employee.value);
+
+      return activityEmployeeSelections.value[employeeId] === true;
+    });
+
+    if (newEmployees.length === 0) {
+      notifyError({
+        message: "Select at least one employee to save."
+      });
+      return;
+    }
+
+    const projectActivitiesPayload = newEmployees.map(employee => ({
+      taskId: selectedTaskId.value,
+      projectId: selectedProjectId.value,
+      projectModuleId: selectedModuleId.value,
+      name: "Engineering",
+      assignedToId: employee.value,
+      deleted: false
+    }));
+
+    const payload = {
+      projectId: selectedProjectId.value,
+      projectModuleId: selectedModuleId.value,
+      projectActivities: projectActivitiesPayload
+    };
+
+    await taskService.taskAssignToOwner(
+      selectedTaskId.value,
+      payload
+    );
+
+    notifySuccess({
+      message: "Task assignments saved successfully."
+    });
+
+    await getActivitiesByTask({
+      pagination: projectActivitiesPagination.value
+    });
+
+    await refreshActivityEmployeeState();
+    refreshProjectTaskList();
+  } catch (error) {
+    console.error(
+      "Error saving activity employee assignments:",
+      error
+    );
+
+    notifyError({
+      message: "An error occurred while saving employee assignments."
+    });
+  } finally {
+    savingActivityEmployees.value = false;
+  }
+};
+
+const normalizeEmployeeId = value => {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  return String(value);
+};
+
+const taskModuleEmployeeOptions = computed(() => {
+  const task = selectedTask.value;
+
+  if (!task) {
+    return [];
+  }
+
+  const mappings =
+    task.projectModule?.projectModuleEmployeeMappings ?? [];
+
+  const employeeIds = new Set(
+    mappings
+      .filter(mapping => !mapping.deleted)
+      .map(mapping => normalizeEmployeeId(mapping.employeeId))
+      .filter(Boolean)
+  );
+
+  return projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value
+    .filter(employee =>
+      employeeIds.has(normalizeEmployeeId(employee.value))
+    );
+});
+
 async function LoadTasks(projectId, moduleId, requirementId) {
   if (showModulesFilter.value === true) {
     showModulesFilter.value = false;
   }
+
   if (showRequirementsFilter.value === true) {
     showRequirementsFilter.value = false;
   }
+
   if (showTasksFilter.value === true) {
     showTasksFilter.value = false;
   }
+
   isProjectTask.value = true;
+
   projectActivities.value = [];
   filteredActivities.value = [];
-  if (requirementId && moduleId && projectId) {
-    activeRequirementRowId.value = requirementId;
-    const module = ProjectModuleRows.value.find(
-      item => item.id === moduleId
-    );
 
-    ModuleName = module?.name || "";
-    ModuleStartDate = module?.startDate;
-    ModuleEndDate = module?.endDate;
-    const project = rows.value.find(
-      item => item.id === projectId
-    );
+  resetActivityEmployeeState();
 
-    ProjectName = project?.name || "";
-    storedProjectName.value = ProjectName;
-    searchProjectTask.value.projectModuleId = moduleId;
-    searchProjectTask.value.projectId = projectId;
-    searchProjectTask.value.requirementId = requirementId;
-    selectedProjectId.value = projectId;
-    selectedModuleId.value = moduleId;
-    selectedRequirementId.value = requirementId;
+  if (!requirementId || !moduleId || !projectId) {
+    return;
+  }
 
-    selectedModule.value = module;
+  activeRequirementRowId.value = requirementId;
 
-    selectedRequirement.value = requirementRows.value.find(
-      item => item.id === requirementId
-    );
-    storedRequirementName.value =
-      selectedRequirement.value?.title;
+  const module = ProjectModuleRows.value.find(
+    item => item.id === moduleId
+  );
 
-    // Save state
-    const updated = {
-      ...getOutlookState(),
-      isProject: isProject.value,
-      isProjectModule: isProjectModule.value,
-      isRequirement: isRequirement.value,
-      isProjectTask: isProjectTask.value,
-      isProjectActivity: isProjectActivity.value,
+  ModuleName = module?.name || "";
+  ModuleStartDate = module?.startDate;
+  ModuleEndDate = module?.endDate;
 
-      projectId: projectId,
-      projectModuleId: moduleId,
-      requirementId: requirementId,
-      projectTaskId: selectedTaskId.value,
-      moduleName: ModuleName,
-      expandedRowId: expandedRowId.value
-    };
-    saveOutlookState(updated);
-    try {
-      await refreshProjectTaskList();
-    } catch (error) {
-      console.error("Error loading tasks:", error);
-    }
+  const project = rows.value.find(
+    item => item.id === projectId
+  );
+
+  ProjectName = project?.name || "";
+  storedProjectName.value = ProjectName;
+
+  searchProjectTask.value.projectModuleId = moduleId;
+  searchProjectTask.value.projectId = projectId;
+  searchProjectTask.value.requirementId = requirementId;
+
+  selectedProjectId.value = projectId;
+  selectedModuleId.value = moduleId;
+  selectedRequirementId.value = requirementId;
+
+  selectedModule.value = module;
+
+  selectedRequirement.value = requirementRows.value.find(
+    item => item.id === requirementId
+  );
+
+  storedRequirementName.value =
+    selectedRequirement.value?.title;
+
+  const updated = {
+    ...getOutlookState(),
+    isProject: isProject.value,
+    isProjectModule: isProjectModule.value,
+    isRequirement: isRequirement.value,
+    isProjectTask: isProjectTask.value,
+    isProjectActivity: isProjectActivity.value,
+    projectId,
+    projectModuleId: moduleId,
+    requirementId,
+    projectTaskId: selectedTaskId.value,
+    moduleName: ModuleName,
+    expandedRowId: expandedRowId.value
+  };
+
+  saveOutlookState(updated);
+
+  try {
+    refreshProjectTaskList();
+  } catch (error) {
+    console.error("Error loading tasks:", error);
   }
 }
 
@@ -3513,6 +3725,7 @@ const getActivitiesByTask = async (props) => {
     });
     isDisabled = false; // Reset the isDisabled flag
     filteredActivities.value = projectActivities.value; // Set initial value to all rows
+    initializeActivityEmployeeSelections();
 
     projectActivitiesPagination.value = {
       ...projectActivitiesPagination.value,
@@ -3549,7 +3762,7 @@ async function LoadTaskActivities (projectTaskId) {
     searchProjectActivity.value.projectTaskId = projectTaskId;
     storedTaskName.value = TaskName;
     try {
-      await refreshProjectTaskActivityList();
+      refreshProjectTaskActivityList();
       // Save the updated state to local storage
       const updated = {
         ...getOutlookState(),
@@ -5206,6 +5419,34 @@ watch(() => searchProjectActivity.value.filterActivity, () => {
   if (searchProjectActivity.value.filterActivity) searchProjectActivityLoader.value = true;
   refreshProjectTaskActivityList();
 });
+
+watch(
+  selectedTaskId,
+  async (newTaskId, oldTaskId) => {
+    if (newTaskId === oldTaskId) {
+      return;
+    }
+
+    resetActivityEmployeeState();
+
+    if (newTaskId == null) {
+      return;
+    }
+
+    await nextTick();
+
+    await getActivitiesByTask({
+      pagination: projectActivitiesPagination.value
+    });
+
+    await nextTick();
+
+    initializeActivityEmployeeSelections();
+  },
+  {
+    flush: "post"
+  }
+);
 
 watch(
   [

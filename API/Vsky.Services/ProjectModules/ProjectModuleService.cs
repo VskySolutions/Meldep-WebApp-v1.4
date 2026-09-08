@@ -55,7 +55,7 @@ namespace Vsky.Services.ProjectModules
 
             if (projectModuleStatusIds != null && projectModuleStatusIds.Any())
                 query = query.Where(x => projectModuleStatusIds.Contains(x.ProjectModuleStatusId));
-            else if(pageName != "PL")
+            else if (pageName != "PL")
                 query = query.Where(x => x.ProjectModuleStatus.DropDownValue != "Close");
 
             if (projectId != null && !string.IsNullOrWhiteSpace(projectId))
@@ -69,7 +69,7 @@ namespace Vsky.Services.ProjectModules
 
             if (pageName == "PL") // planner page
             {
-                if(isShowCloseStatus == false)                
+                if (isShowCloseStatus == false)
                     query = query.Where(x => x.ProjectModuleStatus.DropDownValue != "Close");//Show data without close status
             }
 
@@ -168,7 +168,7 @@ namespace Vsky.Services.ProjectModules
         {
             //var query = _projectModuleRepository.TableNoTracking.Where(x => !x.Deleted);
             var query = _projectModuleRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && x.ProjectId == projectId && x.SiteId == SiteId);
-           
+
             //sorting
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
@@ -306,7 +306,7 @@ namespace Vsky.Services.ProjectModules
                                                     !m.Project.Deleted &&
                                                     m.Project.Active &&
                                                     m.Status.DropDownValue != "Close"
-                                              ) + ")": x.Name,
+                                              ) + ")" : x.Name,
                            Value = x.Id,
                        })
                        .ToListAsync();
@@ -314,9 +314,9 @@ namespace Vsky.Services.ProjectModules
         }
         #endregion
 
-            #region GetProjectModuleDetailsById
-            // Title: GetProjectModuleDetailsById
-            // Description: The method selects relevant fields from the ProjectModule entity, including related entities such as ProjectModule status, and returns a `ProjectModule` object with these details. 
+        #region GetProjectModuleDetailsById
+        // Title: GetProjectModuleDetailsById
+        // Description: The method selects relevant fields from the ProjectModule entity, including related entities such as ProjectModule status, and returns a `ProjectModule` object with these details. 
         public async Task<ProjectModule> GetProjectModuleDetailsById(string id)
         {
             var query = _projectModuleRepository.TableNoTracking.Where(x => !x.Deleted && x.Id == id).Select(x => new ProjectModule
@@ -340,7 +340,49 @@ namespace Vsky.Services.ProjectModules
                 Project = new Project
                 {
                     Id = x.Project.Id,
-                    Name = x.Project.Name
+                    Name = x.Project.Name,
+                    ProjectEmployeeMappings = x.Project.ProjectEmployeeMappings.Where(m => !m.Deleted).Select(m => new ProjectEmployeeMapping
+                    {
+                        Id = m.Id,
+                        EmployeeId = m.EmployeeId,
+
+                        Manage = m.ProjectEmployeeRoleMappings
+                        .Where(r => !r.Deleted)
+                        .Any(r =>
+                            r.SitesProjectRoles
+                                .SitesProjectRolesPermissions
+                                .Any(p =>
+                                    !p.Deleted &&
+                                    p.FullAccess)),
+
+                        View = m.ProjectEmployeeRoleMappings
+                        .Where(r => !r.Deleted)
+                        .Any(r =>
+                            r.SitesProjectRoles
+                                .SitesProjectRolesPermissions
+                                .Any(p =>
+                                    !p.Deleted &&
+                                    p.ViewOnly)),
+
+                        Notes = m.ProjectEmployeeRoleMappings
+                        .Where(r => !r.Deleted)
+                        .Any(r =>
+                            r.SitesProjectRoles
+                                .SitesProjectRolesPermissions
+                                .Any(p =>
+                                    !p.Deleted &&
+                                    p.Notes)),
+
+                        Employee = new Employee
+                        {
+                            Id = m.Employee.Id,
+                            Person = new Person
+                            {
+                                Id = m.Employee.Person.Id,
+                                FullName = m.Employee.Person.FirstName + " " + m.Employee.Person.LastName
+                            }
+                        }
+                    }).ToList(),
                 },
                 ProjectModuleStatus = new DropDown
                 {
@@ -373,6 +415,22 @@ namespace Vsky.Services.ProjectModules
                         LastName = x.UpdatedBy.Person.LastName,
                     }
                 },
+                ProjectModuleEmployeeMappings = x.ProjectModuleEmployeeMappings.Where(m => !m.Deleted).Select(m => new ProjectModuleEmployeeMapping
+                {
+                    Id = m.Id,
+                    FullAccess = m.FullAccess,
+                    ViewOnly = m.ViewOnly,
+                    Notes = m.Notes,
+                    Employee = new Employee
+                    {
+                        Id = m.Employee.Id,
+                        Person = new Person
+                        {
+                            Id = m.Employee.Person.Id,
+                            FullName = m.Employee.Person.FirstName + " " + m.Employee.Person.LastName
+                        }
+                    }
+                }).ToList(),
                 ProjectModuleFilesList = x.ProjectModuleFilesList.Where(x => !x.Deleted).OrderByDescending(x => x.CreatedOnUtc).Select(mapping => new ProjectModuleFiles
                 {
                     Id = mapping.Id,

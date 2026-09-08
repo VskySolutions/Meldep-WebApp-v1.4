@@ -1013,13 +1013,48 @@ const getAllProjectTaskList = async ({ pagination: p }) => {
 }
 
 function transformTaskRow (task, storedTaskIds, isAdmin) {
-  const moduleMapping = task?.projectModule?.projectModulesUserMappings?.[0];
+   const moduleMappings =
+    task?.projectModule?.projectModuleEmployeeMappings ?? [];
+
+  const moduleMapping = moduleMappings[0] ?? null;
 
   const projectFullAccess = task?.project?.currentUserManage ?? false;
   const projectNote = task?.project?.currentUserNotes ?? false;
 
-  const combinedEditable = isAdmin || (moduleMapping ? moduleMapping.fullAccess : projectFullAccess);
-  const combinedNote = isAdmin || (moduleMapping ? moduleMapping.notes : projectNote);
+  const moduleFullAccess =
+    moduleMapping?.fullAccess ?? false;
+
+  const moduleViewOnly =
+    moduleMapping?.viewOnly ?? false;
+
+  const moduleNotes =
+    moduleMapping?.notes ?? false;
+
+  // A module mapping only overrides project security
+  // when at least one module permission is enabled.
+  const hasModuleSecurity =
+    moduleMapping !== null &&
+    (
+      moduleFullAccess ||
+      moduleViewOnly ||
+      moduleNotes
+    );
+
+  const combinedEditable =
+    isAdmin ||
+    (
+      hasModuleSecurity
+        ? moduleFullAccess
+        : projectFullAccess
+    );
+
+  const combinedNote =
+    isAdmin ||
+    (
+      hasModuleSecurity
+        ? moduleNotes
+        : projectNote
+    );
 
   // const issueMapping = task.projectTaskRelatedMappings?.find(m => m.issueId);
   // const requirementMapping = task.projectTaskRelatedMappings?.find(m => m.requirementId);

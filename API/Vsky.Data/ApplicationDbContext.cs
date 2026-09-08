@@ -1435,22 +1435,35 @@ namespace Vsky.Data
                 entity.HasOne(d => d.ProjectModuleType).WithMany().HasForeignKey(d => d.ProjectModuleTypeId);
             });
 
-            builder.Entity<ProjectModulesUserMapping>(entity =>
+            builder.Entity<ProjectModuleEmployeeMapping>(entity =>
             {
-                entity.ToTable("ProjectModules_User_Mapping");
+                entity.ToTable("ProjectModule_Employee_Mapping");
 
                 entity.Property(e => e.ProjectModuleId).IsRequired().HasMaxLength(450);
-                entity.Property(e => e.AspNetUserId).HasMaxLength(256);
-                entity.Property(e => e.FullAccess);
-                entity.Property(e => e.ViewOnly);
-                entity.Property(e => e.Notes);
+                entity.Property(e => e.EmployeeId).HasMaxLength(450);
 
                 entity.Property(e => e.CreatedById).HasMaxLength(450);
                 entity.Property(e => e.CreatedOnUtc).HasPrecision(6);
 
-                entity.HasOne(d => d.ProjectModule).WithMany(x => x.ProjectModulesUserMappings).HasForeignKey(d => d.ProjectModuleId);
-                entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.AspNetUserId);
+                entity.HasOne(d => d.ProjectModule).WithMany(x => x.ProjectModuleEmployeeMappings).HasForeignKey(d => d.ProjectModuleId);
             });
+
+            //builder.Entity<ProjectModulesUserMapping>(entity =>
+            //{
+            //    entity.ToTable("ProjectModules_User_Mapping");
+
+            //    entity.Property(e => e.ProjectModuleId).IsRequired().HasMaxLength(450);
+            //    entity.Property(e => e.AspNetUserId).HasMaxLength(256);
+            //    entity.Property(e => e.FullAccess);
+            //    entity.Property(e => e.ViewOnly);
+            //    entity.Property(e => e.Notes);
+
+            //    entity.Property(e => e.CreatedById).HasMaxLength(450);
+            //    entity.Property(e => e.CreatedOnUtc).HasPrecision(6);
+
+            //    entity.HasOne(d => d.ProjectModule).WithMany(x => x.ProjectModulesUserMappings).HasForeignKey(d => d.ProjectModuleId);
+            //    entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.AspNetUserId);
+            //});
 
             builder.Entity<ProjectModuleFiles>(entity =>
             {
@@ -3069,6 +3082,11 @@ namespace Vsky.Data
             builder.Entity<VW_ProjectTask>(entity =>
             {
                 entity.ToView("VW_ProjectTaskList");
+                entity.HasOne(x => x.ProjectModule)
+                   .WithMany()
+                   .HasForeignKey(x => x.ProjectModuleId)
+                   .HasPrincipalKey(x => x.Id)
+                   .IsRequired(false);
             });
 
             builder.Entity<VW_UserTaskTags>(entity =>

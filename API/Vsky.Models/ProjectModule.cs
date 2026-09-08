@@ -51,8 +51,27 @@ public class ProjectModule : BaseEntity
     public virtual ICollection<ProjectActivity> ProjectActivities { get; set; } = new List<ProjectActivity>();
     public virtual ICollection<ProjectModuleFiles> ProjectModuleFilesList { get; set; } = new List<ProjectModuleFiles>();
     public virtual ICollection<ProjectModulesUserMapping> ProjectModulesUserMappings { get; set; } = new List<ProjectModulesUserMapping>();
+    public virtual ICollection<ProjectModuleEmployeeMapping> ProjectModuleEmployeeMappings { get; set; } = new List<ProjectModuleEmployeeMapping>();
 }
+public class ProjectModuleEmployeeMapping : BaseEntity
+{
+    public string ProjectModuleId { get; set; }
+    public string EmployeeId { get; set; }
 
+    public bool FullAccess { get; set; }
+    public bool ViewOnly { get; set; }
+    public bool Notes { get; set; }
+
+    public string CreatedById { get; set; }
+    public DateTime? CreatedOnUtc { get; set; }
+    public string UpdatedById { get; set; }
+    public DateTime? UpdatedOnUtc { get; set; }
+    public bool Deleted { get; set; }
+
+    public virtual ProjectModule ProjectModule { get; set; }
+    public virtual Employee Employee { get; set; }
+    public virtual ApplicationUser CreatedBy { get; set; }
+}
 public class ProjectModulesUserMapping : BaseEntity
 {
     public string ProjectModuleId { get; set; }
@@ -71,7 +90,6 @@ public class ProjectModulesUserMapping : BaseEntity
     public virtual ProjectModule ProjectModule { get; set; }
     public virtual ApplicationUser User { get; set; }
 }
-
 public class SaveProjectModulesUser
 {
     public string ProjectModuleId { get; set; }

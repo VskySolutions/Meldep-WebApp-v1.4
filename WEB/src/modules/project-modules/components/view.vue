@@ -11,6 +11,7 @@
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator>
             <q-tab name="1_tab" label="Description" class="q-px-lg q-mr-md" />
             <q-tab name="2_tab" label="Project Module Info" class="q-px-lg q-mr-md" />
+            <q-tab name="3_tab" label="Project Module Charter" class="q-px-lg q-mr-md" />
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated class="q-mt-xs">
@@ -74,36 +75,6 @@
                       {{ model.sortOrder }}
                     </div>
                   </div>
-                  <div class="col-6 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Created By</div>
-                    <div class="text-black">
-                      {{ model.createdBy.person.firstName + " "+ model.createdBy.person.lastName }}
-                    </div>
-                  </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Created Date</div>
-                    <div class="text-black">
-                      {{ model.createdOnUtc }}
-                    </div>
-                  </div>
-                  <div class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Updated By</div>
-                    <div class="text-black">
-                      {{ model.updatedBy?.person?.firstName && model.updatedBy?.person?.lastName
-                        ? model.updatedBy.person.firstName + " " + model.updatedBy.person.lastName
-                        : "-" }}
-                    </div>
-                  </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Updated Date</div>
-                      <div class="text-black">
-                        {{ model.updatedOnUtc }}
-                      </div>
-                    </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">
@@ -113,11 +84,41 @@
                     </div>
                   </div>
                 </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-6 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Created By</div>
+                    <div class="text-black">
+                      {{ model.createdBy.person.firstName + " "+ model.createdBy.person.lastName }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Created Date</div>
+                    <div class="text-black">
+                      {{ model.createdOnUtc }}
+                    </div>
+                  </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Updated By</div>
+                    <div class="text-black">
+                      {{ model.updatedBy?.person?.firstName && model.updatedBy?.person?.lastName
+                        ? model.updatedBy.person.firstName + " " + model.updatedBy.person.lastName
+                        : "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Updated Date</div>
+                    <div class="text-black">
+                      {{ model.updatedOnUtc }}
+                    </div>
+                  </div>
+                </div>
               </fieldset>
-              <fieldset class="q-mb-lg">
+              <fieldset class="q-mb-lg q-mt-sm">
                 <legend>Project Module Files</legend>
                 <q-table
-                  ref="tableRef" v-model:pagination="filepagination" bordered class="no-shadow" :loading="loading" :rows="filesrows" :columns="fileColumns" row-key="id" separator="cell"
+                  ref="tableRef" v-model:pagination="filePagination" bordered class="no-shadow" :loading="loading" :rows="filesRows" :columns="fileColumns" row-key="id" separator="cell"
                   binary-state-sort :rows-per-page-options="[20, 50, 100, 200, 500]"
                 >
                   <template #header="props">
@@ -149,6 +150,60 @@
                 </q-table>
               </fieldset>
             </q-tab-panel>
+            <q-tab-panel name="3_tab">
+              <q-table
+                ref="tableRef"
+                v-model:pagination="charterPagination"
+                bordered
+                class="no-shadow"
+                :loading="loading"
+                :rows="rows"
+                :columns="charterColumns"
+                row-key="id"
+                separator="cell"
+                binary-state-sort
+                :rows-per-page-options="[20, 50, 100, 200, 500]"
+              >
+                <template #header="props">
+                  <q-tr :props="props" class="bg-primary text-white">
+                    <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+                  </q-tr>
+                </template>
+                <template #body="props">
+                  <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                    <q-td style="width: 70%">
+                      {{ props.row.employeeName }}
+                    </q-td>
+                     <!-- Manage -->
+                      <q-td style="width: 10%" align="center">
+                        <q-icon
+                          v-if="props.row.fullAccess"
+                          name="o_check"
+                          color="positive"
+                        />
+                      </q-td>
+
+                      <!-- View -->
+                      <q-td style="width: 10%" align="center">
+                        <q-icon
+                          v-if="props.row.viewOnly"
+                          name="o_check"
+                          color="positive"
+                        />
+                      </q-td>
+
+                      <!-- Notes -->
+                      <q-td style="width: 10%" align="center">
+                        <q-icon
+                          v-if="props.row.notes"
+                          name="o_check"
+                          color="positive"
+                        />
+                      </q-td>
+                  </q-tr>
+                </template>
+              </q-table>
+            </q-tab-panel>
           </q-tab-panels>
         </div>
       </div>
@@ -162,17 +217,16 @@ import { useDialogPluginComponent } from "quasar";
 import { ref, onMounted } from "vue";
 import _ from "lodash";
 import projectModulesService from "modules/project-modules/projectModules.service";
-import useFilters from "composables/useFilters";
-
-// Common variables
-const { toDate } = useFilters();
-const loading = ref(true);
-const filesrows = ref([]);
-const tab = ref("1_tab");
 
 // Define emits
 defineEmits([...useDialogPluginComponent.emits]);
 const { dialogRef, onDialogHide } = useDialogPluginComponent();
+
+// Common variables
+const loading = ref(true);
+const filesRows = ref([]);
+const tab = ref("1_tab");
+const rows = ref([]);
 
 // Define model values
 const model = ref({
@@ -203,43 +257,68 @@ const model = ref({
 
 // Props values i.e. come from query string
 const props = defineProps({ id: { type: String, default: "" } });
-const filepagination = ref({ sortBy: "", descending: true, rowsPerPage: 20, page: 1 });
+const filePagination = ref({ sortBy: "", descending: true, rowsPerPage: 20, page: 1 });
 const fileColumns = ref([
   { name: "virtualPath", label: "File Name", field: "file.virtualPath", align: "left" },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left" },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left" }
 ]);
-// On page rendering
-onMounted(() => {
-  getProjectModuleDetails();
-});
+
+const charterPagination = ref({ sortBy: "employeeName", descending: false, rowsPerPage: 20, page: 1 });
+const charterColumns = [
+  {
+    name: "employeeName",
+    label: "Employee Name",
+    field: "employeeName",
+    align: "left",
+    sortable: true
+  },
+  {
+    name: "fullAccess",
+    label: "Manage",
+    field: "fullAccess"
+  },
+  {
+    name: "viewOnly",
+    label: "View",
+    field: "viewOnly"
+  },
+  {
+    name: "notes",
+    label: "Notes",
+    field: "notes"
+  }
+];
 
 // get project details
 const getProjectModuleDetails = () => {
   loading.value = true;
   projectModulesService.getProjectModuleDetails(props.id).then((resp) => {
     model.value = _.cloneDeep(resp);
-    filesrows.value = resp.projectModuleFilesList.map(item => ({
+    rows.value = (resp.projectModuleEmployeeMappings || []).map(item => {
+      return {
+        ...item,
+        // Employee
+        employeeId: item.employeeId,
+        employeeName: item.employee?.person?.fullName || "-",
+        fullAccess: item.fullAccess || false,
+        viewOnly: item.viewOnly || false,
+        notes: item.notes || false
+      };
+    });
+    filesRows.value = resp.projectModuleFilesList.map(item => ({
       ...item
     }));
   }).finally(() => {
     loading.value = false;
   });
 };
+
 function extractFileName (path) {
   return path ? path.split("/").pop() : "Unknown File";
 }
-// Download file method
-// function onDownload (filePath) {
-//   // Construct full file URL dynamically using this.baseURL if part of Vue instance
-//   const fullPath = `${baseURL}${filePath}`;
 
-//   // Create a temporary <a> element for triggering the download
-//   const link = document.createElement("a");
-//   link.href = fullPath;
-//   link.download = filePath.split("/").pop(); // Extract the filename from the file path
-//   link.click(); // Trigger download
-// }
+// Download file method
 function downloadFile (file) {
   const link = document.createElement("a");
   link.href = file;
@@ -258,7 +337,6 @@ function viewFile (file) {
   // Use Google Docs Viewer for Documents
   if (supportedFormats.includes(fileExtension)) {
     viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-    // console.log("googleDocsViewer", viewerUrl);
   }
 
   // Open new window
@@ -327,4 +405,8 @@ function viewFile (file) {
   }, 100);
 }
 
+// On page rendering
+onMounted(() => {
+  getProjectModuleDetails();
+});
 </script>

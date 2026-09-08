@@ -775,6 +775,8 @@ namespace Vsky.Services.Dashboard
                             .ThenInclude(m => m.ProjectEmployeeRoleMappings)
                                 .ThenInclude(r => r.SitesProjectRoles)
                                     .ThenInclude(r => r.SitesProjectRolesPermissions)
+                        .Include(x => x.ProjectModule.ProjectModuleEmployeeMappings
+    .Where(m => !m.Deleted))
                         .Include(x => x.ProjectActivities.Where(a => a.Active))
                         .Where(x => x.SiteId == SiteId);
 

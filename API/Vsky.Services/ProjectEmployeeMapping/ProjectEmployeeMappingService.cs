@@ -112,33 +112,6 @@ namespace Vsky.Services.ProjectEmployeeMappings
         }
         #endregion
 
-        #region InsertProjectEmployeeMappingList
-        public void InsertProjectEmployeeMappingList(IList<ProjectEmployeeMapping> entities)
-        {
-            _projectEmployeeMappingRepository.Insert(entities);
-        }
-        #endregion
-
-        #region UpdateProjectEmployeeMappingList
-        public void UpdateProjectEmployeeMappingList(List<ProjectEmployeeMapping> entities)
-        {
-            _projectEmployeeMappingRepository.Update(entities);
-        }
-        #endregion
-
-        #region DeleteProjectEmployeeMappingList
-        public void DeleteProjectEmployeeMappingList(List<ProjectEmployeeMapping> entities)
-        {
-            var list = new List<ProjectEmployeeMapping>();
-            foreach (var item in entities)
-            {
-                item.Deleted = true;
-                list.Add(item);
-            }
-            _projectEmployeeMappingRepository.Update(list);
-        }
-        #endregion
-
         #region GetProjectCharterEmployeeByProjectId
         public async Task<List<ProjectCharterEmployee>> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string projectId, string taskId, DateTime? currentDate = null)
         {

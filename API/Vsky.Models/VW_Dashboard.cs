@@ -209,6 +209,7 @@ namespace Vsky.Models
         [NotMapped]
         public bool CurrentUserNotes { get; set; }
         public virtual VW_Project Project { get; set; }
+        public virtual ProjectModule ProjectModule { get; set; }
 
         public virtual ICollection<VW_ProjectTaskActivities> ProjectActivities { get; set; } = new List<VW_ProjectTaskActivities>();
 

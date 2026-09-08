@@ -16,6 +16,7 @@ using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
 using Vsky.Services.Common;
 using Vsky.Services.ProjectActivities;
+using Vsky.Services.ProjectModuleEmployeeMappings;
 using Vsky.Services.ProjectModules;
 using Vsky.Services.ProjectTasks;
 using Vsky.Services.Sites;
@@ -36,6 +37,7 @@ namespace Vsky.Api.Controllers
         private readonly IProjectTaskService _projectTaskService;
         private readonly IProjectActivityService _projectActivityService;
         private readonly IAzureBlobImageServices _azureBlobImageServices;
+        private readonly IProjectModuleEmployeeMappingService _projectModuleEmployeeMappingService;
         #endregion
 
         #region Services Initializations
@@ -49,7 +51,8 @@ namespace Vsky.Api.Controllers
             IProjectModuleFilesService projectModuleFilesService,
             IProjectTaskService projectTaskService,
             IProjectActivityService projectActivityService,
-            IAzureBlobImageServices azureBlobImageServices)
+            IAzureBlobImageServices azureBlobImageServices,
+            IProjectModuleEmployeeMappingService projectModuleEmployeeMappingService)
         {
             _globalVariable = globalVariable;
             _mapper = mapper;
@@ -61,6 +64,7 @@ namespace Vsky.Api.Controllers
             _projectTaskService = projectTaskService;
             _projectActivityService = projectActivityService;
             _azureBlobImageServices = azureBlobImageServices;
+            _projectModuleEmployeeMappingService = projectModuleEmployeeMappingService;
         }
         #endregion
 
@@ -343,6 +347,7 @@ namespace Vsky.Api.Controllers
                     return Ok(new
                     {
                         success = true,
+                        id = entity.Id,
                         message = "Project module saved successfully.",
                         Warning
                     });
@@ -591,9 +596,67 @@ namespace Vsky.Api.Controllers
                         }
                     }
 
+                    if (model.Tab == "2_tab")
+                    {
+                        if (model.ProjectModuleEmployeeMappings != null &&
+                            model.ProjectModuleEmployeeMappings.Any())
+                        {
+                            foreach (var item in model.ProjectModuleEmployeeMappings)
+                            {
+                                if (string.IsNullOrWhiteSpace(item.EmployeeId))
+                                    continue;
+
+                                var projectModuleEmployeeMapping = await _projectModuleEmployeeMappingService.GetProjectModuleEmployeeById(item.Id);
+
+                                if (projectModuleEmployeeMapping != null)
+                                {
+                                    // Existing mapping
+                                    projectModuleEmployeeMapping.ProjectModuleId = id;
+                                    projectModuleEmployeeMapping.EmployeeId = item.EmployeeId;
+                                    projectModuleEmployeeMapping.FullAccess = item.FullAccess;
+                                    projectModuleEmployeeMapping.ViewOnly = item.ViewOnly;
+                                    projectModuleEmployeeMapping.Notes = item.Notes;
+                                    projectModuleEmployeeMapping.UpdatedById = LoggedUserId;
+                                    projectModuleEmployeeMapping.UpdatedOnUtc = GetDateTime;
+
+                                    // Current checkbox state
+                                    projectModuleEmployeeMapping.Deleted = item.Deleted;
+
+                                    _projectModuleEmployeeMappingService
+                                        .UpdateProjectModuleEmployees(projectModuleEmployeeMapping);
+                                }
+                                else
+                                {
+                                    // No existing mapping
+                                    if (item.Deleted)
+                                        continue;
+
+                                    var newMapping = new ProjectModuleEmployeeMapping
+                                    {
+                                        Id = Guid.NewGuid().ToString(),
+                                        ProjectModuleId = id,
+                                        EmployeeId = item.EmployeeId,
+                                        FullAccess = item.FullAccess,
+                                        ViewOnly = item.ViewOnly,
+                                        Notes = item.Notes,
+                                        CreatedById = LoggedUserId,
+                                        UpdatedById = LoggedUserId,
+                                        CreatedOnUtc = GetDateTime,
+                                        UpdatedOnUtc = GetDateTime,
+                                        Deleted = false
+                                    };
+
+                                    _projectModuleEmployeeMappingService
+                                        .InsertProjectModuleEmployees(newMapping);
+                                }
+                            }
+                        }
+                    }
+
                     return Ok(new
                     {
                         success = true,
+                        id = entity.Id,
                         message = "Project module saved successfully.",
                         Warning
                     });

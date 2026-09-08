@@ -104,6 +104,7 @@ using Vsky.Services.ProjectActionItem;
 using Vsky.Services.ProjectActivities;
 using Vsky.Services.ProjectEmployeeMappings;
 using Vsky.Services.ProjectMessage;
+using Vsky.Services.ProjectModuleEmployeeMappings;
 using Vsky.Services.ProjectModules;
 using Vsky.Services.ProjectModulesUserMappings;
 using Vsky.Services.ProjectQuestionsAnswer;
@@ -498,6 +499,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<IMovementRegisterServices, MovementRegisterServices>();
             builder.Services.AddScoped<IMovementRegisterDetailsService, MovementRegisterDetailsService>();
             builder.Services.AddScoped<IProjectModulesUserMappingService, ProjectModulesUserMappingService>();
+            builder.Services.AddScoped<IProjectModuleEmployeeMappingService, ProjectModuleEmployeeMappingService>();
             builder.Services.AddScoped<IHelpDeskFilesService, HelpDeskFilesService>();
             builder.Services.AddScoped<IExpensePurchaseRequestFilesService, ExpensePurchaseRequestFilesService>();
             builder.Services.AddScoped<IExpenseAdvanceRequestFilesService, ExpenseAdvanceRequestFilesService>();
