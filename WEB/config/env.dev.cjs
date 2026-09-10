@@ -9,6 +9,6 @@ module.exports = {
   MS_Logout_BASE_URL: "http://localhost:9000/auth/login",
   // MS_Client_Id: "719a4df3-64d2-49cc-92de-6d3694adadde",
   MS_Client_Id: "c59d0cd0-f0fa-4c59-94a4-a6b4b00582d1",
-  MS_Authority_Url: "https://login.microsoftonline.com/fe6a2362-9b42-4ec8-8684-3fb1a542df8c/oauth2/v2.0/token"
+  MS_Authority_Url: "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize"
   // MS_Authority_Url: "https://login.microsoftonline.com/common"
 };
