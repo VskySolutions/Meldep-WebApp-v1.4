@@ -80,14 +80,17 @@ namespace Vsky.Services.Common
 
         #region Insert picture
         void InsertPicture(Picture entity);
+        void InsertPictureFilePathDetails(IList<Picture> entities);
         #endregion
 
         #region Update picture 
         void UpdatePicture(Picture entity);
+        void UpdatePictureFilePathDetails(IList<Picture> entities);
         #endregion
 
         #region DeletePicture
         void DeletePicture(Picture entity);
+        void DeletePictureFilePathDetails(List<Picture> entities);
         #endregion
 
         #region Add/Update Address 

@@ -72,6 +72,11 @@
                   :error="v$.timeZone.$error"
                   :error-message="v$.timeZone.$errors[0]?.$message"
                 />
+                  <div class="col-xs-12 col-sm-6 col-md-4">
+                    <div class="q-mb-xs text-black">Is file upload or external?</div>
+                    <q-radio v-model="model.isFileUploadOrExternal" :val="false" label="Upload File" />
+                    <q-radio v-model="model.isFileUploadOrExternal" :val="true" label="External File Path" />
+                  </div>
               </div>
             </fieldset>
             <fieldset>
@@ -311,7 +316,8 @@ const model = ref({
   siteFaviconPath: "",
   roleIds: [],
   password: "",
-  sendEmail: false
+  sendEmail: false,
+  isFileUploadOrExternal: true
 });
 
 const passwordValidation = computed(() => {
@@ -405,6 +411,7 @@ function getCountryList () {
     // model.value.countryId = resp[1].id;
   });
 }
+
 function filterFn2 (val, update, abort) {
   update(() => {
     const needle = val ? val.toLowerCase() : "";
@@ -415,6 +422,7 @@ function filterFn2 (val, update, abort) {
     }
   });
 }
+
 // Get dropdown list for states
 const stateList = ref([]);
 const options3 = ref([]);
@@ -424,6 +432,7 @@ function getStates () {
     options3.value = resp;
   });
 }
+
 function filterFn3 (val, update, abort) {
   update(() => {
     const needle = val ? val.toLowerCase() : "";

@@ -221,7 +221,7 @@ async function onSiteSelected (selectedId) {
 
     // Change MT
     const data = await siteService.getGlobalSiteData(selectedId);
-    authStore.changeTenant(data.siteId, data.timeZone, data.name, data.landingPage, data.roles);
+    authStore.changeTenant(data.siteId, data.timeZone, data.name, data.landingPage, data.roles, data.isFileUploadOrExternal);
 
     // Redirect to the landing page
     if (data.landingPage) {

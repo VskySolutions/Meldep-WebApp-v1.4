@@ -31,6 +31,7 @@ namespace Vsky.Api.Models
         public bool IsDropdownGenerated { get; set; }
         public int NumberOfWorkingDays { get; set; }
         public bool CheckLeavesForTimesheetReminder { get; set; }
+        public bool IsFileUploadOrExternal { get; set; }
         public bool Deleted { get; set; }
 
         public IFormFile File { get; set; }

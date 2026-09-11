@@ -257,7 +257,24 @@
         </template>
         <template #header="props">
           <q-tr :props="props" class="bg-primary text-white">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+            <q-th
+              v-for="col in props.cols"
+              :key="col.name"
+            >
+              {{ col.label }}
+              <!-- Sort icon only -->
+              <q-icon
+                v-if="col.sortable"
+                :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                size="16px"
+                class="cursor-pointer q-ml-sm"
+                @click.stop="sortColumn(col)"
+              >
+                  <q-tooltip>
+                  {{ pagination.sortBy === col.name ? (pagination.descending ? 'Sort Ascending' : 'Sort Descending') : 'Sort' }}
+                </q-tooltip>
+              </q-icon>
+            </q-th>
             <q-th auto-width class="text-center">Actions</q-th>
           </q-tr>
         </template>
@@ -435,6 +452,25 @@ const handleDocumentClick = (event) => {
     });
   }
 };
+
+const refreshPersonList = () => {
+  getPersons({ pagination: pagination.value });
+};
+
+const sortColumn = (col) => {
+  if (!col.sortable) return;
+  if (pagination.value.sortBy === col.name) {
+    // Same column → toggle direction
+    pagination.value.descending = !pagination.value.descending;
+  }
+  else {
+    // New column → ascending
+      pagination.value.sortBy = col.name;
+      pagination.value.descending = false;
+  }
+  refreshPersonList();
+};
+
 // ----------------------------
 // Search records as per parameters
 // ----------------------------
@@ -521,7 +557,7 @@ const onAdd = () => {
     component: editPerson,
     componentProps: {}
   }).onOk(() => {
-    getPersons({ pagination: pagination.value });
+    refreshPersonList();
   }).onCancel(() => {
   }).onDismiss(() => {
   });
@@ -536,7 +572,7 @@ const onEdit = (id) => {
     component: editPerson,
     componentProps: { id }
   }).onOk(() => {
-    getPersons({ pagination: pagination.value });
+    refreshPersonList();
   }).onCancel(() => {
     activeRowId.value = id;
   }).onDismiss(() => {
@@ -569,7 +605,7 @@ const onDelete = (item) => {
   zwConfirmDelete({ data: `${item.fullName}` }, () => {
     personService.deletePerson(item.id).then(resp => {
       notifySuccess({ message: "Person is deleted successfully." });
-      getPersons({ pagination: pagination.value });
+      refreshPersonList();
     });
   }, () => {
     activeRowId.value = null;
@@ -590,7 +626,7 @@ function onConvertToCustomer (id) {
     personService.convertPersonToCustomer(id)
       .then(resp => {
         notifySuccess({ message: "Customer converted successfully." });
-        getPersons({ pagination: pagination.value });
+        refreshPersonList();
       });
   }).onCancel(() => {
     notifyWarning({ message: "Convert Customer Cancelled" });
@@ -637,7 +673,7 @@ function onClearFilters (key) {
     search.value.city = "";
   }
   delete appliedFilters.value[key];
-  getPersons({ pagination: pagination.value });
+  refreshPersonList();
 }
 
 // ----------------------------
@@ -645,7 +681,7 @@ function onClearFilters (key) {
 // ----------------------------
 watch(() => search.value.searchText, () => {
   if (search.value.searchText) searchLoader.value = true;
-  getPersons({ pagination: pagination.value });
+  refreshPersonList();
 });
 
 watch(() => search.value.countryId, (newValue, oldValue) => {

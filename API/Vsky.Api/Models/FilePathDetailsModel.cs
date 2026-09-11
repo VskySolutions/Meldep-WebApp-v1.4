@@ -7,8 +7,12 @@ namespace Vsky.Api.Models
 {
     public record FilePathDetailsModel : BaseEntityModel
     {
+        public string SiteId { get; set; }
         public string ModuleId { get; set; }
         public string ModuleName { get; set; }
+        public string SubModuleId { get; set; }
+        public string Sub_Module { get; set; }
+        public string Type { get; set; }
         public string FilePath { get; set; }
         public string FileName { get; set; }
         public string Note { get; set; }
@@ -20,5 +24,6 @@ namespace Vsky.Api.Models
         public bool Deleted { get; set; }
 
         public virtual Requirement Requirement { get; set; }
+        public virtual Site Site { get; set; }
     }
 }

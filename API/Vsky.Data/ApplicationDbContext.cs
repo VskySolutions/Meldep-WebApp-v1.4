@@ -638,7 +638,7 @@ namespace Vsky.Data
                 entity.Property(e => e.UpdatedOnUtc).HasPrecision(6);
 
                 entity.HasOne(e => e.Site).WithMany().HasForeignKey(e => e.SiteId);
-                entity.HasOne(d => d.Requirement).WithMany(d => d.FilePathDetails).HasForeignKey(d => d.ModuleId);
+                //entity.HasOne(d => d.Requirement).WithMany(d => d.FilePathDetails).HasForeignKey(d => d.ModuleId);
             });
 
             #endregion

@@ -329,12 +329,21 @@ namespace Vsky.Services.Common
         {
             _pictureRepository.Insert(entity);
         }
+        public void InsertPictureFilePathDetails(IList<Picture> entities)
+        {
+            _pictureRepository.Insert(entities);
+        }
+
         #endregion
 
         #region Update picture 
         public void UpdatePicture(Picture entity)
         {
             _pictureRepository.Update(entity);
+        }
+        public void UpdatePictureFilePathDetails(IList<Picture> entities)
+        {
+            _pictureRepository.Update(entities);
         }
         #endregion
 
@@ -345,6 +354,17 @@ namespace Vsky.Services.Common
         {
             entity.Deleted = true;
             _pictureRepository.Update(entity);
+        }
+
+        public void DeletePictureFilePathDetails(List<Picture> entities)
+        {
+            var list = new List<Picture>();
+            foreach (var item in entities)
+            {
+                item.Deleted = true;
+                list.Add(item);
+            }
+            _pictureRepository.Update(list);
         }
         #endregion       
 

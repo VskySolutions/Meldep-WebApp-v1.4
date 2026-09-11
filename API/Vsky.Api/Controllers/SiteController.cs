@@ -264,7 +264,7 @@ namespace Vsky.Api.Controllers
                 var roles = await _applicationUserRoleService.GetNormalizedRoleNamesByUserAndSite(userId, siteId);
 
                 if (SiteData != null)
-                    return Ok(new { siteId = SiteData.Id, timeZone = SiteData.TimeZone, Name = SiteData.Name, LandingPage = LandingPageLink, Roles = roles });
+                    return Ok(new { siteId = SiteData.Id, timeZone = SiteData.TimeZone, Name = SiteData.Name, LandingPage = LandingPageLink, Roles = roles, IsFileUploadOrExternal = SiteData.IsFileUploadOrExternal });
                 else
                     return BadRequest("No Site Fount");
             }
@@ -761,6 +761,8 @@ namespace Vsky.Api.Controllers
                     entity.AddressId = AddressId;
                     entity.Active = model.Active;
                     entity.TimeZone = model.TimeZone;
+                    entity.IsFileUploadOrExternal = model.IsFileUploadOrExternal;
+
                     entity.UpdatedById = LoggedUserId;
                     entity.UpdatedOnUtc = GetDateTime;
                     _siteService.UpdateSite(entity);

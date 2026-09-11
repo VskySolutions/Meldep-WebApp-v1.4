@@ -56,11 +56,11 @@ namespace Vsky.Services.FilePathDetail
                 Module = x.Module,
                 FilePath = x.FilePath,
                 FileName = x.FileName,
-                Requirement = new Requirement
-                {
-                    Id = x.Requirement.Id,
-                    Title = x.Requirement.Title
-                },
+                //Requirement = new Requirement
+                //{
+                //    Id = x.Requirement.Id,
+                //    Title = x.Requirement.Title
+                //},
 
             });
             var item = await query.FirstOrDefaultAsync();

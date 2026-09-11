@@ -25,6 +25,6 @@ public class FilePathDetails : BaseEntity
     public DateTime? UpdatedOnUtc { get; set; }
     public bool Deleted { get; set; }
 
-    public virtual Requirement Requirement { get; set; }
+    //public virtual Requirement Requirement { get; set; }
     public virtual Site Site { get; set; }
 }

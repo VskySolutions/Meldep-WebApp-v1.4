@@ -40,6 +40,7 @@ namespace Vsky.Api.Models
 
         public string SiteLandingPageLink { get; set; }
         public string GlobalSiteId { get; set; }
+        public bool IsFileUploadOrExternal { get; set; }
     }
 
     public record RegisterModel

@@ -139,6 +139,7 @@ namespace Vsky.Services.Sites
                 TicketNoPrefix = x.TicketNoPrefix,
                 TicketGenerationEmail = x.TicketGenerationEmail,
                 TimeZone = x.TimeZone,
+                IsFileUploadOrExternal = x.IsFileUploadOrExternal,
                 Person = new Person
                 {
                     Id = x.Person.Id,

@@ -183,6 +183,7 @@ namespace Vsky.Api.Controllers
                         Token = token,
                         ExpiresIn = (int)_jwtTokenConfig.ValidFor.TotalSeconds,
                         CreatedAt = GetDateTime,
+                        IsFileUploadOrExternal = SiteData.IsFileUploadOrExternal
                     };
                     return Ok(tokenResult);
                 }
@@ -265,11 +266,10 @@ namespace Vsky.Api.Controllers
                                 Token = token,
                                 ExpiresIn = (int)_jwtTokenConfig.ValidFor.TotalSeconds,
                                 CreatedAt = GetDateTime,
+                                IsFileUploadOrExternal = SiteData.IsFileUploadOrExternal
                             };
 
-                            return Ok(tokenResult);
-
-                          
+                            return Ok(tokenResult);                          
                         }
                         else if (result.RequiresTwoFactor)
                         {
@@ -380,7 +380,8 @@ namespace Vsky.Api.Controllers
                         Token = token,
                         ExpiresIn = (int)_jwtTokenConfig.ValidFor.TotalSeconds,
                         CreatedAt = GetDateTime,
-                        IsMsLogin = true
+                        IsMsLogin = true,
+                        IsFileUploadOrExternal = SiteData.IsFileUploadOrExternal
                     };
                     //Collect user roles
                     if (roles != null && roles.Count > 0)

@@ -19,7 +19,8 @@ function mapUser(resp) {
     siteName: resp.siteName,
     siteTimeZone: resp.siteTimeZone,
     siteLandingPageLink: resp.siteLandingPageLink,
-    isMsLogin: resp.isMsLogin
+    isMsLogin: resp.isMsLogin,
+    isFileUploadOrExternal: resp.isFileUploadOrExternal
   };
 }
 
@@ -182,14 +183,15 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    changeTenant(siteId, siteTimeZone, name, landingPage, roles) {
+    changeTenant(siteId, siteTimeZone, name, landingPage, roles, isFileUploadOrExternal) {
       const updatedUser = {
         ...this.user,
         siteId: siteId,
         siteTimeZone: siteTimeZone,
         siteName: name,
         siteLandingPageLink: landingPage,
-        roles: roles
+        roles: roles,
+        isFileUploadOrExternal: isFileUploadOrExternal
       };
       this.user = updatedUser;
       LocalStorage.set("user", updatedUser);

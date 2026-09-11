@@ -220,7 +220,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="row q-col-gutter-x-md q-mb-lg hidden">
+                    <div v-if="isFileUploadOrExternal" class="row q-col-gutter-x-md q-mb-lg">
                       <div class="col-12 q-mb-xs text-black">Project Files</div>
                       <!-- File Uploader -->
                       <div class="col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12">
@@ -237,7 +237,7 @@
                         />
                       </div>
                     </div>
-                    <div class="row q-col-gutter-x-md q-mb-lg">
+                    <div v-if="isFileUploadOrExternal" class="row q-col-gutter-x-md q-mb-lg">
                       <!-- Display Files in Square Boxes with File Name Below -->
                       <div v-if="model.projectFiles && model.projectFiles.length > 0" class="row q-gutter-md">
                         <div
@@ -267,7 +267,7 @@
                       </div>
                     </div>
                   </fieldset>
-                  <fieldset class="q-mt-lg">
+                  <fieldset v-if="!isFileUploadOrExternal" class="q-mt-lg">
                     <legend>Document Reference List</legend>
                     <div class="flex items-center justify-end q-mb-md">
                       <q-btn color="primary" icon="o_add" label="Add" no-caps @click="onAddDocumentReference" />
@@ -278,7 +278,7 @@
                       bordered
                       class="no-shadow"
                       :loading="loading"
-                      :rows="rows"
+                      :rows="fileRows"
                       :columns="documentReferenceColumns"
                       row-key="id"
                       separator="cell"
@@ -292,7 +292,7 @@
                             :key="col.name" :props="props"
                           >
                             {{ col.label }}
-                            <span v-if="['filePath','fileName'].includes(col.name)" class="required">*</span>
+                            <span v-if="['externalFilePath','externalFileName'].includes(col.name)" class="required">*</span>
                           </q-th>
                           <q-th auto-width class="text-center">Actions</q-th>
                         </q-tr>
@@ -302,35 +302,35 @@
                           <q-td>
                             <div>
                               <q-input
-                                v-model="editingRow.filePath"
+                                v-model="editingRow.externalFilePath"
                                 outlined
                                 stack-label
                                 hide-bottom-space
                                 :dense="true"
-                                :error="editingRowV$.filePath.$error"
-                                :error-message="editingRowV$.filePath.$errors[0]?.$message"
-                                @blur="editingRowV$.filePath.$touch"
+                                :error="editingRowV$.externalFilePath.$error"
+                                :error-message="editingRowV$.externalFilePath.$errors[0]?.$message"
+                                @blur="editingRowV$.externalFilePath.$touch"
                               />
                             </div>
                           </q-td>
                           <q-td>
                             <div>
                               <q-input
-                                v-model="editingRow.fileName"
+                                v-model="editingRow.externalFileName"
                                 outlined
                                 stack-label
                                 hide-bottom-space
                                 :dense="true"
-                                :error="editingRowV$.fileName.$error"
-                                :error-message="editingRowV$.fileName.$errors[0]?.$message"
-                                @blur="editingRowV$.fileName.$touch"
+                                :error="editingRowV$.externalFileName.$error"
+                                :error-message="editingRowV$.externalFileName.$errors[0]?.$message"
+                                @blur="editingRowV$.externalFileName.$touch"
                               />
                             </div>
                           </q-td>
                           <q-td style="width: 350px;">
                             <div>
                               <q-input
-                                v-model="editingRow.note"
+                                v-model="editingRow.externalFileDescription"
                                 outlined
                                 stack-label
                                 type="textarea"
@@ -341,10 +341,10 @@
                             </div>
                           </q-td>
                           <q-td auto-width class="text-center">
-                            <q-icon name="o_save" size="xs" class="cursor-pointer q-mr-lg" @click="onSave()">
+                            <q-icon name="o_save" size="xs" class="cursor-pointer q-mr-lg" @click="onFilePathSave()">
                               <q-tooltip>Save</q-tooltip>
                             </q-icon>
-                            <q-icon name="o_cancel" size="xs" color="red" class="cursor-pointer" @click="onCancel">
+                            <q-icon name="o_cancel" size="xs" color="red" class="cursor-pointer" @click="onFilePathCancel">
                               <q-tooltip>Cancel</q-tooltip>
                             </q-icon>
                           </q-td>
@@ -353,36 +353,76 @@
                       <template #body="props">
                         <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
                           <q-td class="text-left" style="width: 40%;">
+                            <q-input
+                              v-if="mode == 'edit' && editingRow && props.row.id === activeRowId"
+                              v-model="editingRow.externalFilePath"
+                              outlined
+                              stack-label
+                              hide-bottom-space
+                              :dense="true"
+                              :error="editingRowV$.externalFilePath.$error"
+                              :error-message="editingRowV$.externalFilePath.$errors[0]?.$message"
+                              @blur="editingRowV$.externalFilePath.$touch"
+                            />
                             <span
                               :class="props.row.deleted ? 'text-delete' : ''"
                               style="white-space: normal; word-break: break-word;"
                             >
-                              <a :href="props.row.filePath" target="_blank" class="text-bluee">
-                                {{ props.row.filePath }}
+                              <a :href="props.row.externalFilePath" target="_blank" class="text-bluee">
+                                {{ props.row.externalFilePath }}
                               </a>
                             </span>
                           </q-td>
                           <q-td class="text-left" style="width: 25%;">
+                            <q-input
+                              v-if="mode == 'edit' && editingRow && props.row.id === activeRowId"
+                              v-model="editingRow.externalFileName"
+                              outlined
+                              stack-label
+                              hide-bottom-space
+                              :dense="true"
+                              :error="editingRowV$.externalFileName.$error"
+                              :error-message="editingRowV$.externalFileName.$errors[0]?.$message"
+                              @blur="editingRowV$.externalFileName.$touch"
+                            />
                             <span
                               :class="props.row.deleted ? 'text-delete' : ''"
                               style="white-space: normal; word-break: break-word;"
                             >
-                              {{ props.row.fileName }}
+                              {{ props.row.externalFileName }}
                             </span>
                           </q-td>
                           <q-td class="text-left">
+                            <q-input
+                              v-if="mode == 'edit' && editingRow && props.row.id === activeRowId"
+                              v-model="editingRow.externalFileDescription"
+                              outlined
+                              stack-label
+                              type="textarea"
+                              hide-bottom-space
+                              :dense="true"
+                              maxlength="500"
+                            />
                             <span
                               :class="props.row.deleted ? 'text-delete' : ''"
                               style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
-                              v-html="props.row.note"
+                              v-html="props.row.externalFileDescription"
                             />
                           </q-td>
                           <q-td auto-width class="text-center">
-                            <template>
+                            <template v-if="mode == 'edit' && editingRow && props.row.id === activeRowId">
+                              <q-icon name="o_save" size="xs" class="cursor-pointer q-mr-lg" @click="onFilePathSave()">
+                                <q-tooltip>Save</q-tooltip>
+                              </q-icon>
+                              <q-icon name="o_cancel" size="xs" color="red" class="cursor-pointer" @click="onFilePathCancel">
+                                <q-tooltip>Cancel</q-tooltip>
+                              </q-icon>
+                            </template>
+                            <template v-else>
                               <q-icon v-if="!props.row.deleted" name="o_delete_outline" color="red" size="xs" class="cursor-pointer" @click="onDeleteDocumentReference(props.row)">
                                 <q-tooltip>Delete</q-tooltip>
                               </q-icon>
-                              <q-icon v-if="props.row.deleted" name="o_redo" size="xs" class="cursor-pointer" @click="onUndo(props.row)">
+                              <q-icon v-if="props.row.deleted" name="o_redo" size="xs" class="cursor-pointer" @click="onFilePathUndo(props.row)">
                                 <q-tooltip>Undo</q-tooltip>
                               </q-icon>
                             </template>
@@ -563,6 +603,8 @@ const processingClose = ref(false);
 const isFilesValid = ref(true);
 const mode = ref(null);
 const editingRow = ref(null);
+const isFileUploadOrExternal = user.isFileUploadOrExternal;
+
 const defaultRoles = [
   "Project Manager",
   "Project Coordinator",
@@ -614,10 +656,11 @@ const columns = ref([
   }
 ]);
 
+const fileRows = ref([]);
 const documentReferenceColumns = ref([
-  { name: "filePath", label: "File Path", field: "filePath", align: "left", sortable: true },
-  { name: "fileName", label: "File Name", field: "fileName", align: "left", sortable: true },
-  { name: "note", label: "Notes", field: "note", align: "left", sortable: true }
+  { name: "externalFilePath", label: "File Path", field: "externalFilePath", align: "left", sortable: true },
+  { name: "externalFileName", label: "File Name", field: "externalFileName", align: "left", sortable: true },
+  { name: "externalFileDescription", label: "File Description", field: "externalFileDescription", align: "left", sortable: true }
 ]);
 
 // Define model values
@@ -1057,8 +1100,8 @@ function validateMandatoryProjectRoles() {
 // ----------------------------------------------------------------------------------------------------------------
 
 const editingRowrules = {
-  filePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1), maxLength: maxLength(200) },
-  fileName: { required: helpers.withMessage("File Name is required", required) }
+  externalFilePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1), maxLength: maxLength(200) },
+  externalFileName: { required: helpers.withMessage("File Name is required", required) }
 };
 
 const editingRowV$ = useVuelidate(editingRowrules, editingRow, { $lazy: true, $autoDirty: true });
@@ -1074,7 +1117,7 @@ const getProject = (projectId) => {
 
   projectService.getProject(projectId).then((resp) => {
     model.value = _.cloneDeep(resp);
-
+    
     companyContactDropdownSingleSelect.load(resp.customerId);
     projectSubCategoryDropdownSingleSelect.load(resp.projectCategoryId);
     activeEmployeesDropdownSingleSelect.load(user.siteId);
@@ -1190,6 +1233,12 @@ const getProject = (projectId) => {
       return row;
     });
 
+    fileRows.value = resp.projectFileList.map(item => ({
+      ...item.file,
+      editing: false,
+      flag: "Edit"
+    }));
+
     rowCounter.value = counter;
 
     syncRowValidations();
@@ -1250,9 +1299,9 @@ function onAddProjectCharter() {
 function onAddDocumentReference () {
   mode.value = "addDocumentReference";
   editingRow.value = {
-    filePath: "",
-    fileName: "",
-    note: ""
+    externalFilePath: "",
+    externalFileName: "",
+    externalFileDescription: ""
   };
   activeRowId.value = null;
 }
@@ -1274,87 +1323,57 @@ const onDeleteProjectCharter = (row) => {
 
 function onDeleteDocumentReference (item) {
   item.deleted = true;
-  const rowIndex = rows.value.findIndex((row) => row.id === item.id);
+  const rowIndex = fileRows.value.findIndex((row) => row.id === item.id);
   if (rowIndex !== -1) {
-    rows.value.splice(rowIndex, 1, {
-      ...rows.value[rowIndex],
+    fileRows.value.splice(rowIndex, 1, {
+      ...fileRows.value[rowIndex],
       id: item.id,
-      fileName: item.fileName,
-      filePath: item.filePath,
-      note: item.note,
+      externalFileName: item.externalFileName,
+      externalFilePath: item.externalFilePath,
+      externalFileDescription: item.externalFileDescription,
       flag: "Delete"
     });
   }
   activeRowId.value = item.id;
 }
 
-function onCancel () {
+function onFilePathCancel () {
   mode.value = null;
   editingRow.value = null;
-  editingLogRow.value = null;
   activeRowId.value = null;
 }
 
-function onUndo (item) {
+function onFilePathUndo (item) {
   item.deleted = false;
   activeRowId.value = null;
 }
 
-async function onSave () {
+async function onFilePathSave () {
+  debugger;
   if (mode.value === "addDocumentReference") {
     if (!await editingRowV$.value.$validate()) {
       return;
     }
     // check duplicate row
     let isDuplicate = 0;
-    rows.value.forEach((item, index) => {
-      if (item.fileName.toLowerCase() === editingRow.value.fileName.toLowerCase()) {
+    fileRows.value.forEach((item, index) => {
+      if (item.externalFileName.toLowerCase() === editingRow.value.externalFileName.toLowerCase()) {
         isDuplicate = 1;
       }
     });
     if (isDuplicate === 0) {
       const newRow = {
         id: uid(),
-        fileName: editingRow.value.fileName,
-        filePath: editingRow.value.filePath,
-        note: editingRow.value.note,
+        externalFileName: editingRow.value.externalFileName,
+        externalFilePath: editingRow.value.externalFilePath,
+        externalFileDescription: editingRow.value.externalFileDescription,
         flag: "New"
       };
-      rows.value.unshift(newRow);
+      fileRows.value.unshift(newRow);
       mode.value = null;
       activeRowId.value = null;
     } else {
       notifyError({ message: "Duplicate File Name." });
-    }
-  } else if (mode.value === "addChangeLog") {
-    if (!await editingLogRowV$.value.$validate()) {
-      return;
-    }
-    // check duplicate row
-    let isDuplicate = 0;
-    const requirementName = editingLogRow.value.requirementName?.trim();
-    if (requirementName) {
-      logrows.value.forEach((item, index) => {
-        const existingRequirementName = item.requirementName?.trim();
-        if (existingRequirementName && existingRequirementName.toLowerCase() === requirementName.toLowerCase()) {
-          isDuplicate = 1;
-        }
-      });
-    }
-    if (isDuplicate === 0) {
-      const newRow = {
-        id: uid(),
-        employeeId: editingLogRow.value.employeeId,
-        requirementLogDateStr: editingLogRow.value.requirementLogDateStr,
-        requirementName: editingLogRow.value.requirementName,
-        description: editingLogRow.value.description,
-        flag: "New"
-      };
-      logrows.value.unshift(newRow);
-      mode.value = null;
-      activeRowId.value = null;
-    } else {
-      notifyError({ message: "Duplicate Requirement Name." });
     }
   }
 }
@@ -1507,6 +1526,7 @@ const onSubmitClose = () => {
 };
 
 const onSubmit = async (isClose = 0) => {
+  debugger;
   if (isClose === 1) {
     processingClose.value = true;
     processing.value = false;
@@ -1555,6 +1575,17 @@ const onSubmit = async (isClose = 0) => {
       notifyWarning({ message: "Please upload valid files" });
       return;
     }
+    
+    if (mode.value === "addDocumentReference") {
+      const isValid = await editingRowV$.value.$validate();
+
+      if (isValid) {
+        notifyError({ message: "Please save document reference first." });
+      }
+
+      return;
+    }
+
     const formValid = props.isCharter ? true : await v$.value.$validate();
     if (formValid && isValid) {
       if (tab.value === "2_tab" && rows.value.length === 0) {
@@ -1597,6 +1628,37 @@ const onSubmit = async (isClose = 0) => {
         // Also pass the projectFileFlag for general status tracking
         formData.append("projectFileFlag", model.value.projectFileFlag || "no_change");
       }
+      
+      // model.value.filePathModelList = fileRows.value;
+      const filePathDetails = toRaw(fileRows.value || []);
+
+      filePathDetails.forEach((file, index) => {
+        formData.append(
+          `filePathModelList[${index}].id`,
+          file.id ?? ""
+        );
+
+        formData.append(
+          `filePathModelList[${index}].externalFilePath`,
+          file.externalFilePath ?? ""
+        );
+
+        formData.append(
+          `filePathModelList[${index}].externalFileDescription`,
+          file.externalFileDescription ?? ""
+        );
+
+        formData.append(
+          `filePathModelList[${index}].externalFileName`,
+          file.externalFileName ?? ""
+        );
+        
+        formData.append(
+          `filePathModelList[${index}].flag`,
+          file.flag ?? ""
+        );
+      });
+
       const isValidRow = (emp) => {
         if (emp.deleted && emp.id === null) return false;
         if (!emp) return false;
