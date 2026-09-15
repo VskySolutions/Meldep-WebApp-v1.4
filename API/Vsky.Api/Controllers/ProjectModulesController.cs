@@ -72,14 +72,16 @@ namespace Vsky.Api.Controllers
         // Title: Get All ProjectModules
         // Description: This endpoint fetches a list of ProjectModules based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
-        public IActionResult GetAllProjectModules(ProjectModuleSearchModel searchModel)
+        public async Task<IActionResult> GetAllProjectModules(ProjectModuleSearchModel searchModel)
         {
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+
                 // Fetch a list of project module based on search criteria (name, sorting, pagination)
-                var list = _projectModuleService.GetAllProjectModules(SiteId, searchModel.SearchText, searchModel.ProjectIds, searchModel.ProjectModuleTypeIds, searchModel.ProjectModuleStatusIds, searchModel.ProjectId, searchModel.CustomerIds, searchModel.CompanyContactIds, searchModel.isShowCloseStatus, searchModel.pageName, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var list = await _projectModuleService.GetAllProjectModules(SiteId, LoggedUserId, employeeId, searchModel.SearchText, searchModel.ProjectIds, searchModel.ProjectModuleTypeIds, searchModel.ProjectModuleStatusIds, searchModel.ProjectId, searchModel.CustomerIds, searchModel.CompanyContactIds, searchModel.isShowCloseStatus, searchModel.pageName, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
                 // Map the fetched list to a model suitable for the response
                 var model = new ProjectModuleListModel
                 {

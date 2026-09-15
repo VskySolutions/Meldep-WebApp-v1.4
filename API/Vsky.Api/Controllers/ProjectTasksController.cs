@@ -2992,11 +2992,13 @@ namespace Vsky.Api.Controllers
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
             var SiteId = _globalVariable.SiteId;
+            var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+
             if (searchModel.ProjectIds != null && searchModel.ProjectIds.Count > 1)
                 searchModel.SortBy = "calendar";
 
             var fullPageSize = int.MaxValue;
-            var modules = _projectModuleService.GetAllProjectModules(SiteId, searchModel.SearchText, searchModel.ProjectIds, null, searchModel.ProjectModuleStatusIds, searchModel.ProjectId, searchModel.CustomerIds, searchModel.CompanyContactIds, searchModel.isShowCloseStatus, null, searchModel.SortBy, searchModel.Descending, 1, fullPageSize);
+            var modules = await _projectModuleService.GetAllProjectModules(SiteId, LoggedUserId, employeeId, searchModel.SearchText, searchModel.ProjectIds, null, searchModel.ProjectModuleStatusIds, searchModel.ProjectId, searchModel.CustomerIds, searchModel.CompanyContactIds, searchModel.isShowCloseStatus, null, searchModel.SortBy, searchModel.Descending, 1, fullPageSize);
             // selected month 
             //var now = CalendarMonth;
             var now = searchModel.StartDateStr.HasValue ? searchModel.StartDateStr.Value : CalendarMonth;

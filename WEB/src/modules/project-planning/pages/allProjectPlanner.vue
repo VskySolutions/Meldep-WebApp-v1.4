@@ -2019,7 +2019,34 @@
                             <template #header="props">
                               <q-tr :props="props" class="bg-primary text-white">
                                 <!-- <q-th auto-width class="text-center" /> -->
-                                <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}<span v-if="['activityOwner'].includes(col.name) || ['activityName'].includes(col.name)" class="required">*</span></q-th>
+                                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}<span v-if="['activityOwner'].includes(col.name) || ['activityName'].includes(col.name)" class="required">*</span></q-th> -->
+                                <q-th
+                                  v-for="col in props.cols"
+                                  :key="col.name"
+                                  :props="props"
+                                  class="text-no-wrap"
+                                >
+                                  <!-- <div
+                                    v-if="col.name === 'activityOwner'"
+                                    class="row items-center no-wrap"
+                                  > -->
+                                  <template v-if="col.name === 'activityOwner'">
+                                    <q-checkbox
+                                      v-if="
+                                        !savingActivityEmployees &&
+                                        getNewModuleEmployees().length > 0
+                                      "
+                                      v-model="selectAllActivities"
+                                      size="sm"
+                                      @update:model-value="toggleSelectAllActivities"
+                                    />
+
+                                    <span class="q-ml-sm">{{ col.label }}</span>
+                                  <!-- </div> -->
+                                   </template>
+
+                                  <span v-else>{{ col.label }}</span>
+                                </q-th>
                                 <q-th auto-width class="text-center" />
                               </q-tr>
                             </template>
@@ -2029,37 +2056,37 @@
                                 :key="`new-employee-${employee.value}`"
                                 class="bg-grey-1"
                               >
-                                <q-td colspan="100%" class="q-pa-xs">
+                                <q-td class="q-pa-xs">
                                   <div class="row items-center">
                                     <q-checkbox
                                       :model-value="
-                                        activityEmployeeSelections[employee.value] ?? true
+                                        activityEmployeeSelections[employee.value] ?? false
                                       "
                                       size="sm"
                                       :disable="savingActivityEmployees"
                                       @update:model-value="
                                         value => {
                                           activityEmployeeSelections[employee.value] = value;
+
+                                          selectAllActivities =
+                                            getNewModuleEmployees().length > 0 &&
+                                            getNewModuleEmployees().every(
+                                              emp => activityEmployeeSelections[emp.value] === true
+                                            );
                                         }
                                       "
                                     />
 
-                                    <span
-                                      class="q-ml-sm"
-                                      style="font-size: 12px;"
-                                    >
+                                    <span class="q-ml-sm" style="font-size: 12px;">
                                       {{ employee.text }}
                                     </span>
 
-                                    <q-badge
-                                      color="orange"
-                                      outline
-                                      class="q-ml-sm"
-                                    >
+                                    <q-badge color="orange" outline class="q-ml-sm">
                                       New
                                     </q-badge>
                                   </div>
                                 </q-td>
+                                <q-td auto-width class="text-center actions" />
                               </q-tr>
                             </template>
                             <template #body="props">
@@ -3410,12 +3437,19 @@ const getNewModuleEmployees = () => {
 };
 
 const activityEmployeeSelections = ref({});
+const selectAllActivities = ref(false);
+
+const toggleSelectAllActivities = (value) => {
+  getNewModuleEmployees().forEach((employee) => {
+    activityEmployeeSelections.value[employee.value] = value;
+  });
+};
 
 const initializeActivityEmployeeSelections = () => {
   const selections = {};
 
   getNewModuleEmployees().forEach(employee => {
-    selections[normalizeEmployeeId(employee.value)] = true;
+    selections[normalizeEmployeeId(employee.value)] = false;
   });
 
   activityEmployeeSelections.value = selections;

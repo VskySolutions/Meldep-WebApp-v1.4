@@ -4,11 +4,14 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
+using Vsky.Services.ApplicationUserRoles;
 using Vsky.Services.Sites;
 
 namespace Vsky.Services.ProjectModules
@@ -18,13 +21,22 @@ namespace Vsky.Services.ProjectModules
         #region Define Services
         private readonly IRepository<ProjectModule> _projectModuleRepository;
         private readonly IRepository<Notes> _notesRepository;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IApplicationUserRoleService _applicationUserRoleService;
         #endregion
 
         #region Services Initializations
-        public ProjectModuleService(IRepository<ProjectModule> projectModuleRepository, IRepository<Notes> notesRepository)
+        public ProjectModuleService(
+            IRepository<ProjectModule> projectModuleRepository, 
+            IRepository<Notes> notesRepository,
+            UserManager<ApplicationUser> userManager,
+            IApplicationUserRoleService applicationUserRoleService
+        )
         {
             _projectModuleRepository = projectModuleRepository;
             _notesRepository = notesRepository;
+            _userManager = userManager;
+            _applicationUserRoleService = applicationUserRoleService;
         }
         #endregion
 
@@ -42,10 +54,48 @@ namespace Vsky.Services.ProjectModules
         // Description: This method retrieves a paginated list of Project Modules based on various search criteria such as name, 
         // Project Modules status. It also supports sorting and includes related data such as ProjectModules status. 
         // The method allows for both full and lookup (limited) data retrieval modes.
-        public IPagedList<ProjectModule> GetAllProjectModules(string SiteId, string SearchText, List<string> projectIds, List<string> projectModuleTypeIds, List<string> projectModuleStatusIds, string projectId, List<string> customerIds, List<string> companyContactIds, bool isShowCloseStatus, string pageName, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public async Task<IPagedList<ProjectModule>> GetAllProjectModules(
+            string SiteId,
+            string loggedUserId,
+            string employeeId,
+            string SearchText, 
+            List<string> projectIds, 
+            List<string> projectModuleTypeIds, 
+            List<string> projectModuleStatusIds, 
+            string projectId, 
+            List<string> customerIds, 
+            List<string> companyContactIds, 
+            bool isShowCloseStatus, 
+            string pageName, 
+            string sortBy, 
+            bool descending, 
+            int page = 1, 
+            int pageSize = int.MaxValue, 
+            bool lookup = false
+        )
         {
             //var query = _projectModuleRepository.TableNoTracking.Where(x => !x.Deleted);
             var query = _projectModuleRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && x.Project.Active && x.SiteId == SiteId && !x.Project.IsTemplate);
+
+            bool isAdmin = await IsCurrentUserAdmin(loggedUserId, SiteId);
+            if (!isAdmin)
+            {
+                query = query.Where(x =>
+                   x.Project.CreatedById == loggedUserId ||
+                   x.CreatedById == loggedUserId ||
+                   x.Project.ProjectEmployeeMappings.Any(m =>
+                       !m.Deleted &&
+                       m.EmployeeId == employeeId &&
+                       m.ProjectEmployeeRoleMappings.Any(r =>
+                           !r.Deleted &&
+                           r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                               !p.Deleted &&
+                               (p.FullAccess || p.ViewOnly || p.Notes)
+                           )
+                       )
+                   )
+               );
+            }
 
             if (projectIds != null && projectIds.Any())
                 query = query.Where(x => projectIds.Contains(x.ProjectId));
@@ -136,6 +186,37 @@ namespace Vsky.Services.ProjectModules
                     {
                         Id = x.Project.Id,
                         Name = x.Project.Name,
+                        CurrentUserManage =
+                            x.Project.CreatedById == loggedUserId ||
+                            x.CreatedById == loggedUserId ||
+                            x.Project.ProjectEmployeeMappings
+                                .Where(m =>
+                                    !m.Deleted &&
+                                    m.EmployeeId == employeeId)
+                                .Any(m =>
+                                    m.ProjectEmployeeRoleMappings
+                                        .Where(r => !r.Deleted)
+                                        .Any(r =>
+                                            r.SitesProjectRoles
+                                                .SitesProjectRolesPermissions
+                                                .Any(p =>
+                                                    !p.Deleted &&
+                                                    p.FullAccess))),
+
+                        CurrentUserNotes =
+                            x.Project.ProjectEmployeeMappings
+                                .Where(m =>
+                                    !m.Deleted &&
+                                    m.EmployeeId == employeeId)
+                                .Any(m =>
+                                    m.ProjectEmployeeRoleMappings
+                                        .Where(r => !r.Deleted)
+                                        .Any(r =>
+                                            r.SitesProjectRoles
+                                                .SitesProjectRolesPermissions
+                                                .Any(p =>
+                                                    !p.Deleted &&
+                                                    p.Notes)))
                     },
                     ProjectModuleStatus = new DropDown
                     {
@@ -529,5 +610,16 @@ namespace Vsky.Services.ProjectModules
             _projectModuleRepository.Update(entity);
         }
         #endregion
+
+        private async Task<bool> IsCurrentUserAdmin(string CId, string SiteId)
+        {
+            var userdata = await _userManager.FindByIdAsync(CId);
+            var user = await _userManager.FindByNameAsync(userdata.UserName);
+            //var roles = await _userManager.GetRolesAsync(user);
+            var roles = await _applicationUserRoleService.GetRoleNamesByUserAndSite(user.Id, SiteId);
+            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
+
+            return isAdmin;
+        }
     }
 }

@@ -105,11 +105,11 @@
               :key="col.name"
             >
               {{ col.label }}
-              <!-- Sort icon only --> 
+              <!-- Sort icon only -->
               <q-icon
-                v-if="col.sortable" 
-                :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                size="16px" 
+                v-if="col.sortable"
+                :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                size="16px"
                 class="cursor-pointer q-ml-sm"
                 @click.stop="sortColumn(col)"
               >
@@ -141,6 +141,7 @@
                     <q-tooltip>Project Center</q-tooltip>
                   </q-icon>
                   <q-icon
+                    v-if="props.row.isEditable"
                     name="o_developer_board" size="xs"
                     class="cursor-pointer"
                     @click="setActiveRowIdInLocalStorage(props.row.id);
@@ -152,16 +153,40 @@
               </div>
             </q-td>
             <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">{{ props.row.name }}</q-td>
-            <q-td style="width: 5%;">
+            <!-- <q-td style="width: 5%;">
               <q-select
                 v-model="props.row.projectModuleStatus.id" outlined stack-label hide-bottom-space :dense="true"
                 :options="projectModuleStatusForDropdownSingleSelect.list.value" class="project-module-status-list" option-value="value" option-label="text" emit-value map-options :bg-color="getStatusColor(props.row.projectModuleStatus.dropDownValue)" :disable="isClose" @update:model-value="onSubmit(props.row.id, props.row.projectModuleStatus.id)"
               />
+            </q-td> -->
+            <q-td style="width: 5%;">
+              <q-select
+                v-if="props.row.isEditable"
+                v-model="props.row.projectModuleStatus.id"
+                outlined
+                stack-label
+                hide-bottom-space
+                :dense="true"
+                :options="projectModuleStatusForDropdownSingleSelect.list.value"
+                class="project-module-status-list"
+                option-value="value"
+                option-label="text"
+                emit-value
+                map-options
+                :bg-color="getStatusColor(props.row.projectModuleStatus.dropDownValue)"
+                :disable="isClose"
+                @update:model-value="onSubmit(props.row.id, props.row.projectModuleStatus.id)"
+              />
+
+              <span v-else>
+                {{ props.row.projectModuleStatus?.dropDownValue || '-' }}
+              </span>
             </q-td>
             <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">{{ props.row.createdBy.person.firstName +" "+ props.row.createdBy.person.lastName }}</q-td>
             <q-td style="width: 5%;" class="text-center">{{ props.row.createdOnUtc }}</q-td>
             <q-td style="width: 5%;" class="text-center actions">
-              <a style="position: relative;" class="q-icon notranslate cursor-pointer q-mr-md" @click="onNoteAdd(props.row.id, 'Projects Module', props.row.id, props.row.name, props.row.name, '', refreshProjectModulesList)">
+              <a
+                  v-if="props.row.isEditable || props.row.isNotes" style="position: relative;" class="q-icon notranslate cursor-pointer q-mr-md" @click="onNoteAdd(props.row.id, 'Projects Module', props.row.id, props.row.name, props.row.name, '', refreshProjectModulesList)">
                 <q-tooltip anchor="bottom middle" self="top middle">
                   Note
                 </q-tooltip>
@@ -182,17 +207,24 @@
                       <q-item-section avatar><q-icon name="o_visibility" size="xs" /></q-item-section>
                       <q-item-section>View</q-item-section>
                     </q-item>
-                    <q-item v-ripple clickable @click="onProjectFilesAdd(props.row.id, props.row.name, props.row.project.name)">
+                    <q-item
+                      v-if="props.row.isEditable"  v-ripple clickable @click="onProjectFilesAdd(props.row.id, props.row.name, props.row.project.name)">
                       <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
                       <q-item-section>Files</q-item-section>
                     </q-item>
 
-                    <q-item v-ripple clickable @click="onProjectModuleEdit(props.row.id, refreshProjectModulesList)">
+                    <q-item
+                      v-if="props.row.isEditable"
+                      v-ripple
+                      clickable
+                      @click="onProjectModuleEdit(props.row.id, refreshProjectModulesList)"
+                    >
                       <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
                       <q-item-section>Edit</q-item-section>
                     </q-item>
 
-                    <q-item v-ripple clickable @click="onProjectModuleCopy(props.row.id, props.row.name, refreshProjectModulesList)">
+                    <q-item
+                      v-if="props.row.isEditable" v-ripple clickable @click="onProjectModuleCopy(props.row.id, props.row.name, refreshProjectModulesList)">
                       <q-item-section avatar><q-icon name="o_content_copy" size="xs" /></q-item-section>
                       <q-item-section>Copy to Project</q-item-section>
                     </q-item>
@@ -203,7 +235,8 @@
                     </q-item>
                     <q-separator />
 
-                    <q-item v-ripple clickable @click="onSubmitProjectModuleDelete(props.row.id, props.row.name, props.row.project.name, refreshProjectModulesList)">
+                    <q-item
+                      v-if="props.row.isEditable" v-ripple clickable @click="onSubmitProjectModuleDelete(props.row.id, props.row.name, props.row.project.name, refreshProjectModulesList)">
                       <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
                       <q-item-section class="text-negative">Delete</q-item-section>
                     </q-item>
@@ -340,7 +373,12 @@ const getProjectModules = (props) => {
   const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
   setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination, activeRowId: activeRowId.value });
   projectModulesService.getProjectModules(payload).then((resp) => {
-    rows.value = resp.data;
+    // rows.value = resp.data;
+    rows.value = resp.data.map((module) => ({
+      ...module,
+      isNotes: module.project?.currentUserNotes ?? false,
+      isEditable: module.project?.currentUserManage
+    }));
     pagination.value.page = page;
     pagination.value.rowsPerPage = rowsPerPage;
     pagination.value.sortBy = sortBy;
@@ -359,7 +397,7 @@ const sortColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
   }

@@ -8,7 +8,26 @@ namespace Vsky.Services.ProjectModules
     public interface IProjectModuleService
     {
         #region GetAllProjectModules
-        IPagedList<ProjectModule> GetAllProjectModules(string SiteId, string SearchText, List<string> projectIds, List<string> projectModuleTypeIds, List<string> projectModuleStatusIds, string projectId, List<string> customerIds, List<string> companyContactIds, bool isShowCloseStatus, string pageName, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        //IPagedList<ProjectModule> GetAllProjectModules(string SiteId, string SearchText, List<string> projectIds, List<string> projectModuleTypeIds, List<string> projectModuleStatusIds, string projectId, List<string> customerIds, List<string> companyContactIds, bool isShowCloseStatus, string pageName, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        Task<IPagedList<ProjectModule>> GetAllProjectModules(
+            string SiteId,
+            string loggedUserId,
+            string employeeId,
+            string SearchText,
+            List<string> projectIds,
+            List<string> projectModuleTypeIds,
+            List<string> projectModuleStatusIds,
+            string projectId,
+            List<string> customerIds,
+            List<string> companyContactIds,
+            bool isShowCloseStatus,
+            string pageName,
+            string sortBy,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
         IPagedList<ProjectModule> GetAllProjectModulesForDashboard(string SiteId, string projectId, string pageName, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
 
         #endregion
