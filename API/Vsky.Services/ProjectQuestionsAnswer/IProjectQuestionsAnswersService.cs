@@ -7,16 +7,18 @@ namespace Vsky.Services.ProjectQuestionsAnswer
 {
     public interface IProjectQuestionsAnswersService
     {
-        IPagedList<Vsky.Models.ProjectQuestionsAnswers> GetAllProjectQuestionsAnswers(
+        Task<IPagedList<ProjectQuestionsAnswers>> GetAllProjectQuestionsAnswers(
             string siteId,
-            string searchText, 
-            string title, 
-            List<string> projectIds, 
-            List<string> requirementIds, 
+            string loggedUserId,
+            string employeeId,
+            string searchText,
+            string title,
+            List<string> projectIds,
+            List<string> requirementIds,
             string sortBy,
             Dictionary<string, string> sorts,
-            bool descending, 
-            int page = 1, 
+            bool descending,
+            int page = 1,
             int pageSize = int.MaxValue
         );
 

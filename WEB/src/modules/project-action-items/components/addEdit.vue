@@ -12,7 +12,7 @@
             <fieldset>
               <legend>Project Action Item Info</legend>
               <div class="row q-col-gutter-x-md q-mb-md">
-                <div class="col-12 col-sm-6 col-md-6">
+                <!-- <div class="col-12 col-sm-6 col-md-6">
                   <formSingleSelectDropdown
                     v-model="model.projectId"
                     label="Project Name"
@@ -33,7 +33,26 @@
                     :error="v$.requirementId.$error"
                     :error-message="v$.requirementId.$errors[0]?.$message"
                   />
-                </div>
+                </div> -->
+                <formSingleSelectDropdown
+                  v-model="model.projectId"
+                  label="Project Name"
+                  :options="projectNameDropdownSingleSelect.list.value"
+                  :filter="projectNameDropdownSingleSelect.filter"
+                  wrapper-class="col-xxl-6 col-lg-6 col-md-6 col-sm-6 col-xs-12"
+                  :error="v$.projectId.$error"
+                  :error-message="v$.projectId.$errors[0]?.$message"
+                />
+                <formSingleSelectDropdown
+                  v-model="model.requirementId"
+                  label="Requirement"
+                  :disable="!model.projectId"
+                  :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
+                  :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                  wrapper-class="col-xxl-6 col-lg-6 col-md-6 col-sm-6 col-xs-12"
+                  :error="v$.requirementId.$error"
+                  :error-message="v$.requirementId.$errors[0]?.$message"
+                />
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-12 col-md-12">
@@ -195,7 +214,7 @@ let selectedRequirementId = null;
 const model = ref({
   id: "",
   projectId: props.projectIdAttr || props.projectIdValue || selectedProjectId ||null,
-  requirementId: props.requirementIdAttr || selectedRequirementId || null,
+  requirementId: props.requirementIdAttr || selectedRequirementId || "",
   title: "",
   description: "",
   customerId: "",
@@ -300,7 +319,9 @@ watch(
 
 onMounted(async () => {
   await projectActionItemPrioritySingleSelect.load("Project Action Item Priority");
-  requirementByProjectModuleIdForDropdownSingleSelect.load();
+  if (model.value.projectId) {
+    await requirementByProjectModuleIdForDropdownSingleSelect.load("", model.value.projectId);
+  }
   customerDropdownSingleSelect.load();
   activeEmployeesDropdownSingleSelect.load();
 

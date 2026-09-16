@@ -13,7 +13,8 @@ namespace Vsky.Services.ProjectActionItem
         #region GetAllProjectActionItems
         Task<IPagedList<ProjectActionItems>> GetAllProjectActionItems(
             string SiteId,
-            string LoggedUserId,
+            string loggedUserId,
+            string employeeId,
             string SearchText,
             List<string> projectIds,
             List<string> requirementIds,

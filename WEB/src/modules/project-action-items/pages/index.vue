@@ -194,11 +194,11 @@
                   }"
                 >
                   {{ col.label }}
-                  <!-- Sort icon only --> 
+                  <!-- Sort icon only -->
                   <q-icon
-                    v-if="col.sortable" 
-                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                    size="16px" 
+                    v-if="col.sortable"
+                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                    size="16px"
                     class="cursor-pointer q-ml-sm"
                     @click.stop="sortColumn(col)"
                   >
@@ -250,8 +250,9 @@
                         <q-tooltip>Project Center</q-tooltip>
                       </q-icon>
                       <q-icon
-                        name="o_developer_board hidden" size="xs"
-                        class="cursor-pointer"
+                        v-if="props.row.isEditable"
+                        name="o_developer_board" size="xs"
+                        class="cursor-pointer hidden"
                         @click="setActiveRowIdInLocalStorage(props.row.id);
                                 $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
                       >
@@ -321,6 +322,7 @@
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
                   <q-icon
+                    v-if="props.row.isEditable"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
                     size="xs"
@@ -329,6 +331,7 @@
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
                   <q-icon
+                    v-if="props.row.isEditable"
                     name="o_delete_outline"
                     class="cursor-pointer"
                     color="negative"
@@ -472,10 +475,11 @@ const getAllProjectActionItems = async ({ pagination: p }) => {
     });
 
     const resp = await projectActionItemsService.getAllProjectActionItems(payload);
-
     rows.value = resp.projectActionItemList.map(items => {
       return {
-        ...items
+        ...items,
+        isNotes: items.project?.currentUserNotes ?? false,
+        isEditable: items.project?.currentUserManage
       };
     });
 
@@ -597,10 +601,10 @@ const sortColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
-  } 
+  }
   refreshProjectActionItemsList();
 };
 
