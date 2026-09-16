@@ -104,26 +104,6 @@
                           <q-input v-model="search.name" fill-input class="q-mx-sm w-100 h-auto" :dense="true" />
                         </div>
                       </div>
-                      <div class="row items-center q-mb-sm">
-                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                          <label class="Cutomlabel q-mt-sm fs-13">Draft/Confirmed</label>
-                        </div>
-                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
-                          <q-select
-                            v-model="search.editingStatus"
-                            clearable
-                            class="q-mx-sm w-100 h-auto"
-                            stack-label
-                            hide-bottom-space
-                            use-input
-                            emit-value
-                            map-options
-                            :dense="true"
-                            :options="editingStatusList"
-                            :popup-content-class="customPopupContentClass"
-                          />
-                        </div>
-                      </div>
                       <multiSelectDropdown
                         v-model="search.statusIds"
                         label="Requirement Status"
@@ -261,6 +241,7 @@
               </q-menu>
               <div>
                 <q-btn
+                  v-if="!isTHFRole"
                   icon="o_add"
                   outline
                   label="Create Requirement"
@@ -269,6 +250,7 @@
                   @click="onRequirementAdd(search.projectIds?.[0], search.projectModuleIds?.[0], refreshRequirementList, null)"
                 />
                 <q-btn
+                  v-if="!isTHFRole"
                   icon="o_checklist"
                   outline
                   no-caps
@@ -395,11 +377,9 @@
               :class="[
                 props.row.isPinned ? 'bg-amber-1' : '',
                 highlightedId == props.row.id ? 'highlight'
-                  : (props.row.editingStatus === 2
-                      ? 'bg-cyan-1'
-                      : '')
+                  : ''
               ]"
-              :set="(preProjectName = null, resetTracking())"
+              :set="(preProjectName = null, preProjectModuleName = null, resetTracking())"
             >
               <q-td>
                 <div
@@ -439,9 +419,6 @@
                   @update:model-value="onSelectCheckbox(props.row.projectId, props.row.project.name, props.row.id, props.row.title, $event)"
                 />
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('requirementNumber')" class="text-right">
-                #{{ props.row.requirementNumber }}
-              </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('project.name')"
                 class="common-q-td hoverable-cell"
@@ -476,9 +453,18 @@
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('projectModule.name')"
-                class="common-q-td"
+                class="common-q-td hoverable-cell"
+                @click="onProjectModuleView(props.row.projectModule.id)"
               >
-                {{ props.row.projectModule.name }}
+                <span
+                 v-if="preProjectModuleName !== props.row.projectModule.name"
+                 :set="preProjectModuleName = props.row.projectModule.name"
+                >
+                  {{ props.row.projectModule.name }}
+                </span>
+              </q-td>
+              <q-td v-if="selectedColumnNames.includes('requirementNumber')" class="text-right">
+                #{{ props.row.requirementNumber }}
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('title')"
@@ -507,6 +493,21 @@
                   </div>
                 </div>
               </q-td>
+              <q-td v-if="selectedColumnNames.includes('shortDescription')"
+                class="common-q-td content-cell"
+                :style="{
+                    width: (resizeWidths?.shortDescription || 120) + 'px',
+                    minWidth: '80px',
+                    maxWidth: (resizeWidths?.shortDescription || 120) + 'px'
+                  }"
+                >
+                <div class="content-ellipsis">
+                  {{
+                    getAnswerShortDescription(props.row.shortDescription)
+                  }}
+                </div>
+                <!-- <div v-html="props.row.shortDescription" /> -->
+              </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('projectTaskRelatedMappings')"
                 class="common-q-td hoverable-cell"
@@ -524,12 +525,6 @@
                 </span>
               </q-td>
               <q-td
-                v-if="selectedColumnNames.includes('editingStatus')"
-                class="common-q-td"
-              >
-                {{ props.row.editingStatus === 1 ? 'Draft' : 'Confirmed' }}
-              </q-td>
-              <q-td
                 v-if="selectedColumnNames.includes('status.dropDownValue')"
                 class="common-q-td"
                 :class="{ 'hoverable-cell' : props.row.isEditable }"
@@ -544,7 +539,6 @@
                   :options="requirementStatusDropdownSingleSelect.list.value"
                   :active-edit="activeEdit"
                   :show-history="true"
-                  :disable="props.row.editingStatus === 1"
                   @filter="requirementStatusDropdownSingleSelect.filter"
                   @cancel="activeEdit = { rowId: null, field: null }"
                   @submit="({ rowId, value }) => onSubmitRequirementStatus(rowId, value, refreshRequirementList)"
@@ -690,7 +684,7 @@
               </q-td>
               <q-td
                   v-if="selectedColumnNames.includes('lastNote')"
-                  class="common-q-td hoverable-cell answer-cell"
+                  class="common-q-td hoverable-cell content-cell"
                   :style="{
                     width: (resizeWidths?.lastNote || 120) + 'px',
                     minWidth: '80px',
@@ -698,7 +692,7 @@
                   }"
               >
                 <span
-                  class="answer-text"
+                  class="content-ellipsis"
                   @click="onNoteTimelineView(
                     props.row.id,
                    'Requirement',
@@ -706,7 +700,7 @@
                   )"
                   >
                     {{
-                      getAnswerText(
+                      getAnswerShortDescription (
                         props.row.lastNote
                       )
                     }}
@@ -777,6 +771,26 @@
                 {{ props.row.updatedOnUtc }}
               </q-td>
               <q-td class="text-center actions">
+                <q-icon
+                  name="o_visibility"
+                  class="cursor-pointer q-mr-sm"
+                  size="xs"
+                  @click="onRequirementView(props.row.id)"
+                >
+                  <q-tooltip>
+                    View
+                  </q-tooltip>
+                </q-icon>
+                <q-icon
+                  name="o_description"
+                  class="cursor-pointer q-mr-sm"
+                  size="xs"
+                  @click="onRequirementEdit(props.row.id, true, refreshRequirementList)"
+                >
+                  <q-tooltip>
+                    Manage Description
+                  </q-tooltip>
+                </q-icon>
                 <a
                   v-if="props.row.isEditable || props.row.isNotes"
                   style="position: relative;"
@@ -800,22 +814,14 @@
                   <q-menu auto-close>
                     <q-list style="min-width: 180px">
                       <q-item
-                        v-ripple
-                        clickable
-                        @click="onRequirementView(props.row.id)"
-                      >
-                        <q-item-section avatar><q-icon name="o_visibility" size="xs" /></q-item-section>
-                        <q-item-section>View</q-item-section>
-                      </q-item>
-                      <q-item
                         v-if="props.row.isEditable"
                         v-ripple
                         clickable
-                        @click="onRequirementEdit(props.row.id, refreshRequirementList)"
+                        @click="onRequirementEdit(props.row.id, false, refreshRequirementList)"
                       >
                         <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
                         <q-item-section>Edit</q-item-section>
-                        </q-item>
+                      </q-item>
                       <q-item
                         v-if="props.row.isEditable"
                         v-ripple clickable
@@ -965,6 +971,12 @@ import {
   onNoteTimelineView
 } from "src/modules/common/utils/dialogs.js";
 
+// Shared Project Module Dialogs
+import {
+  initProjectModuleDialogs,
+  onProjectModuleView
+} from "src/modules/project-modules/utils/dialogs.js";
+
 // Shared Project Task Dialogs
 import {
   initProjectTaskDialogs,
@@ -1000,7 +1012,8 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
-const editingStatusList = ref(["Confirmed", "Draft"]);
+const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
+
 const selectedProjectId = history.state?.projectId;
 const processing = ref(false);
 const showManageDropdownOptions = ref(false);
@@ -1023,12 +1036,12 @@ const tableRef = ref();
 const rows = ref([]);
 
 const columns = ref([
-  { name: "requirementNumber", label: "Req. No.", field: "requirementNumber", align: "right", sortable: true, default: true },
   { name: "project.name", label: "Project", field: "project.name", align: "left", sortable: true, default: true },
-  { name: "projectModule.name", label: "Module", field: "projectModule.name", align: "left", sortable: true, default: false },
+  { name: "projectModule.name", label: "Module", field: "projectModule.name", align: "left", sortable: true, default: true },
+  { name: "requirementNumber", label: "Req. No.", field: "requirementNumber", align: "right", sortable: true, default: true },
   { name: "title", label: "Requirement", field: "title", align: "left", sortable: true, default: true },
+  { name: "shortDescription", label: "Short Description", field: "shortDescription", align: "left", sortable: true, default: true },
   { name: "projectTaskRelatedMappings", label: "Task", field: "projectTaskRelatedMappings", align: "left", sortable: false, default: false },
-  { name: "editingStatus", label: "Draft/Confirmed", field: "editingStatus", align: "left", sortable: false, default: true },
   { name: "status.dropDownValue", label: "Status", field: "status.dropDownValue", align: "left", sortable: true, default: true },
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true, default: true },
   { name: "userType.dropDownValue", label: "Identifier", field: "userType.dropDownValue", align: "left", sortable: true, default: false },
@@ -1130,7 +1143,7 @@ const getAllRequirement = async ({ pagination: p }) => {
   }
 };
 
-const getAnswerText = (htmlText) => {
+const getAnswerShortDescription = (htmlText) => {
   if (!htmlText) return "";
 
   const textarea = document.createElement("textarea");
@@ -1143,6 +1156,7 @@ const getAnswerText = (htmlText) => {
     .replace(/\s+/g, " ")
     .trim();
 };
+
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
@@ -1187,7 +1201,6 @@ const onAdvanceClear = () => {
   search.value.projectModuleIds = [];
   search.value.requirementGroupIds = [];
   search.value.name = "";
-  search.value.editingStatus = null;
   search.value.statusIds = [];
   search.value.requirementTypeIds = [];
   search.value.identifiedUserTypeId = null;
@@ -1516,7 +1529,6 @@ const {
           : [route.query.requirementGroupId])
       : [],
     name: "",
-    editingStatus: null,
     identifiedUserTypeId: null,
     identifiedEmployeeIds: [],
     statusIds: [],
@@ -1645,7 +1657,6 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
   ...mapFilterToLabel(search.value.requirementGroupIds, requirementGroupList, "Requirement Group Name"),
-  ...mapSingleFilterToLabel(search.value.editingStatus, editingStatusList, "Draft/Confirmed"),
   ...mapFilterToLabel(search.value.statusIds, requirementStatusForDropdown.list, "Requirement Status"),
   ...mapFilterToLabel(search.value.requirementTypeIds, requirementTypeForDropdown.list, "Requirement Type"),
   ...mapSingleFilterToLabel(search.value.identifiedUserTypeId, requirementIdentifiedUserTypeDropdownSingleSelect.list, "Identifier"),
@@ -1681,8 +1692,6 @@ function onClearFilters (key) {
     search.value.projectModuleIds = [];
   } else if (key === "Requirement Group Name") {
     search.value.requirementGroupIds = [];
-  } else if (key === "Draft/Confirmed") {
-    search.value.editingStatus = null;
   } else if (key === "Requirement Status") {
     search.value.statusIds = [];
   }  else if (key === "Requirement Type") {
@@ -1827,16 +1836,14 @@ onMounted(async () =>  {
 .table-requirement .Custom-DataTable {
   min-width: max-content;
 }
-.answer-cell {
+.content-cell {
   overflow: hidden;
   white-space: nowrap;
 }
-
-.answer-text {
+.content-ellipsis {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  cursor: pointer;
 }
 </style>

@@ -68,7 +68,9 @@
                 </q-menu>
               </div>
               <div class="q-ml-sm">
-                <q-btn icon="o_add"
+                <q-btn
+                  v-if="!isTHFRole"
+                  icon="o_add"
                   outline
                   label="Add"
                   no-caps
@@ -303,6 +305,7 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
+const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
 
 // local storage values
 const localStorageKey = "Project Modules";

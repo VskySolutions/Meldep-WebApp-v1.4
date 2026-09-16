@@ -71,7 +71,6 @@ namespace Vsky.Services.Requirements
             List<string> projectModuleIds,
             List<string> requirementGroupIds,
             string name,
-            string editingStatus,
             List<string> statusIds,
             List<string> requirementTypeIds,
             string identifiedUserTypeId,
@@ -122,9 +121,6 @@ namespace Vsky.Services.Requirements
 
             if (projectModuleIds != null && projectModuleIds.Any())
                 query = query.Where(x => projectModuleIds.Contains(x.ProjectModuleId));
-
-            if (!string.IsNullOrWhiteSpace(editingStatus))
-                query = query.Where(x => editingStatus == "Draft" ? x.EditingStatus == 1 : x.EditingStatus != 1);
 
             if (statusIds != null && statusIds.Any())
                 query = query.Where(x => statusIds.Contains(x.StatusId));
@@ -199,9 +195,8 @@ namespace Vsky.Services.Requirements
                        m.ApprovalStatusDropDown.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
                        (m.CreatedBy.Person.FirstName + " " + m.CreatedBy.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
                        (m.UpdatedBy.Person.FirstName + " " + m.UpdatedBy.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
-                       (m.CreatedOnUtc.ToString().Contains(SearchText.ToLower())) ||
-                       (SearchText.ToLower() == "draft" && m.EditingStatus == 1) ||
-                       (SearchText.ToLower() == "confirmed" && m.EditingStatus != 1)
+                       (m.CreatedOnUtc.ToString().Contains(SearchText.ToLower())) 
+                       
                 );
             }
 
@@ -219,7 +214,6 @@ namespace Vsky.Services.Requirements
                 ProjectModuleId = x.ProjectModuleId,
                 Title = x.Title,
                 StatusId = x.StatusId,
-                EditingStatus = x.EditingStatus,
                 IdentifiedUserType = x.IdentifiedUserType,
                 RequirementNumber = x.RequirementNumber,
                 IdentifiedDate = x.IdentifiedDate,
@@ -230,6 +224,7 @@ namespace Vsky.Services.Requirements
                 ActualEndDate = x.ActualEndDate,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
+                ShortDescription = x.ShortDescription,
                 Employee = new Employee
                 {
                     Person = new Person
@@ -567,7 +562,6 @@ namespace Vsky.Services.Requirements
                 Description = x.Description,
                 ShortDescription = x.ShortDescription,
                 Notes = x.Notes,
-                EditingStatus = x.EditingStatus,
                 ApprovalStatus = x.ApprovalStatus,
                 IdentifiedCustomerId = x.IdentifiedCustomerId,
                 IdentifiedEmployeeId = x.IdentifiedEmployeeId,

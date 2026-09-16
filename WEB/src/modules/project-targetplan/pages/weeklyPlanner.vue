@@ -10,7 +10,7 @@
                 <q-icon size="1.5em" name="o_chevron_right" color="primary" />
               </template>
               <q-breadcrumbs-el label="Project Management" />
-              <q-breadcrumbs-el icon="o_calendar_view_week" label="Weekly Target Plan" />
+              <q-breadcrumbs-el icon="o_calendar_view_week" label="Weekly Target Plans" />
             </q-breadcrumbs>
           </div>
           <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-6 col-xs-12">
@@ -111,7 +111,7 @@
               </div>
               <div class="q-ml-sm">
                 <q-btn
-                  v-if="isFullAccess"
+                  v-if="isFullAccess && !isTHFRole"
                   icon="o_add"
                   outline
                   label="Add Weekly Plan"
@@ -816,7 +816,18 @@
                           >
                             <div @click="onRequirementView(item.requirementId)">
                               {{ item.requirement.requirementNumber }}
-                              <q-icon name="o_info"><q-tooltip>{{ item.requirement.title }}</q-tooltip></q-icon>
+                              <q-icon name="o_info">
+                                <q-tooltip>
+                                  <span
+                                    v-html="
+                                      item.requirement.shortDescription
+                                        ? `${item.requirement.title} - ${item.requirement.shortDescription}`
+                                        : item.requirement.title
+                                    "
+                                  >
+                                  </span>
+                                </q-tooltip>
+                              </q-icon>
                             </div>
                             <q-icon v-if="isFullAccess" name="o_close" class="q-ml-xs" color="red" @click="removeMappingFromWeek(item.id, 'Requirement')"><q-tooltip>Remove Requirement?</q-tooltip></q-icon>
                           </q-badge>
@@ -990,6 +1001,7 @@ const projectPlanLoading = ref(false);
 const authStore = useAuthStore();
 const user = authStore.user;
 const employeeId = user.employeeId ?? user.userId;
+const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
 
 const siteId = computed(() => authStore.user?.siteId);
 // --------------------------------------------------------------------------------------------------------------------------------------------------

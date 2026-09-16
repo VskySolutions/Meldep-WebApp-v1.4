@@ -109,7 +109,7 @@
               </div>
               <div class="q-ml-sm">
                 <q-btn
-                  v-if="isFullAccess"
+                  v-if="isFullAccess && !isTHFRole"
                   icon="o_add"
                   outline
                   label="Add Monthly Plan"
@@ -784,7 +784,18 @@
                             @click="onRequirementView(item.requirementId)"
                           >
                             {{ item.requirement.requirementNumber }}
-                            <q-icon name="o_info" class="q-ml-xs"><q-tooltip>{{ item.requirement.title }}</q-tooltip></q-icon>
+                            <q-icon name="o_info" class="q-ml-xs">
+                              <q-tooltip>
+                                <span
+                                  v-html="
+                                    item.requirement.shortDescription
+                                      ? `${item.requirement.title} - ${item.requirement.shortDescription}`
+                                      : item.requirement.title
+                                  "
+                                >
+                                </span>
+                              </q-tooltip>
+                            </q-icon>
                           </q-badge>
                         </div>
                         <div v-if="filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Tasks')?.length > 0" class="col-4 flex">
@@ -955,6 +966,7 @@ const processing = ref(false);
 const planTypeId = ref(null);
 const actualLineProcessing = ref(false);
 const resourceProcessing = ref(false);
+const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
 
 const siteId = computed(() => authStore.user?.siteId);
 // --------------------------------------------------------------------------------------------------------------------------------------------------

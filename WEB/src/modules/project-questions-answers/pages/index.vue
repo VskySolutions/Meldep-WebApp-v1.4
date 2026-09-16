@@ -135,11 +135,11 @@
                   }"
                 >
                   {{ col.label }}
-                  <!-- Sort icon only --> 
+                  <!-- Sort icon only -->
                   <q-icon
-                    v-if="col.sortable" 
-                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                    size="16px" 
+                    v-if="col.sortable"
+                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                    size="16px"
                     class="cursor-pointer q-ml-sm"
                     @click.stop="sortColumn(col)"
                   >
@@ -158,7 +158,7 @@
                 :class="[
                   highlightedId == props.row.id ? 'highlight' : ''
                 ]"
-                :set="(preProjectName = null, resetTracking())"
+                :set="(preProjectName = null, preRequirement = null, resetTracking())"
               >
                 <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
                   <div class="row no-wrap items-center justify-between">
@@ -193,6 +193,8 @@
                   <div class="row no-wrap items-center justify-between">
                     <span>
                       <span
+                        v-if="preRequirement !== props.row.requirement?.title"
+                        :set="preRequirement = props.row.requirement?.title"
                         class="cursor-pointer"
                         @click="onRequirementView(props.row.requirement?.id)"
                       >
@@ -535,10 +537,10 @@ const sortColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
-  } 
+  }
   refreshQuestionsAnswersList();
 };
 

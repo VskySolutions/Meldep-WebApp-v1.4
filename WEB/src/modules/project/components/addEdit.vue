@@ -220,7 +220,7 @@
                         </div>
                       </div>
                     </div>
-                    <div v-if="isFileUploadOrExternal" class="row q-col-gutter-x-md q-mb-lg">
+                    <div class="row q-col-gutter-x-md q-mb-lg">
                       <div class="col-12 q-mb-xs text-black">Project Files</div>
                       <!-- File Uploader -->
                       <div class="col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12">
@@ -267,7 +267,7 @@
                       </div>
                     </div>
                   </fieldset>
-                  <fieldset v-if="!isFileUploadOrExternal" class="q-mt-lg">
+                  <fieldset class="q-mt-lg hidden">
                     <legend>Document Reference List</legend>
                     <div class="flex items-center justify-end q-mb-md">
                       <q-btn color="primary" icon="o_add" label="Add" no-caps @click="onAddDocumentReference" />
@@ -431,7 +431,7 @@
                       </template>
                     </q-table>
                   </fieldset>
-                  <div align="center" class="q-gutter-sm justify-center">
+                  <div align="center" class="q-gutter-sm justify-center q-mt-md">
                     <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="confirmProjectClose" />
                     <q-btn v-if="tab === '1_tab'" label="Save & Next" type="submit" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps />
                     <q-btn label="Save & Close" type="button" color="primary" class="actionBtn hidden" :loading="processingClose" :disable="processingClose" no-caps @click="onSubmitClose()" />
@@ -1117,7 +1117,7 @@ const getProject = (projectId) => {
 
   projectService.getProject(projectId).then((resp) => {
     model.value = _.cloneDeep(resp);
-    
+
     companyContactDropdownSingleSelect.load(resp.customerId);
     projectSubCategoryDropdownSingleSelect.load(resp.projectCategoryId);
     activeEmployeesDropdownSingleSelect.load(user.siteId);
@@ -1349,7 +1349,6 @@ function onFilePathUndo (item) {
 }
 
 async function onFilePathSave () {
-  debugger;
   if (mode.value === "addDocumentReference") {
     if (!await editingRowV$.value.$validate()) {
       return;
@@ -1526,7 +1525,6 @@ const onSubmitClose = () => {
 };
 
 const onSubmit = async (isClose = 0) => {
-  debugger;
   if (isClose === 1) {
     processingClose.value = true;
     processing.value = false;
@@ -1575,7 +1573,7 @@ const onSubmit = async (isClose = 0) => {
       notifyWarning({ message: "Please upload valid files" });
       return;
     }
-    
+
     if (mode.value === "addDocumentReference") {
       const isValid = await editingRowV$.value.$validate();
 
@@ -1628,7 +1626,7 @@ const onSubmit = async (isClose = 0) => {
         // Also pass the projectFileFlag for general status tracking
         formData.append("projectFileFlag", model.value.projectFileFlag || "no_change");
       }
-      
+
       // model.value.filePathModelList = fileRows.value;
       const filePathDetails = toRaw(fileRows.value || []);
 
@@ -1652,7 +1650,7 @@ const onSubmit = async (isClose = 0) => {
           `filePathModelList[${index}].externalFileName`,
           file.externalFileName ?? ""
         );
-        
+
         formData.append(
           `filePathModelList[${index}].flag`,
           file.flag ?? ""

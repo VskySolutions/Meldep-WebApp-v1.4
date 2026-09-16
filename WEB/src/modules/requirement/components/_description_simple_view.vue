@@ -7,6 +7,11 @@
       <q-timeline-entry
         v-for="(responseLogDescription, index) in allResponseLogDescriptions"
         :key="index"
+        :subtitle="
+        showDescriptionInfo
+          ? `${responseLogDescription.createdOnUtc} - ${responseLogDescription.createdBy?.person?.fullName}`
+          : ''
+        "
         :icon="done_all"
         :color="'primary'"
       >
@@ -17,7 +22,7 @@
               <div
                 class="text-black note-text"
                 v-html="responseLogDescription.description || ''"/>
-              <q-separator class="q-my-sm" />
+              <q-separator v-if="showDescriptionInfo" class="q-my-sm" />
           </div>
         </div>
       </q-timeline-entry>
@@ -35,7 +40,8 @@ import requirementService from "../requirement.service";
 
 // Props values i.e. come from query string
 const props = defineProps({
-  id: { type: String, default: "" }
+  id: { type: String, default: "" },
+  showDescriptionInfo: { type: Boolean, default: false }
 });
 
 // common variables
@@ -100,15 +106,6 @@ const getAllRequirementDescriptionsById = async () => {
     );
 
     allResponseLogDescriptions.value = responseLogDescriptions;
-    const draftRequirement = responseLogDescriptions.find(
-    item =>
-      item.isRequirementDescription &&
-      item.editingStatus === 1
-    );
-
-    if (draftRequirement) {
-      editRequirementDescription(draftRequirement);
-    }
   } catch (error) {
     console.error(
       "Error while loading requirement descriptions:",

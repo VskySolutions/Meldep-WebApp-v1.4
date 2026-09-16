@@ -114,7 +114,6 @@ namespace Vsky.Api.Controllers
                     searchModel.ProjectModuleIds,
                     searchModel.RequirementGroupIds,
                     searchModel.Name,
-                    searchModel.EditingStatus,
                     searchModel.StatusIds,
                     searchModel.RequirementTypeIds,
                     searchModel.identifiedUserTypeId,
@@ -293,7 +292,6 @@ namespace Vsky.Api.Controllers
                     entity.Notes = model.Notes;
                     entity.StatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Requirement Status", "New");
                     entity.IdentifiedUserType = model.IdentifiedUserType;
-                    entity.EditingStatus = model.EditingStatus;
                     entity.SiteId = SiteId;
                     entity.PlannedStartDate = model.PlannedStartDate;
                     entity.PlannedEndDate = model.PlannedEndDate;
@@ -383,7 +381,7 @@ namespace Vsky.Api.Controllers
                                     continue;
 
                                 type.ModuleId = entity.Id;
-                                type.Module = entity.Title;
+                                type.ModuleName = entity.Title;
                                 type.FilePath = item.FilePath;
                                 type.FileName = item.FileName;
                                 type.Note = item.Note;
@@ -400,7 +398,7 @@ namespace Vsky.Api.Controllers
 
                                 var data = _mapper.Map<FilePathDetails>(item);
                                 data.ModuleId = entity.Id;
-                                data.Module = entity.Title;
+                                data.ModuleName = entity.Title;
                                 data.FilePath = item.FilePath;
                                 data.FileName = item.FileName;
                                 data.Note = item.Note;
@@ -575,7 +573,7 @@ namespace Vsky.Api.Controllers
                                     continue;
 
                                 type.ModuleId = entity.Id;
-                                type.Module = entity.Title;
+                                type.ModuleName = entity.Title;
                                 type.FilePath = item.FilePath;
                                 type.FileName = item.FileName;
                                 type.Note = item.Note;
@@ -592,7 +590,7 @@ namespace Vsky.Api.Controllers
                                 var data = _mapper.Map<FilePathDetails>(item);
 
                                 data.ModuleId = entity.Id;
-                                data.Module = entity.Title;
+                                data.ModuleName = entity.Title;
                                 data.FilePath = item.FilePath;
                                 data.FileName = item.FileName;
                                 data.Note = item.Note;
@@ -1062,11 +1060,18 @@ namespace Vsky.Api.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    var LoggedUserId = User.GetLoggedInUserId<string>();
+                    var SiteId = _globalVariable.SiteId;
+                    var SiteData = await _siteService.GetById(SiteId);
+                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
                     var existingRequirement = await _requirementService.GetRequirementById(model.Id);
                     if (existingRequirement == null)
                         return BadRequest(new BadRequestError("No Requirement found with the specified id."));
 
                     existingRequirement.Description = model.Description;
+                    existingRequirement.UpdatedById = LoggedUserId;
+                    existingRequirement.UpdatedOnUtc = GetDateTime;
 
                     _requirementService.UpdateRequirement(existingRequirement);
 

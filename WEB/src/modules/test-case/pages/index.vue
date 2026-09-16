@@ -163,6 +163,7 @@
               </q-menu>
               <div class="q-ml-xs">
                 <q-btn
+                  v-if="!isTHFRole"
                   icon="o_add"
                   outline
                   label="Create Test Case"
@@ -259,11 +260,11 @@
                   }"
                 >
                   {{ col.label }}
-                  <!-- Sort icon only --> 
+                  <!-- Sort icon only -->
                   <q-icon
-                    v-if="col.sortable" 
-                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                    size="16px" 
+                    v-if="col.sortable"
+                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                    size="16px"
                     class="cursor-pointer q-ml-sm"
                     @click.stop="sortColumn(col)"
                   >
@@ -531,6 +532,7 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
+const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
 const dropdownTypes = ref([]);
 const showManageDropdownOptions = ref(false);
 const showSortDialog = ref(false);
@@ -743,10 +745,10 @@ const sortColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
-  } 
+  }
   refreshTestCaseList();
 };
 

@@ -155,8 +155,8 @@
                 </q-card>
               </q-menu>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Create Issue" no-caps class="text-primary btnRounded" @click="onIssueAdd(refreshIssueList)" />
-                <q-btn icon="o_checklist" outline no-caps class="text-primary btnRounded q-ml-sm" :disabled="multiSelectIssueIds.length === 0" @click.stop="showMultiSelectOptions = !showMultiSelectOptions">
+                <q-btn v-if="!isTHFRole" icon="o_add" outline label="Create Issue" no-caps class="text-primary btnRounded" @click="onIssueAdd(refreshIssueList)" />
+                <q-btn v-if="!isTHFRole" icon="o_checklist" outline no-caps class="text-primary btnRounded q-ml-sm" :disabled="multiSelectIssueIds.length === 0" @click.stop="showMultiSelectOptions = !showMultiSelectOptions">
                   <q-badge v-if="multiSelectIssueIds?.length > 0" :label="multiSelectIssueIds.length" class="primary" floating />
                   <q-tooltip>Multi Actions</q-tooltip>
                 </q-btn>
@@ -371,7 +371,9 @@
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-                  {{ props.row.name }}
+                  <span class="hoverable-cell" @click="onIssueView(props.row.id)">
+                    {{ props.row.name }}
+                  </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('priority.dropDownValue')">
                   {{ props.row.priority.dropDownValue }}
@@ -616,6 +618,8 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
+const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
+
 const route = useRoute();
 const processing = ref(false);
 const dropdownTypes = ref([]);

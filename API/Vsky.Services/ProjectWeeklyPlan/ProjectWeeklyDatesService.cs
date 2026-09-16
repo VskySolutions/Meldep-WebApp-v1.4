@@ -175,6 +175,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
                     Id = n.Requirement.Id,
                     RequirementNumber = n.Requirement.RequirementNumber,
                     Title = n.Requirement.Title,
+                    ShortDescription = n.Requirement.ShortDescription
                 },
                 TaskId = n.TaskId,
                 Task = n.Task == null ? null : new ProjectTask

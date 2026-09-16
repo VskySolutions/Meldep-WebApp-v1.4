@@ -129,6 +129,7 @@
                 </q-menu>
               </div>
               <manageDropdownOptions
+                v-if="!isTHFRole"
                 v-model="showManageDropdownOptions"
                 :manage-drop-down-types="manageDropDownTypes"
                 :selected-field="selectedField"
@@ -167,6 +168,7 @@
                   <q-tooltip>Grid View</q-tooltip>
                 </q-btn>
                 <q-btn
+                  v-if="!isTHFRole"
                   icon="o_add"
                   outline
                   label="Add"
@@ -178,6 +180,7 @@
                 </q-btn>
                 <!-- Quick Multi Task Actions -->
                 <q-btn
+                  v-if="!isTHFRole"
                   icon="o_checklist"
                   outline
                   no-caps
@@ -288,11 +291,11 @@
                   </template>
                   <template v-else>
                     {{ col.label }}
-                    <!-- Sort icon only --> 
+                    <!-- Sort icon only -->
                     <q-icon
-                      v-if="col.sortable" 
-                      :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                      size="16px" 
+                      v-if="col.sortable"
+                      :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                      size="16px"
                       class="cursor-pointer q-ml-sm"
                       @click.stop="sortColumn(col)"
                     >
@@ -936,6 +939,7 @@ const loading = ref(true);
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
+const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
 
 const activeEdit = ref({ rowId: null, field: null });
 const selectedProjectId = ref(history.state?.projectId);
@@ -1226,10 +1230,10 @@ const sortColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
-  } 
+  }
   refreshProjectTaskList();
 };
 

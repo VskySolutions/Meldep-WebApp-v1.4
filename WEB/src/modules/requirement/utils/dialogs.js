@@ -1,5 +1,6 @@
 import { useQuasar } from "quasar";
 import addEditRequirement from "modules/requirement/components/addEdit.vue";
+import editRequirement from "modules/requirement/components/edit.vue";
 import viewRequirement from "modules/requirement/components/view.vue";
 
 let $q;
@@ -26,7 +27,6 @@ export function onRequirementAdd (
   refresh,
   refreshProjectModulesList
 ) {
-  debugger;
   const componentProps = {};
 
   if (projectId) componentProps.projectIdAttr = projectId;
@@ -43,11 +43,11 @@ export function onRequirementAdd (
 }
 
 
-export function onRequirementEdit (id, refresh) {
+export function onRequirementEdit (id, isManageDescription = false, refresh) {
   activeRowId.value = id;
   $q.dialog({
-    component: addEditRequirement,
-    componentProps: { id }
+    component: editRequirement,
+    componentProps: { id, isManageDescription }
   }).onOk(() => {
     refresh();
   })

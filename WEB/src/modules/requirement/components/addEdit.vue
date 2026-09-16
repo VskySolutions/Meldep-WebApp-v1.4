@@ -9,7 +9,6 @@
       <q-form greedy @submit.prevent.stop="onSubmit">
         <div :class="['q-pa-md cardTable', readonlyRequirement != '' ? 'edit_requirement' : '']">
           <div class="q-gutter-y-md">
-            <input ref="saveAndContinueStatus" type="hidden" :value="saveStatus">
             <fieldset>
               <legend>Requirement Info</legend>
               <div class="row q-col-gutter-x-md q-mb-md">
@@ -17,8 +16,6 @@
                   <formSingleSelectDropdown
                     v-model="model.projectId"
                     label="Project Name"
-                    :class="readonlyProject !== '' ? 'edit_tasks' : ''"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement' && readonlyProject != ''"
                     :options="projectNameDropdownSingleSelect.list.value"
                     :filter="projectNameDropdownSingleSelect.filter"
                     :error="v$.projectId.$error"
@@ -49,8 +46,6 @@
                   <formSingleSelectDropdown
                     v-model="model.projectModuleId"
                     label="Project Module"
-                    :class="readonlyProjectModule !== '' ? 'edit_tasks' : ''"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement' && readonlyProjectModule != ''"
                     :disable="(model.projectId?.length || 0) === 0"
                     :options="projectModulesByProjectIdForDropdownSingleSelect.list.value"
                     :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
@@ -69,7 +64,6 @@
                       stack-label
                       hide-bottom-space
                       :dense="true"
-                      :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                       autogrow
                       :error="v$.title.$error"
                       :error-message="v$.title.$errors[0]?.$message"
@@ -79,12 +73,35 @@
                 </div>
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
+                <div class="col-12">
+                  <div class="form-group">
+                    <label class="q-mb-xs text-black">Short Description
+                      <q-icon
+                        name="o_info"
+                        size="16px"
+                        class="q-ml-xs cursor-pointer text-grey-7"
+                      >
+                        <q-tooltip
+                          anchor="top middle"
+                          self="bottom middle"
+                          :offset="[0, 6]"
+                        >
+                          <div style="max-width: 320px; white-space: normal;">
+                            Enter a description that will be displayed on the Requirement List, Week Planner, and Monthly Planner wherever the Requirement is linked.
+                          </div>
+                        </q-tooltip>
+                      </q-icon>
+                    </label>
+                    <q-input v-model="model.shortDescription" outlined autogrow hint="The maximum length allowed is 200." maxlength="200" />
+                  </div>
+                </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-6 col-md-6 col-lg-4">
                   <formSingleSelectDropdown
                     v-model="model.requirementTypeId"
                     label="Type"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="requirementTypeDropdownSingleSelect.list.value"
                     :filter="requirementTypeDropdownSingleSelect.filter"
                   />
@@ -94,7 +111,6 @@
                     v-model="model.areaId"
                     label="Area"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="areaForDropdownSingleSelect.list.value"
                     :filter="areaForDropdownSingleSelect.filter"
                   />
@@ -104,7 +120,6 @@
                     v-model="model.workspaceId"
                     label="Workspace"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="workspaceForDropdownSingleSelect.list.value"
                     :filter="workspaceForDropdownSingleSelect.filter"
                   />
@@ -116,7 +131,6 @@
                     v-model="model.identifiedUserType"
                     label="Requirement Identifier"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="requirementIdentifiedUserTypeDropdownSingleSelect.list.value"
                     :filter="requirementIdentifiedUserTypeDropdownSingleSelect.filter"
                   />
@@ -126,7 +140,6 @@
                     v-model="model.identifiedEmployeeId"
                     label="Employee Name"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="activeEmployeesDropdownSingleSelect.list.value"
                     :filter="activeEmployeesDropdownSingleSelect.filter"
                   />
@@ -136,7 +149,6 @@
                     v-model="model.identifiedCustomerId"
                     label="Customer Name"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="customerContactByProjectIdDropdownSingleSelect.list.value"
                     :filter="customerContactByProjectIdDropdownSingleSelect.filter"
                   />
@@ -146,7 +158,6 @@
                 <formDate
                   v-model="model.IdentifiedDateStr"
                   label="Requirement Identified Date"
-                  :readonly="model.editingStatus === 2"
                   :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                   :error="v$.IdentifiedDateStr.$error"
                   :error-message="v$.IdentifiedDateStr.$errors[0]?.$message"
@@ -157,7 +168,6 @@
                     v-model="model.requirementEnteredBy"
                     label="Requirement Entered By"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="activeEmployeesDropdownSingleSelect.list.value"
                     :filter="activeEmployeesDropdownSingleSelect.filter"
                   />
@@ -167,7 +177,6 @@
                     v-model="model.statusId"
                     label="Requirement Status"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="requirementStatusDropdownSingleSelect.list.value"
                     :filter="requirementStatusDropdownSingleSelect.filter"
                     :error="v$.statusId.$error"
@@ -178,7 +187,6 @@
                   <formDate
                     v-model="model.closeDateStr"
                     label="Requirement Close Date"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                     :error="v$.closeDateStr.$error"
                     :error-message="v$.closeDateStr.$errors[0]?.$message"
@@ -190,7 +198,6 @@
                     v-model="model.approvalStatus"
                     label="Approval Status"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="requirementApprovalStatusDropdownSingleSelect.list.value"
                     :filter="requirementApprovalStatusDropdownSingleSelect.filter"
                   />
@@ -201,7 +208,6 @@
                   v-model="model.plannedStartDateStr"
                   label="Planned Start Date"
                   :required="false"
-                  :readonly="model.editingStatus === 2"
                   :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                 />
                 <div class="col-12 col-sm-6 col-md-6 col-lg-4">
@@ -209,7 +215,6 @@
                     v-model="model.plannedEndDateStr"
                     label="Planned End Date"
                     :required="false"
-                    :readonly="model.editingStatus === 2"
                     :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                     :dateOptions="disablePlannedDatesBeforeStartDate"
                   />
@@ -219,7 +224,6 @@
                     v-model="model.actualStartDateStr"
                     label="Actual Start Date"
                     :required="false"
-                    :readonly="model.editingStatus === 2"
                     :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                   />
                 </div>
@@ -229,7 +233,6 @@
                     v-model="model.actualEndDateStr"
                     label="Actual End Date"
                     :required="false"
-                    :readonly="model.editingStatus === 2"
                     :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                     :dateOptions="disableActualDatesBeforeStartDate"
                   />
@@ -238,7 +241,6 @@
                     label="Confirmed By"
                     class="hidden"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="activeEmployeesDropdownSingleSelect.list.value"
                     :filter="activeEmployeesDropdownSingleSelect.filter"
                   />
@@ -247,7 +249,6 @@
                     label="Approved By"
                     class="hidden"
                     :required="false"
-                    :readonly="readonlyRequirement != '' ? '' : 'readonlyRequirement'"
                     :options="activeEmployeesDropdownSingleSelect.list.value"
                     :filter="activeEmployeesDropdownSingleSelect.filter"
                   />
@@ -256,20 +257,18 @@
                 <div class="col-12">
                   <div class="form-group">
                     <label class="q-mb-xs text-black">Description</label>
-                    <div
-                      v-if="readonlyRequirement !== ''"
-                      class="readonly-description q-pa-sm q-mb-sm q-field__native q-input__control bg-grey-2 text-black RichTextEditor"
-                    >
-                      <!-- Description text -->
-                      <span v-html="model.description" />
-                    </div>
                     <q-editor
-                      v-else
                       v-model="model.description"
                       :dense="$q.screen.lt.md"
                       :toolbar="toolbar"
                       :fonts="fonts"
                     />
+                  </div>
+                  <div
+                    v-if="v$.description.$error"
+                    class="text-negative text-caption q-mt-xs"
+                  >
+                    {{ v$.description.$errors[0]?.$message }}
                   </div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-6 hidden">
@@ -285,40 +284,6 @@
                       :readonly="readonlyRequirement != ''"
                       maxlength="128"
                     />
-                  </div>
-                </div>
-              </div>
-              <div class="row q-col-gutter-x-md q-mb-md">
-                <div class="col-12">
-                  <div class="form-group">
-                    <label class="q-mb-xs text-black">Short Description</label>
-                    <!-- <div
-                      v-if="readonlyRequirement !== ''"
-                      class="readonly-description q-pa-sm q-mb-sm q-field__native q-input__control bg-grey-2 text-black RichTextEditor"
-                    >
-                      <span v-html="model.shortDescription" />
-                    </div>                     -->
-                    <q-input
-                      v-model="model.shortDescription"
-                      outlined
-                      stack-label
-                      type="textarea"
-                      hide-bottom-space
-                      :dense="true"
-                      :readonly="readonlyRequirement != ''"
-                      maxlength="200"
-                    />
-                    <!-- <q-editor
-                      v-else
-                      v-model="model.shortDescription"
-                      :dense="$q.screen.lt.md"
-                      :toolbar="toolbar"
-                      :fonts="fonts"
-                      @input="limitShortDescription"
-                    />
-                    <span class="text-caption text-grey">
-                      {{ shortDescriptionLength }}/200 characters
-                    </span> -->
                   </div>
                 </div>
               </div>
@@ -718,10 +683,8 @@
         </div>
         <q-separator />
         <q-card-actions align="center" class="stickyFooter q-gutter-sm justify-center">
-          <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn same-size-btn" no-caps @click="onDialogCancel" />
-          <q-btn v-if="model.editingStatus === 1 || !props.id" color="primary" push outline label="Save as Draft and Continue" class="actionBtn same-size-btn" :loading="processing && activeButton === 'saveDraftAndContinue'" no-caps @click="handleSave('saveDraftAndContinue')" />
-          <q-btn v-if="model.editingStatus === 1 || !props.id" color="primary" push outline label="Save as Draft and Close" class="actionBtn same-size-btn" :loading="processing && activeButton === 'saveAndDraft'" no-caps @click="handleSave('saveAndDraft')" />
-          <q-btn color="primary" push outline :label="model.editingStatus === 2 ? 'Update & Close' : 'Confirm and Close'" class="actionBtn same-size-btn" :loading="processing && activeButton === 'confirmAndClose'" no-caps @click="handleSave('confirmAndClose')" />
+          <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="onDialogCancel" />
+          <q-btn color="primary" push outline label="Save" type="submit" class="actionBtn" :loading="processing" no-caps />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -760,8 +723,7 @@ import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 // ----------------------------------------------------------------------------------------------------------------
 
 const props = defineProps({ id: { type: String, default: "" }, projectIdAttr: { type: String, default: "" }, projectIdValue: { type: String, default: "" }, moduleIdAttr: { type: String, default: "" } });
-const readonlyProject = props.projectIdAttr ? "readonly" : "";
-const readonlyProjectModule = props.moduleIdAttr ? "readonly" : "";
+
 let requirementId = props.id;
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -776,7 +738,6 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginC
 // ----------------------------------------------------------------------------------------------------------------
 
 const loading = ref(true);
-const saveStatus = ref(0);
 const rows = ref([]);
 const logrows = ref([]);
 const mode = ref(null);
@@ -853,6 +814,25 @@ const model = ref({
 // ----------------------------------------------------------------------------------------------------------------
 // Requirement Info - Validation Rules
 // ----------------------------------------------------------------------------------------------------------------
+const descriptionRequired = helpers.withMessage(
+  "Description is required",
+  value => {
+    if (!value) return false;
+    const descriptionText = stripHtml(value);
+    const containsImage = hasImage(value);
+    return descriptionText || containsImage;
+  }
+);
+
+const stripHtml = (html) => {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+};
+
+const hasImage = (html) => {
+  if (!html) return false;
+  return /<img\s+[^>]*src=/i.test(html);
+};
 
 const rules = {
   projectId: { required: helpers.withMessage("Project name is required", required) },
@@ -871,6 +851,12 @@ const rules = {
   },
   closeDateStr: {
     isDate: helpers.withMessage("Date is invalid", isDate)
+  },
+  description: {
+    descriptionRequired: helpers.withMessage(
+      "Description is required",
+      descriptionRequired
+    )
   }
 };
 
@@ -889,16 +875,6 @@ const editingRowrules = {
 // ----------------------------------------------------------------------------------------------------------------
 // Response Change Log - Validation Rules
 // ----------------------------------------------------------------------------------------------------------------
-function stripHtml(html = "") {
-  return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .trim();
-}
-
-function hasImage(html = "") {
-  return /<img\b[^>]*>/i.test(html);
-}
 
 const requiredEditor = helpers.withMessage(
   "Description is required",
@@ -1178,15 +1154,8 @@ function handleSave (action) {
   onSubmit(action);
 }
 
-// const getPlainTextLength = (html) => {
-//   const div = document.createElement("div");
-//   div.innerHTML = html || "";
-//   return div.textContent?.trim().length || 0;
-// };
-
 // Submit form
 const onSubmit = async (action) => {
-  debugger;
   processing.value = true;
   try {
     if (mode.value === "addDocumentReference") {
@@ -1223,13 +1192,10 @@ const onSubmit = async (action) => {
       processing.value = true;
       model.value.filePathDetailsModel = rows.value;
       model.value.requirementChangeLogModel = logrows.value;
-      model.value.editingStatus = saveStatus.value;
       requirementService.saveRequirement(requirementId, model.value).then((resp) => {
         requirementId = resp;
         notifySuccess({ message: "Requirement is saved successfully." });
-        if (action !== "saveDraftAndContinue") {
-          onDialogOK();
-        }
+        onDialogOK();
       });
     }
   } catch (error) {

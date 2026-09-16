@@ -9,16 +9,10 @@
         :color="'primary'"
       >
         <div class="fs-14 note-row">
-          <template  v-if="editingResponseLogDescriptionId === responseLogDescription.id && (
-            (
-              responseLogDescription.isRequirementDescription &&
-              responseLogDescription.editingStatus === 1
-            ) ||
-            (
-              !responseLogDescription.isRequirementDescription &&
-              storedUser === responseLogDescription.createdBy?.userName
-            )
-          )">
+          <template v-if="
+            editingResponseLogDescriptionId === responseLogDescription.id &&
+            storedUser === responseLogDescription.createdBy?.userName
+          ">
             <div class="relative">
               <div class="col-11">
                 <q-editor
@@ -60,11 +54,10 @@
           </template>
           <template v-else>
             <div
-              class="note-wrapper cursor-pointer RichTextEditor full-width q-pa-sm"
+              class="note-wrapper RichTextEditor full-width q-pa-sm"
+              :class="{ 'cursor-pointer': storedUser === responseLogDescription.createdBy?.userName }"
               @click="
-                responseLogDescription.isRequirementDescription
-                  ? editRequirementDescription(responseLogDescription)
-                  : startEditingResponseLogDescription(responseLogDescription)
+                  startEditingResponseLogDescription(responseLogDescription)
               "
             >
               <span
@@ -73,16 +66,7 @@
               ></span>
 
               <q-tooltip
-                 v-if="
-                  (
-                    responseLogDescription.isRequirementDescription &&
-                    responseLogDescription.editingStatus === 1
-                  ) ||
-                  (
-                    !responseLogDescription.isRequirementDescription &&
-                    storedUser === responseLogDescription.createdBy?.userName
-                  )
-                "
+                 v-if="storedUser === responseLogDescription.createdBy?.userName"
               >
                 Click to edit
               </q-tooltip>
@@ -121,11 +105,7 @@
           :toolbar="toolbar"
           :fonts="fonts"
           style="width: 92%;"
-          :disable="isDraftRequirement"
         />
-        <q-tooltip v-if="isDraftRequirement">
-          Description cannot be added while the Requirement is in Draft status.
-        </q-tooltip>
       </div>
       <div class="col-1">
         <q-btn
@@ -134,7 +114,7 @@
           round
           flat
           :loading="processing"
-          :disable=" isDraftRequirement || !hasResponseLogDescriptionContent(false)  || processing || responseLogDescriptionEditProcessing"
+          :disable="!hasResponseLogDescriptionContent(false)  || processing || responseLogDescriptionEditProcessing"
           @click="submitResponseLogDescription()"
         />
       </div>
@@ -174,6 +154,7 @@ const storedUser = user?.username;
 const editingResponseLogDescriptionId  = ref(null);
 const editingResponseLogDescriptionValue  = ref("");
 const originalResponseLogDescriptionValue  = ref("");
+const hasMainRequirementDescription = ref(false);
 
 const hasResponseLogDescriptionContent = (isEdit = false) => {
   const description = isEdit
@@ -201,17 +182,17 @@ const startEditingResponseLogDescription  = (responseLogDescriptionItem) => {
   isCancelling.value = false;
 };
 
-const editRequirementDescription = (requirementDescription) => {
-  editingResponseLogDescriptionId.value = requirementDescription.id;
+// const editRequirementDescription = (requirementDescription) => {
+//   editingResponseLogDescriptionId.value = requirementDescription.id;
 
-  editingResponseLogDescriptionValue.value =
-    requirementDescription.description || "";
+//   editingResponseLogDescriptionValue.value =
+//     requirementDescription.description;
 
-  originalResponseLogDescriptionValue.value =
-    requirementDescription.description || "";
+//   originalResponseLogDescriptionValue.value =
+//     requirementDescription.description;
 
-  isCancelling.value = false;
-};
+//   isCancelling.value = false;
+// };
 
 const cancelEditingResponseLogDescription  = (responseLogDescriptionItem) => {
   isCancelling.value = true; // block blur save
@@ -254,20 +235,30 @@ const getAllRequirementDescriptionsById = async (openDraft = false) => {
     const requirementsList = resp.requirementList || [];
     const responseLogDescriptions = [];
 
+    // Check whether Main Requirement Description exists
+    hasMainRequirementDescription.value = requirementsList.some(
+      (requirement) => {
+        const description = requirement.description
+          ?.replace(/<[^>]*>/g, "")
+          .trim();
+
+        return !!description;
+      }
+    );
+
     requirementsList.forEach((requirement) => {
       const requirementDescription = requirement.description
         ?.replace(/<[^>]*>/g, "")
         .trim();
 
       // Add requirement only when description exists
-      if (requirement.editingStatus === 1 || requirementDescription) {
+      if (requirementDescription) {
         responseLogDescriptions.push({
           id: requirement.id,
           description: requirement.description,
           createdOnUtc: requirement.createdOnUtc,
           createdById: requirement.createdById,
           createdBy: requirement.createdBy,
-          editingStatus: requirement.editingStatus,
           isRequirementDescription: true
         });
       }
@@ -298,17 +289,6 @@ const getAllRequirementDescriptionsById = async (openDraft = false) => {
     );
 
     allResponseLogDescriptions.value = responseLogDescriptions;
-    if (openDraft) {
-      const draftRequirement = responseLogDescriptions.find(
-        item =>
-          item.isRequirementDescription &&
-          item.editingStatus === 1
-      );
-
-      if (draftRequirement) {
-        editRequirementDescription(draftRequirement);
-      }
-    }
   } catch (error) {
     console.error(
       "Error while loading requirement descriptions:",
@@ -318,14 +298,6 @@ const getAllRequirementDescriptionsById = async (openDraft = false) => {
     loading.value = false;
   }
 };
-
-const isDraftRequirement = computed(() => {
-  const requirementDescription = allResponseLogDescriptions.value.find(
-    item => item.isRequirementDescription
-  );
-
-  return requirementDescription?.editingStatus === 1;
-});
 
 // Group descriptions by date
 // const groupedDescriptions = computed(() => {
@@ -406,22 +378,54 @@ const submitResponseLogDescription = async (responseLogDescriptionItem = null) =
 
     // await requirementService.saveDescription(payload);
 
+    // if (responseLogDescriptionItem?.isRequirementDescription) {
+    //   // Original Requirement Description
+    //   const payload = {
+    //     id: responseLogDescriptionItem.id,
+    //     description: editingResponseLogDescriptionValue.value || ""
+    //   };
+    //   await requirementService.updateRequirementDescription(payload);
+    // } else {
+    //   // Requirement Change Log Description
+    //   await requirementService.saveResponseLogDescription({
+    //     id: isEditing ? responseLogDescriptionItem.id : null,
+    //     requirementId: props.id,
+    //     employeeId: user.employeeId,
+    //     description: isEditing ? editingResponseLogDescriptionValue.value : responseLogDescription.value,
+    //   });
+    // }
     if (responseLogDescriptionItem?.isRequirementDescription) {
-      // Original Requirement Description
-      const payload = {
-        id: responseLogDescriptionItem.id,
-        description: editingResponseLogDescriptionValue.value || ""
-      };
-      await requirementService.updateRequirementDescription(payload);
-    } else {
-      // Requirement Change Log Description
-      await requirementService.saveResponseLogDescription({
-        id: isEditing ? responseLogDescriptionItem.id : null,
-        requirementId: props.id,
-        employeeId: user.employeeId,
-        description: isEditing ? editingResponseLogDescriptionValue.value : responseLogDescription.value,
-      });
-    }
+
+  // Existing Main Description
+  const payload = {
+    id: responseLogDescriptionItem.id,
+    description: responseLogDescriptionValue
+  };
+
+  await requirementService.updateRequirementDescription(payload);
+
+} else if (!hasMainRequirementDescription.value) {
+
+  // Main Description is null
+  // Use the existing Requirement ID
+  const payload = {
+    id: props.id,
+    description: responseLogDescriptionValue
+  };
+
+  await requirementService.updateRequirementDescription(payload);
+
+} else {
+
+  // Main Description already exists
+  // New description goes to Change Log
+  await requirementService.saveResponseLogDescription({
+    id: null,
+    requirementId: props.id,
+    employeeId: user.employeeId,
+    description: responseLogDescriptionValue
+  });
+}
 
     notifySuccess({
       message: "Description is saved successfully."
