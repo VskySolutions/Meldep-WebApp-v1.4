@@ -2051,6 +2051,7 @@ namespace Vsky.Data
                 entity.HasOne(d => d.Priority).WithMany().HasForeignKey(d => d.PriorityId);
                 entity.HasOne(d => d.ConfirmedBy).WithMany().HasForeignKey(d => d.ConfirmedById);
                 entity.HasOne(d => d.ApprovedBy).WithMany().HasForeignKey(d => d.ApprovedById);
+                entity.HasOne(d => d.RequirementOwner).WithMany().HasForeignKey(d => d.RequirementOwnerId);
             });
 
             builder.Entity<RequirementGroup>(entity =>

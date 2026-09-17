@@ -87,7 +87,8 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 //var createdBy = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
                 var createdBy = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);

@@ -101,7 +101,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 // Fetch a list of Requirements on search criteria (name, sorting, pagination)
                 var list = await _requirementService.GetAllRequirements(
@@ -288,6 +289,7 @@ namespace Vsky.Api.Controllers
                     entity.WorkspaceId = model.WorkspaceId;
                     entity.ConfirmedById = model.ConfirmedById;
                     entity.ApprovedById = model.ApprovedById;
+                    entity.RequirementOwnerId = model.RequirementOwnerId;
                     entity.Title = model.Title;
                     entity.Notes = model.Notes;
                     entity.StatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Requirement Status", "New");
@@ -468,6 +470,7 @@ namespace Vsky.Api.Controllers
                     entity.WorkspaceId = model.WorkspaceId;
                     entity.ConfirmedById = model.ConfirmedById;
                     entity.ApprovedById = model.ApprovedById;
+                    entity.RequirementOwnerId = model.RequirementOwnerId;
                     entity.Title = model.Title;
                     entity.Notes = model.Notes;
                     entity.StatusId = model.StatusId;

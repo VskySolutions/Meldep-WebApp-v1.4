@@ -144,7 +144,7 @@
                       <div v-if="identifiedUserTypeText === 'Customer'" class="col-12 col-sm-6 col-md-6 col-lg-4">
                         <formSingleSelectDropdown
                           v-model="model.identifiedCustomerId"
-                          label="Customer Name"
+                          label="Customer Contact Name"
                           :required="false"
                           :options="customerContactByProjectIdDropdownSingleSelect.list.value"
                           :filter="customerContactByProjectIdDropdownSingleSelect.filter"
@@ -160,7 +160,19 @@
                         />
                       </div>
                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
-                       <formSingleSelectDropdown
+                        <formSingleSelectDropdown
+                          v-model="model.requirementOwnerId"
+                          label="Requirement Owner"
+                          :options="activeEmployeesDropdownSingleSelect.list.value"
+                          :filter="activeEmployeesDropdownSingleSelect.filter"
+                          :error="v$.requirementOwnerId.$error"
+                          :error-message="v$.requirementOwnerId.$errors[0]?.$message"
+                       />
+                      </div>
+                    </div>
+                    <div class="row q-col-gutter-x-md q-mb-md">
+                      <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                        <formSingleSelectDropdown
                           v-model="model.requirementEnteredBy"
                           label="Requirement Entered By"
                           :required="false"
@@ -168,8 +180,6 @@
                           :filter="activeEmployeesDropdownSingleSelect.filter"
                         />
                       </div>
-                    </div>
-                    <div class="row q-col-gutter-x-md q-mb-md">
                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
                         <formSingleSelectDropdown
                           v-model="model.approvalStatus"
@@ -187,7 +197,9 @@
                           :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                         />
                       </div>
-                      <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                    </div>
+                    <div class="row q-col-gutter-x-md q-mb-md">
+                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
                         <formDate
                           v-model="model.plannedEndDateStr"
                           label="Planned End Date"
@@ -196,8 +208,6 @@
                           :dateOptions="disablePlannedDatesBeforeStartDate"
                         />
                       </div>
-                    </div>
-                    <div class="row q-col-gutter-x-md q-mb-md">
                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
                         <formDate
                           v-model="model.actualStartDateStr"
@@ -215,6 +225,8 @@
                           :dateOptions="disableActualDatesBeforeStartDate"
                         />
                       </div>
+                    </div>
+                    <div class="row q-col-gutter-x-md q-mb-md">
                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
                         <formSingleSelectDropdown
                           v-model="model.confirmedById"
@@ -225,8 +237,6 @@
                           :filter="activeEmployeesDropdownSingleSelect.filter"
                         />
                       </div>
-                    </div>
-                    <div class="row q-col-gutter-x-md q-mb-md">
                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
                         <formSingleSelectDropdown
                           v-model="model.approvedById"
@@ -485,6 +495,7 @@ const model = ref({
   identifiedUserType: "",
   employeeId: "",
   identifiedEmployeeId: user?.employeeId ? user.employeeId : "",
+  requirementOwnerId: user?.employeeId ? user.employeeId : "",
   confirmedById: null,
   approvedById: null,
   identifiedDateStr: format(new Date(), "MM/dd/yyyy"),
@@ -513,6 +524,7 @@ const rules = {
     required: helpers.withMessage("Identified date is required", required),
     isDate: helpers.withMessage("Date is invalid", isDate)
   },
+  requirementOwnerId: { required: helpers.withMessage("Requirement Owner is required", required) },
   closeDateStr: {
     isDate: helpers.withMessage("Date is invalid", isDate)
   }

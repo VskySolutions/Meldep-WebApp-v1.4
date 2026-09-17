@@ -199,7 +199,8 @@ namespace Vsky.Api.Controllers
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
                 int Status = 2;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
                 if (!string.IsNullOrWhiteSpace(searchModel.StatusId))
                 {
                     var activeStatus = _dropDownService.GetDropDownById(searchModel.StatusId).GetAwaiter().GetResult();
@@ -268,7 +269,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 int Status = 2;
                 if (!string.IsNullOrWhiteSpace(searchModel.StatusId))
@@ -340,7 +342,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 var list = await _projectService.GetAllProjectListForDropdown(SiteId, LoggedUserId, employeeId, statuses);
                 var model = _mapper.Map<List<ProjectModel>>(list);
@@ -360,7 +363,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 var list = await _projectService.GetProjectsListForDropdown(SiteId, LoggedUserId, employeeId, isTemplate, ActiveStatus, isAllProject);
                 var model = _mapper.Map<List<CommonDropDown>>(list);
@@ -1993,7 +1997,8 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+               // var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 int Status = 2;
                 if (!string.IsNullOrWhiteSpace(searchModel.StatusId))

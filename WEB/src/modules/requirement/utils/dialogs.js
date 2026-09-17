@@ -1,5 +1,5 @@
 import { useQuasar } from "quasar";
-import addEditRequirement from "modules/requirement/components/addEdit.vue";
+import addRequirement from "modules/requirement/components/add.vue";
 import editRequirement from "modules/requirement/components/edit.vue";
 import viewRequirement from "modules/requirement/components/view.vue";
 
@@ -33,7 +33,7 @@ export function onRequirementAdd (
   if (moduleId) componentProps.moduleIdAttr = moduleId;
 
   $q.dialog({
-    component: addEditRequirement,
+    component: addRequirement,
     componentProps
   })
     .onOk(() => {

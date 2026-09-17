@@ -192,6 +192,7 @@ namespace Vsky.Services.Requirements
                        m.ActualStartDate == parsedDate.Date ||
                        m.ActualEndDate == parsedDate.Date ||
                        (m.RequirementEntered.Person.FirstName + " " + m.RequirementEntered.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
+                       (m.RequirementOwner.Person.FirstName + " " + m.RequirementOwner.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
                        m.ApprovalStatusDropDown.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
                        (m.CreatedBy.Person.FirstName + " " + m.CreatedBy.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
                        (m.UpdatedBy.Person.FirstName + " " + m.UpdatedBy.Person.LastName).ToLower().Contains(SearchText.ToLower()) ||
@@ -326,6 +327,14 @@ namespace Vsky.Services.Requirements
                     {
                         Id = x.ApprovedBy.Person.Id,
                         FullName = x.ApprovedBy.Person.FirstName + " " + x.ApprovedBy.Person.LastName,
+                    }
+                },
+                RequirementOwner = new Employee
+                {
+                    Person = new Person
+                    {
+                        Id = x.RequirementOwner.Person.Id,
+                        FullName = x.RequirementOwner.Person.FirstName + " " + x.RequirementOwner.Person.LastName,
                     }
                 },
                 RequirementType = new DropDown
@@ -555,6 +564,7 @@ namespace Vsky.Services.Requirements
                 WorkspaceId = x.WorkspaceId,
                 ConfirmedById = x.ConfirmedById,
                 ApprovedById = x.ApprovedById,
+                RequirementOwnerId = x.RequirementOwnerId,
                 StatusId = x.StatusId,
                 RequirementTypeId = x.RequirementTypeId,
                 IdentifiedDate = x.IdentifiedDate,
@@ -616,6 +626,14 @@ namespace Vsky.Services.Requirements
                     {
                         Id = x.ApprovedBy.Person.Id,
                         FullName = x.ApprovedBy.Person.FirstName + " " + x.ApprovedBy.Person.LastName,
+                    }
+                },
+                RequirementOwner = new Employee
+                {
+                    Person = new Person
+                    {
+                        Id = x.RequirementOwner.Person.Id,
+                        FullName = x.RequirementOwner.Person.FirstName + " " + x.RequirementOwner.Person.LastName,
                     }
                 },
                 Customer = new Person

@@ -101,38 +101,38 @@
                       <div class="text-black">{{ model.userType.dropDownValue === 'Customer' ? (model.customer && model.customer.fullName ? model.customer.fullName : 'N/A') : (model.employee && model.employee.person && model.employee.person.fullName ? model.employee.person.fullName : 'N/A') }}</div>
                     </div>
                     <div class="col-12 col-sm-6 col-md-6">
-                      <div class="q-mb-xs">Requirement Entered By :</div>
-                      <div class="text-black">{{ model.requirementEntered.person.fullName }}</div>
+                      <div class="q-mb-xs">Requirement Owner :</div>
+                      <div class="text-black">{{ model.requirementOwner.person.fullName }}</div>
                     </div>
                   </div>
                   <div class="row q-col-gutter-x-md q-mb-md">
+                    <div class="col-12 col-sm-6 col-md-6">
+                      <div class="q-mb-xs">Requirement Entered By :</div>
+                      <div class="text-black">{{ model.requirementEntered.person.fullName }}</div>
+                    </div>
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Status :</div>
                       <div class="text-black">{{ model.status.dropDownValue }}</div>
                     </div>
+                  </div>
+                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Approval Status :</div>
                       <div class="text-black">{{ model.approvalStatusDropDown.dropDownValue }}</div>
                     </div>
-                  </div>
-                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Planned Start Date :</div>
                       <div class="text-black">{{ model.plannedStartDate }}</div>
                     </div>
+                  </div>
+                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Planned End Date :</div>
                       <div class="text-black">{{ model.plannedEndDate }}</div>
                     </div>
-                  </div>
-                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Actual Start Date :</div>
                       <div class="text-black">{{ model.actualStartDate }}</div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-6">
-                      <div class="q-mb-xs">Actual End Date :</div>
-                      <div class="text-black">{{ model.actualEndDate }}</div>
                     </div>
                   </div>
                   <div class="row q-col-gutter-x-md q-mb-md hidden">
@@ -146,6 +146,10 @@
                     </div>
                   </div>
                   <div class="row q-col-gutter-x-md q-mb-md">
+                    <div class="col-12 col-sm-6 col-md-6">
+                      <div class="q-mb-xs">Actual End Date :</div>
+                      <div class="text-black">{{ model.actualEndDate }}</div>
+                    </div>
                     <div v-if="model.status.dropDownValue == 'Close'" class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Close Date :</div>
                       <div class="text-black">{{ model.closeDate }}</div>
@@ -353,6 +357,11 @@ const model = ref({
     }
   },
   approvedBy: {
+    person: {
+      fullName: ""
+    }
+  },
+  requirementOwner: {
     person: {
       fullName: ""
     }

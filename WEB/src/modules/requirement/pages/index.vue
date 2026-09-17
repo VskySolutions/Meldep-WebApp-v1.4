@@ -584,6 +584,12 @@
                   {{ props.row.identifiedDate }}
               </q-td>
               <q-td
+                v-if="selectedColumnNames.includes('requirementOwner.person.firstName')"
+                class="common-q-td text-center"
+              >
+                  {{ props.row.requirementOwner.person.fullName }}
+              </q-td>
+              <q-td
                 v-if="selectedColumnNames.includes('requirementTags')"
                 class="common-q-td"
                 :class="{ 'hoverable-cell' : props.row.isEditable }"
@@ -1047,6 +1053,7 @@ const columns = ref([
   { name: "userType.dropDownValue", label: "Identifier", field: "userType.dropDownValue", align: "left", sortable: true, default: false },
   { name: "employee.person.firstName", label: "Identified By", field: "employee.person.firstName", align: "left", sortable: true, default: false },
   { name: "identifiedDate", label: "Identified Date", field: "identifiedDate", align: "center", sortable: true, default: true },
+  { name: "requirementOwner.person.firstName", label: "Requirement Owner", field: "requirementOwner.person.firstName", align: "left", sortable: true, default: false },
   { name: "requirementTags", label: "Tags", field: row => row.requirementTags, align: "left", sortable: false, default: false },
   { name: "requirementType.dropDownValue", label: "Type", field: "requirementType.dropDownValue", align: "left", sortable: true, default: false },
   { name: "area.dropDownValue", label: "Area", field: "area.dropDownValue", align: "left", sortable: true, default: false },

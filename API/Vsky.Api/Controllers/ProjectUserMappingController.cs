@@ -45,7 +45,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 // Fetch a list of projects based on search criterias
                 var list = await _projectUserMappingService.GetAllProjectsForUserPermission(SiteId, searchModel.IsTemplate, LoggedUserId, employeeId, searchModel.SearchText, searchModel.ProjectIds, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);

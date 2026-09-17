@@ -113,7 +113,8 @@ namespace Vsky.Api.Controllers
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
-                var employeeId = _commonService.GetEmployeeIdByUserId(siteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(siteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(siteId, LoggedUserId);
 
                 return Ok(new
                 {

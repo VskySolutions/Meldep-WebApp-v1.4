@@ -78,7 +78,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 // Fetch a list of project module based on search criteria (name, sorting, pagination)
                 var list = await _projectModuleService.GetAllProjectModules(SiteId, LoggedUserId, employeeId, searchModel.SearchText, searchModel.ProjectIds, searchModel.ProjectModuleTypeIds, searchModel.ProjectModuleStatusIds, searchModel.ProjectId, searchModel.CustomerIds, searchModel.CompanyContactIds, searchModel.isShowCloseStatus, searchModel.pageName, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);

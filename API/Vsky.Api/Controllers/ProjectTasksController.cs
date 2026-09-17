@@ -131,7 +131,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
                 // Fetch a list
                 var list = await _taskService.GetAllProjectTasks(
                     SiteId,
@@ -422,7 +423,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 var list = await _taskService.GetAllProjectTaskWithProjectListForDropdown(SiteId, LoggedUserId, employeeId);
                 var model = _mapper.Map<List<CommonDropDown>>(list);
@@ -2792,7 +2794,8 @@ namespace Vsky.Api.Controllers
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
             var SiteId = _globalVariable.SiteId;
-            var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+            //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+            var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
             if (searchModel.ProjectIds != null && searchModel.ProjectIds.Count > 1)
                 searchModel.SortBy = "calendar";
@@ -2992,7 +2995,8 @@ namespace Vsky.Api.Controllers
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
             var SiteId = _globalVariable.SiteId;
-            var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+            //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+            var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
             if (searchModel.ProjectIds != null && searchModel.ProjectIds.Count > 1)
                 searchModel.SortBy = "calendar";

@@ -24,6 +24,7 @@ namespace Vsky.Models
         public string RequirementTypeId { get; set; }
         public string ConfirmedById { get; set; }
         public string ApprovedById { get; set; }
+        public string RequirementOwnerId { get; set; }
         public string ApprovalStatus { get; set; }
         public string RequirementEnteredBy { get; set; }
         public string StatusId { get; set; }
@@ -79,6 +80,7 @@ namespace Vsky.Models
         public virtual DropDown Priority { get; set; }
         public virtual Employee ConfirmedBy { get; set; }
         public virtual Employee ApprovedBy { get; set; }
+        public virtual Employee RequirementOwner { get; set; }
         public virtual ICollection<FilePathDetails> FilePathDetails { get; set; } = new List<FilePathDetails>();
         public virtual ICollection<RequirementChangeLog> RequirementChangeLog { get; set; } = new List<RequirementChangeLog>();
         public virtual ICollection<ProjectTask> ProjectTaskRelatedMappings { get; set; } = new List<ProjectTask>();
