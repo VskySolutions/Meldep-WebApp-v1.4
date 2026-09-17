@@ -176,33 +176,31 @@
         </q-tr>
       </template>
       <template #body="props">
-        <q-tr
-          :props="props"
-          :set="(prevDate = null, prevEmployee = null)"
-        >
+        <q-tr :props="props">
           <!-- Date -->
           <q-td>
-            <span
-              v-if="prevDate !== props.row.timesheetDate"
-              :set="(prevDate = props.row.timesheetDate, prevEmployee = null)"
-            >
-              {{ props.row.timesheet?.timesheetDate }}
-            </span>
+            {{
+              props.rowIndex === 0 ||
+              filteredRows[props.rowIndex - 1].timesheetDate !== props.row.timesheetDate
+                ? props.row.timesheetDate
+                : ''
+            }}
           </q-td>
 
           <!-- Employee -->
           <q-td>
-            <span
-              v-if="prevEmployee !== props.row.employeeName"
-              :set="prevEmployee = props.row.employeeName"
-            >
-              {{ props.row.timesheet?.user?.person?.fullName }}
-            </span>
+            {{
+              props.rowIndex === 0 ||
+              filteredRows[props.rowIndex - 1].timesheetDate !== props.row.timesheetDate ||
+              filteredRows[props.rowIndex - 1].employeeName !== props.row.employeeName
+                ? props.row.employeeName
+                : ''
+            }}
           </q-td>
 
           <!-- Task -->
           <q-td>
-            {{ props.row.task?.name }}
+            {{ props.row.taskName }}
           </q-td>
 
           <!-- Hours -->
@@ -256,57 +254,12 @@ const rows = ref([]);
 
 const columns = [
   { name: 'timesheet.timesheetDate', label: 'DATE', field: 'timesheet.timesheetDate', align: 'left', sortable: true },
-  { name: 'timesheet.user.person.fullName', label: 'EMPLOYEE', field: 'timesheet.user.person.fullName', align: 'left', sortable: true },
+  { name: 'timesheet.user.person.firstName', label: 'EMPLOYEE', field: 'timesheet.user.person.firstName', align: 'left', sortable: true },
   { name: 'task.name', label: 'TASK', field: 'task.name', align: 'left', sortable: true },
   { name: 'hours', label: 'HOURS', field: 'hours', align: 'right', sortable: true }
 ]
 
 const projectId = ref('');
-// const getAllTimesheetByRequirementId = async ({ pagination: p = pagination.value }) => {
-//   const { page, rowsPerPage, sortBy, descending } = p;
-
-//   try {
-//     loading.value = true;
-//     const payload = {
-//       requirementId: props.requirementId,
-//       searchText: search.value.searchText,
-//       createdBy: search.value.createdBy,
-//       employeeId: search.value.employeeId,
-//       projectTaskId: search.value.projectTaskId,
-//       activityDate: search.value.activityDate,
-//       fromDate: search.value.fromDate,
-//       toDate: search.value.toDate,
-//       weekFilter: search.value.weekFilter,
-//       page: page,
-//       pageSize: rowsPerPage,
-//       sortBy,
-//       descending,
-//       sorts: sorts.value
-//     };
-
-//     const resp = await requirementCenterService.getAllTimesheetByRequirementId(payload);
-//     rows.value = resp.data || [];
-
-//     // console.log("timesheet", rows.value);
-
-//     Object.assign(pagination.value, {
-//       page,
-//       rowsPerPage,
-//       sortBy,
-//       descending,
-//       rowsNumber: resp.total || 0
-//     });
-//     saveDataTableState({
-//       search: search.value,
-//       pagination: pagination.value,
-//       activeRowId: activeRowId.value,
-//       sorts
-//     });
-//   } finally {
-//     loading.value = false;
-//     searchLoader.value = false;
-//   }
-// };
 
 const getAllTimesheetByRequirementId = async ({ pagination: p = pagination.value }) => {
   const { page, rowsPerPage, sortBy, descending } = p;
@@ -331,9 +284,12 @@ const getAllTimesheetByRequirementId = async ({ pagination: p = pagination.value
     };
 
     const resp = await requirementCenterService.getAllTimesheetByRequirementId(payload);
-    rows.value = resp.data || [];
-
-    console.log("timesheet", rows.value);
+    rows.value = resp.data.map(item => ({
+      ...item,
+      timesheetDate: item.timesheet?.timesheetDate ?? '-',
+      employeeName: item.timesheet?.user?.person?.fullName ?? '-',
+      taskName: item.task?.name ?? '-'
+    }));
 
     Object.assign(pagination.value, {
       page,
