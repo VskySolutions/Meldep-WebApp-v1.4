@@ -22,6 +22,8 @@ namespace Vsky.Services.ProjectActionItem
         private readonly IRepository<ProjectActionItems> _projectActionItemsRepository;
         private readonly IRepository<Notes> _notesRepository;
         private readonly ICommonService _commonService;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IApplicationUserRoleService _applicationUserRoleService;
         #endregion
 
         #region Services Initializations
@@ -29,12 +31,16 @@ namespace Vsky.Services.ProjectActionItem
         public ProjectActionItemsService(
             IRepository<ProjectActionItems> projectActionItemsRepository,
             IRepository<Notes> notesRepository,
-            ICommonService commonService
+            ICommonService commonService,
+            UserManager<ApplicationUser> userManager,
+            IApplicationUserRoleService applicationUserRoleService
         )
         {
             _projectActionItemsRepository = projectActionItemsRepository;
             _notesRepository = notesRepository;
             _commonService = commonService;
+            _userManager = userManager;
+            _applicationUserRoleService = applicationUserRoleService;
         }
 
         #endregion
@@ -51,7 +57,8 @@ namespace Vsky.Services.ProjectActionItem
         #region GetAllProjectActionItems
         public async Task<IPagedList<ProjectActionItems>> GetAllProjectActionItems(
             string SiteId,
-            string LoggedUserId,
+            string loggedUserId,
+            string employeeId,
             string SearchText,
             List<string> projectIds,
             List<string> requirementIds,
@@ -69,6 +76,26 @@ namespace Vsky.Services.ProjectActionItem
         )
         {
             var query = _projectActionItemsRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
+
+            bool isAdmin = await IsCurrentUserAdmin(loggedUserId, SiteId);
+            if (!isAdmin)
+            {
+                query = query.Where(x =>
+                   x.Project.CreatedById == loggedUserId ||
+                   x.CreatedById == loggedUserId ||
+                   x.Project.ProjectEmployeeMappings.Any(m =>
+                       !m.Deleted &&
+                       m.EmployeeId == employeeId &&
+                       m.ProjectEmployeeRoleMappings.Any(r =>
+                           !r.Deleted &&
+                           r.SitesProjectRoles.SitesProjectRolesPermissions.Any(p =>
+                               !p.Deleted &&
+                               (p.FullAccess || p.ViewOnly || p.Notes)
+                           )
+                       )
+                   )
+               );
+            }
 
             if (projectIds != null && projectIds.Any())
                 query = query.Where(x => projectIds.Contains(x.ProjectId));
@@ -214,7 +241,38 @@ namespace Vsky.Services.ProjectActionItem
                 Project = new Project
                 {
                     Id = x.Project.Id,
-                    Name = x.Project.Name
+                    Name = x.Project.Name,
+                    CurrentUserManage =
+                        x.Project.CreatedById == loggedUserId ||
+                        x.CreatedById == loggedUserId ||
+                        x.Project.ProjectEmployeeMappings
+                            .Where(m =>
+                                !m.Deleted &&
+                                m.EmployeeId == employeeId)
+                            .Any(m =>
+                                m.ProjectEmployeeRoleMappings
+                                    .Where(r => !r.Deleted)
+                                    .Any(r =>
+                                        r.SitesProjectRoles
+                                            .SitesProjectRolesPermissions
+                                            .Any(p =>
+                                                !p.Deleted &&
+                                                p.FullAccess))),
+
+                    CurrentUserNotes =
+                        x.Project.ProjectEmployeeMappings
+                            .Where(m =>
+                                !m.Deleted &&
+                                m.EmployeeId == employeeId)
+                            .Any(m =>
+                                m.ProjectEmployeeRoleMappings
+                                    .Where(r => !r.Deleted)
+                                    .Any(r =>
+                                        r.SitesProjectRoles
+                                            .SitesProjectRolesPermissions
+                                            .Any(p =>
+                                                !p.Deleted &&
+                                                p.Notes)))
                 },
                 Requirement = new Requirement
                 {
@@ -549,5 +607,15 @@ namespace Vsky.Services.ProjectActionItem
             _projectActionItemsRepository.Update(entity);
         }
         #endregion
+        private async Task<bool> IsCurrentUserAdmin(string CId, string SiteId)
+        {
+            var userdata = await _userManager.FindByIdAsync(CId);
+            var user = await _userManager.FindByNameAsync(userdata.UserName);
+            //var roles = await _userManager.GetRolesAsync(user);
+            var roles = await _applicationUserRoleService.GetRoleNamesByUserAndSite(user.Id, SiteId);
+            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
+
+            return isAdmin;
+        }
     }
 }

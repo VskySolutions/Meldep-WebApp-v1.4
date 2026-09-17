@@ -281,10 +281,18 @@
                   <q-icon name="o_visibility" class="cursor-pointer q-mr-xs" size="xs" @click="onQuestionAnswersView(props.row.id)">
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
-                  <q-icon name="o_edit" class="cursor-pointer q-mr-xs" size="xs" @click="onQuestionAnswersEdit(props.row.id, refreshQuestionsAnswersList)">
+                  <q-icon
+                    v-if="props.row.isEditable"
+                    name="o_edit"
+                    class="cursor-pointer
+                    q-mr-xs"
+                    size="xs"
+                    @click="onQuestionAnswersEdit(props.row.id, refreshQuestionsAnswersList)"
+                  >
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
                   <q-icon
+                    v-if="props.row.isEditable"
                     name="o_history"
                     class="cursor-pointer q-mr-xs"
                     size="xs"
@@ -296,7 +304,14 @@
                   >
                     <q-tooltip>Response Log</q-tooltip>
                   </q-icon>
-                  <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitQuestionsAnswersDelete(props.row.id, props.row.title, refreshQuestionsAnswersList)">
+                  <q-icon
+                    v-if="props.row.isEditable"
+                    name="o_delete_outline"
+                    class="cursor-pointer"
+                    color="negative"
+                    size="xs"
+                    @click="onSubmitQuestionsAnswersDelete(props.row.id, props.row.title, refreshQuestionsAnswersList)"
+                  >
                     <q-tooltip>Delete</q-tooltip>
                   </q-icon>
                 </q-td>
@@ -482,7 +497,12 @@ const getAllQuestionAnswers = async ({ pagination: p }) => {
     sorts
   });
   projectQuestionsAnswersService.getAllQuestionAnswers(payload).then((resp) => {
-    rows.value = resp.projectQuestionsAnswerList;
+    // rows.value = resp.projectQuestionsAnswerList;
+    rows.value = resp.projectQuestionsAnswerList.map((module) => ({
+      ...module,
+      isNotes: module.project?.currentUserNotes ?? false,
+      isEditable: module.project?.currentUserManage
+    }));
     Object.assign(pagination.value, {
       page,
       rowsPerPage,

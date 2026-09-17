@@ -9,6 +9,7 @@ using Vsky.Api.Extensions;
 using Vsky.Api.Models;
 using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
+using Vsky.Services.Common;
 using Vsky.Services.ProjectQuestionsAnswer;
 using Vsky.Services.Sites;
 
@@ -23,9 +24,11 @@ namespace Vsky.Api.Controllers
         private readonly IAzureBlobImageServices _azureBlobImageServices;
         private readonly IProjectQuestionsAnswersService _projectQuestionsAnswerService;
         private readonly IProjectQuestionsAnswersResponseLogService _projectQuestionsAnswersResponseLogService;
+        private readonly ICommonService _commonService;
         public ProjectQuestionsAnswerController(
             GlobalVariable globalVariable,
             ISiteService siteService,
+            ICommonService commonService,
             IAzureBlobImageServices azureBlobImageServices,
             IProjectQuestionsAnswersService projectQuestionsAnswerService,
             IProjectQuestionsAnswersResponseLogService projectQuestionsAnswersResponseLogService)
@@ -35,18 +38,23 @@ namespace Vsky.Api.Controllers
             _azureBlobImageServices = azureBlobImageServices;
             _projectQuestionsAnswerService = projectQuestionsAnswerService;
             _projectQuestionsAnswersResponseLogService = projectQuestionsAnswersResponseLogService;
+            _commonService = commonService;
         }
         #endregion
 
         [HttpPost("list")]
-        public IActionResult GetAllProjectQuestionsAnswers(ProjectQuestionsAnswersSearchModel searchModel)
+        public async Task<IActionResult> GetAllProjectQuestionsAnswers(ProjectQuestionsAnswersSearchModel searchModel)
         {
             try
             {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
 
-                var list = _projectQuestionsAnswerService.GetAllProjectQuestionsAnswers(
+                var list = await _projectQuestionsAnswerService.GetAllProjectQuestionsAnswers(
                     SiteId,
+                    LoggedUserId,
+                    employeeId,
                     searchModel.SearchText,
                     searchModel.Title,
                     searchModel.ProjectIds,
