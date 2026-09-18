@@ -532,6 +532,7 @@ namespace Vsky.Api
 
             builder.Services.AddScoped<IProjectQuestionsAnswersService, ProjectQuestionsAnswersService>();
             builder.Services.AddScoped<IProjectQuestionsAnswersResponseLogService, ProjectQuestionsAnswersResponseLogService>();
+            builder.Services.AddScoped<IProjectQuestionsAnswersContributorsService, ProjectQuestionsAnswersContributorsService>();
 
             builder.Services.AddScoped<ISitesProjectRolesService, SitesProjectRolesService>();
 

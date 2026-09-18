@@ -24,6 +24,7 @@ namespace Vsky.Api.Controllers
         private readonly IAzureBlobImageServices _azureBlobImageServices;
         private readonly IProjectQuestionsAnswersService _projectQuestionsAnswerService;
         private readonly IProjectQuestionsAnswersResponseLogService _projectQuestionsAnswersResponseLogService;
+        private readonly IProjectQuestionsAnswersContributorsService _projectQuestionAnswerContributorsService;
         private readonly ICommonService _commonService;
         public ProjectQuestionsAnswerController(
             GlobalVariable globalVariable,
@@ -31,7 +32,8 @@ namespace Vsky.Api.Controllers
             ICommonService commonService,
             IAzureBlobImageServices azureBlobImageServices,
             IProjectQuestionsAnswersService projectQuestionsAnswerService,
-            IProjectQuestionsAnswersResponseLogService projectQuestionsAnswersResponseLogService)
+            IProjectQuestionsAnswersResponseLogService projectQuestionsAnswersResponseLogService,
+            IProjectQuestionsAnswersContributorsService projectQuestionAnswerContributorsService)
         {
             _globalVariable = globalVariable;
             _siteService = siteService;
@@ -39,6 +41,7 @@ namespace Vsky.Api.Controllers
             _projectQuestionsAnswerService = projectQuestionsAnswerService;
             _projectQuestionsAnswersResponseLogService = projectQuestionsAnswersResponseLogService;
             _commonService = commonService;
+            _projectQuestionAnswerContributorsService = projectQuestionAnswerContributorsService;
         }
         #endregion
 
@@ -142,9 +145,10 @@ namespace Vsky.Api.Controllers
                     if (exists != null)
                         return BadRequest(new BadRequestError("Project question already exists"));
 
+                    var questionAnswerId = Guid.NewGuid().ToString();
                     var entity = new ProjectQuestionsAnswers
                     {
-                        Id = Guid.NewGuid().ToString(),
+                        Id = questionAnswerId,
                         SiteId = SiteId,
                         Title = model.Title,
                         ProjectId = model.ProjectId,
@@ -166,6 +170,56 @@ namespace Vsky.Api.Controllers
                             );
                     }
                     _projectQuestionsAnswerService.InsertProjectQuestionsAnswer(entity);
+
+                    var contributors = new List<ProjectQuestionsAnswersContributors>();
+
+                    // Employees
+                    foreach (var employeeId in model.ContributorEmployeeIds ?? new List<string>())
+                    {
+                        if (string.IsNullOrEmpty(employeeId))
+                            continue;
+
+                        contributors.Add(new ProjectQuestionsAnswersContributors
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            ProjectQuestionAnswerId = entity.Id,
+                            ContributorTypeId = model.ContributorTypeId,
+                            ContributorEmployeeId = employeeId,
+                            ContributorCustomerId = null,
+                            CreatedById = LoggedUserId,
+                            CreatedOnUtc = GetDateTime,
+                            UpdatedById = LoggedUserId,
+                            UpdatedOnUtc = GetDateTime,
+                            Deleted = false
+                        });
+                    }
+
+                    // Customers
+                    foreach (var customerId in model.ContributorCustomerIds ?? new List<string>())
+                    {
+                        if (string.IsNullOrEmpty(customerId))
+                            continue;
+
+                        contributors.Add(new ProjectQuestionsAnswersContributors
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            ProjectQuestionAnswerId = entity.Id,
+                            ContributorTypeId = model.ContributorTypeId,
+                            ContributorEmployeeId = null,
+                            ContributorCustomerId = customerId,
+                            CreatedById = LoggedUserId,
+                            CreatedOnUtc = GetDateTime,
+                            UpdatedById = LoggedUserId,
+                            UpdatedOnUtc = GetDateTime,
+                            Deleted = false
+                        });
+                    }
+
+                    if (contributors.Any())
+                    {
+                        _projectQuestionAnswerContributorsService
+                            .InsertProjectQuestionAnswerContributorList(contributors);
+                    }
 
                     return Ok(entity);
                 }
@@ -222,7 +276,6 @@ namespace Vsky.Api.Controllers
                     }
 
                     _projectQuestionsAnswerService.UpdateProjectQuestionsAnswer(entity);
-
 
                     //save Response Change Log
                     if (model.ProjectQuestionsAnswersResponseLogs?.Any() == true)
@@ -306,6 +359,170 @@ namespace Vsky.Api.Controllers
 
                         if (deleteList.Count > 0)
                             _projectQuestionsAnswersResponseLogService.DeleteProjectQuestionsAnswersResponseLogList(deleteList);
+                    }
+
+                    // Update Q&A Contributors
+                    var existingContributors =
+                        await _projectQuestionAnswerContributorsService
+                            .GetProjectQuestionAnswerContributorsByQuestionAnswerId(
+                                SiteId,
+                                entity.Id);
+
+                    var selectedEmployeeIds =
+                        model.ContributorEmployeeIds ?? new List<string>();
+
+                    var selectedCustomerIds =
+                        model.ContributorCustomerIds ?? new List<string>();
+
+                    var existingActiveContributors = existingContributors
+                        .Where(x => !x.Deleted)
+                        .ToList();
+
+                    var newContributors =
+                        new List<ProjectQuestionsAnswersContributors>();
+
+                    // Employee Contributors
+                    foreach (var employeeId in selectedEmployeeIds)
+                    {
+                        if (string.IsNullOrEmpty(employeeId))
+                            continue;
+
+                        var existing = existingActiveContributors
+                            .FirstOrDefault(x =>
+                                x.ContributorEmployeeId == employeeId);
+
+                        if (existing != null)
+                        {
+                            existing.ContributorTypeId = model.ContributorTypeId;
+                            existing.UpdatedById = loggedUserId;
+                            existing.UpdatedOnUtc = currentDateTime;
+
+                            _projectQuestionAnswerContributorsService
+                                .UpdateProjectQuestionAnswerContributor(existing);
+
+                            continue;
+                        }
+
+                        var deletedContributor = existingContributors
+                            .FirstOrDefault(x =>
+                                x.Deleted &&
+                                x.ContributorEmployeeId == employeeId);
+
+                        if (deletedContributor != null)
+                        {
+                            deletedContributor.Deleted = false;
+                            deletedContributor.ContributorTypeId = model.ContributorTypeId;
+                            deletedContributor.UpdatedById = loggedUserId;
+                            deletedContributor.UpdatedOnUtc = currentDateTime;
+
+                            _projectQuestionAnswerContributorsService
+                                .UpdateProjectQuestionAnswerContributor(
+                                    deletedContributor);
+
+                            continue;
+                        }
+
+                        newContributors.Add(
+                            new ProjectQuestionsAnswersContributors
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                ProjectQuestionAnswerId = entity.Id,
+                                ContributorTypeId = model.ContributorTypeId,
+                                ContributorEmployeeId = employeeId,
+                                ContributorCustomerId = null,
+                                CreatedById = loggedUserId,
+                                UpdatedById = loggedUserId,
+                                CreatedOnUtc = currentDateTime,
+                                UpdatedOnUtc = currentDateTime,
+                                Deleted = false
+                            });
+                    }
+
+                    // Customer Contributors
+                    foreach (var customerId in selectedCustomerIds)
+                    {
+                        if (string.IsNullOrEmpty(customerId))
+                            continue;
+
+                        var existing = existingActiveContributors
+                            .FirstOrDefault(x =>
+                                x.ContributorCustomerId == customerId);
+
+                        if (existing != null)
+                        {
+                            existing.ContributorTypeId = model.ContributorTypeId;
+                            existing.UpdatedById = loggedUserId;
+                            existing.UpdatedOnUtc = currentDateTime;
+
+                            _projectQuestionAnswerContributorsService
+                                .UpdateProjectQuestionAnswerContributor(existing);
+
+                            continue;
+                        }
+
+                        var deletedContributor = existingContributors
+                            .FirstOrDefault(x =>
+                                x.Deleted &&
+                                x.ContributorCustomerId == customerId);
+
+                        if (deletedContributor != null)
+                        {
+                            deletedContributor.Deleted = false;
+                            deletedContributor.ContributorTypeId = model.ContributorTypeId;
+                            deletedContributor.UpdatedById = loggedUserId;
+                            deletedContributor.UpdatedOnUtc = currentDateTime;
+
+                            _projectQuestionAnswerContributorsService
+                                .UpdateProjectQuestionAnswerContributor(
+                                    deletedContributor);
+
+                            continue;
+                        }
+
+                        newContributors.Add(
+                            new ProjectQuestionsAnswersContributors
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                ProjectQuestionAnswerId = entity.Id,
+                                ContributorTypeId = model.ContributorTypeId,
+                                ContributorEmployeeId = null,
+                                ContributorCustomerId = customerId,
+                                CreatedById = loggedUserId,
+                                UpdatedById = loggedUserId,
+                                CreatedOnUtc = currentDateTime,
+                                UpdatedOnUtc = currentDateTime,
+                                Deleted = false
+                            });
+                    }
+
+                    // Delete removed contributors
+                    var contributorsToDelete = existingActiveContributors
+                        .Where(x =>
+                            (x.ContributorEmployeeId != null &&
+                             !selectedEmployeeIds.Contains(x.ContributorEmployeeId)) ||
+                            (x.ContributorCustomerId != null &&
+                             !selectedCustomerIds.Contains(x.ContributorCustomerId)))
+                        .ToList();
+
+                    foreach (var contributor in contributorsToDelete)
+                    {
+                        contributor.Deleted = true;
+                        contributor.UpdatedById = loggedUserId;
+                        contributor.UpdatedOnUtc = currentDateTime;
+                    }
+
+                    if (contributorsToDelete.Any())
+                    {
+                        _projectQuestionAnswerContributorsService
+                            .UpdateProjectQuestionAnswerContributorList(
+                                contributorsToDelete);
+                    }
+
+                    if (newContributors.Any())
+                    {
+                        _projectQuestionAnswerContributorsService
+                            .InsertProjectQuestionAnswerContributorList(
+                                newContributors);
                     }
                     return Ok();
                 }

@@ -425,6 +425,61 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                     }
                 },
                 LastAnswer = x.ProjectQuestionsAnswersResponseLog.Where(p => !p.Deleted).OrderByDescending(p => p.CreatedOnUtc).Select(p => p.Description).FirstOrDefault(),
+                ProjectQuestionAnswerContributors =
+                x.ProjectQuestionAnswerContributors
+                    .Where(c => !c.Deleted)
+                    .Select(c => new ProjectQuestionsAnswersContributors
+                    {
+                        Id = c.Id,
+                        ProjectQuestionAnswerId = c.ProjectQuestionAnswerId,
+
+                        ContributorTypeId = c.ContributorTypeId,
+
+                        ContributorEmployeeId = c.ContributorEmployeeId,
+                        ContributorCustomerId = c.ContributorCustomerId,
+
+                        // Names
+                        ContributorType = c.ContributorType == null
+                        ? null
+                        : new DropDown
+                        {
+                            Id = c.ContributorType.Id,
+                            DropDownValue = c.ContributorType.DropDownValue
+                        },
+
+                        ContributorEmployee = c.ContributorEmployee == null
+                        ? null
+                        : new Employee
+                        {
+                            Id = c.ContributorEmployee.Id,
+                            Person = c.ContributorEmployee.Person == null
+                                ? null
+                                : new Person
+                                {
+                                    Id = c.ContributorEmployee.Person.Id,
+                                    FullName =
+                                        (c.ContributorEmployee.Person.FirstName ?? "") + " " +
+                                        (c.ContributorEmployee.Person.LastName ?? "")
+                                }
+                        },
+
+                        ContributorCustomer = c.ContributorCustomer == null
+                        ? null
+                        : new Person
+                        {
+                            Id = c.ContributorCustomer.Id,
+                            FullName =
+                                (c.ContributorCustomer.FirstName ?? "") + " " +
+                                (c.ContributorCustomer.LastName ?? "")
+                        },
+
+                        CreatedById = c.CreatedById,
+                        CreatedOnUtc = c.CreatedOnUtc,
+                        UpdatedById = c.UpdatedById,
+                        UpdatedOnUtc = c.UpdatedOnUtc,
+                        Deleted = c.Deleted
+                    })
+                    .ToList(),
                 ProjectQuestionsAnswersResponseLog = x.ProjectQuestionsAnswersResponseLog.Where(p => !p.Deleted)
                 .OrderByDescending(p => p.CreatedOnUtc)
                 .Select(p => new ProjectQuestionsAnswersResponseLog

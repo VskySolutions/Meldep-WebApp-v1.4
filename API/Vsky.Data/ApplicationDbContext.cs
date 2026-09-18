@@ -1550,6 +1550,19 @@ namespace Vsky.Data
                 entity.HasOne(d => d.Requirement).WithMany().HasForeignKey(d => d.RequirementId);
             });
 
+            builder.Entity<ProjectQuestionsAnswersContributors>(entity =>
+            {
+                entity.ToTable("ProjectQuestionsAnswersContributors");
+
+                entity.Property(e => e.ProjectQuestionAnswerId).IsRequired().HasMaxLength(450);
+                entity.Property(e => e.ContributorTypeId).HasMaxLength(450);
+                entity.Property(e => e.ContributorEmployeeId).HasMaxLength(450);
+                entity.Property(e => e.ContributorCustomerId).HasMaxLength(450);
+
+                entity.HasOne(d => d.ProjectQuestionsAnswers).WithMany(x => x.ProjectQuestionAnswerContributors).HasForeignKey(d => d.ProjectQuestionAnswerId);
+                entity.HasOne(d => d.ContributorType).WithMany().HasForeignKey(d => d.ContributorTypeId);
+            });
+
             builder.Entity<ProjectQuestionsAnswersResponseLog>(entity =>
             {
                 entity.ToTable("ProjectQuestionsAnswersResponseLog");

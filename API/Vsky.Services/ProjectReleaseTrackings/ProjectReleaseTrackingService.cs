@@ -103,6 +103,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
                 query = query.Where(m =>
                     m.Project.Name.ToLower().Contains(searchText) ||
                     m.Name.ToLower().Contains(searchText) ||
+                    m.VersionNumber.ToLower().Contains(searchText) ||
                     m.InfraInstance.InstanceType.DropDownValue.ToLower().Contains(searchText) ||
                     (m.DeploymentOwner.Person.FirstName + " " + m.DeploymentOwner.Person.LastName)
                         .ToLower()

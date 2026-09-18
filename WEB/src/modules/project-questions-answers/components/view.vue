@@ -27,9 +27,46 @@
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
+              <!-- Contributor Type -->
+              <div class="col-12 col-sm-6">
+                <div class="q-mb-xs">Q&A Contributor Type</div>
+
+                <div class="text-black q-mb-sm">
+                  {{
+                    model.projectQuestionAnswerContributors?.[0]?.contributorTypeName || "-"
+                  }}
+                </div>
+              </div>
+                <div class="col-12 col-sm-6">
+                  <div class="q-mb-xs">Contributors</div>
+
+                  <div class="text-black q-mb-sm row items-center q-gutter-xs">
+                    <template
+                      v-if="model.projectQuestionAnswerContributors?.length"
+                    >
+                      <q-badge
+                        v-for="contributor in model.projectQuestionAnswerContributors"
+                        :key="contributor.id"
+                        color="primary"
+                        rounded
+                        class="q-px-sm q-py-xs"
+                      >
+                        {{
+                          contributor.contributorEmployeeName !== "-"
+                            ? contributor.contributorEmployeeName
+                            : contributor.contributorCustomerName
+                        }}
+                      </q-badge>
+                    </template>
+
+                    <span v-else>-</span>
+                  </div>
+                </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12">
                 <div class="q-mb-xs">Answer</div>
-                <p class="q-pt-md text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
+                <p class="text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
@@ -142,16 +179,51 @@ const changeLogColumns = ref([
   { name: "updatedOnUtc", label: "Updated Date", field: "updatedOnUtc", align: "left", sortable: true }
 ]);
 
-// get Question Answers details
+// // get Question Answers details
+// const getQuestionAnswersInDetailsById = async () => {
+//   loading.value = true;
+
+//   try {
+//     const resp = await projectQuestionsAnswersService.getQuestionAnswersInDetailsById(props.id);
+
+//     model.value = _.cloneDeep(resp);
+
+//     changeLogRows.value = (resp.projectQuestionsAnswersResponseLog ?? []).map(item => ({
+//       ...item,
+//       editing: false,
+//       flag: "Edit"
+//     }));
+//   } finally {
+//     loading.value = false;
+//   }
+// };
 const getQuestionAnswersInDetailsById = async () => {
   loading.value = true;
 
   try {
-    const resp = await projectQuestionsAnswersService.getQuestionAnswersInDetailsById(props.id);
+    const resp =
+      await projectQuestionsAnswersService.getQuestionAnswersInDetailsById(
+        props.id
+      );
 
     model.value = _.cloneDeep(resp);
 
-    changeLogRows.value = (resp.projectQuestionsAnswersResponseLog ?? []).map(item => ({
+    // Contributors
+    model.value.projectQuestionAnswerContributors =
+      (resp.projectQuestionAnswerContributors ?? []).map(item => ({
+        ...item,
+        contributorTypeName:
+          item.contributorType?.dropDownValue ?? "-",
+        contributorEmployeeName:
+          item.contributorEmployee?.person?.fullName ?? "-",
+        contributorCustomerName:
+          item.contributorCustomer?.fullName ?? "-"
+      }));
+
+    // Response log
+    changeLogRows.value = (
+      resp.projectQuestionsAnswersResponseLog ?? []
+    ).map(item => ({
       ...item,
       editing: false,
       flag: "Edit"

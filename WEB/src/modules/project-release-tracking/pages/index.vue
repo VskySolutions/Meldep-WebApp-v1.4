@@ -143,11 +143,11 @@
                   }"
                 >
                   {{ col.label }}
-                  <!-- Sort icon only --> 
+                  <!-- Sort icon only -->
                   <q-icon
-                    v-if="col.sortable" 
-                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                    size="16px" 
+                    v-if="col.sortable"
+                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                    size="16px"
                     class="cursor-pointer q-ml-sm"
                     @click.stop="sortColumn(col)"
                   >
@@ -167,41 +167,60 @@
                   highlightedId == props.row.id ? 'highlight' : '',
                   props.row.statusText.toLowerCase() !== 'draft' ? 'bg-cyan-1' : ''
                 ]"
-                :set="(preProjectName = null, resetTracking())"
               >
                 <q-td v-if="selectedColumnNames.includes('versionNumber')" class="text-right">
                   {{ props.row.versionNumber }}
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" :class="(props.row.isEditable || props.row.isView) ? 'hoverable-cell' : ''">
+                <q-td
+                  v-if="selectedColumnNames.includes('project.name')"
+                  style="white-space: normal;"
+                  :class="(props.row.isEditable || props.row.isView) ? 'hoverable-cell' : ''"
+                >
                   <div class="row no-wrap items-center justify-between">
-                    <span style="flex: 1; word-break: break-word; white-space: normal;">
-                      <span
-                        v-if="preProjectName !== props.row.project.name"
-                        :set="preProjectName = props.row.project.name"
-                        @click="(props.row.isEditable || props.row.isView) && onProjectView(props.row.project.id)"
-                      >{{ props.row.project.name }}
-                      </span>
+                    <span
+                      v-if="isFirstProjectRow(props.row.project?.id, props.row.id)"
+                      style="flex: 1; word-break: break-word; white-space: normal;"
+                      @click="
+                        (props.row.isEditable || props.row.isView) &&
+                        onProjectView(props.row.project.id)
+                      "
+                    >
+                      {{ props.row.project.name }}
                     </span>
+
                     <div
-                      v-if="shouldShowIcons(props.row.project.name, index)"
+                      v-if="isFirstProjectRow(props.row.project?.id, props.row.id)"
                       class="row items-center q-gutter-sm q-ml-sm"
                       style="flex-shrink: 0;"
                     >
                       <q-icon
                         v-if="props.row.isEditable || props.row.isView"
-                        name="o_radio_button_checked" size="xs"
+                        name="o_radio_button_checked"
+                        size="xs"
                         class="cursor-pointer"
-                        @click="setActiveRowIdInLocalStorage(props.row.id);
-                                $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                        @click="
+                          setActiveRowIdInLocalStorage(props.row.id);
+                          $router.push({
+                            path: '/project-center',
+                            state: { projectId: props.row.project.id }
+                          })
+                        "
                       >
                         <q-tooltip>Project Center</q-tooltip>
                       </q-icon>
+
                       <q-icon
                         v-if="props.row.isEditable"
-                        name="o_developer_board" size="xs"
+                        name="o_developer_board"
+                        size="xs"
                         class="cursor-pointer"
-                        @click="setActiveRowIdInLocalStorage(props.row.id);
-                                $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
+                        @click="
+                          setActiveRowIdInLocalStorage(props.row.id);
+                          $router.push({
+                            path: '/project-planning/workboard',
+                            state: { projectId: props.row.project.id }
+                          })
+                        "
                       >
                         <q-tooltip>Work Board</q-tooltip>
                       </q-icon>
@@ -527,10 +546,10 @@ const sortColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
-  } 
+  }
   refreshReleaseTrackingList();
 };
 
@@ -551,17 +570,18 @@ const onClear = () => {
   onSearch();
 };
 
-function resetTracking () {
-  shownProjects.clear(); // Clear the set before rendering rows
-}
+function isFirstProjectRow(projectId, rowId) {
+  const currentIndex = rows.value.findIndex(
+    row => row.id === rowId
+  );
 
-function shouldShowIcons (projectName) {
-  if (shownProjects.has(projectName)) {
-    return false;
-  } else {
-    shownProjects.add(projectName);
+  if (currentIndex <= 0) {
     return true;
   }
+
+  const previousProjectId = rows.value[currentIndex - 1]?.project?.id;
+
+  return previousProjectId !== projectId;
 }
 
 const lsSorts = sorts.value || null;

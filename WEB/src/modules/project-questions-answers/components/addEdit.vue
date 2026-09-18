@@ -32,6 +32,43 @@
                 />
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
+                  <formSingleSelectDropdown
+                    v-model="model.contributorTypeId"
+                    label="Q&A Contributor"
+                    :required="false"
+                    :options="contributorTypeDropdownSingleSelect.list.value"
+                    :filter="contributorTypeDropdownSingleSelect.filter"
+                    wrapper-class="col-xxl-6 col-lg-6 col-md-6 col-sm-6 col-xs-12"
+                  />
+                <formMultiSelectDropdown
+                  v-if="contributorTypeText === 'Employee'"
+                  v-model="model.contributorEmployeeIds"
+                  label="Employees"
+                  :required="false"
+                  :options="activeEmployeesDropdown.list.value"
+                  :filter="activeEmployeesDropdown.list.filter"
+                  wrapper-class="col-xxl-6 col-lg-6 col-md-6 col-sm-6 col-xs-12"
+                  popup-content-class="customPopupContentClass"
+                />
+                <div class="col-xxl-6 col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                  <formMultiSelectDropdown
+                    v-if="contributorTypeText === 'Customer'"
+                    v-model="model.contributorCustomerIds"
+                    label="Customer Contacts"
+                    :required="false"
+                    :disable="!model.projectId"
+                    :options="customerContactByProjectIdDropdownSingleSelect.list.value"
+                    :filter="customerContactByProjectIdDropdownSingleSelect.list.filter"
+                    wrapper-class="col-xxl-6 col-lg-6 col-md-6 col-sm-6 col-xs-12"
+                    popup-content-class="customPopupContentClass"
+                  />
+
+                  <q-tooltip v-if="!model.projectId">
+                    Select project first
+                  </q-tooltip>
+                </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">
                   <div class="text-black">Question<span class="required">*</span></div>
                   <q-input
@@ -208,7 +245,7 @@
 import _ from "lodash";
 import { notifySuccess, notifyError } from "assets/utils";
 import useVuelidate from "@vuelidate/core";
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { uid, date } from "quasar";
 import { useAuthStore } from "stores/auth";
 import { useQuasar, useDialogPluginComponent } from "quasar";
@@ -219,10 +256,14 @@ import projectQuestionsAnswersService from "modules/project-questions-answers/pr
 // SOP Change :- Shared Dropdowns
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
+import questionsAnswersModule from "src/modules/project-questions-answers/utils/dropdowns.js";
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
 // SOP Change :- Shared Inputs
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
+import formMultiSelectDropdown from "src/components/form-inputs/_formMultiSelectDropdown.vue";
+
+import employeeModule from "src/modules/employee/utils/dropdowns.js";
 
 const $q = useQuasar();
 const { fonts, toolbar } = getEditorConfig($q);
@@ -264,6 +305,14 @@ const formatDateTime = (value) =>
   return row?.createdBy?.person?.fullName || '';
 };
 
+// Computed property to get the contributorType's text
+const contributorTypeText = computed(() => {
+  const selectedOption = contributorTypeDropdownSingleSelect.list.value.find(
+    item => item.value === model.value.contributorTypeId
+  );
+  return selectedOption ? selectedOption.text : null;
+});
+
 const getCreatedOn = (row) => {
   if (mode.value === "editLog" && row.id === activeRowId.value) {
     return editingLogRow.value.flag === "New"
@@ -294,7 +343,11 @@ const model = ref({
   title: "",
   projectId: props.projectIdAttr || props.projectIdValue || null,
   requirementId: props.requirementIdAttr || "",
-  description: ""
+  contributorTypeId: "",
+  contributorEmployeeIds: user?.employeeId ? [user.employeeId] : [],
+  contributorCustomerIds: [],
+  description: "",
+  projectQuestionsAnswersResponseLogs: []
 });
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -313,36 +366,72 @@ const getQuestionAnswersInDetailsById = async (questionAnswersId) => {
   isInitializing.value = true;
 
   try {
-    const resp = await projectQuestionsAnswersService.getQuestionAnswersInDetailsById(questionAnswersId);
+    const resp =
+      await projectQuestionsAnswersService
+        .getQuestionAnswersInDetailsById(questionAnswersId);
 
     model.value = _.cloneDeep(resp);
-    model.value.projectId = resp.project?.id;
 
-    await requirementByProjectModuleIdForDropdownSingleSelect.load("", model.value.projectId);
+    model.value.projectId = resp.project?.id ?? null;
+    model.value.requirementId = resp.requirement?.id ?? "";
 
-    model.value.requirementId = resp.requirement?.id;
+    const contributors = Array.isArray(
+  resp.projectQuestionAnswerContributors
+)
+  ? resp.projectQuestionAnswerContributors
+  : [];
+
+    model.value.contributorTypeId =
+      contributors.length > 0
+        ? contributors[0].contributorTypeId ?? ""
+        : "";
+
+    model.value.contributorEmployeeIds = contributors
+      .filter(x => x.contributorEmployeeId)
+      .map(x => x.contributorEmployeeId);
+
+    model.value.contributorCustomerIds = contributors
+      .filter(x => x.contributorCustomerId)
+      .map(x => x.contributorCustomerId);
+
     model.value.description = resp.description ?? "";
 
-    logRows.value = (resp.projectQuestionsAnswersResponseLog ?? []).map(item => ({
+    await requirementByProjectModuleIdForDropdownSingleSelect.load(
+      "",
+      model.value.projectId
+    );
+
+    await customerContactByProjectIdDropdownSingleSelect.load(
+      model.value.projectId
+    );
+
+    logRows.value = (
+      resp.projectQuestionsAnswersResponseLog ?? []
+    ).map(item => ({
       ...item,
       editing: false,
       flag: "Edit"
     }));
-
   } finally {
     isInitializing.value = false;
     loading.value = false;
   }
 };
-
 // ------------------------------------------------------------------------------------
 // Advance Filter :- All Dropdowns (SOP Change)
 // ------------------------------------------------------------------------------------
 const {
-  projectNameDropdownSingleSelect
+  projectNameDropdownSingleSelect,
+  customerContactByProjectIdDropdownSingleSelect
 } = projectModule();
 
-const { requirementByProjectModuleIdForDropdownSingleSelect } = requirementModule();
+const { activeEmployeesDropdown } = employeeModule();
+
+const {
+  requirementByProjectModuleIdForDropdownSingleSelect
+} = requirementModule();
+
+const { contributorTypeDropdownSingleSelect } = questionsAnswersModule();
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Validation Rules
@@ -568,11 +657,23 @@ async function onSubmit() {
       return;
     }
 
-    model.value.projectQuestionsAnswersResponseLogs = logRows.value;
+    const payload = {
+      ...model.value,
+
+      contributorEmployeeIdss: Array.isArray(model.value.contributorEmployeeIds)
+        ? model.value.contributorEmployeeIds
+        : [],
+
+      contributorCustomerIdss: Array.isArray(model.value.contributorCustomerIds)
+        ? model.value.contributorCustomerIds
+        : [],
+
+      projectQuestionsAnswersResponseLogs: logRows.value
+    };
 
     await projectQuestionsAnswersService.saveQuestionAnswers(
       props.id,
-      model.value
+      payload
     );
 
     notifySuccess({
@@ -586,8 +687,10 @@ async function onSubmit() {
 
     $emit("ok");
     $emit("hide");
+
   } catch (error) {
     console.error(error);
+
     notifyError({
       message: "An error occurred while saving."
     });
@@ -598,14 +701,40 @@ async function onSubmit() {
 
 watch(
   () => model.value.projectId,
-  async (newValue) => {
+  async (newValue, oldValue) => {
     if (!isInitializing.value) {
       model.value.requirementId = "";
     }
-    if (!newValue) return;
 
-    await requirementByProjectModuleIdForDropdownSingleSelect.load("", newValue);
-  }, { immediate: true }
+    if (!newValue) {
+      model.value.requirementId = "";
+      model.value.contributorCustomerIds = [];
+      customerContactByProjectIdDropdownSingleSelect.list.value = [];
+
+      return;
+    }
+
+    // Load requirements for selected project
+    await requirementByProjectModuleIdForDropdownSingleSelect.load(
+      "",
+      newValue
+    );
+
+    // Only clear customer contacts when project actually changes
+    if (
+      oldValue !== undefined &&
+      oldValue !== null &&
+      newValue !== oldValue
+    ) {
+      model.value.contributorCustomerIds = [];
+    }
+
+    // Load customer contacts for selected project
+    await customerContactByProjectIdDropdownSingleSelect.load(newValue);
+  },
+  {
+    immediate: true
+  }
 );
 
 watch(
@@ -619,18 +748,41 @@ watch(
     immediate: true
   }
 );
+
+watch(
+  () => model.value.contributorTypeId,
+  (newValue, oldValue) => {
+    if (newValue === oldValue) return;
+
+    if (contributorTypeText.value === "Employee") {
+      model.value.contributorCustomerIds = [];
+    }
+
+    if (contributorTypeText.value === "Customer") {
+      model.value.contributorEmployeeIds = [];
+    }
+  }
+);
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load - If changed
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
 onMounted(async () => {
   await projectNameDropdownSingleSelect.load();
+  contributorTypeDropdownSingleSelect.load("Requirement Identifier");
+  activeEmployeesDropdown.load();
 
   if (model.value.projectId) {
     await requirementByProjectModuleIdForDropdownSingleSelect.load("", model.value.projectId);
   }
   if (props.requirementIdAttr) {
     model.value.requirementId = props.requirementIdAttr;
+  }
+
+  // Set "Employee" employeeType as the default if it exists
+  const employeeType = contributorTypeDropdownSingleSelect.getValueByLabel("Employee");
+  if (employeeType && props.id === "") {
+    model.value.contributorTypeId = employeeType;
   }
 });
 

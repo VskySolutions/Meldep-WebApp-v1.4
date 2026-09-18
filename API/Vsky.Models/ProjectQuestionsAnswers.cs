@@ -15,7 +15,6 @@ namespace Vsky.Models
         public virtual ICollection<ProjectQuestionsAnswersResponseLog> ProjectQuestionsAnswersResponseLogLists { get; set; } = new List<ProjectQuestionsAnswersResponseLog>();
         public int Total { get; set; }
     }
-
     public class ProjectQuestionsAnswers : BaseEntity
     {
         public string SiteId { get; set; }
@@ -38,6 +37,7 @@ namespace Vsky.Models
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }
         public virtual ICollection<ProjectQuestionsAnswersResponseLog> ProjectQuestionsAnswersResponseLog { get; set; } = new List<ProjectQuestionsAnswersResponseLog>();
+        public virtual ICollection<ProjectQuestionsAnswersContributors> ProjectQuestionAnswerContributors { get; set; } = new List<ProjectQuestionsAnswersContributors>();
     }
     public class ProjectQuestionsAnswersResponseLog : BaseEntity
     {
@@ -56,6 +56,26 @@ namespace Vsky.Models
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }
     }
+    public class ProjectQuestionsAnswersContributors : BaseEntity
+    {
+        public string ProjectQuestionAnswerId { get; set; }
+        public string ContributorTypeId { get; set; }
+        public string ContributorEmployeeId { get; set; }
+        public string ContributorCustomerId { get; set; }
+        public string CreatedById { get; set; }
+        public DateTime CreatedOnUtc { get; set; }
+        public string UpdatedById { get; set; }
+        public DateTime UpdatedOnUtc { get; set; }
+        public bool Deleted { get; set; }
+
+        public virtual ProjectQuestionsAnswers ProjectQuestionsAnswers { get; set; }
+        public virtual DropDown ContributorType { get; set; }
+        public virtual Employee ContributorEmployee { get; set; }
+        public virtual Person ContributorCustomer { get; set; }
+        public virtual ApplicationUser CreatedBy { get; set; }
+        public virtual ApplicationUser UpdatedBy { get; set; }
+        public virtual ICollection<ProjectQuestionsAnswersResponseLog> ProjectQuestionsAnswersResponseLog { get; set; } = new List<ProjectQuestionsAnswersResponseLog>();
+    }
     public class SaveProjectQuestionsAnswers
     {
         public string Id { get; set; }
@@ -64,6 +84,9 @@ namespace Vsky.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public bool Deleted { get; set; }
+        public string? ContributorTypeId { get; set; }
+        public List<string> ContributorEmployeeIds { get; set; } = new();
+        public List<string> ContributorCustomerIds { get; set; } = new();
         public virtual ICollection<ProjectQuestionsAnswersResponseLog> ProjectQuestionsAnswersResponseLogs { get; set; } = new List<ProjectQuestionsAnswersResponseLog>();
     }
 }
