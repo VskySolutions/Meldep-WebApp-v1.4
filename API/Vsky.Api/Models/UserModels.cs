@@ -48,6 +48,7 @@ namespace Vsky.Api.Models
         public string Email { get; set; }
         public string SiteId { get; set; }
         public List<string> SiteRoleIds { get; set; }
+        public bool IsSharedUser { get; set; }
         public string SearchText { get; set; }
     }
 

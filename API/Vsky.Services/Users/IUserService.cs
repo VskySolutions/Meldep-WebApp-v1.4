@@ -7,7 +7,7 @@ namespace Vsky.Services.Users
 {
     public interface IUserService
     {
-        IPagedList<ApplicationUser> GetAllUsersList(string SiteId, string SearchText, string userStatus, string userName, string fullName, string email, List<string> roleIds, string UserId, string sortBy,
+        IPagedList<ApplicationUser> GetAllUsersList(string SiteId, string SearchText, string userStatus, string userName, string fullName, string email, List<string> roleIds, string UserId, bool isSharedUser, string sortBy,
             bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
         Task<string> GetUserInitialAsync();
 

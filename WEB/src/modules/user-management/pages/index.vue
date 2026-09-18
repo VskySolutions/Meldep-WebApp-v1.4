@@ -96,6 +96,25 @@
                             transition-hide="jump-up" hide-bottom-space :dense="true" multiple fill-input input-debounce="0"
                             :options="siteRolesList" option-value="value" option-label="text" emit-value map-options :popup-content-class="customPopupContentClass" @filter="siteRolesListForFilter"
                           >
+                            <template #selected-item="{ opt, removeAtIndex, index }">
+                              <q-chip
+                                removable
+                                dense
+                                class="q-mr-xs"
+                                @remove="removeAtIndex(index)"
+                              >
+                                <div
+                                  class="ellipsis"
+                                  style="max-width: 150px;"
+                                >
+                                  {{ opt.text }}
+                                </div>
+
+                                <q-tooltip>
+                                  {{ opt.text }}
+                                </q-tooltip>
+                              </q-chip>
+                            </template>
                             <template #option="{ itemProps, opt, selected, toggleOption }">
                               <q-item v-bind="itemProps">
                                 <q-item-section>
@@ -110,6 +129,20 @@
                               </q-item>
                             </template>
                           </q-select>
+                        </div>
+                      </div>
+                      <!-- Is Shared -->
+                      <div class="row items-center q-mb-sm">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel">Is Shared</label>
+                        </div>
+
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <q-checkbox
+                            v-model="search.isSharedUser"
+                            class="q-mx-sm"
+                            :dense="true"
+                          />
                         </div>
                       </div>
                       <!-- Search and Clear Buttons -->
@@ -257,7 +290,8 @@ const {
     userName: "",
     fullName: "",
     email: "",
-    siteRoleIds: []
+    siteRoleIds: [],
+    isSharedUser: false
   },
   defaultPagination: {
     sortBy: "createdOnUtc",
@@ -283,7 +317,8 @@ const getUsers = (props) => {
     email: search.value.email,
     siteRoleIds: search.value.siteRoleIds,
     firstName: search.value.firstName,
-    lastName: search.value.lastName
+    lastName: search.value.lastName,
+    isSharedUser: search.value.isSharedUser
   };
   usersService.getUsers(payload).then((resp) => {
     rows.value = resp.data.map(item => ({
@@ -515,7 +550,10 @@ const appliedFilters = computed(() => ({
   ...(search.value.userName ? { "User Name": search.value.userName } : {}),
   ...(search.value.fullName ? { "Full Name": search.value.fullName } : {}),
   ...(search.value.email ? { Email: search.value.email } : {}),
-  ...mapFilterToLabel(search.value.siteRoleIds, siteRolesList, "Roles")
+  ...mapFilterToLabel(search.value.siteRoleIds, siteRolesList, "Roles"),
+   ...(search.value.isSharedUser !== null
+    ? { "Is Shared": search.value.isSharedUser ? "Yes" : "No" }
+    : {}),
 }));
 
 function onClearFilters (key) {

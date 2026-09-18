@@ -98,6 +98,7 @@ namespace Vsky.Api.Controllers
                 searchModel.Email,
                 searchModel.SiteRoleIds,
                 searchModel.UserId,
+                searchModel.IsSharedUser,
                 searchModel.SortBy,
                 searchModel.Descending,
                 searchModel.Page,

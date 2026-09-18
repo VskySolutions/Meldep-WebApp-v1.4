@@ -51,9 +51,9 @@ namespace Vsky.Services.Users
             return orderBy;
         }
 
-        public IPagedList<ApplicationUser> GetAllUsersList(string SiteId, string SearchText, string userStatus, string userName, string fullName, string email, List<string> siteRoleIds, string UserId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public IPagedList<ApplicationUser> GetAllUsersList(string SiteId, string SearchText, string userStatus, string userName, string fullName, string email, List<string> siteRoleIds, string UserId, bool isSharedUser, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
         {
-            var query = _userManager.Users.Where(x => !x.Deleted && x.UserRoles.Any(m => m.SiteId == SiteId && m.Role.Name != "SuperAdmin") && x.Person.PersonSitesMapping.Any(psm => psm.SiteId == SiteId && !psm.Deleted));
+            var query = _userManager.Users.Where(x => !x.Deleted && x.UserRoles.Any(m => m.SiteId == SiteId && m.Role.Name != "SuperAdmin") && x.Person.PersonSitesMapping.Any(psm => psm.SiteId == SiteId && !psm.Deleted && psm.IsSharedUser == isSharedUser));
             var activeSiteRoleIds = _SitesRolesRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted).Select(x => x.RoleId).ToList();
 
             if (!string.IsNullOrWhiteSpace(userStatus))
