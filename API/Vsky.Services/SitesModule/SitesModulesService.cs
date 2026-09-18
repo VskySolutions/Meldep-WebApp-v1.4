@@ -86,7 +86,7 @@ namespace Vsky.Services.SitesModule
                                   siteModuleMenu.ModulesMenus.Active &&
                                   siteModuleMenu.SitesModulesMenusPermissions
                                       .Any(permission =>
-                                          roleId.Contains(permission.SiteRoleId) &&
+                                          roleId.Contains(permission.SiteRoleId) && !permission.Deleted &&
                                           permission.IsShowMenu))
                               .OrderBy(siteModuleMenu => siteModuleMenu.SortOrder)
                               .Select(siteModuleMenu => new CustomSiteModule.CustomSiteModuleMenu
