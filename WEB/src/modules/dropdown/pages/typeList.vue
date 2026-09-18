@@ -64,6 +64,25 @@
                               map-options
                               @filter="getAllModuleListForFilter"
                             >
+                              <template #selected-item="{ opt, removeAtIndex, index }">
+                                <q-chip
+                                  removable
+                                  dense
+                                  class="q-mr-xs"
+                                  @remove="removeAtIndex(index)"
+                                >
+                                  <div
+                                    class="ellipsis"
+                                    style="max-width: 150px;"
+                                  >
+                                    {{ opt.text }}
+                                  </div>
+
+                                  <q-tooltip>
+                                    {{ opt.text }}
+                                  </q-tooltip>
+                                </q-chip>
+                              </template>
                               <template #option="{ itemProps, opt }">
                                 <q-item v-bind="itemProps">
                                   <q-item-section>
@@ -117,6 +136,25 @@
                             :popup-content-class="customPopupContentClass"
                             @filter="getAllDropDownTypeListForFilter"
                           >
+                            <template #selected-item="{ opt, removeAtIndex, index }">
+                              <q-chip
+                                removable
+                                dense
+                                class="q-mr-xs"
+                                @remove="removeAtIndex(index)"
+                              >
+                                <div
+                                  class="ellipsis"
+                                  style="max-width: 150px;"
+                                >
+                                  {{ opt.text }}
+                                </div>
+
+                                <q-tooltip>
+                                  {{ opt.text }}
+                                </q-tooltip>
+                              </q-chip>
+                            </template>
                             <template #option="{ itemProps, opt, selected, toggleOption }">
                               <q-item v-bind="itemProps">
                                 <q-item-section>

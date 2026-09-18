@@ -55,6 +55,25 @@
                             transition-hide="jump-up" hide-bottom-space :dense="true" multiple fill-input input-debounce="0"
                             :options="dropDownTypeList" option-value="value" option-label="text" emit-value map-options :popup-content-class="customPopupContentClass" @filter="filterFn1"
                           >
+                            <template #selected-item="{ opt, removeAtIndex, index }">
+                              <q-chip
+                                removable
+                                dense
+                                class="q-mr-xs"
+                                @remove="removeAtIndex(index)"
+                              >
+                                <div
+                                  class="ellipsis"
+                                  style="max-width: 150px;"
+                                >
+                                  {{ opt.text }}
+                                </div>
+
+                                <q-tooltip>
+                                  {{ opt.text }}
+                                </q-tooltip>
+                              </q-chip>
+                            </template>
                             <template #option="{ itemProps, opt, selected, toggleOption }">
                               <q-item v-bind="itemProps">
                                 <q-item-section>
