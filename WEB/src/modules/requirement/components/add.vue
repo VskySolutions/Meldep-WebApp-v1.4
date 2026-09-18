@@ -175,11 +175,12 @@
                 </div>
                 <div class="col-12 col-sm-6 col-md-6 col-lg-4">
                   <formSingleSelectDropdown
-                    v-model="model.requirementEnteredBy"
-                    label="Requirement Entered By"
-                    :required="false"
-                    :options="activeEmployeesDropdownSingleSelect.list.value"
-                    :filter="activeEmployeesDropdownSingleSelect.filter"
+                    v-model="model.customerOwnerId"
+                    label="Customer Owner"
+                    :options="customerContactByProjectIdDropdownSingleSelect.list.value"
+                    :filter="customerContactByProjectIdDropdownSingleSelect.filter"
+                    :error="v$.customerOwnerId.$error"
+                    :error-message="v$.customerOwnerId.$errors[0]?.$message"
                   />
                 </div>
                 <div class="col-12 col-sm-6 col-md-3 col-lg-3 hidden">
@@ -207,6 +208,15 @@
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-6 col-md-6 col-lg-4">
                   <formSingleSelectDropdown
+                    v-model="model.requirementEnteredBy"
+                    label="Requirement Entered By"
+                    :required="false"
+                    :options="activeEmployeesDropdownSingleSelect.list.value"
+                    :filter="activeEmployeesDropdownSingleSelect.filter"
+                  />
+                </div>
+                <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                  <formSingleSelectDropdown
                     v-model="model.approvalStatus"
                     label="Approval Status"
                     :required="false"
@@ -220,17 +230,15 @@
                   :required="false"
                   :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                 />
-                <div class="col-12 col-sm-6 col-md-6 col-lg-4">
-                  <formDate
-                    v-model="model.plannedEndDateStr"
-                    label="Planned End Date"
-                    :required="false"
-                    :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
-                    :dateOptions="disablePlannedDatesBeforeStartDate"
-                  />
-                </div>
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
+                <formDate
+                  v-model="model.plannedEndDateStr"
+                  label="Planned End Date"
+                  :required="false"
+                  :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
+                  :dateOptions="disablePlannedDatesBeforeStartDate"
+                />
                 <formDate
                   v-model="model.actualStartDateStr"
                   label="Actual Start Date"
@@ -807,6 +815,7 @@ const model = ref({
   employeeId: "",
   identifiedEmployeeId: user?.employeeId ? user.employeeId : "",
   requirementOwnerId: user?.employeeId ? user.employeeId : "",
+  customerOwnerId: null,
   confirmedById: null,
   approvedById: null,
   identifiedDateStr: format(new Date(), "MM/dd/yyyy"),
@@ -866,6 +875,7 @@ const rules = {
     isDate: helpers.withMessage("Date is invalid", isDate)
   },
   requirementOwnerId: { required: helpers.withMessage("Requirement Owner is required", required) },
+  customerOwnerId: { required: helpers.withMessage("Customer Owner is required", required) },
   closeDateStr: {
     isDate: helpers.withMessage("Date is invalid", isDate)
   },
@@ -1239,19 +1249,59 @@ watch(() => props.id, (newValue) => {
   }
 }, { immediate: true });
 
+// watch(
+//   () => model.value.projectId,
+//   (projectId) => {
+//     if ((projectId?.length || 0) > 0) {
+//       projectModulesByProjectIdForDropdownSingleSelect.load(
+//         false,
+//         false,
+//         projectId
+//       );
+//     } else {
+//       model.value.projectModuleId = null;
+//       projectModulesByProjectIdForDropdownSingleSelect.list.value = [];
+//       v$.value.projectModuleId.$reset();
+//     }
+//   },
+//   { immediate: true }
+// );
+const normalize = (val) => {
+  if (Array.isArray(val)) {
+    return val.length > 0 ? val[0] : null;
+  }
+  return val ?? null;
+};
+
 watch(
   () => model.value.projectId,
-  (projectId) => {
-    if ((projectId?.length || 0) > 0) {
-      projectModulesByProjectIdForDropdownSingleSelect.load(
-        false,
-        false,
-        projectId
-      );
-    } else {
+  async (newId, oldId) => {
+    const newVal = normalize(newId);
+    const oldVal = normalize(oldId);
+
+    const isValid = newVal != null && newVal !== "";
+
+    // Clear module only when actual value changes
+    if (oldId !== undefined && oldId !== null && newVal !== oldVal) {
       model.value.projectModuleId = null;
+    }
+
+    // Always load dropdown
+    await projectNameDropdownSingleSelect.load();
+
+    if (isValid) {
+      const selected = projectNameDropdownSingleSelect.list.value.find(
+        (p) => p.value === newVal
+      );
+
+      if (selected) {
+        model.value.projectStatus = selected.data;
+      }
+
+      projectModulesByProjectIdForDropdownSingleSelect.load(false, false, newVal);
+    } else {
+      // Optional cleanup
       projectModulesByProjectIdForDropdownSingleSelect.list.value = [];
-      v$.value.projectModuleId.$reset();
     }
   },
   { immediate: true }
@@ -1267,12 +1317,14 @@ watch(() => model.value.projectId, async (newValue, oldValue) => {
   // No project selected
   if (!newValue) {
     model.value.identifiedCustomerId = null;
+    model.value.customerOwnerId = null;
     customerContactByProjectIdDropdownSingleSelect.list.value = null;
     return;
   }
   // Project changed
   if (oldProjectId !== undefined && newValue !== oldProjectId) {
     model.value.identifiedCustomerId = null;
+    model.value.customerOwnerId = null;
   }
 
   // Clear customer dropdown

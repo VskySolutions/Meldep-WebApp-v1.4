@@ -18,6 +18,7 @@ namespace Vsky.Api.Models
         public string ConfirmedById { get; set; }
         public string ApprovedById { get; set; }
         public string RequirementOwnerId { get; set; }
+        public string CustomerOwnerId { get; set; }
         public string ApprovalStatus { get; set; }
         public string RequirementEnteredBy { get; set; }
         public string StatusId { get; set; }
@@ -70,6 +71,7 @@ namespace Vsky.Api.Models
         public virtual Employee ConfirmedBy { get; set; }
         public virtual Employee ApprovedBy { get; set; }
         public virtual Employee RequirementOwner { get; set; }
+        public virtual Person CustomerOwner { get; set; }
         public virtual Person Customer { get; set; }
         public virtual DropDown Priority { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }

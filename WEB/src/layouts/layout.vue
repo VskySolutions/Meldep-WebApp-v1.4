@@ -132,9 +132,9 @@
               <q-tooltip anchor="bottom middle" self="top middle">Download Meld-EP 4.0 (v1.0) Mobile App</q-tooltip>
             </q-btn>
           </div> -->
-          <div class="column">
+          <div v-if="helpDeskModule?.customSiteModuleMenuList?.length > 0" class="column">
             <!-- <q-btn unelevated color="primary" text-color="white" class="q-pa-xs" style="border-radius: 7px;" @click="onAdd"> -->
-            <q-btn unelevated color="primary" text-color="white" class="q-pa-xs" style="border-radius: 7px;" @click="$router.push('/help-desk')">
+            <q-btn unelevated color="primary" text-color="white" class="q-pa-xs" style="border-radius: 7px;" @click="$router.push(helpDeskModule.customSiteModuleMenuList[0].link)">
               <q-icon name="fa-solid fa-headset" size="18px" color="white" class="q-mr-xs" />
               <q-item-label class="text-xs">
                 <span class="block">HELP</span>
@@ -362,6 +362,7 @@ const notifyMenu = ref(null);
 const ntfModel = ref({});
 let notificationInterval = null;
 const settingsModule = ref(null);
+const helpDeskModule = ref(null);
 // ----------------------------------------------------------------------------------------------------------------------
 // System Notifications
 // ----------------------------------------------------------------------------------------------------------------------
@@ -372,7 +373,12 @@ const getSiteActiveModulesMenus = () => {
     settingsModule.value = resp.find(
       m => m.name === "Settings"
     ) || null;
-    allModules.value = resp.filter(m => !m.name.includes("Settings"));
+    helpDeskModule.value = resp.find(
+      m => m.name === "Help Desk"
+    ) || null;
+    allModules.value = resp.filter(
+      m => !["Settings", "Help Desk"].includes(m.name)
+    );
   }).finally(() => {
   });
 };
@@ -384,6 +390,7 @@ const getNotificationCount = () => {
     console.error("Error fetching notification count:", error);
   });
 };
+
 
 const toggleLeftDrawer = () => {
   leftDrawerOpen.value = !leftDrawerOpen.value;
@@ -705,7 +712,7 @@ function validateTaskEstimatedHours (value) {
 //   }
 
 //   if (route.path === 'auth/login') return
- 
+
 //   const script = document.createElement("script");
 //   script.id = "sop-assistant-script";
 //   // script.src = "https://api-sowbuddy-prasad-local.prasadsawant.site/sop-agent/cdn/vsky_sop_assistant.js";
@@ -729,7 +736,7 @@ function validateTaskEstimatedHours (value) {
 //   script.dataset.offsetX = "24";
 //   script.dataset.offsetY = "24";
 //   script.dataset.showSources = "true";
- 
+
 //   document.body.appendChild(script);
 // }
 

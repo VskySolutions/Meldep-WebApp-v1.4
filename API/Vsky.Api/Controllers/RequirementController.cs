@@ -290,6 +290,7 @@ namespace Vsky.Api.Controllers
                     entity.ConfirmedById = model.ConfirmedById;
                     entity.ApprovedById = model.ApprovedById;
                     entity.RequirementOwnerId = model.RequirementOwnerId;
+                    entity.CustomerOwnerId = model.CustomerOwnerId;
                     entity.Title = model.Title;
                     entity.Notes = model.Notes;
                     entity.StatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Requirement Status", "New");
@@ -471,6 +472,7 @@ namespace Vsky.Api.Controllers
                     entity.ConfirmedById = model.ConfirmedById;
                     entity.ApprovedById = model.ApprovedById;
                     entity.RequirementOwnerId = model.RequirementOwnerId;
+                    entity.CustomerOwnerId = model.CustomerOwnerId;
                     entity.Title = model.Title;
                     entity.Notes = model.Notes;
                     entity.StatusId = model.StatusId;

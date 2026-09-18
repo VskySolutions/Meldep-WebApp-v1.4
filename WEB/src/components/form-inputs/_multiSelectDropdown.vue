@@ -63,6 +63,22 @@
         @blur="resetInput"
         @popup-hide="resetInput"
       >
+      <template #selected-item="{ opt, removeAtIndex, index }">
+        <q-chip
+          removable
+          dense
+          class="q-mr-xs"
+          @remove="removeAtIndex(index)"
+        >
+          <div class="ellipsis" style="max-width: 150px;">
+            {{ opt.text }}
+          </div>
+
+          <q-tooltip>
+            {{ opt.text }}
+          </q-tooltip>
+        </q-chip>
+      </template>
       <template
           v-if="props.options?.length > 0 && props.isShowAll"
           #append

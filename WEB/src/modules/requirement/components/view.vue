@@ -107,32 +107,32 @@
                   </div>
                   <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
+                      <div class="q-mb-xs">Customer Owner :</div>
+                      <div class="text-black">{{ model.customerOwner.fullName }}</div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Entered By :</div>
                       <div class="text-black">{{ model.requirementEntered.person.fullName }}</div>
                     </div>
+                  </div>
+                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Status :</div>
                       <div class="text-black">{{ model.status.dropDownValue }}</div>
                     </div>
-                  </div>
-                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Approval Status :</div>
                       <div class="text-black">{{ model.approvalStatusDropDown.dropDownValue }}</div>
                     </div>
+                  </div>
+                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Planned Start Date :</div>
                       <div class="text-black">{{ model.plannedStartDate }}</div>
                     </div>
-                  </div>
-                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Planned End Date :</div>
                       <div class="text-black">{{ model.plannedEndDate }}</div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-6">
-                      <div class="q-mb-xs">Actual Start Date :</div>
-                      <div class="text-black">{{ model.actualStartDate }}</div>
                     </div>
                   </div>
                   <div class="row q-col-gutter-x-md q-mb-md hidden">
@@ -147,9 +147,15 @@
                   </div>
                   <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
+                      <div class="q-mb-xs">Actual Start Date :</div>
+                      <div class="text-black">{{ model.actualStartDate }}</div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Actual End Date :</div>
                       <div class="text-black">{{ model.actualEndDate }}</div>
                     </div>
+                  </div>
+                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div v-if="model.status.dropDownValue == 'Close'" class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Close Date :</div>
                       <div class="text-black">{{ model.closeDate }}</div>
@@ -365,6 +371,9 @@ const model = ref({
     person: {
       fullName: ""
     }
+  },
+  customerOwner: {
+    fullName: ""
   },
   employee: {
     person: {

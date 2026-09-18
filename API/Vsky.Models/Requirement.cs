@@ -27,6 +27,7 @@ namespace Vsky.Models
         public string RequirementOwnerId { get; set; }
         public string ApprovalStatus { get; set; }
         public string RequirementEnteredBy { get; set; }
+        public string CustomerOwnerId { get; set; }
         public string StatusId { get; set; }
         public string IdentifiedUserType { get; set; }
         public string IdentifiedEmployeeId { get; set; }
@@ -81,6 +82,7 @@ namespace Vsky.Models
         public virtual Employee ConfirmedBy { get; set; }
         public virtual Employee ApprovedBy { get; set; }
         public virtual Employee RequirementOwner { get; set; }
+        public virtual Person CustomerOwner { get; set; }
         public virtual ICollection<FilePathDetails> FilePathDetails { get; set; } = new List<FilePathDetails>();
         public virtual ICollection<RequirementChangeLog> RequirementChangeLog { get; set; } = new List<RequirementChangeLog>();
         public virtual ICollection<ProjectTask> ProjectTaskRelatedMappings { get; set; } = new List<ProjectTask>();
