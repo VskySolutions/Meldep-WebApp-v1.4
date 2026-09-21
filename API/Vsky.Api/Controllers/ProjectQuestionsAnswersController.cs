@@ -52,7 +52,8 @@ namespace Vsky.Api.Controllers
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                // var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 var list = await _projectQuestionsAnswerService.GetAllProjectQuestionsAnswers(
                     SiteId,
