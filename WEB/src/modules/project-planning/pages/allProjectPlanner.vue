@@ -1193,6 +1193,7 @@
 
                                         <q-badge
                                           v-if="props.row.editingStatus"
+                                          class="hidden"
                                           color="grey"
                                           rounded
                                         >
@@ -4431,7 +4432,6 @@ const storePreviousColor = (row) => {
 // };
 
 const onSubmitProjectArchiveUnArchiveToggle = (row) => {
-  debugger;
   const isArchived = row.isArchived === true;
   const newIsArchived = !isArchived;
 
