@@ -35,7 +35,10 @@ namespace Vsky.Services.ProjectTasks
             int page = 1,
             int pageSize = int.MaxValue
         );
-        IPagedList<ProjectTask> GetAllProjectTasksForDashboard(string SiteId,
+        Task<IPagedList<ProjectTask>> GetAllProjectTasksForDashboard(
+            string SiteId,
+            string loggedUserId,
+            string employeeId,
             string projectId,
             string sortBy, 
             bool descending,

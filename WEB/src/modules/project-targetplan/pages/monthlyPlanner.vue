@@ -109,7 +109,7 @@
               </div>
               <div class="q-ml-sm">
                 <q-btn
-                  v-if="isFullAccess && !isTHFRole"
+                  v-if="isFullAccess && !isViewer"
                   icon="o_add"
                   outline
                   label="Add Monthly Plan"
@@ -310,7 +310,7 @@
                               </q-tooltip>
                             </q-icon>
                           </div>
-                          <div v-else class="AddProjectPlanApprover q-mr-xs cursor-pointer">
+                          <div v-else-if="!isViewer" class="AddProjectPlanApprover q-mr-xs cursor-pointer">
                             <q-icon name="o_person_add" size="sm" @click="showAddProjectPlanApproverModal = true; selectedPlanApproverId = null">
                               <q-tooltip anchor="bottom middle" self="top middle">
                                 Click here to add your plan approver?
@@ -319,7 +319,7 @@
                           </div>
                           <div class="">
                             <q-btn
-                              v-if="activeProjectName !== 'No Project Selected' && isFullAccess"
+                              v-if="activeProjectName !== 'No Project Selected' && isFullAccess && !isViewer"
                               :icon="showCalendar ? 'o_close' : 'o_add'"
                               class="customBTN"
                               size="sm"
@@ -966,7 +966,7 @@ const processing = ref(false);
 const planTypeId = ref(null);
 const actualLineProcessing = ref(false);
 const resourceProcessing = ref(false);
-const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const siteId = computed(() => authStore.user?.siteId);
 // --------------------------------------------------------------------------------------------------------------------------------------------------

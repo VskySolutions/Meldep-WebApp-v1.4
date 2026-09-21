@@ -75,8 +75,10 @@ namespace Vsky.Api.Controllers
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
 
+                searchModel.SiteId = searchModel.SiteId != null ? searchModel.SiteId : SiteId;
+
                 var siteList = _personSitesMappingService.GetAllSiteShare(
-                    SiteId, 
+                    searchModel.SiteId, 
                     searchModel.SearchText, 
                     searchModel.PersonIds, 
                     searchModel.PrimaryEmailAddress,
@@ -138,7 +140,8 @@ namespace Vsky.Api.Controllers
                 if (ModelState.IsValid)
                 {
                     var LoggedUserId = User.GetLoggedInUserId<string>();
-                    var SiteId = _globalVariable.SiteId;
+                    //var SiteId = _globalVariable.SiteId;
+                    var SiteId = !string.IsNullOrEmpty(model.SiteId) ? model.SiteId : _globalVariable.SiteId;
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 

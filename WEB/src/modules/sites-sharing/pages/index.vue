@@ -126,6 +126,7 @@
 
                 <addUserPopup
                   :on-save-api="saveSiteShareDetails"
+                  :siteId= "siteId"
                 />
 
                 <q-btn
@@ -232,6 +233,7 @@ const loading = ref(true);
 const showFilter = ref(false);
 const searchLoader = ref(false);
 const userStatusList = ref(["Active", "Inactive"]);
+const siteId = ref(history.state?.siteId);
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Columns
@@ -255,7 +257,8 @@ const getAllSiteShares = (props) => {
 
   const { page, rowsPerPage, sortBy, descending } = props.pagination;
 
-  const payload = {
+  const payload = {    
+    siteId: siteId.value ? siteId.value : null,
     page,
     pageSize: rowsPerPage,
     sortBy,

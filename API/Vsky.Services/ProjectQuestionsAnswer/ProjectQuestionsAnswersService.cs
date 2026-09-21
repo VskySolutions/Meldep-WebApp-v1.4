@@ -172,6 +172,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                     Id = x.Project.Id,
                     Name = x.Project.Name,
                     CurrentUserManage =
+                        isAdmin ||
                         x.Project.CreatedById == loggedUserId ||
                         x.CreatedById == loggedUserId ||
                         x.Project.ProjectEmployeeMappings

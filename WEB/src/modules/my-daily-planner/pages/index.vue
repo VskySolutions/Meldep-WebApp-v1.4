@@ -132,7 +132,9 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add"
+                <q-btn
+                  v-if="!isViewer"
+                  icon="o_add"
                   outline
                   label="Add Daily Plan"
                   no-caps
@@ -211,11 +213,11 @@
                   }"
                 >
                   {{ col.label }}
-                  <!-- Sort icon only --> 
+                  <!-- Sort icon only -->
                   <q-icon
-                    v-if="col.sortable" 
-                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                    size="16px" 
+                    v-if="col.sortable"
+                    :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                    size="16px"
                     class="cursor-pointer q-ml-sm"
                     @click.stop="sortColumn(col)"
                   >
@@ -421,6 +423,7 @@ const createdByList = ref(["Created By Me", "View All"]);
 const shownProjects = new Set();
 const shownTasks = new Set();
 const showSortDialog = ref(false);
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Columns
@@ -593,10 +596,10 @@ const sortColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
-  } 
+  }
   refreshDailyPlannerList();
 };
 

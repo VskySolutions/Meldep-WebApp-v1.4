@@ -241,7 +241,7 @@
               </q-menu>
               <div>
                 <q-btn
-                  v-if="!isTHFRole"
+                  v-if="!isViewer"
                   icon="o_add"
                   outline
                   label="Create Requirement"
@@ -250,7 +250,7 @@
                   @click="onRequirementAdd(search.projectIds?.[0], search.projectModuleIds?.[0], refreshRequirementList, null)"
                 />
                 <q-btn
-                  v-if="!isTHFRole"
+                  v-if="!isViewer"
                   icon="o_checklist"
                   outline
                   no-caps
@@ -343,7 +343,8 @@
           </template>
           <template #header="props">
             <q-tr :props="props" class="bg-primary text-white">
-              <q-th auto-width class="text-center" />
+              <q-th
+                  v-if="!isViewer" auto-width class="text-center" />
                 <q-th
                   v-for="col in props.cols"
                   :key="col.name"
@@ -381,7 +382,8 @@
               ]"
               :set="(preProjectName = null, preProjectModuleName = null, resetTracking())"
             >
-              <q-td>
+              <q-td
+                  v-if="!isViewer">
                 <div
                   v-if="props.row.requirementColor"
                   :style="{
@@ -1024,7 +1026,7 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
-const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const selectedProjectId = history.state?.projectId;
 const processing = ref(false);

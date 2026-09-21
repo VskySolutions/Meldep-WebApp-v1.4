@@ -189,6 +189,7 @@
               </q-menu>
               <div class="q-ml-xs">
                 <q-btn
+                  v-if="!isViewer"
                   color="primary"
                   :class="routeName === 'project-tast-activities'? 'hidden' : ''"
                   outline
@@ -200,6 +201,7 @@
                   @click="onSendDailyPlan"
                 />
                 <q-btn
+                  v-if="!isViewer"
                   color="primary"
                   :class="routeName === 'project-tast-activities'? 'hidden' : ''"
                   outline
@@ -211,6 +213,7 @@
                   @click="onSendTimesheet"
                 />
                 <q-btn
+                  v-if="!isViewer"
                   icon="o_checklist"
                   outline
                   no-caps
@@ -309,6 +312,7 @@
                     <q-tooltip>Project Center</q-tooltip>
                   </q-icon>
                   <q-icon
+                    v-if="!isViewer"
                     name="o_developer_board" size="xs"
                     class="cursor-pointer"
                     @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
@@ -350,28 +354,29 @@
                   <!-- @update:pagination="val => projectActivityPagination[props.row.project.id] = val" -->
                   <template #header="headerProps">
                     <q-tr :props="headerProps" class="bg-grey-4 text-black">
-                      <q-th auto-width class="text-center" :class="routeName === 'project-tast-activities'? 'hidden' : ''" />
+                      <q-th
+                          v-if="!isViewer" auto-width class="text-center" :class="routeName === 'project-tast-activities'? 'hidden' : ''" />
                       <q-th
                         v-for="col in headerProps.cols"
                         :key="col.name"
                       >
                       {{ col.label }}
-                      <!-- Sort icon only --> 
+                      <!-- Sort icon only -->
                       <q-icon
                         v-if="col.sortable"
                         :name=" projectActivityPagination[props.row.project.id]?.sortBy === col.name ? ( projectActivityPagination[props.row.project.id]?.descending ? 'o_arrow_downward' : 'o_arrow_upward' ) : 'o_unfold_more' "
-                        size="16px" 
+                        size="16px"
                         class="cursor-pointer q-ml-sm"
                         @click.stop="sortActivityColumn(col, props.row.project.id)"
                       >
                         <q-tooltip>
-                          {{ 
-                            projectActivityPagination[props.row.project.id]?.sortBy === col.name 
+                          {{
+                            projectActivityPagination[props.row.project.id]?.sortBy === col.name
                               ? (
                                   projectActivityPagination[props.row.project.id]?.descending
                                     ? 'Sort Ascending'
-                                    : 'Sort Descending' 
-                                ) 
+                                    : 'Sort Descending'
+                                )
                               : 'Sort'
                           }}
                         </q-tooltip>
@@ -410,7 +415,11 @@
                         Please add activity details and open the task activity to start filling the timesheet and daily plan for this activity.
                       </q-tooltip> -->
                       <!-- Active / Checkbox -->
-                      <q-td class="text-center" style="width: 5%;">
+                      <q-td
+                        v-if="!isViewer"
+                        class="text-center"
+                        style="width: 5%;"
+                      >
                         <div
                           :class="['dot-circle q-mr-xs hoverable-cell', activityProps.row.active ? 'dot-active' : 'dot-inactive']"
                           @click="() => { onSubmitProjectTaskActivityStatus(activityProps.row, refreshProjectTaskActivityList) }"
@@ -536,6 +545,7 @@
                       <!-- Actions -->
                       <q-td style="width: 5%;" class="text-center actions">
                         <q-icon
+                          v-if="!isViewer"
                           name="o_article"
                           size="xs"
                           :class="[
@@ -621,6 +631,7 @@
                           </q-tooltip>
                         </q-icon>
                         <q-icon
+                          v-if="!isViewer"
                           name="o_edit"
                           class="cursor-pointer q-mr-sm"
                           size="xs"
@@ -632,6 +643,7 @@
                           </q-tooltip>
                         </q-icon>
                         <q-icon
+                          v-if="!isViewer"
                           name="o_timer"
                           class="cursor-pointer q-mr-sm ss"
                           size="xs"
@@ -670,6 +682,7 @@
                           <q-tooltip>Delete</q-tooltip>
                         </q-icon>
                         <q-icon
+                          v-if="!isViewer"
                           :name="activityProps.row.active ? 'o_block' : 'o_check_circle_outline'"
                           :color="activityProps.row.active ? 'negative' : 'positive'" class="cursor-pointer"
                           @click="onSubmitProjectTaskActivityStatus(activityProps.row, refreshProjectTaskActivityList)"
@@ -857,6 +870,7 @@ const showSortDialog = ref(false);
 const activeScope = ref(null);
 const processing = ref(false);
 const activeEdit = ref({ rowId: null, field: null });
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 function openPlan (d, rowId) {
   selectedDate.value = d.text || "";
@@ -987,7 +1001,7 @@ const getProjectActivities = (props) => {
           //   requirementWeeklyPlanMappings.some(m =>
           //     isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)
           //   );
-          
+
           return {
             ...activity,
             description: activity.description || "",
@@ -1072,18 +1086,18 @@ const isCurrentWeek = (date) => {
   return weekDate >= currentSunday && weekDate <= currentSaturday;
 };
 
-const sortActivityColumn = (col, projectId) => { 
-  if (!col.sortable) return; 
-  // Get pagination for this project 
-  const currentPagination = 
-    projectActivityPagination.value[projectId] || { 
+const sortActivityColumn = (col, projectId) => {
+  if (!col.sortable) return;
+  // Get pagination for this project
+  const currentPagination =
+    projectActivityPagination.value[projectId] || {
       page: 1,
       rowsPerPage: 20,
       sortBy: null,
       descending: false
     };
   if (currentPagination.sortBy === col.name) {
-    // Same column -> toggle sorting direction 
+    // Same column -> toggle sorting direction
     currentPagination.descending = !currentPagination.descending;
   } else {
     // New column -> ascending
@@ -1092,14 +1106,14 @@ const sortActivityColumn = (col, projectId) => {
   }
   // Reset to first page when sorting changes
   currentPagination.page = 1;
-  // Update pagination for this project 
-  projectActivityPagination.value = { 
+  // Update pagination for this project
+  projectActivityPagination.value = {
     ...projectActivityPagination.value,
-    [projectId]: { 
+    [projectId]: {
       ...currentPagination
     }
   };
-  // Refresh activities 
+  // Refresh activities
   refreshProjectTaskActivityList(projectId);
 };
 
@@ -1462,7 +1476,7 @@ const onSelectMultiOptions = () => {
     notifyWarning({
       message: `${missingDescriptionOrNotOpenCount} ${
         missingDescriptionOrNotOpenCount > 1 ? "activities" : "activity"
-      // } missing description or not in Open status. Please add description and update status to Open.`      
+      // } missing description or not in Open status. Please add description and update status to Open.`
       } not in Open status. Please update status to Open.`
     });
     selectedField.value = null;
@@ -1830,7 +1844,7 @@ onMounted(async () => {
   activeEmployeesDropdown.load(user.siteId);
   projectTaskActivityNameDropdown.load("Project Activities");
   // projectTaskActivityStatusDropdown.load("Activity Status");
-  projectTaskStatusForDropdown.load("Task Status");  
+  projectTaskStatusForDropdown.load("Task Status");
   projectTaskActivityNameForDropdownSingleSelect.load("Project Activities");
   // Get Active/InActive and Set default to Active
   // await projectTaskActivityActiveInActiveDropdown.load("Project Active Status");

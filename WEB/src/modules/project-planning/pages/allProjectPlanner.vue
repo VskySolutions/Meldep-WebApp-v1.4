@@ -81,6 +81,7 @@
 
                       <div class="row items-center q-gutter-sm">
                         <q-btn
+                          v-if="!isViewer"
                           icon="o_add"
                           outline
                           size="sm"
@@ -656,7 +657,7 @@
                           <div class="q-mb-sm">
                             <!-- </q-toolbar-title> -->
                             <q-btn
-                              v-if="getProjectDetail(selectedProjectId)?.isEditable"
+                              v-if="getProjectDetail(selectedProjectId)?.isEditable && !isViewer"
                               icon="o_add"
                               outline
                               size="sm"
@@ -954,7 +955,7 @@
 
                               <div class="q-mb-sm">
                                 <q-btn
-                                  v-if="getProjectDetail(selectedProjectId)?.isEditable"
+                                  v-if="getProjectDetail(selectedProjectId)?.isEditable && !isViewer"
                                   icon="o_add"
                                   outline
                                   size="sm"
@@ -1292,16 +1293,16 @@
                               </div>
                               <div class="q-mb-sm">
                                 <!-- </q-toolbar-title> -->
-                                <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddProjectTask(selectedProjectId)" />
-                                <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTask">
+                                <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddProjectTask(selectedProjectId)" />
+                                <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTask">
                                   <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
                                   <q-tooltip>Add Bulk Tasks</q-tooltip>
                                 </q-btn>
-                                <q-btn v-if="selectedTaskId!=null && getProjectDetail(selectedProjectId)?.isEditable" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_edit" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onEditBulkTasks">
+                                <q-btn v-if="selectedTaskId!=null && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_edit" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onEditBulkTasks">
                                   <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
                                   <q-tooltip>Edit Bulk Tasks</q-tooltip>
                                 </q-btn>
-                                <q-btn icon="o_open_in_new" size="sm" outline class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="$router.push('/project-tasks')">
+                                <q-btn v-if="!isViewer" icon="o_open_in_new" size="sm" outline class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="$router.push('/project-tasks')">
                                   <q-tooltip>Manage Tasks</q-tooltip>
                                 </q-btn>
                               </div>
@@ -1944,10 +1945,10 @@
                                 <h3 class="text-black q-mb-none"><span>Activity for </span><span v-if="storedTaskName" class="text-primary"> {{ storedTaskName }}</span></h3>
                               </div>
                               <div class="q-mb-sm">
-                                <q-btn v-if="selectedTaskId!=null" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddInlineTaskActivity(selectedTaskId)">
+                                <q-btn v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddInlineTaskActivity(selectedTaskId)">
                                   <q-tooltip>Add Task Activity</q-tooltip>
                                 </q-btn>
-                                <q-btn v-if="selectedTaskId!=null" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTaskActivity">
+                                <q-btn v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTaskActivity">
                                   <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
                                   <q-tooltip>Add/Edit Bulk Activities</q-tooltip>
                                 </q-btn>
@@ -2035,7 +2036,7 @@
                                     <q-checkbox
                                       v-if="
                                         !savingActivityEmployees &&
-                                        getNewModuleEmployees().length > 0
+                                        getNewModuleEmployees().length > 0 && !isViewer
                                       "
                                       v-model="selectAllActivities"
                                       size="sm"
@@ -2053,6 +2054,7 @@
                             </template>
                             <template #top-row>
                               <q-tr
+                                v-if="!isViewer"
                                 v-for="employee in getNewModuleEmployees()"
                                 :key="`new-employee-${employee.value}`"
                                 class="bg-grey-1"
@@ -2529,6 +2531,7 @@ const $q = useQuasar();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const currentSiteId = computed(() => user.siteId);
 const loading = ref(true);

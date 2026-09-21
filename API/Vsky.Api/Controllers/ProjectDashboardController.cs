@@ -104,13 +104,18 @@ namespace Vsky.Api.Controllers
 
         #region GetAllProjectTasks
         [HttpPost("projectTaskList")]
-        public IActionResult GetAllProjectTasksForDashboard(ProjectTaskSearchModel searchModel)
+        public async Task<IActionResult> GetAllProjectTasksForDashboard(ProjectTaskSearchModel searchModel)
         {
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var list = _taskService.GetAllProjectTasksForDashboard(SiteId,
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+
+                var list = await _taskService.GetAllProjectTasksForDashboard(
+                    SiteId,
+                    LoggedUserId,
+                    employeeId,
                     searchModel.ProjectId,
                     searchModel.SortBy,
                     searchModel.Descending, 

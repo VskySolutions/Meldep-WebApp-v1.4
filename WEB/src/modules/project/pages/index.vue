@@ -146,6 +146,7 @@
               />
               <div class="flex items-center no-wrap">
                 <q-btn
+                  v-if="!isViewer"
                   icon="o_add"
                   outline
                   label="Add"
@@ -156,6 +157,7 @@
                   <q-tooltip>Add Project</q-tooltip>
                 </q-btn>
                 <q-btn
+                  v-if="!isViewer"
                   icon="o_event"
                   outline
                   class="text-primary btnRounded q-ml-xs"
@@ -182,7 +184,7 @@
                 </q-btn>
                 <!-- SOP Change -->
                 <q-btn
-                  v-if="role === 'admin'"
+                  v-if="role === 'admin' && !isViewer"
                   icon="o_playlist_add"
                   outline
                   no-caps
@@ -1259,6 +1261,7 @@ const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
 const pMRole = user?.roles?.some(
   r => r?.toLowerCase() === "project manager"
 ) ?? false;
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const currentSiteId = computed(() => user.siteId);
 

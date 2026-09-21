@@ -129,7 +129,7 @@
                 </q-menu>
               </div>
               <manageDropdownOptions
-                v-if="!isTHFRole"
+                v-if="!!isViewer"
                 v-model="showManageDropdownOptions"
                 :manage-drop-down-types="manageDropDownTypes"
                 :selected-field="selectedField"
@@ -168,7 +168,7 @@
                   <q-tooltip>Grid View</q-tooltip>
                 </q-btn>
                 <q-btn
-                  v-if="!isTHFRole"
+                  v-if="!isViewer"
                   icon="o_add"
                   outline
                   label="Add"
@@ -180,7 +180,7 @@
                 </q-btn>
                 <!-- Quick Multi Task Actions -->
                 <q-btn
-                  v-if="!isTHFRole"
+                  v-if="!isViewer"
                   icon="o_checklist"
                   outline
                   no-caps
@@ -193,7 +193,7 @@
                 </q-btn>
                 <!-- Admin:- Manage All Dropdowns -->
                 <q-btn
-                  v-if="role === 'admin'"
+                  v-if="role === 'admin' && !isViewer"
                   icon="o_playlist_add"
                   outline
                   no-caps
@@ -269,7 +269,11 @@
             </template>
             <template #header="props">
               <q-tr :props="props" class="bg-primary text-white">
-                <q-th auto-width class="text-center" />
+                <q-th
+                  v-if="!isViewer"
+                  auto-width
+                  class="text-center"
+                />
                 <q-th
                   v-for="col in props.cols"
                   :key="col.name"
@@ -314,7 +318,7 @@
                 :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''"
                 :set="(preProjectName = null, preProjectModuleName = null)"
               >
-                <q-td class="text-center">
+                <q-td v-if="!isViewer" class="text-center">
                   <q-checkbox
                     v-model="props.row.checkboxStatus"
                     @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.project.projectStatus.dropDownValue, props.row.id, props.row.name,$event)"
@@ -792,7 +796,7 @@
               <q-tr v-if="selectedColumnNames.includes('estimateTime') && props.pageIndex === rows.length - 1" class="bg-grey-2">
                 <!-- Label spanning all columns before estimateTime -->
                 <q-td
-                  :colspan="computedColumns.findIndex(c => c.name === 'estimateTime') + 1"
+                  :colspan="computedColumns.findIndex(c => c.name === 'estimateTime') + (!isViewer ? 1 : 0)"
                   class="text-right text-bold"
                 >
                   Total Hours:
@@ -939,7 +943,7 @@ const loading = ref(true);
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
-const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const activeEdit = ref({ rowId: null, field: null });
 const selectedProjectId = ref(history.state?.projectId);
@@ -954,6 +958,7 @@ const manageDropDownTypes = ref([]);
 const showManageDropdownOptions = ref(false);
 const showSortDialog = ref(false);
 const siteId = computed(() => authStore.user?.siteId);
+
 // ----------------------------------------------------------------------------------------------------------------
 // Local Storage:- DataTable and Advance Filter Values
 // ----------------------------------------------------------------------------------------------------------------

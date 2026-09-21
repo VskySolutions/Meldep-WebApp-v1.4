@@ -82,13 +82,6 @@ const columnsTestCases = ref([
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true }
 ]);
 
-// On page rendering
-onMounted(() => {
-  getDropDownTestCaseStatus("Test Case Status");
-  const propsTestCase = { pagination: paginationTestCases.value };
-  getAllTestCase(propsTestCase);
-});
-
 const getAllTestCase = (propsTestCase) => {
   const { page, rowsPerPage, sortBy, descending } = propsTestCase.pagination;
   loading.value = true;
@@ -174,4 +167,11 @@ const filterRows = (data, searchTerm, columns) => {
 
 const teseCaseColumns = columnsTestCases.value;
 const filteredTestCase = computed(() => filterRows(rowsTestCases.value, filterTestCase.value, teseCaseColumns));
+
+// On page rendering
+onMounted(() => {
+  getDropDownTestCaseStatus("Test Case Status");
+  const propsTestCase = { pagination: paginationTestCases.value };
+  getAllTestCase(propsTestCase);
+});
 </script>

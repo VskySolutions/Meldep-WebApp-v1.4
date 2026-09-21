@@ -450,7 +450,10 @@ namespace Vsky.Services.ProjectTasks
             return list;
         }
 
-        public IPagedList<ProjectTask> GetAllProjectTasksForDashboard(string SiteId,
+        public async Task<IPagedList<ProjectTask>> GetAllProjectTasksForDashboard(
+            string SiteId,
+            string loggedUserId,
+            string employeeId,
             string projectId,
             string sortBy,
             bool descending,
@@ -459,6 +462,8 @@ namespace Vsky.Services.ProjectTasks
         )
         {
             var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active && !x.IsMoved && x.ProjectId == projectId);
+
+            bool isAdmin = await IsCurrentUserAdmin(loggedUserId, SiteId);
 
             //sorting
             if (!string.IsNullOrWhiteSpace(sortBy))
@@ -493,7 +498,24 @@ namespace Vsky.Services.ProjectTasks
                     {
                         Id = x.Project.ProjectStatus.Id,
                         DropDownValue = x.Project.ProjectStatus.DropDownValue,
-                    }
+                    },
+                    CurrentUserManage =
+                        isAdmin ||
+                        x.CreatedById == loggedUserId ||
+                        x.Project.CreatedById == loggedUserId ||
+                        x.Project.ProjectEmployeeMappings
+                            .Where(m =>
+                                !m.Deleted &&
+                                m.EmployeeId == employeeId)
+                            .Any(m =>
+                                m.ProjectEmployeeRoleMappings
+                                    .Where(r => !r.Deleted)
+                                    .Any(r =>
+                                        r.SitesProjectRoles
+                                            .SitesProjectRolesPermissions
+                                            .Any(p =>
+                                                !p.Deleted &&
+                                                p.FullAccess)))
                 },
                 ProjectModule = new ProjectModule
                 {
