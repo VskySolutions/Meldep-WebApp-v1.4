@@ -90,7 +90,8 @@ import siteModule from "src/modules/sites/utils/dropdowns.js";
 import formMultiSelectDropdown from "src/components/form-inputs/_formMultiSelectDropdown.vue";
 
 const props = defineProps({
-  onSaveApi: { type: Function, required: true }
+  onSaveApi: { type: Function, required: true },
+  siteId: { id: { type: String, default: "" }}
 });
 
 const emit = defineEmits(["success"]);
@@ -164,7 +165,8 @@ function onSave (scope) {
 
   const payload = {
     email: email,
-    roleIds: localRow.roleIds
+    roleIds: localRow.roleIds,
+    siteId: props.siteId
   };
   
   props.onSaveApi(payload)

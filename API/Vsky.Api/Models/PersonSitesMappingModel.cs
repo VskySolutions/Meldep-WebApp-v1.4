@@ -30,6 +30,7 @@ namespace Vsky.Api.Models
     public record PersonSitesSearchModel : BaseSearchModel
     {
         public string SearchText { get; set; }
+        public string SiteId { get; set; }
         public List<string> PersonIds { get; set; }
         public string PrimaryEmailAddress { get; set; }
         public string UserStatus { get; set; }
@@ -46,5 +47,6 @@ namespace Vsky.Api.Models
 
         public string[] RoleIds { get; set; }
         public string Email { get; set; }
+        public string SiteId { get; set; }
     }
 }
