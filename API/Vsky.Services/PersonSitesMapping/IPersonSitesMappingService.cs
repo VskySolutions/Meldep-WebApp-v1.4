@@ -15,6 +15,8 @@ namespace Vsky.Services.Persons
             string SearchText,
             List<string> personIds,
             string primaryEmailAddress,
+            string userStatus,
+            bool isSharedUser,
             string sortBy,
             bool descending,
             int page = 1,

@@ -42,47 +42,80 @@
                       />
                       <div class="row items-center q-mb-sm">
                         <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                          <label class="Cutomlabel q-mt-sm fs-13">Email</label>
+                          <label class="Cutomlabel fs-13">Email</label>
                         </div>
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
-                          <q-input 
-                            v-model="search.primaryEmailAddress" 
-                            push 
-                            class="q-mx-sm w-100 h-auto" 
-                            hide-bottom-space 
-                            :dense="true" 
-                            type="email" 
+                          <q-input
+                            v-model="search.primaryEmailAddress"
+                            push
+                            class="q-mx-sm w-100 h-auto"
+                            hide-bottom-space
+                            :dense="true"
+                            type="email"
+                          />
+                        </div>
+                      </div>
+                      <div class="row items-center q-mb-sm hidden">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel fs-13">User Status</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <q-select
+                            v-model="search.userStatus"
+                            clearable
+                            class="q-mx-sm w-100 h-auto"
+                            stack-label
+                            hide-bottom-space
+                            use-input
+                            :dense="true"
+                            :options="userStatusList"
+                            emit-value
+                            map-options
+                            :popup-content-class="customPopupContentClass"
+                          />
+                        </div>
+                      </div>
+                      <div class="row items-center q-mb-sm">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel fs-13">Is Shared</label>
+                        </div>
+
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <q-checkbox
+                            v-model="search.isSharedUser"
+                            class="q-mx-sm"
+                            :dense="true"
                           />
                         </div>
                       </div>
                       <!-- Search and Clear Buttons -->
                       <div class="row justify-end q-gutter-sm q-mb-sm">
-                        <q-btn 
-                          style="width: 20%;" 
-                          outline 
-                          color="primary" 
-                          label="Search" 
-                          class="btnRounded" 
-                          no-caps 
-                          @click="() => { showFilter = false; onAdvanceSearch(); }" 
+                        <q-btn
+                          style="width: 20%;"
+                          outline
+                          color="primary"
+                          label="Search"
+                          class="btnRounded"
+                          no-caps
+                          @click="() => { showFilter = false; onAdvanceSearch(); }"
                         />
-                        <q-btn 
-                          style="width: 20%;" 
-                          outline 
-                          color="grey-4" 
-                          label="Clear" 
-                          class="text-grey-9 btnRounded" 
-                          no-caps 
-                          @click="onAdvanceClear" 
+                        <q-btn
+                          style="width: 20%;"
+                          outline
+                          color="grey-4"
+                          label="Clear"
+                          class="text-grey-9 btnRounded"
+                          no-caps
+                          @click="onAdvanceClear"
                         />
-                        <q-btn 
-                          style="width: 20%;" 
-                          outline 
-                          color="negative" 
-                          label="Close" 
-                          class="btnRounded" 
-                          no-caps 
-                          @click="() => { showFilter = false; }" 
+                        <q-btn
+                          style="width: 20%;"
+                          outline
+                          color="negative"
+                          label="Close"
+                          class="btnRounded"
+                          no-caps
+                          @click="() => { showFilter = false; }"
                         />
                       </div>
                     </q-card>
@@ -90,17 +123,17 @@
                 </div>
               </div>
               <div class="q-ml-sm">
-                
+
                 <addUserPopup
                   :on-save-api="saveSiteShareDetails"
                 />
 
-                <q-btn 
-                  icon="o_chevron_left" 
-                  outline 
-                  label="Back" 
-                  no-caps 
-                  class="text-primary btnRounded q-ml-sm" 
+                <q-btn
+                  icon="o_chevron_left"
+                  outline
+                  label="Back"
+                  no-caps
+                  class="text-primary btnRounded q-ml-sm"
                   @click="$router.back()"
                 />
               </div>
@@ -112,15 +145,15 @@
 
       <q-table
         ref="tableRef"
-        v-model:pagination="pagination" 
-        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'" 
-        :loading="loading" 
-        :rows="rows" 
-        :columns="columns" 
+        v-model:pagination="pagination"
+        :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'"
+        :loading="loading"
+        :rows="rows"
+        :columns="columns"
         row-key="id"
         separator="cell"
-        no-data-label="No data available" 
-        binary-state-sort 
+        no-data-label="No data available"
+        binary-state-sort
         :rows-per-page-options="[15, 30, 50 ,100]"
         @request="refreshSiteShareList"
       >
@@ -150,11 +183,11 @@
               {{ props.row.createdOnUtc }}
             </q-td>
             <q-td auto-width class="text-left actions">
-              <q-icon 
-                name="o_delete_outline" 
-                class="cursor-pointer" 
-                color="negative" 
-                size="xs" 
+              <q-icon
+                name="o_delete_outline"
+                class="cursor-pointer"
+                color="negative"
+                size="xs"
                 @click="onSubmitSiteShareDelete(props.row.id, props.row.person.fullName, refreshSiteShareList)"
               >
                 <q-tooltip>Delete</q-tooltip>
@@ -168,7 +201,8 @@
 </template>
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
-import { notifySuccess, getLocalStorage, setLocalStorage, clearLocalStorage, notifyWarning } from "assets/utils";
+import { notifySuccess} from "assets/utils";
+import { useAuthStore } from "stores/auth";
 
 import siteShareService from "modules/sites-sharing/sitesSharing.service";
 
@@ -180,9 +214,10 @@ import personModule from "src/modules/person/utils/dropdowns.js";
 
 // Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
-
 import addUserPopup from "modules/sites-sharing/components/_addUserPopup.vue";
 
+// Shared DataTable Views
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 // Shared Site Share Actions
 import {
   initSiteShareActions,
@@ -196,21 +231,13 @@ import {
 const loading = ref(true);
 const showFilter = ref(false);
 const searchLoader = ref(false);
-
-// ----------------------------------------------------------------------------------------------------------------
-// Local Storage:- DataTable and Advance Filter Values
-// ----------------------------------------------------------------------------------------------------------------
-
-const localStorageKey = "Share My Tenant";
-const filterLocalStorage = getLocalStorage(localStorageKey);
-const pagination = ref(filterLocalStorage?.pagination || { sortBy: "createdOnUtc", descending: true, rowsPerPage: 20, page: 1 });
+const userStatusList = ref(["Active", "Inactive"]);
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Columns
 // ----------------------------------------------------------------------------------------------------------------
 
 const tableRef = ref();
-const activeRowId = ref(null);
 const rows = ref([]);
 const columns = ref([
   { name: "person.fullName", label: "Person Name", field: "person.fullName", align: "left", sortable: true },
@@ -225,21 +252,66 @@ const columns = ref([
 
 const getAllSiteShares = (props) => {
   loading.value = true;
+
   const { page, rowsPerPage, sortBy, descending } = props.pagination;
-  const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
-  setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination });
-  siteShareService.getAllSiteShares(payload).then((resp) => {
-    rows.value = resp.data;
-    pagination.value.page = page;
-    pagination.value.rowsPerPage = rowsPerPage;
-    pagination.value.sortBy = sortBy;
-    pagination.value.descending = descending;
-    pagination.value.rowsNumber = resp.total;
-  }).finally(() => {
-    loading.value = false;
-    searchLoader.value = false;
-  });
+
+  const payload = {
+    page,
+    pageSize: rowsPerPage,
+    sortBy,
+    descending,
+    ...search.value
+  };
+
+  siteShareService.getAllSiteShares(payload)
+    .then((resp) => {
+      rows.value = resp.data;
+
+      pagination.value.page = page;
+      pagination.value.rowsPerPage = rowsPerPage;
+      pagination.value.sortBy = sortBy;
+      pagination.value.descending = descending;
+      pagination.value.rowsNumber = resp.total;
+      saveDataTableState({
+        search: search.value,
+        pagination: props.pagination,
+        activeRowId: activeRowId.value
+      });
+    })
+    .finally(() => {
+      loading.value = false;
+      searchLoader.value = false;
+    });
 };
+// ---------------------------------------------------------
+// Site-wise DataTable and Search State
+// ---------------------------------------------------------
+
+const authStore = useAuthStore();
+const currentSiteId = computed(() => authStore.user.siteId);
+
+const {
+  search,
+  pagination,
+  activeRowId,
+  saveDataTableState
+} = useSiteTableState({
+  storageKey: "shareMyTenant-Index",
+  siteId: currentSiteId,
+  defaultSearch: {
+    searchText: "",
+    personIds: [],
+    primaryEmailAddress: "",
+    userStatus: "Active",
+    isSharedUser: true
+  },
+  defaultPagination: {
+    sortBy: "createdOnUtc",
+    descending: true,
+    rowsPerPage: 20,
+    page: 1
+  }
+});
 
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions
@@ -254,31 +326,26 @@ const refreshSiteShareList = () => {
   getAllSiteShares({ pagination: pagination.value });
 }
 
-// Search variables
-const getFilterValue = (key, defaultValue) => {
-  const val = filterLocalStorage?.[key];
-  return val && val.length > 0 ? val : defaultValue;
-};
-
-const search = ref({
-  searchText: getFilterValue("searchText", ""),
-  personIds: getFilterValue("personIds", []),
-  primaryEmailAddress: getFilterValue("primaryEmailAddress", null)  
-});
-
 // Search records as per parameters
 const onAdvanceSearch = () => {
+  saveDataTableState();
   refreshSiteShareList();
 };
 
-// Clear search
+// Clear advance search filters
 const onAdvanceClear = () => {
   search.value.personIds = [];
   search.value.primaryEmailAddress = "";
-  clearLocalStorage(localStorageKey);
+  search.value.userStatus = "Active";
+  search.value.isSharedUser = true;
+
+  pagination.value.page = 1;
+
+  saveDataTableState({
+    search: search.value
+  });
   onAdvanceSearch();
 };
-
 // ------------------------------------------------------------------------------------
 // Advance Filter :- All Dropdowns
 // ------------------------------------------------------------------------------------
@@ -298,19 +365,37 @@ const mapFilterToLabel = (ids, list, label) => {
   return { [label]: text };
 };
 
+const mapSingleFilterToLabel = (id, list, label) => {
+  if (id == null || id === "") return {};
+  const match = list.value.find(item => item.value === id);
+  const text = match ? match.text : id;
+  return { [label]: text };
+};
+
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.personIds, isSharedPersonNameForDropdown.list, "Person Name"),
-  ...(search.value.primaryEmailAddress ? { Email: search.value.primaryEmailAddress } : {})
+  ...(search.value.primaryEmailAddress ? { Email: search.value.primaryEmailAddress } : {}),
+  ...mapSingleFilterToLabel(search.value.userStatus, userStatusList, "User Status"),
+   ...(search.value.isSharedUser !== null
+    ? { "Is Shared": search.value.isSharedUser ? "Yes" : "No" }
+    : {})
 }));
 
-function onClearFilters (key) {
+function onClearFilters(key) {
   if (key === "Person Name") {
     search.value.personIds = [];
   } else if (key === "Email") {
     search.value.primaryEmailAddress = "";
+  } else if (key === "User Status") {
+    search.value.userStatus = null;
+  } else if (key === "Is Shared") {
+    search.value.isSharedUser = null;
   }
-  delete appliedFilters.value[key];
-  getSites({ pagination: pagination.value });
+
+  pagination.value.page = 1;
+
+  saveDataTableState();
+  refreshSiteShareList();
 }
 
 function getFilterCount (key) {
@@ -338,9 +423,9 @@ function saveSiteShareDetails (payload) {
 
 watch(() => search.value.searchText, () => {
   searchLoader.value = true;
+  saveDataTableState();
   refreshSiteShareList();
 });
-
 // ----------------------------
 // On page rendering
 // ----------------------------

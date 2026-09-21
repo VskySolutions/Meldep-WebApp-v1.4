@@ -32,6 +32,8 @@ namespace Vsky.Api.Models
         public string SearchText { get; set; }
         public List<string> PersonIds { get; set; }
         public string PrimaryEmailAddress { get; set; }
+        public string UserStatus { get; set; }
+        public bool IsSharedUser { get; set; }
     }
 
     public record PersonSitesListModel : BasePagedListModel<PersonSitesMappingModel>

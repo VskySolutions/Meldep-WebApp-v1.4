@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.JsonPatch.Internal;
 using Microsoft.EntityFrameworkCore;
+using SendGrid.Helpers.Mail;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
@@ -56,6 +57,8 @@ namespace Vsky.Services.Persons
             string SearchText,
             List<string> personIds,
             string primaryEmailAddress,
+            string userStatus, 
+            bool isSharedUser,
             string sortBy,
             bool descending,
             int page = 1,
@@ -63,10 +66,13 @@ namespace Vsky.Services.Persons
             bool lookup = false
         )
         {
-            var query = _personSitesMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.IsSharedUser && x.SiteId == SiteId);
+            var query = _personSitesMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.IsSharedUser == isSharedUser && x.SiteId == SiteId);
 
             if (personIds != null && personIds.Any())
                 query = query.Where(x => personIds.Contains(x.PersonId));
+
+            //if (!string.IsNullOrWhiteSpace(userStatus))
+            //    query = query.Where(x => userStatus == "Active" ? x.Active : !x.Active);
 
             if (!string.IsNullOrWhiteSpace(primaryEmailAddress))
             {
