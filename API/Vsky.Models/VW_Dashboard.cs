@@ -62,7 +62,8 @@ namespace Vsky.Models
         public string Priority { get; set; }
         public bool IsTemplate { get; set; }
         public bool IsPinned { get; set; }
-        public bool Active { get; set; }
+        public bool Active { get; set; } 
+        public bool IsArchived { get; set; }
         public string ProjectColor { get; set; }
         public int ProjectNoteCount { get; set; }
         public int ProjectMessageCount { get; set; }

@@ -32,6 +32,7 @@ public class Project : BaseEntity
     public bool IsTemplate { get; set; }
     public string IsFrom { get; set; }
     public bool Active { get; set; }
+    public bool IsArchived { get; set; }
     public int SortOrder { get; set; }
 
     public DateTime CreatedOnUtc { get; set; }

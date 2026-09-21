@@ -616,11 +616,11 @@
                                     </q-item-section>
                                     <q-item-section>{{ props.row.isPinned ? "Un Pin" : "Pin" }}</q-item-section>
                                   </q-item>
-                                  <q-item v-if="props.row.isEditable" v-ripple class="" clickable @click="toggleActiveStatus(props.row)">
+                                  <q-item v-if="props.row.isEditable" v-ripple class="" clickable @click="onSubmitProjectArchiveUnArchiveToggle(props.row)">
                                     <q-item-section avatar>
-                                      <q-icon :name="props.row.active ? 'o_block' : 'o_check_circle_outline'" :color="props.row.active ? 'negative' : 'positive'" size="xs" />
+                                      <q-icon :name="props.row.isArchived ? 'o_unarchive' : 'o_archive'" :color="props.row.isArchived ? 'positive' : 'negative'" size="xs" />
                                     </q-item-section>
-                                    <q-item-section>{{ props.row.active ? 'Set Inactive?' : 'Set Active?' }}</q-item-section>
+                                    <q-item-section>{{ props.row.isArchived ? 'Unarchive' : 'Archive' }}</q-item-section>
                                   </q-item>
                                   <q-separator />
                                   <q-item v-if="props.row.isEditable" v-ripple v-close-popup clickable @click.stop="onDelete(props.row)">
@@ -4404,29 +4404,64 @@ const storePreviousColor = (row) => {
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Update Project Active/Inactive Status
 // --------------------------------------------------------------------------------------------------------------------------------------------------
-const toggleActiveStatus = (row) => {
-  const isCurrentlyActive = row.active === true;
-  const newStatus = !isCurrentlyActive; // Toggle the status
-  const payload = { id: row.id, activeStatus: newStatus ? "Active" : "Inactive" };
+// const toggleActiveStatus = (row) => {
+//   const isCurrentlyActive = row.active === true;
+//   const newStatus = !isCurrentlyActive; // Toggle the status
+//   const payload = { id: row.id, activeStatus: newStatus ? "Active" : "Inactive" };
+
+//   $q.dialog({
+//     title: "Confirmation",
+//     message: `Are you sure you want to ${isCurrentlyActive ? "deactivate" : "activate"} this project?`,
+//     ok: { label: "Yes", color: "primary" },
+//     cancel: { label: "No", color: "negative" }
+//   }).onOk(() => {
+//     projectService.updateProjectColor(row.id, payload)
+//       .then(() => {
+//         notifySuccess({ message: `Project has been ${newStatus ? "activated" : "deactivated"} successfully.` });
+//         row.active = newStatus ? "Active" : "Inactive";
+//         refreshProjectList();
+//       })
+//       .catch(() => {
+//         $q.notify({
+//           type: "negative",
+//           message: `Failed to ${newStatus ? "activate" : "deactivate"} the project.`
+//         });
+//       });
+//   });
+// };
+
+const onSubmitProjectArchiveUnArchiveToggle = (row) => {
+  debugger;
+  const isArchived = row.isArchived === true;
+  const newIsArchived = !isArchived;
+
+  const payload = {
+    id: row.id,
+    isArchived: newIsArchived
+  };
 
   $q.dialog({
     title: "Confirmation",
-    message: `Are you sure you want to ${isCurrentlyActive ? "deactivate" : "activate"} this project?`,
+    message: `Are you sure you want to ${newIsArchived ? "archive" : "unarchive"} this project?`,
     ok: { label: "Yes", color: "primary" },
     cancel: { label: "No", color: "negative" }
-  }).onOk(() => {
-    projectService.updateProjectColor(row.id, payload)
-      .then(() => {
-        notifySuccess({ message: `Project has been ${newStatus ? "activated" : "deactivated"} successfully.` });
-        row.active = newStatus ? "Active" : "Inactive";
-        refreshProjectList();
-      })
-      .catch(() => {
-        $q.notify({
-          type: "negative",
-          message: `Failed to ${newStatus ? "activate" : "deactivate"} the project.`
-        });
+  }).onOk(async () => {
+    try {
+      activeRowId.value = row.id;
+
+      await projectService.updateProjectColor(row.id, payload);
+
+      notifySuccess({
+        message: `Project has been ${newIsArchived ? "archived" : "unarchived"} successfully.`
       });
+
+      refreshProjectList();
+    } catch (error) {
+      const msg = `Failed to ${newIsArchived ? "archive" : "unarchive"} the project.`;
+      sendError(msg, error);
+    } finally {
+      activeRowId.value = null;
+    }
   });
 };
 

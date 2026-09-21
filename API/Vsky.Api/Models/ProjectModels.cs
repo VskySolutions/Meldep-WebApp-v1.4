@@ -42,6 +42,7 @@ namespace Vsky.Api.Models
 
 
         public bool Active { get; set; }
+        public bool IsArchived { get; set; }
         public bool editing { get; set; }
 
 

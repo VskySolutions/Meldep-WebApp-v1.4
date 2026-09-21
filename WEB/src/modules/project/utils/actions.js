@@ -95,6 +95,41 @@ export const onSubmitProjectActiveInActiveToggle = (id, active, refreshProjectLi
   });
 };
 
+// Update Project Archive / Unarchive
+export const onSubmitProjectArchiveUnArchiveToggle = (
+  id,
+  isArchived,
+  refreshProjectList
+) => {
+  const newIsArchived = !isArchived;
+
+  const payload = {
+    id,
+    isArchived: newIsArchived
+  };
+
+  $q.dialog({
+    title: "Confirmation",
+    message: `Are you sure you want to ${newIsArchived ? "archive" : "unarchive"} this project?`,
+    ok: { label: "Yes", color: "primary" },
+    cancel: { label: "No", color: "negative" }
+  }).onOk(async () => {
+    try {
+      activeRowId.value = id;
+      await projectService.updateProjectColor(id, payload);
+      notifySuccess({
+        message: `Project has been ${newIsArchived ? "archived" : "unarchived"} successfully.`
+      });
+      refreshProjectList();
+    } catch (error) {
+      const msg = `Failed to ${newIsArchived ? "archive" : "unarchive"} the project.`;
+      sendError(msg, error);
+    } finally {
+      activeRowId.value = null;
+    }
+  });
+};
+
 // Update Project Status
 export const onSubmitProjectStatus = async (id, statusId, refreshProjectList) => {
   try {

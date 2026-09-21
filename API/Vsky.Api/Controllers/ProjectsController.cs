@@ -1020,6 +1020,7 @@ namespace Vsky.Api.Controllers
                         entity.PlanApproverId = !string.IsNullOrEmpty(model.PlanApproverId) ? model.PlanApproverId : null;
 
                         entity.Active = model.Active;
+                        entity.IsArchived = model.IsArchived;
                         entity.Name = model.Name;
                         entity.StartDate = model.StartDateStr != "" && model.StartDateStr != null ? DateTime.ParseExact(model.StartDateStr, "MM/dd/yyyy", null) : null;
                         entity.GoLiveDate = model.GoLiveDateStr != "" && model.GoLiveDateStr != null ? DateTime.ParseExact(model.GoLiveDateStr, "MM/dd/yyyy", null) : null;
@@ -1402,6 +1403,7 @@ namespace Vsky.Api.Controllers
                     if (model.ActiveStatus != null)
                         entity.Active = model.ActiveStatus == "Active" ? true : false;
 
+                    entity.IsArchived = model.IsArchived;
                     entity.UpdatedById = LoggedUserId;
                     entity.UpdatedOnUtc = GetDateTime;
                     _projectService.UpdateProject(entity);

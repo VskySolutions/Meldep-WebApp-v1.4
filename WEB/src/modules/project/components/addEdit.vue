@@ -183,7 +183,7 @@
                         :error-message="v$.planApproverId.$errors[0]?.$message"
                       />
                       <div class="col-12 col-sm-2 col-md-2 col-lg-2">
-                        <div class="q-mb-xs q-mt-md text-black">Active/Inactive Flag
+                        <!-- <div class="q-mb-xs q-mt-md text-black">Active/Inactive Flag
                           <q-icon
                             name="o_info"
                             size="16px"
@@ -203,6 +203,14 @@
                         <q-checkbox
                           v-model="model.active"
                           label="Active"
+                          :dense="true"
+                        />-->
+                        <div class="q-mb-xs q-mt-md text-black">
+                          Archive/Unarchive
+                        </div>
+                        <q-checkbox
+                          v-model="model.isArchived"
+                          :label="model.isArchived ? 'Archived' : 'Unarchived'"
                           :dense="true"
                         />
                       </div>
@@ -672,6 +680,7 @@ const model = ref({
   goLiveDateStr: "",
   description: "",
   active: true,
+  isArchived: false,
   employeeId: null,
   projectFiles: [],
   projectFileFlag: "edit"

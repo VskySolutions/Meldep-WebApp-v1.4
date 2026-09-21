@@ -1089,14 +1089,33 @@
                           v-if="!search.isTemplate && props.row.isEditable"
                           v-ripple
                           clickable
-                          @click="onSubmitProjectActiveInActiveToggle(props.row.id, props.row.active, refreshProjectList)"
+                          @click="onSubmitProjectArchiveUnArchiveToggle(props.row.id, props.row.isArchived, refreshProjectList)"
                         >
-                          <q-item-section avatar>
+                          <!-- <q-item-section avatar>
                             <q-icon :name="props.row.active ? 'o_block' : 'o_check_circle_outline'" :color="!props.row.active ? 'positive' : 'negative'" size="xs" />
                           </q-item-section>
-                          <q-item-section>{{ !props.row.active ? 'Set Active?' : 'Set Inactive?' }}
-                            <q-tooltip v-if="!props.row.active">Sets the project as Active, making it available and visible across the application.</q-tooltip>
+                          <q-item-section> {{ !props.row.active ? 'Set Active' : 'Set Inactive' }} -->
+                            <!-- <q-tooltip v-if="!props.row.active">Sets the project as Active, making it available and visible across the application.</q-tooltip>
                             <q-tooltip v-else>Sets the project as Inactive, hiding it from the overall application and making it unavailable to users.</q-tooltip>
+                          </q-item-section> -->
+                          <q-item-section avatar>
+                            <q-icon
+                              :name="props.row.isArchived ? 'o_unarchive' : 'o_archive'"
+                              :color="props.row.isArchived ? 'positive' : 'negative'"
+                              size="xs"
+                            />
+                          </q-item-section>
+
+                          <q-item-section>
+                            {{ props.row.isArchived ? 'Unarchive' : 'Archive' }}
+
+                            <!-- <q-tooltip v-if="props.row.isArchived">
+                              Unarchives the project, making it available across the application.
+                            </q-tooltip>
+
+                            <q-tooltip v-else>
+                              Archives the project, removing it from the active project list while keeping it available for future use.
+                            </q-tooltip> -->
                           </q-item-section>
                         </q-item>
                         <q-item
@@ -1221,6 +1240,7 @@ import {
   onSubmitProjectPinned,
   onSubmitProjectColor,
   onSubmitProjectActiveInActiveToggle,
+  onSubmitProjectArchiveUnArchiveToggle,
   onSubmitProjectStatus,
   onSubmitProjectPriority,
   onSubmitProjectDelete,
