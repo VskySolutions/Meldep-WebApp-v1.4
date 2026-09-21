@@ -65,7 +65,17 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Question Answers" no-caps class="text-primary btnRounded q-mr-xs" @click="onQuestionAnswersAdd(search.projectIds?.[0], search.requirementIds?.[0], refreshQuestionsAnswersList)" />
+                <q-btn
+                  v-if="!isViewer"
+                  icon="o_add"
+                  outline
+                  label="Add Question Answers"
+                  no-caps
+                  class="text-primary
+                  btnRounded
+                  q-mr-xs"
+                  @click="onQuestionAnswersAdd(search.projectIds?.[0], search.requirementIds?.[0], refreshQuestionsAnswersList)"
+                />
                 <!-- Reset Column Width -->
                 <q-btn
                   icon="o_refresh"
@@ -392,6 +402,8 @@ const showFilter = ref(false);
 const searchLoader = ref(false);
 const authStore = useAuthStore();
 const showSortDialog = ref(false);
+const user = authStore.user;
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const siteId = computed(() => authStore.user?.siteId);
 const highlightedId = computed(() => activeRowId.value);

@@ -163,7 +163,7 @@
               </q-menu>
               <div class="q-ml-xs">
                 <q-btn
-                  v-if="!isTHFRole"
+                  v-if="!isViewer"
                   icon="o_add"
                   outline
                   label="Create Test Case"
@@ -172,7 +172,7 @@
                   @click="onTestCaseAdd(refreshTestCaseList)"
                 />
                 <q-btn
-                  v-if="role === 'admin'"
+                  v-if="role === 'admin' && !isViewer"
                   icon="o_playlist_add"
                   outline
                   no-caps
@@ -532,7 +532,7 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
-const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 const dropdownTypes = ref([]);
 const showManageDropdownOptions = ref(false);
 const showSortDialog = ref(false);

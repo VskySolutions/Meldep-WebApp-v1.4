@@ -155,12 +155,12 @@
                 </q-card>
               </q-menu>
               <div class="q-ml-xs">
-                <q-btn v-if="!isTHFRole" icon="o_add" outline label="Create Issue" no-caps class="text-primary btnRounded" @click="onIssueAdd(refreshIssueList)" />
-                <q-btn v-if="!isTHFRole" icon="o_checklist" outline no-caps class="text-primary btnRounded q-ml-sm" :disabled="multiSelectIssueIds.length === 0" @click.stop="showMultiSelectOptions = !showMultiSelectOptions">
+                <q-btn v-if="!isViewer" icon="o_add" outline label="Create Issue" no-caps class="text-primary btnRounded" @click="onIssueAdd(refreshIssueList)" />
+                <q-btn v-if="!isViewer" icon="o_checklist" outline no-caps class="text-primary btnRounded q-ml-sm" :disabled="multiSelectIssueIds.length === 0" @click.stop="showMultiSelectOptions = !showMultiSelectOptions">
                   <q-badge v-if="multiSelectIssueIds?.length > 0" :label="multiSelectIssueIds.length" class="primary" floating />
                   <q-tooltip>Multi Actions</q-tooltip>
                 </q-btn>
-                <q-btn v-if="role === 'admin'" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
+                <q-btn v-if="role === 'admin' && !isViewer" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
                  <!-- Reset Column Width -->
@@ -231,7 +231,11 @@
             </template>
             <template #header="props">
               <q-tr :props="props" class="bg-primary text-white">
-                <q-th auto-width class="text-center" />
+                <q-th
+                  v-if="!isViewer"
+                  auto-width
+                  class="text-center"
+                />
                 <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
                 <q-th
                   v-for="col in props.cols"
@@ -267,7 +271,10 @@
                     <q-tooltip>{{ isExpanded(props.row.id) ? 'Collapse' : 'Expand' }}</q-tooltip>
                   </q-icon>
                 </q-td>
-                <q-td class="text-center">
+                <q-td
+                  v-if="!isViewer"
+                  class="text-center"
+                >
                   <q-checkbox v-model="props.row.checkboxStatus" @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.id, props.row.name, $event)" />
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('issueNumber')" class="text-right">
@@ -618,7 +625,7 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "site-super-admin", "system-super-admin", "project admin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
-const isTHFRole = user?.roles?.some(r => r?.toLowerCase() === "thf") ?? false;
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const route = useRoute();
 const processing = ref(false);

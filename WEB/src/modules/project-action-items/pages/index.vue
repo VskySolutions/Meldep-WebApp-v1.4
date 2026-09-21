@@ -118,6 +118,7 @@
               </div>
               <div class="q-ml-xs">
                 <q-btn
+                  v-if="!isViewer"
                   icon="o_add"
                   outline
                   label="Create Project Action Item"
@@ -423,6 +424,7 @@ const user = authStore.user;
 const showSortDialog = ref(false);
 const { toDate } = useFilters();
 const currentSiteId = computed(() => user?.siteId || null);
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 // Table variables
 const rows = ref([]);

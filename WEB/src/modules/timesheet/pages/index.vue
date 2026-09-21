@@ -165,8 +165,17 @@
                 </div>
               </div>
               <div class="row items-center q-gutter-sm q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Timesheet" no-caps class="text-primary btnRounded" @click="onTimesheetAdd(refreshTimesheetList)" />
                 <q-btn
+                  v-if="!isViewer"
+                  icon="o_add"
+                  outline
+                  label="Add Timesheet"
+                  no-caps
+                  class="text-primary btnRounded"
+                  @click="onTimesheetAdd(refreshTimesheetList)"
+                />
+                <q-btn
+                  v-if="!isViewer"
                   icon="o_add"
                   outline
                   label="Send to New Timesheet"
@@ -260,7 +269,9 @@
             </template>
             <template #header="props">
               <q-tr :props="props" class="bg-primary text-white">
-                <q-th></q-th>
+                <q-th
+                  v-if="!isViewer"
+                ></q-th>
                 <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
                   <q-th
                     v-for="col in props.cols"
@@ -320,7 +331,11 @@
                 :key="line.id"
                 :class="highlightedId == line.id ? 'highlight' : ''"
                 :set="(preProjectName = null, preProjectTask = null, preProjectDate = null, preProjectTaskDate = null, resetTracking())">
-                <q-td style="width: 2%;" class="text-center">
+                <q-td
+                  v-if="!isViewer"
+                  style="width: 2%;"
+                  class="text-center"
+                >
                   <q-checkbox
                     v-if="line.projectActivity?.activityStatus?.dropDownValue === 'Open' &&
                           line.projectActivity?.active &&
@@ -497,6 +512,7 @@ const shownProjects = new Set();
 const shownTasks = new Set();
 const showSortDialog = ref(false);
 const selectedProjectId = history.state?.projectId;
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 // ----------------------------------------------------------------------------------------------------------------
 // Local Storage:- DataTable and Advance Filter Values

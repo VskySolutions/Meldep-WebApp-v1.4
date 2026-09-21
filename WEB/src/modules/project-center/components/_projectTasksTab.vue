@@ -49,7 +49,7 @@
           <q-td style="width: 5%;">{{ propsTask.row.priority.dropDownValue }}</q-td>
           <!-- <q-td class="text-right" style="width: 5%;">{{ propsTask.row.totalActivityHours }}</q-td> -->
           <q-td class="text-right" style="width: 5%;">{{ propsTask.row.estimateTime }}</q-td>
-          <q-td style="width: 5%;">
+          <!-- <q-td style="width: 5%;">
             <q-select
               v-model="propsTask.row.status.id" outlined stack-label hide-bottom-space :dense="true"
               :disable="projectTaskStatusList?.find(item => item.value === propsTask.row.status.id)?.text === 'Close'"
@@ -57,6 +57,30 @@
               emit-value map-options :bg-color="getStatusColorTask(propsTask.row.status.dropDownValue)"
               @update:model-value="onSubmitTaskStatus(propsTask.row.id, propsTask.row.status.id)" @popup-show="() => handlePopupShow(propsTask.row.status.dropDownValue, propsTask.row.project.projectStatus.dropDownValue)"
             />
+          </q-td> -->
+          <q-td style="width: 5%">
+            <q-select
+              v-if="propsTask.row.isEditable"
+              v-model="propsTask.row.status.id"
+              outlined
+              stack-label
+              hide-bottom-space
+              :dense="true"
+              :disable="projectTaskStatusList?.find(item => item.value === propsTask.row.status.id)?.text === 'Close'"
+              :options="projectTaskStatusList"
+              class="task-status-list"
+              option-value="value"
+              option-label="text"
+              emit-value
+              map-options
+              :bg-color="getStatusColorTask(propsTask.row.status.dropDownValue)"
+              @update:model-value="onSubmitTaskStatus(propsTask.row.id, propsTask.row.status.id)"
+              @popup-show="() => handlePopupShow(propsTask.row.status.dropDownValue, propsTask.row.project.projectStatus.dropDownValue)"
+            />
+
+            <span v-else>
+              {{ propsTask.row.status.dropDownValue }}
+            </span>
           </q-td>
         </q-tr>
         <q-tr v-if="propsTask.pageIndex === taskRows.length - 1">
@@ -122,6 +146,7 @@ const getProjectTasks = (propsTask) => {
   projectService.getAllProjectTasksForDashboard(payloadTask).then((resp) => {
     taskRows.value = resp.data.map(task => ({
       ...task,
+      isEditable: task.project?.currentUserManage,
       activity: task.projectActivities ? task.projectActivities.map(activity => ({
         ...activity
       })) : [],
