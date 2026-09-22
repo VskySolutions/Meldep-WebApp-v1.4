@@ -34,9 +34,25 @@
           <!-- <q-td>{{ propsTestCase.row.status.dropDownValue }}</q-td> -->
           <q-td style="width: 5%;">
             <q-select
-              v-model="propsTestCase.row.status.id" outlined stack-label hide-bottom-space :dense="true" :bg-color="getStatusColorForTestCase(propsTestCase.row.status.dropDownValue)"
-              :options="testCaseStatusList" class="company-list" option-value="value" option-label="text" emit-value map-options @update:model-value="onSubmitTestCaseStatus(propsTestCase.row.id, propsTestCase.row.status.id)"
+              v-if="propsTestCase.row.isEditable && !isViewer"
+              v-model="propsTestCase.row.status.id"
+              outlined
+              stack-label
+              hide-bottom-space
+              :dense="true"
+              :bg-color="getStatusColorForTestCase(propsTestCase.row.status.dropDownValue)"
+              :options="testCaseStatusList"
+              class="company-list"
+              option-value="value"
+              option-label="text"
+              emit-value
+              map-options
+              @update:model-value="onSubmitTestCaseStatus(propsTestCase.row.id, propsTestCase.row.status.id)"
             />
+
+            <span v-else>
+              {{ propsTestCase.row.status.dropDownValue }}
+            </span>
           </q-td>
           <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 8%;">{{ propsTestCase.row.testedByEmployee.person.fullName }}</q-td>
           <q-td style="width: 5%;">{{ propsTestCase.row.createdOnUtc }}</q-td>
@@ -63,10 +79,16 @@ import projectService from "modules/project/projects.service";
 import commonService from "services/common.service";
 import testcasesService from "modules/test-case/testCase.service";
 import { notifySuccess } from "assets/utils";
+import { useAuthStore } from "stores/auth";
 
 const props = defineProps({ projectId: { type: String, default: "" } });
 const projectId = props.projectId;
 const loading = ref(true);
+
+const authStore = useAuthStore();
+const user = authStore.user;
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
+
 const tableRef6 = ref();
 const rowsTestCases = ref([]);
 const activeRowIdTestCases = ref(null);
@@ -84,7 +106,9 @@ const columnsTestCases = ref([
 
 const getAllTestCase = (propsTestCase) => {
   const { page, rowsPerPage, sortBy, descending } = propsTestCase.pagination;
+
   loading.value = true;
+
   const payloadTestCase = {
     page,
     pageSize: rowsPerPage,
@@ -92,13 +116,19 @@ const getAllTestCase = (propsTestCase) => {
     descending,
     projectId
   };
+
   projectService.getAllTestCasesForDashboard(payloadTestCase).then((resp) => {
-    rowsTestCases.value = resp.data;
+    rowsTestCases.value = resp.data.map(testCase => ({
+      ...testCase,
+      isEditable: testCase.project?.currentUserManage
+    }));
+
     paginationTestCases.value.page = page;
     paginationTestCases.value.rowsPerPage = rowsPerPage;
     paginationTestCases.value.sortBy = sortBy;
     paginationTestCases.value.descending = descending;
     paginationTestCases.value.rowsNumber = resp.total;
+
   }).finally(() => {
     loading.value = false;
   });

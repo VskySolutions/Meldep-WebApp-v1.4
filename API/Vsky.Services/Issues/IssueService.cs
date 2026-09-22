@@ -329,10 +329,22 @@ namespace Vsky.Services.Issues
             return list;
         }
 
-
-        public IPagedList<Issue> GetAllIssuesForDashboard(string SiteId, string projectId, string targetMonthStr, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public async Task<IPagedList<Issue>> GetAllIssuesForDashboard(
+            string SiteId,
+            string LoggedUserId,
+            string employeeId, 
+            string projectId,
+            string targetMonthStr, 
+            string sortBy, 
+            bool descending, 
+            int page = 1, 
+            int pageSize = int.MaxValue, 
+            bool lookup = false
+        )
         {
             var query = _issueRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.ProjectId == projectId);
+
+            bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
@@ -410,7 +422,25 @@ namespace Vsky.Services.Issues
                 Project = new Project
                 {
                     Id = x.Project.Id,
-                    Name = x.Project.Name
+                    Name = x.Project.Name,
+                    CurrentUserManage =
+                    IsAdmin ||
+                    x.Project.CreatedById == LoggedUserId ||
+                    x.CreatedById == LoggedUserId ||
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                 r.SitesProjectRoles.MasterProjectRoles.Name == "Software Tester" ||
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess)))
                 },
                 ProjectModule = new ProjectModule
                 {

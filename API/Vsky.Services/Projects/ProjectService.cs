@@ -447,6 +447,37 @@ namespace Vsky.Services.Projects
                 CompanyContactId = x.CompanyContactId,
                 Active = x.Active,
                 CreatedById = x.CreatedById,
+                CurrentUserManage =
+                    isAdmin ||
+                    x.CreatedById == userId ||
+                    x.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess))),
+                CurrentUserNotes =
+                    isAdmin ||
+                    x.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.Notes))),
                 ProjectStatus = new DropDown { Id = x.ProjectStatus.Id, DropDownValue = x.ProjectStatus.DropDownValue },
                 TotalTaskCount = x.ProjectTasks.Count(m => !m.Deleted && !m.IsMoved && !m.ProjectModule.Deleted && !m.Project.Deleted),
                 ProjectNotesCount = _notesRepository.TableNoTracking.Count(m => !m.Deleted && m.SubModuleId == x.Id && m.Type == "Projects")

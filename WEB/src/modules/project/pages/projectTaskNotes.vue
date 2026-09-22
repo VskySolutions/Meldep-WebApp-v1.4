@@ -124,11 +124,11 @@
                     :key="col.name"
                   >
                     {{ col.label }}
-                    <!-- Sort icon only --> 
+                    <!-- Sort icon only -->
                     <q-icon
-                      v-if="col.sortable" 
-                      :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                      size="16px" 
+                      v-if="col.sortable"
+                      :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                      size="16px"
                       class="cursor-pointer q-ml-sm"
                       @click.stop="sortProjectColumn(col)"
                     >
@@ -268,11 +268,11 @@
                     :key="col.name"
                   >
                     {{ col.label }}
-                    <!-- Sort icon only --> 
+                    <!-- Sort icon only -->
                     <q-icon
-                      v-if="col.sortable" 
-                      :name=" paginationTasks.sortBy === col.name ? (paginationTasks.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                      size="16px" 
+                      v-if="col.sortable"
+                      :name=" paginationTasks.sortBy === col.name ? (paginationTasks.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                      size="16px"
                       class="cursor-pointer q-ml-sm"
                       @click.stop="sortProjectTaskColumn(col)"
                     >
@@ -435,7 +435,7 @@
                 </div>
               </div>
               <!-- Footer -->
-              <div class="bg-white" style="position: sticky; bottom: 0; z-index: 10; border-top: 0px solid #ccc;">
+              <div v-if="(isEditable || isNotesAccess) && !isViewer" class="bg-white" style="position: sticky; bottom: 0; z-index: 10; border-top: 0px solid #ccc;">
                 <div v-if="!!activeProjectName || !!activeTaskName" class="row items-center no-wrap">
                   <div class="col-11">
                     <q-editor
@@ -518,6 +518,7 @@ const storedUser = user?.username;
 const selectedProjectId = history.state?.projectId ?? null;
 const $q = useQuasar();
 const { fonts, toolbar } = getEditorConfig($q);
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 // projects
 const showFilter = ref(false);
@@ -609,7 +610,11 @@ const getProjects = async (props) => {
   const { page, rowsPerPage, sortBy, descending } = props.pagination;
   const payload = { page, pageSize: rowsPerPage, sortBy, descending, ...search.value };
   const resp = await projectService.getAllProjectsForNotes(payload);
-  rows.value = resp.data || [];
+  rows.value = resp.data.map(project => ({
+    ...project,
+    isEditable: project.currentUserManage,
+    isNotesAccess: project.currentUserNotes
+  }));
 
   pagination.value = {
     ...pagination.value,
@@ -651,10 +656,10 @@ const sortProjectColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
-  } 
+  }
   refreshProjectList();
 };
 
@@ -665,10 +670,10 @@ const sortProjectTaskColumn = (col) => {
     paginationTasks.value.descending = !paginationTasks.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       paginationTasks.value.sortBy = col.name;
       paginationTasks.value.descending = false;
-  } 
+  }
   refreshProjectTaskList();
 };
 
@@ -917,6 +922,18 @@ const extractMentionedUsers = (text) => {
   }).map(emp => emp.value);
 };
 
+const activeProject = computed(() =>
+  rows.value.find(p => p.id === activeProjectId.value)
+);
+
+const isEditable = computed(() =>
+  !!activeProject.value?.isEditable
+);
+
+const isNotesAccess = computed(() =>
+  !!activeProject.value?.isNotesAccess
+);
+
 // save note
 const sendNote = async (note = null) => {
   // Prevent double submit
@@ -1139,19 +1156,22 @@ const getProjectTasks = async (props) => {
 
     saveTaskState({
       search: searchTaskModule.value,
-
       pagination: paginationTasks.value,
-
       activeTaskId: activeTaskId.value,
       activeTaskName: activeTaskName.value
     });
 
-    const activeProject = rows.value.find(
-      p => p.id === activeProjectId.value
-    );
+    // const activeProject = rows.value.find(
+    //   p => p.id === activeProjectId.value
+    // );
 
-    if (activeProject) {
-      activeProject.totalTaskCount = resp.total;
+    // if (activeProject) {
+    //   activeProject.totalTaskCount = resp.total;
+    // }
+
+    // Update active project's task count
+    if(activeProject.value) {
+      activeProject.value.totalTaskCount = resp.total;
     }
   } finally {
     loading.value = false;

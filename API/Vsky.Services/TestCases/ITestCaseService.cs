@@ -31,7 +31,17 @@ namespace Vsky.Services.TestCases
             int pageSize = int.MaxValue,
             bool lookup = false
         );
-        IPagedList<TestCase> GetAllTestCasesForDashboard(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        Task<IPagedList<TestCase>> GetAllTestCasesForDashboard(
+            string SiteId,
+            string LoggedUserId,
+            string employeeId,
+            string projectId, 
+            string sortBy, 
+            bool descending, 
+            int page = 1, 
+            int pageSize = int.MaxValue, 
+            bool lookup = false
+        );
         #endregion
 
         #region GetTestCaseById

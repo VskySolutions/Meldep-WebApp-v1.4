@@ -304,7 +304,7 @@
                 :props="props"
                 :class="activeRowId == props.row.id ? 'highlight' : ''"
               >
-                <q-td :colspan="totalVisibleColumns - 1" style="background: #dbf2ff;" class="text-center">{{ toDate(props.row.timesheetDate) }}</q-td>
+                <q-td :colspan="totalVisibleColumns - (!isViewer ? 1 : 2)" style="background: #dbf2ff;" class="text-center">{{ toDate(props.row.timesheetDate) }}</q-td>
                 <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
                   <q-icon
                     v-if="props.row.isActionVisible && storedUser.username === props.row.user.userName"
@@ -412,13 +412,13 @@
                 </q-td>
               </q-tr>
               <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                <q-td :colspan="totalVisibleColumns - 1" class="text-right">Total:</q-td>
+                <q-td :colspan="totalVisibleColumns - (!isViewer ? 1 : 2)" class="text-right">Total:</q-td>
                 <q-td class="text-right">
                   {{ calculateLineTotal(props.row.timesheetLines) }}
                 </q-td>
               </q-tr>
               <q-tr v-if="props.pageIndex === rows.length - 1">
-                <q-td :colspan="totalVisibleColumns - 1" class="text-right">Total Hours:</q-td>
+                <q-td :colspan="totalVisibleColumns - (!isViewer ? 1 : 2)" class="text-right">Total Hours:</q-td>
                 <q-td class="text-right">
                   {{ calculateGrandTotal(rows) }}
                 </q-td>

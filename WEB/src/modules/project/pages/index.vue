@@ -377,7 +377,7 @@
                     <span v-if="props.row.showCustomerName" class="hoverable-cell" @click="setActiveRowIdInLocalStorage(props.row.id); onCustomerView(props.row.customer.id)">
                       {{ props.row.customer.name }}
                     </span>
-                    <div class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
+                    <div v-if="props.row.isEditable" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
                       <q-icon
                         v-if="props.row.showCustomerName && !search.isTemplate"
                         name="o_edit"

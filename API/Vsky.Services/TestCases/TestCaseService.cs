@@ -332,9 +332,21 @@ namespace Vsky.Services.TestCases
             return list;
         }
 
-        public IPagedList<TestCase> GetAllTestCasesForDashboard(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        public async Task<IPagedList<TestCase>> GetAllTestCasesForDashboard(
+            string SiteId, 
+            string LoggedUserId, 
+            string employeeId, 
+            string projectId, 
+            string sortBy, 
+            bool descending, 
+            int page = 1, 
+            int pageSize = int.MaxValue, 
+            bool lookup = false
+        )
         {
             var query = _testCaseRepository.TableNoTracking.Where(x => !x.Deleted && !x.TestPlan.Deleted && x.SiteId == SiteId && x.ProjectId == projectId);
+
+            bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
@@ -380,7 +392,25 @@ namespace Vsky.Services.TestCases
                 Project = new Project
                 {
                     Id = x.Project.Id,
-                    Name = x.Project.Name
+                    Name = x.Project.Name,
+                    CurrentUserManage =
+                    IsAdmin ||
+                    x.Project.CreatedById == LoggedUserId ||
+                    x.CreatedById == LoggedUserId ||
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                 r.SitesProjectRoles.MasterProjectRoles.Name == "Software Tester" ||
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess)))
                 },
                 Status = new DropDown
                 {

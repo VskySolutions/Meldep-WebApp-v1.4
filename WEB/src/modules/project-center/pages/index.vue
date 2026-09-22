@@ -14,7 +14,16 @@
       </q-card-section>
       <!-- Chat Popup Button -->
       <div>
-        <q-btn round color="primary" class="projectchatbox q-mr-sm" @click="toggleProjectChatBox(projectId)"> <i class="fa-brands fa-facebook-messenger" /><q-tooltip>Message</q-tooltip></q-btn>
+        <q-btn
+          v-if="!isViewer"
+          round
+          color="primary"
+          class="projectchatbox q-mr-sm"
+          @click="toggleProjectChatBox(projectId)"
+        >
+          <i class="fa-brands fa-facebook-messenger" />
+          <q-tooltip>Message</q-tooltip>
+        </q-btn>
         <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-mr-lg no-space-between" @click="$router.back()" />
       </div>
     </q-card>
@@ -275,20 +284,28 @@
                         <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">{{ propsRequirements.row.title }}</q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
+                            v-if="propsRequirements.row.isEditable && !isViewer"
                             v-model="propsRequirements.row.status.id"
                             :options="requirementStatusDropdownSingleSelect.list.value"
                             :filter="requirementStatusDropdownSingleSelect.filter"
                             :bg-color="getStatusColorRequirement(propsRequirements.row.status.dropDownValue)"
                             @update:model-value="onSubmitRequirementStatus(propsRequirements.row.id, propsRequirements.row.status.id, refreshRequirementList, refreshRequirementStatusDropdown)"
                           />
+                          <span v-else>
+                            {{ propsRequirements.row.status.dropDownValue }}
+                          </span>
                         </q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
+                            v-if="propsRequirements.row.isEditable && !isViewer"
                             v-model="propsRequirements.row.priority.id"
                             :options="requirementPriorityDropdownSingleSelect.list.value"
                             :filter="requirementPriorityDropdownSingleSelect.filter"
                             @update:model-value="onSubmitRequirementPriority(propsRequirements.row.id, propsRequirements.row.priority.id, refreshRequirementList, refreshRequirementPriorityDropdown)"
                           />
+                          <span v-else>
+                            {{ propsRequirements.row.priority.dropDownValue }}
+                          </span>
                         </q-td>
                         <q-td style="width: 5%;">{{ propsRequirements.row.userType.dropDownValue }}</q-td>
                         <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 8%;">{{ propsRequirements.row.userType.dropDownValue === 'Customer' ? (propsRequirements.row.customer && propsRequirements.row.customer.fullName ? propsRequirements.row.customer.fullName : 'N/A') : (propsRequirements.row.employee && propsRequirements.row.employee.person && propsRequirements.row.employee.person.fullName ? propsRequirements.row.employee.person.fullName : 'N/A') }}</q-td>
@@ -327,12 +344,16 @@
                         <q-td style="width: 5%;">{{ propsIssue.row.type.dropDownValue }}</q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
+                            v-if="propsIssue.row.isEditable && !isViewer"
                             v-model="propsIssue.row.status.id"
                             :options="issueStatusDropdownSingleSelect.list.value"
                             :filter="issueStatusDropdownSingleSelect.filter"
                             :bg-color="getIssueStatusColor(propsIssue.row.status.dropDownValue)"
                             @update:model-value="onSubmitIssueStatus(propsIssue.row.id, propsIssue.row.status.id, refreshIssueList)"
                           />
+                          <span v-else>
+                            {{ propsIssue.row.status.dropDownValue }}
+                          </span>
                         </q-td>
                         <q-td style="width: 8%;">{{ propsIssue.row.employee.person.fullName }}</q-td>
                         <q-td style="width: 8%;">{{ propsIssue.row.reportedBy.person.fullName }}</q-td>
@@ -433,6 +454,7 @@ const authStore = useAuthStore();
 const user = authStore.user;
 const adminRoles = ["admin", "infrastructureadmin"];
 const role = user?.roles?.some(r => adminRoles.includes(r)) ? "admin" : "";
+const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const $q = useQuasar();
 const selectedProjectId = history.state?.projectId;
@@ -699,7 +721,10 @@ const getAllIssue = (propsIssue) => {
     projectId
   };
   projectService.getAllIssuesForDashboard(payloadIssue).then((resp) => {
-    rowsIssue.value = resp.data;
+    rowsIssue.value = resp.data.map(issue => ({
+      ...issue,
+      isEditable: issue.project?.currentUserManage
+    }));
     paginationIssue.value.page = page;
     paginationIssue.value.rowsPerPage = rowsPerPage;
     paginationIssue.value.sortBy = sortBy;
@@ -754,7 +779,11 @@ const getAllRequirement = (propsRequirements) => {
     projectId
   };
   projectService.getAllRequirementsForDashboard(payloadRequirementGroup).then((resp) => {
-    rowsRequirements.value = resp.data;
+    // rowsRequirements.value = resp.data;
+    rowsRequirements.value = resp.data.map(requirement => ({
+      ...requirement,
+      isEditable: requirement.project?.currentUserManage
+    }));
     paginationRequirements.value.page = page;
     paginationRequirements.value.rowsPerPage = rowsPerPage;
     paginationRequirements.value.sortBy = sortBy;

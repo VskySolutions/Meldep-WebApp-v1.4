@@ -29,7 +29,20 @@ namespace Vsky.Services.Issues
             int pageSize = int.MaxValue,
             bool lookup = false
         );
-        IPagedList<Issue> GetAllIssuesForDashboard(string SiteId, string projectId, string targetMonthStr, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+
+        Task<IPagedList<Issue>> GetAllIssuesForDashboard(
+            string SiteId,
+            string LoggedUserId,
+            string employeeId, 
+            string projectId, 
+            string targetMonthStr,
+            string sortBy, 
+            bool descending, 
+            int page = 1, 
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
+
         List<VWProjectIssueStatusSummary> GetIssueStatusSummaryByProjectIds(List<string> projectIds);
         #endregion
 

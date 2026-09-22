@@ -139,13 +139,15 @@ namespace Vsky.Api.Controllers
 
         #region GetAllIssues
         [HttpPost("issueList")]
-        public IActionResult GetAllIssuesForDashboard(IssueSearchModel searchModel)
+        public async Task<IActionResult> GetAllIssuesForDashboard(IssueSearchModel searchModel)
         {
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var list = _issueService.GetAllIssuesForDashboard(SiteId, searchModel.ProjectId, searchModel.TargetMonthStr, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+
+                var list = await _issueService.GetAllIssuesForDashboard(SiteId, LoggedUserId, employeeId, searchModel.ProjectId, searchModel.TargetMonthStr, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
                 var model = new IssueListModel
                 {
                     Data = _mapper.Map<IList<IssueModel>>(list),
@@ -244,13 +246,15 @@ namespace Vsky.Api.Controllers
         // Title: Get All TestCases
         // Description: This endpoint fetches a list of test cases based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("testCasesList")]
-        public IActionResult GetAllTestCasesForDashboard(TestCaseSearchModel searchModel)
+        public async Task<IActionResult> GetAllTestCasesForDashboard(TestCaseSearchModel searchModel)
         {
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var list = _testCaseService.GetAllTestCasesForDashboard(SiteId, searchModel.ProjectId, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+
+                var list = await _testCaseService.GetAllTestCasesForDashboard(SiteId, LoggedUserId, employeeId, searchModel.ProjectId, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
                 
                 var model = new TestCaseListModel
                 {
@@ -298,13 +302,24 @@ namespace Vsky.Api.Controllers
         // Title: Get All Requirements
         // Description: This endpoint fetches a list of Requirements based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("requirementList")]
-        public IActionResult GetAllRequirementsForDashboard(RequirementSearchModel searchModel)
+        public async Task<IActionResult> GetAllRequirementsForDashboard(RequirementSearchModel searchModel)
         {
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var list = _requirementService.GetAllRequirementsForDashboard(SiteId, searchModel.ProjectId, searchModel.SortBy, searchModel.Descending, searchModel.Page, searchModel.PageSize);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+
+                var list = await _requirementService.GetAllRequirementsForDashboard(
+                    SiteId,
+                    LoggedUserId,
+                    employeeId,
+                    searchModel.ProjectId, 
+                    searchModel.SortBy, 
+                    searchModel.Descending, 
+                    searchModel.Page, 
+                    searchModel.PageSize
+                );
 
                 var model = new RequirementListModel
                 {

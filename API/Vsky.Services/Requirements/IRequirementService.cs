@@ -34,7 +34,17 @@ namespace Vsky.Services.Requirements
             int pageSize = int.MaxValue,
             bool lookup = false
         );
-        IPagedList<Requirement> GetAllRequirementsForDashboard(string SiteId, string projectId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
+        Task<IPagedList<Requirement>> GetAllRequirementsForDashboard(
+            string SiteId,
+            string LoggedUserId,
+            string employeeId,
+            string projectId,
+            string sortBy,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
         #endregion
 
         #region GetAllRequirementListForDropdown
