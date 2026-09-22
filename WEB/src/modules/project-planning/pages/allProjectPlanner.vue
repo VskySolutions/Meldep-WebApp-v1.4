@@ -1237,7 +1237,7 @@
                                               v-if="getProjectDetail(selectedProjectId)?.isEditable"
                                               v-ripple
                                               clickable
-                                              @click="onRequirementEdit(props.row.id, refreshRequirementList)"
+                                              @click="onRequirementEdit(props.row.id, false, refreshRequirementList)"
                                             >
                                               <q-item-section avatar>
                                                 <q-icon

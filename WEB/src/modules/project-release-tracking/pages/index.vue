@@ -213,7 +213,7 @@
                         v-if="props.row.isEditable"
                         name="o_developer_board"
                         size="xs"
-                        class="cursor-pointer"
+                        class="cursor-pointer hidden"
                         @click="
                           setActiveRowIdInLocalStorage(props.row.id);
                           $router.push({

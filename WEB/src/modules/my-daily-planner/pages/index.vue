@@ -276,7 +276,7 @@
                       </q-icon>
                       <q-icon
                         name="o_developer_board" size="xs"
-                        class="cursor-pointer"
+                        class="cursor-pointer hidden"
                         @click="setActiveRowIdInLocalStorage(line.id);
                                 $router.push({ path: '/project-planning/workboard', state: {projectId: line.project.id } })"
                       >

@@ -122,6 +122,8 @@
                     label="Tested By"
                     :options="activeEmployeesDropdownSingleSelect.list.value"
                     :filter="activeEmployeesDropdownSingleSelect.filter"
+                    :error="v$.testedBy.$error"
+                    :error-message="v$.testedBy.$errors[0]?.$message"
                   />
                 </div>
                 <div class="col-12 col-sm-4 col-md-4">
@@ -317,6 +319,7 @@ const rules = {
   requirementId: { required: helpers.withMessage("Requirement is required", required) },
   planId: { required: helpers.withMessage("Test plan is required", required) },
   name: { required: helpers.withMessage("Name is required", required), minLength: minLength(1), maxLength: maxLength(200) },
+  testedBy: { required: helpers.withMessage("Tested By is required", required) },
   testedDateStr: {
     isDate: helpers.withMessage("Date is invalid", isDate)
   }

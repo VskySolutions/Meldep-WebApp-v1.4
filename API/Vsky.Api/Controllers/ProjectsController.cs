@@ -2726,6 +2726,8 @@ namespace Vsky.Api.Controllers
                     if (exists != null)
                         return BadRequest(new BadRequestError("Project name already exists, try with another."));
 
+                    var projectDetails = await _projectService.GetById(module.ProjectId);
+
                     var StatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Project Status", "New");
                     var PriorityId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Project Priorities", "Medium");
 
@@ -2738,6 +2740,7 @@ namespace Vsky.Api.Controllers
                     projectEntity.StartDate = module.StartDate;
                     projectEntity.ProjectStatusId = StatusId;
                     projectEntity.ProjectPriorityId = PriorityId;
+                    projectEntity.ProjectTypeId = projectDetails.ProjectTypeId;
                     projectEntity.Active = true;
 
                     if (!string.IsNullOrEmpty(module.Description))

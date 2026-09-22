@@ -542,6 +542,7 @@ function getAllProjectListForDropdown () {
     if (model.value.projectId) {
       getProject(model.value.projectId);
     }
+    console.log(responseData);
   });
 }
 
@@ -837,6 +838,7 @@ const onSubmit = async () => {
     }
     if (await v$.value.$validate()) {
       processing.value = true;
+      console.log(model.value);
       await adPostService.saveAdPost(props.id, model.value);
       notifySuccess({ message: "Ad is saved successfully." });
       onDialogOK();

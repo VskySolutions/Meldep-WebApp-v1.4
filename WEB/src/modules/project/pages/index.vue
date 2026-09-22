@@ -420,7 +420,7 @@
                         v-if="props.row.isEditable && !search.isTemplate"
                         name="o_developer_board"
                         size="xs"
-                        class="cursor-pointer"
+                        class="cursor-pointer hidden"
                         @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/project-planning/workboard', state: { projectId: props.row.id } })"
                       >
                         <q-tooltip>Work Board</q-tooltip>
