@@ -115,6 +115,7 @@ public class Project : BaseEntity
     public virtual ICollection<ProjectPinned> ProjectPinned { get; set; } = new List<ProjectPinned>();
     public virtual ICollection<ProjectColor> ProjectColors { get; set; } = new List<ProjectColor>();
     public virtual ICollection<ProjectFiles> ProjectFileList { get; set; } = new List<ProjectFiles>();
+    //public virtual ICollection<Picture> FilePathList { get; set; } = new List<Picture>();
     public virtual ICollection<ProjectsMessages> ProjectsMessages { get; set; } = new List<ProjectsMessages>();
 
     // Primary DataFlow - Project

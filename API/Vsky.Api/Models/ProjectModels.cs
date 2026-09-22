@@ -116,6 +116,7 @@ namespace Vsky.Api.Models
         public virtual ICollection<ProjectActivityModel> ProjectActivities { get; set; } = new List<ProjectActivityModel>();
         public virtual ICollection<ProjectEmployeeMappingModel> ProjectEmployeeMappings { get; set; } = new List<ProjectEmployeeMappingModel>();
         public virtual ICollection<ProjectFilesModel> ProjectFileList { get; set; } = new List<ProjectFilesModel>();
+        public virtual ICollection<PicturesModel> FilePathModelList { get; set; } = new List<PicturesModel>();
         public virtual ICollection<ProjectTaskModel> ProjectTasks { get; set; } = new List<ProjectTaskModel>();
         public virtual ICollection<ProjectModuleModel> ProjectModules { get; set; } = new List<ProjectModuleModel>();
         public virtual ICollection<ProjectsMessagesModel> ProjectsMessages { get; set; } = new List<ProjectsMessagesModel>();
@@ -131,7 +132,6 @@ namespace Vsky.Api.Models
         public ICollection<InfraProjectServices> InfraProjectServices { get; set; }
         public IEnumerable<ProjectWeeklyPlanModel> WeeklyPlan { get; set; }
         public IEnumerable<ProjectWeeklyPlanModel> MonthlyPlan { get; set; }
-
     }
 
     public record ProjectSearchModel : BaseSearchModel

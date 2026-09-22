@@ -3,7 +3,8 @@ using Vsky.Core;
 
 namespace Vsky.Models;
 
-public class ProjectFiles : BaseEntity
+public class 
+    ProjectFiles : BaseEntity
 {
     public string ProjectId { get; set; }
     public string FileId { get; set; }

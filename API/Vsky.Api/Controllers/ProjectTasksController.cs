@@ -1176,6 +1176,10 @@ namespace Vsky.Api.Controllers
                                 if (existsActivity != null)
                                     continue;
 
+                                //Activity Type
+                                var type = await _dropDownTypeService.GetDropDownTypeByType(SiteId, "Project Activities");
+                                var activityType = await _dropDownService.GetDropDownByTypeAndValue(SiteId, type.Id, "Engineering");
+
                                 ProjectActivity projectActivity = new ProjectActivity();
 
                                 projectActivity.Id = Guid.NewGuid().ToString();
@@ -1183,7 +1187,7 @@ namespace Vsky.Api.Controllers
                                 projectActivity.ProjectId = model.ProjectId;
                                 projectActivity.ProjectModuleId = model.ProjectModuleId;
                                 projectActivity.TaskId = id;
-                                projectActivity.Name = activity.Name;
+                                projectActivity.Name = activityType.DropDownValue;
                                 projectActivity.AssignedToId = activity.AssignedToId;
                                 projectActivity.EstimateHours = activity.EstimateHours;
                                 projectActivity.Active = true;

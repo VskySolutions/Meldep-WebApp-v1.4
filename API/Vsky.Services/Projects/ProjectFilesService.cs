@@ -61,19 +61,22 @@ namespace Vsky.Services.Projects
         #region GetAllProjectFileByProjectId
         public async Task<List<ProjectFiles>> GetAllProjectFileByProjectId(string siteId, string projectId)
         {
-            var query = _projectFilesRepository.TableNoTracking.Where(x => !x.Deleted && x.ProjectId == projectId && x.Project.SiteId == siteId);
+            var query = _projectFilesRepository.TableNoTracking.Where(x => !x.Deleted && x.ProjectId == projectId && x.Project.SiteId == siteId && x.File != null);
             query = query.Select(x => new ProjectFiles
             {
                 Id = x.Id,
                 FileId = x.FileId,
                 ProjectId = x.ProjectId,
-                File = new Picture
-                {
-                    Id = x.File.Id,
-                    VirtualPath = x.File.VirtualPath,
-                    MimeType = x.File.MimeType,
-                    SeoFilename = x.File.SeoFilename
-                }
+                //File = new Picture
+                //{
+                //    Id = x.File.Id,
+                //    VirtualPath = x.File.VirtualPath,
+                //    MimeType = x.File.MimeType,
+                //    SeoFilename = x.File.SeoFilename,
+                //    ExternalFileName = x.File.ExternalFileName,
+                //    ExternalFilePath = x.File.ExternalFilePath,
+                //    ExternalFileDescription = x.File.ExternalFileDescription
+                //}
             });
 
             var list = await query.ToListAsync();

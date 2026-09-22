@@ -887,6 +887,10 @@ namespace Vsky.Api.Controllers
                 var status = await _dropDownTypeService.GetDropDownTypeByType(SiteId, "Activity Status");
                 var activityStatus = await _dropDownService.GetDropDownByTypeAndValue(SiteId, status.Id, "Open");
 
+                //Activity Type
+                var type = await _dropDownTypeService.GetDropDownTypeByType(SiteId, "Project Activities");
+                var activityType = await _dropDownService.GetDropDownByTypeAndValue(SiteId, type.Id, "Engineering");
+
                 foreach (var activity in model.ProjectActivityModel)
                 {
                     if (activity.Flag != "Delete")
@@ -901,6 +905,7 @@ namespace Vsky.Api.Controllers
                         activityEntity.ProjectModuleId = model.ProjectModuleId;
                         activityEntity.TaskId = model.TaskId;
                         activityEntity.ActivityStatusId = activityStatus.Id;
+                        activityEntity.Name = activityType.DropDownValue;
 
                         // Set custom properties
                         if (activity.StartDateStr != "" && activity.StartDateStr != null)

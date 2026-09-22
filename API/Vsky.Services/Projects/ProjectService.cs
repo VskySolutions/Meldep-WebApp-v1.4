@@ -711,6 +711,13 @@ namespace Vsky.Services.Projects
                         FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                     }
                 },
+                //FilePathList = x.FilePathList.Where(x => !x.Deleted).Select(p => new Picture
+                //{
+                //    Id = p.Id,
+                //    FileName = p.FileName,
+                //    FilePath = p.FilePath,
+                //    Note = p.Note
+                //}).ToList(),
                 ProjectEmployeeMappings = x.ProjectEmployeeMappings
                 .Where(mapping => !mapping.Deleted)
                 .Select(mapping => new ProjectEmployeeMapping
@@ -824,7 +831,10 @@ namespace Vsky.Services.Projects
                         Id = mapping.File.Id,
                         VirtualPath = mapping.File.VirtualPath,
                         MimeType = mapping.File.MimeType,
-                        SeoFilename = mapping.File.SeoFilename
+                        SeoFilename = mapping.File.SeoFilename,
+                        ExternalFileName = mapping.File.ExternalFileName,
+                        ExternalFilePath = mapping.File.ExternalFilePath,
+                        ExternalFileDescription = mapping.File.ExternalFileDescription
                     }
                 }).ToList(),
                 InfraProjectServices = x.InfraProjectServices.Where(m => !m.Deleted).Select(m => new InfraProjectServices
