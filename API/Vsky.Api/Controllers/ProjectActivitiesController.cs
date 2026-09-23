@@ -161,6 +161,7 @@ namespace Vsky.Api.Controllers
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
                 var SiteData = await _siteService.GetById(SiteId);
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
                 //var createdBy = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
@@ -177,6 +178,7 @@ namespace Vsky.Api.Controllers
                 // Fetch a list of project activities  based on search criteria
                 var list = await _activityService.GetAllProjectActivitiesForExpandCollapse(SiteId,
                     LoggedUserId,
+                    employeeId,
                     createdBy,
                     searchModel.SearchText,
                     searchModel.ProjectTaskNumber,

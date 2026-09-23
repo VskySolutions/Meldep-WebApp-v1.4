@@ -560,7 +560,7 @@ function onClearFilters (key) {
   if (key === "User Status") {
     search.value.userStatus = null;
   } else if (key === "User Name") {
-    search.value.userName = [];
+    search.value.userName = "";
   } else if (key === "Full Name") {
     search.value.fullName = "";
   } else if (key === "Email") {

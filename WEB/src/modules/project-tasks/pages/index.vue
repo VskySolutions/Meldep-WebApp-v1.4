@@ -185,11 +185,18 @@
                   outline
                   no-caps
                   class="text-primary btnRounded q-ml-xs"
-                  :disabled="multiSelectTaskIds.length === 0"
+                  :disabled="multiSelectTaskIds.length === 0 ||
+                  hasNonEditableSelectedTask"
                   @click.stop="showMultiSelectOptions = !showMultiSelectOptions"
                 >
                   <q-badge v-if="multiSelectTaskIds?.length > 0" :label="multiSelectTaskIds.length" class="primary" floating />
-                  <q-tooltip>Multi Actions</q-tooltip>
+                  <q-tooltip>
+                    {{
+                      hasNonEditableSelectedTask
+                        ? 'Some selected tasks have only view permission.'
+                        : 'Multi Actions'
+                    }}
+                  </q-tooltip>
                 </q-btn>
                 <!-- Admin:- Manage All Dropdowns -->
                 <q-btn
@@ -321,7 +328,17 @@
                 <q-td v-if="!isViewer" class="text-center">
                   <q-checkbox
                     v-model="props.row.checkboxStatus"
-                    @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.project.projectStatus.dropDownValue, props.row.id, props.row.name,$event)"
+                    @update:model-value="
+                      onSelectCheckbox(
+                        props.row.project.id,
+                        props.row.project.name,
+                        props.row.project.projectStatus.dropDownValue,
+                        props.row.id,
+                        props.row.name,
+                        $event,
+                        props.row.isEditable
+                      )
+                    "
                   />
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;">
@@ -515,6 +532,7 @@
                     v-model="props.row.assignedToId"
                     class="small-popup-title"
                     style="width: 270px;"
+                    @show="loadProjectEmployees(props.row.projectId)"
                     @save="val => { props.row.assignedToId = val; onSubmitProjectTaskOwner(props.row.id, val, refreshProjectTaskList); }"
                   >
                     <div class="row justify-between items-center">
@@ -523,7 +541,7 @@
                     </div>
                     <q-select
                       v-model="scope.value"
-                      :options="activeEmployeesDropdown.list.value"
+                      :options="projectEmployeeDropdownSingleSelect.list.value"
                       use-input
                       style="width: 100%;"
                       use-chips
@@ -535,7 +553,7 @@
                       option-value="value"
                       option-label="text"
                       dropdown-icon="o_arrow_drop_down"
-                      @filter="activeEmployeesDropdown.filter"
+                      @filter="projectEmployeeDropdownSingleSelect.filter"
                     />
                     <div class="row justify-end q-gutter-sm q-mt-sm">
                       <q-btn v-close-popup label="Cancel" color="grey" flat dense />
@@ -958,6 +976,7 @@ const manageDropDownTypes = ref([]);
 const showManageDropdownOptions = ref(false);
 const showSortDialog = ref(false);
 const siteId = computed(() => authStore.user?.siteId);
+const multiSelectTaskEditableMap = ref({});
 
 // ----------------------------------------------------------------------------------------------------------------
 // Local Storage:- DataTable and Advance Filter Values
@@ -1258,6 +1277,11 @@ function onHandleProjectTaskLevelTimeSheetView (id) {
   }
 }
 
+const loadProjectEmployees = (projectId) => {
+  if (!projectId) return;
+
+  projectEmployeeDropdownSingleSelect.load(projectId);
+};
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Columns
 // ----------------------------------------------------------------------------------------------------------------
@@ -1414,7 +1438,7 @@ const multiSelectTaskIds = ref([]);
 const multiSelectTaskNames = ref([]);
 const multiSelectTaskStatusMap = ref({});
 
-const onSelectCheckbox = (projectId, projectName, projectStatus, taskId, taskName, flag) => {
+const onSelectCheckbox = (projectId, projectName, projectStatus, taskId, taskName, flag, isEditable) => {
   if (flag === true) {
     if (!multiSelectTaskIds.value.includes(taskId)) {
       // Add the taskId to the multiSelectTaskIds array if it's not already present
@@ -1422,6 +1446,9 @@ const onSelectCheckbox = (projectId, projectName, projectStatus, taskId, taskNam
       multiSelectTaskNames.value.push(taskName);
       multiSelectTaskStatusMap.value[taskId] = projectStatus;
       multiSelectTaskProjectMap.value[taskId] = projectId;
+
+      // Store edit permission for each selected task
+      multiSelectTaskEditableMap.value[taskId] = isEditable === true;
 
       // Add projectId only if not already present
       if (!multiSelectProjectIds.value.includes(projectId)) {
@@ -1440,6 +1467,7 @@ const onSelectCheckbox = (projectId, projectName, projectStatus, taskId, taskNam
     }
     delete multiSelectTaskStatusMap.value[taskId];
     delete multiSelectTaskProjectMap.value[taskId];
+    delete multiSelectTaskEditableMap.value[taskId];
 
     // If no other selected task belongs to that project, remove the projectId
     const stillHasTaskForProject = Object.values(multiSelectTaskProjectMap.value).some(pid => pid === removedProjectId);
@@ -1453,6 +1481,12 @@ const onSelectCheckbox = (projectId, projectName, projectStatus, taskId, taskNam
   localStorage.setItem("selectedTaskIds", JSON.stringify(multiSelectTaskIds.value));
 };
 
+const hasNonEditableSelectedTask = computed(() => {
+  return multiSelectTaskIds.value.some(
+    id => multiSelectTaskEditableMap.value[id] !== true
+  );
+});
+
 const selectedFieldOptions = [
   { label: "Link Task To Plan", value: "linkToPlan", icon: "o_calendar_view_week" },
   { label: "Change Status", value: "Status", icon: "o_flag" },
@@ -1461,6 +1495,17 @@ const selectedFieldOptions = [
 ];
 
 const onSelectMultiOptions = () => {
+  // Block actions if any selected task is not editable
+  if (hasNonEditableSelectedTask.value) {
+    notifyWarning({
+      message: "Some selected tasks have only view permission."
+    });
+
+    selectedField.value = null;
+    showMultiSelectOptions.value = false;
+
+    return;
+  }
   const selectedTasks = rows.value.filter(task => multiSelectTaskIds.value.includes(task.id));
 
   // check if any selected task is not manage permission
@@ -1648,7 +1693,7 @@ function getFilterCount (key) {
 // Advance Filter:- Initialization Of All DropDowns
 // ----------------------------------------------------------------------------------------------------------------
 
-const { projectNameDropdown } = projectModule();
+const { projectNameDropdown, projectEmployeeDropdownSingleSelect } = projectModule();
 const { projectModulesByProjectIdForDropdown } = projectModuleOfProjectModule();
 const { projectTasksByProjectIdAndModuleIdForDropdown, projectTaskPrioritiesForDropdown, projectTaskTagsDropdown } = projectTaskModule();
 const { activeEmployeesDropdown } = employeeModule();
@@ -1729,6 +1774,15 @@ const toggleShowAllTags = (rowId) => {
 
 watch(selectedField, (newVal) => {
   if (newVal) {
+    if (hasNonEditableSelectedTask.value) {
+      notifyWarning({
+        message: "Some selected tasks have only view permission."
+      });
+
+      selectedField.value = null;
+      showMultiSelectOptions.value = false;
+      return;
+    }
     showMultiSelectOptions.value = false;
     if (newVal === "linkToPlan") {
       if (multiSelectProjectIds.value.length > 1) {

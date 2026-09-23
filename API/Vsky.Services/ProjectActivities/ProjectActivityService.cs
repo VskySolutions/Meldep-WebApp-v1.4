@@ -299,8 +299,10 @@ namespace Vsky.Services.ProjectActivities
             return pagedList;
         }
 
-        public async Task<IPagedList<object>> GetAllProjectActivitiesForExpandCollapse(string SiteId,
+        public async Task<IPagedList<object>> GetAllProjectActivitiesForExpandCollapse(
+            string SiteId,
             string userId,
+            string employeeId,
             string createdBy,
             string SearchText,
             int projectTaskNumber,
@@ -467,7 +469,39 @@ namespace Vsky.Services.ProjectActivities
                     {
                         Id = x.Project.ProjectStatus.Id,
                         DropDownValue = x.Project.ProjectStatus.DropDownValue,
-                    }
+                    },
+
+                    CurrentUserManage =
+                    x.Project.CreatedById == userId ||
+                    x.CreatedById == userId ||
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.FullAccess))),
+
+                    CurrentUserNotes =
+                    x.Project.ProjectEmployeeMappings
+                        .Where(m =>
+                            !m.Deleted &&
+                            m.EmployeeId == employeeId)
+                        .Any(m =>
+                            m.ProjectEmployeeRoleMappings
+                                .Where(r => !r.Deleted)
+                                .Any(r =>
+                                    r.SitesProjectRoles
+                                        .SitesProjectRolesPermissions
+                                        .Any(p =>
+                                            !p.Deleted &&
+                                            p.Notes)))
                     //ProjectUserMappings = x.Project.ProjectUserMappings
                     //    .Where(m => !m.Deleted && m.ProjectId == x.Project.Id && (isAdmin || m.AspNetUserId == userId))
                     //    .Take(1).Select(m => new ProjectUserMapping

@@ -312,7 +312,9 @@
                     <q-tooltip>Project Center</q-tooltip>
                   </q-icon>
                   <q-icon
-                    v-if="!isViewer"
+                    v-if="!isViewer || props.row.activities?.some(
+                      activity => activity.isEditable === true && activity.project?.id === props.row.project?.id
+                    )"
                     name="o_developer_board" size="xs"
                     class="cursor-pointer hidden"
                     @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })"
@@ -355,7 +357,13 @@
                   <template #header="headerProps">
                     <q-tr :props="headerProps" class="bg-grey-4 text-black">
                       <q-th
-                          v-if="!isViewer" auto-width class="text-center" :class="routeName === 'project-tast-activities'? 'hidden' : ''" />
+                        v-if="!isViewer || props.row.activities?.some(
+                          activity => activity.isEditable === true && activity.project?.id === props.row.project?.id
+                        )"
+                        auto-width
+                        class="text-center"
+                        :class="routeName === 'project-tast-activities'? 'hidden' : ''"
+                      />
                       <q-th
                         v-for="col in headerProps.cols"
                         :key="col.name"
@@ -416,7 +424,7 @@
                       </q-tooltip> -->
                       <!-- Active / Checkbox -->
                       <q-td
-                        v-if="!isViewer"
+                        v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
                         class="text-center"
                         style="width: 5%;"
                       >
@@ -517,6 +525,7 @@
                       <!-- Activity Status -->
                       <q-td style="width: 5%;">
                         <q-select
+                          v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
                           v-model="activityProps.row.activityStatus.id"
                           outlined
                           stack-label
@@ -533,6 +542,10 @@
                           :disable="isClose"
                           @update:model-value="onChangeActivityStatus(activityProps.row.id, activityProps.row.activityStatus.id)"
                         />
+
+                      <span v-else>
+                        {{ activityProps.row.activityStatus.dropDownValue }}
+                      </span>
                       </q-td>
 
                       <!-- Estimate Hours -->
@@ -545,7 +558,7 @@
                       <!-- Actions -->
                       <q-td style="width: 5%;" class="text-center actions">
                         <q-icon
-                          v-if="!isViewer"
+                          v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
                           name="o_article"
                           size="xs"
                           :class="[
@@ -631,7 +644,7 @@
                           </q-tooltip>
                         </q-icon>
                         <q-icon
-                          v-if="!isViewer"
+                          v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
                           name="o_edit"
                           class="cursor-pointer q-mr-sm"
                           size="xs"
@@ -643,7 +656,7 @@
                           </q-tooltip>
                         </q-icon>
                         <q-icon
-                          v-if="!isViewer"
+                          v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
                           name="o_timer"
                           class="cursor-pointer q-mr-sm ss"
                           size="xs"
@@ -655,6 +668,7 @@
                           </q-tooltip>
                         </q-icon>
                         <a
+                          v-if="!isViewer || (isViewer && (activityProps.row.isEditable || activityProps.row.isNotes))"
                           style="position: relative;"
                           class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
                           @click="onNoteAdd(activityProps.row.id, 'project Activities', activityProps.row.project.id, activityProps.row.project.name, activityProps.row.name, '', refreshProjectTaskActivityList)"
@@ -682,7 +696,7 @@
                           <q-tooltip>Delete</q-tooltip>
                         </q-icon>
                         <q-icon
-                          v-if="!isViewer"
+                          v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
                           :name="activityProps.row.active ? 'o_block' : 'o_check_circle_outline'"
                           :color="activityProps.row.active ? 'negative' : 'positive'" class="cursor-pointer"
                           @click="onSubmitProjectTaskActivityStatus(activityProps.row, refreshProjectTaskActivityList)"
@@ -987,6 +1001,10 @@ const getProjectActivities = (props) => {
         activities: project.activities.map((activity, idx, arr) => {
           const prevActivity = arr[idx - 1];
           const hasCurrentWeek = false;
+          const currentUserManage =
+              activity.project?.currentUserManage ?? false;
+          const currentUserNotes =
+              activity.project?.currentUserNotes ?? false;
           // const taskWeeklyPlanMappings =
           //   activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList || [];
 
@@ -1006,6 +1024,8 @@ const getProjectActivities = (props) => {
             ...activity,
             description: activity.description || "",
             checkboxStatus: ActivityIds.value.includes(activity.id),
+            isEditable: currentUserManage,
+            isNotes: currentUserNotes,
             // hasCurrentWeek,
             hasCurrentWeek: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList?.some(m => isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)) || false,
             weekDates: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList
@@ -1035,6 +1055,7 @@ const getProjectActivities = (props) => {
         })
       };
     });
+    console.log(rows.value);
     Object.assign(pagination.value, {
       page,
       rowsPerPage,

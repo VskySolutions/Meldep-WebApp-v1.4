@@ -255,7 +255,8 @@
                   outline
                   no-caps
                   class="text-primary btnRounded q-ml-xs"
-                  :disabled="multiSelectRequirementIds.length === 0" @click.stop="showMultiSelectOptions = !showMultiSelectOptions"
+                  :disabled="multiSelectRequirementIds.length === 0 || hasNonEditableSelectedRequirement"
+                  @click.stop="showMultiSelectOptions = !showMultiSelectOptions"
                 >
                   <q-badge
                     v-if="multiSelectRequirementIds?.length > 0"
@@ -263,7 +264,12 @@
                     class="primary"
                     floating
                   />
-                  <q-tooltip>Multi Actions</q-tooltip>
+                  <q-tooltip>
+                    {{
+                      hasNonEditableSelectedRequirement
+                        ? 'Some selected requirements have only view permission.'
+                        : 'Multi Actions'
+                    }}</q-tooltip>
                 </q-btn>
                 <q-btn
                   v-if="role === 'admin'"
@@ -418,7 +424,7 @@
                 <q-checkbox
                   v-model="props.row.checkboxStatus"
                   size="sm"
-                  @update:model-value="onSelectCheckbox(props.row.projectId, props.row.project.name, props.row.id, props.row.title, $event)"
+                  @update:model-value="onSelectCheckbox(props.row.projectId, props.row.project.name, props.row.id, props.row.title, $event, props.row.isEditable)"
                 />
               </q-td>
               <q-td
@@ -796,6 +802,7 @@
                   </q-tooltip>
                 </q-icon>
                 <q-icon
+                  v-if="props.row.isEditable"
                   name="o_description"
                   class="cursor-pointer q-mr-sm"
                   size="xs"
@@ -872,7 +879,8 @@
                         </q-item-section>
                       </q-item>
                       <q-item
-                        v-if="props.row.isEditable" v-ripple clickable
+                        v-ripple
+                        clickable
                         @click="() => { onSubmitRequirementPinned(props.row.id, !props.row.isPinned, refreshRequirementList); }"
                       >
                         <q-item-section avatar>
@@ -919,7 +927,7 @@
 import { ref, onMounted, watch, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
-import { zwConfirmDelete, notifySuccess, notifyError } from "assets/utils";
+import { zwConfirmDelete, notifySuccess, notifyError, notifyWarning } from "assets/utils";
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
 
@@ -1035,6 +1043,7 @@ const manageDropDownTypes = ref([]);
 const { toDate } = useFilters();
 const showSortDialog = ref(false);
 const activeEdit = ref({ rowId: null, field: null });
+const multiSelectRequirementEditableMap = ref({});
 
 const highlightedId = computed(() => { return activeRowId.value; });
 
@@ -1173,6 +1182,12 @@ const getAnswerShortDescription = (htmlText) => {
     .trim();
 };
 
+const hasNonEditableSelectedRequirement = computed(() =>
+  multiSelectRequirementIds.value.some(
+    (id) => multiSelectRequirementEditableMap.value[id] !== true
+  )
+);
+
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------
@@ -1303,13 +1318,15 @@ function shouldShowIcons (projectName) {
   }
 }
 
-const onSelectCheckbox = (projectId, projectName, requirementId, requirementTitle, flag) => {
+const onSelectCheckbox = (projectId, projectName, requirementId, requirementTitle, flag, isEditable) => {
   if (flag === true) {
     if (!multiSelectRequirementIds.value.includes(requirementId)) {
       // Add the itemId to the multiSelectRequirementIds array if it's not already present
       multiSelectRequirementIds.value.push(requirementId);
       multiSelectRequirementTitles.value.push(requirementTitle);
       multiSelectRequirementProjectMap.value[requirementId] = projectId;
+
+      multiSelectRequirementEditableMap.value[requirementId] = isEditable;
 
       // Add projectId only if not already present
       if (!multiSelectProjectIds.value.includes(projectId)) {
@@ -1327,6 +1344,7 @@ const onSelectCheckbox = (projectId, projectName, requirementId, requirementTitl
       multiSelectRequirementTitles.value.splice(index, 1);
     }
 
+    delete multiSelectRequirementEditableMap.value[requirementId];
     delete multiSelectRequirementProjectMap.value[requirementId];
 
     // If no other selected task belongs to that project, remove the projectId
@@ -1351,6 +1369,17 @@ const selectedFieldOptions = [
 ];
 
 const onSelectMultiOptions = () => {
+  // Block actions if any selected task is not editable
+  if (hasNonEditableSelectedRequirement.value) {
+    notifyWarning({
+      message: "Some selected requirements have only view permission."
+    });
+
+    selectedField.value = null;
+    showMultiSelectOptions.value = false;
+
+    return;
+  }
   activeRowId.value = multiSelectRequirementIds.value;
   $q.dialog({
     component: selectMultiRequirement,
@@ -1366,6 +1395,13 @@ const onSelectMultiOptions = () => {
 };
 
 const onLinkTaskToPlan = () => {
+  if (
+    multiSelectRequirementIds.value.length === 0 ||
+    hasNonEditableSelectedRequirement.value
+  ) {
+    return;
+  }
+
   const props = {
     projectId: multiSelectProjectIds.value[0],
     projectName: multiSelectProjectName.value[0],
@@ -1390,6 +1426,13 @@ const onLinkTaskToPlan = () => {
 };
 
 function onBulkRequirementsConvertToTask (requirementIds) {
+  if (
+    multiSelectRequirementIds.value.length === 0 ||
+    hasNonEditableSelectedRequirement.value
+  ) {
+    return;
+  }
+
   const selectedRequirements = rows.value.filter(row => requirementIds.includes(row.id));
   if (!selectedRequirements.length) return;
 
@@ -1474,7 +1517,8 @@ function onBulkRequirementsConvertToTask (requirementIds) {
           html: true,
           ok: { label: "OK", color: "primary" }
         });
-        multiSelectRequirementIds.value = [];
+        setDefaultsForMultiSelects();
+        // multiSelectRequirementIds.value = [];
         selectedField.value = null;
         localStorage.removeItem("selectedRequirementIds");
         refreshRequirementList();
@@ -1493,6 +1537,7 @@ function setDefaultsForMultiSelects () {
   multiSelectRequirementProjectMap.value = {};
   multiSelectRequirementIds.value = [];
   multiSelectRequirementTitles.value = [];
+  multiSelectRequirementEditableMap.value = {};
   localStorage.removeItem("selectedRequirementIds");
 }
 

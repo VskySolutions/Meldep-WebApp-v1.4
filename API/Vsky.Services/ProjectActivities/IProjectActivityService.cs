@@ -33,6 +33,7 @@ namespace Vsky.Services.ProjectActivities
         );
         Task<IPagedList<object>> GetAllProjectActivitiesForExpandCollapse(string SiteId,
            string userId,
+           string employeeId,
            string createdBy,
            string SearchText,
            int projectTaskNumber,
