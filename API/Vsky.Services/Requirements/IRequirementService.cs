@@ -53,6 +53,10 @@ namespace Vsky.Services.Requirements
 
         List<VWProjectRequirementStatusSummary> GetRequirementStatusSummaryByProjectIds(List<string> projectIds);
 
+        #region GetAllRequirementsByProjectModuleId
+        Task<List<Requirement>> GetAllRequirementsByProjectModuleId(string moduleId);
+        #endregion
+
         #region GetRequirementById
         Task<Requirement> GetRequirementById(string id);
         #endregion

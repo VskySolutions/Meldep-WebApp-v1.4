@@ -559,6 +559,27 @@ namespace Vsky.Services.Requirements
             return list;
         }
 
+        #region GetAllRequirementsByProjectModuleId
+        public async Task<List<Requirement>> GetAllRequirementsByProjectModuleId(string moduleId)
+        {
+            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && !x.ProjectModule.Deleted && x.ProjectModuleId == moduleId);
+
+            query = query.OrderByDescending(x => x.CreatedOnUtc);
+            query = query.Select(x => new Requirement
+            {
+                Id = x.Id,
+                SiteId = x.SiteId,
+                ProjectId = x.ProjectId,
+                ProjectModuleId = x.ProjectModuleId,
+                Title = x.Title,
+                CreatedOnUtc = x.CreatedOnUtc
+            });
+
+            var list = await query.ToListAsync();
+            return list;
+        }
+        #endregion
+
         #region GetRequirementById
         // Title: GetRequirementById
         // Description: This method retrieves a Requirement from the database by its unique identifier (`id`). 

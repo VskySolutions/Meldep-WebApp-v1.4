@@ -231,12 +231,31 @@ namespace Vsky.Api.Controllers
         {
             try
             {
+                var SiteId = _globalVariable.SiteId;
+
                 //Find record
                 var entity = await _personSitesMappingService.GetById(id);
                 if (entity == null)
-                    return BadRequest(new BadRequestError("No user found with the specified id."));
+                    return BadRequest(new BadRequestError("No user found with the specified id."));               
+
+                var userId = await _userService.GetUserIdByPersonId(SiteId, entity.PersonId);
+
+                //Remove user's role from ApplicationUserRole for this site
+
+                var userRoles = await _db.UserRoles.
+                    Where(x =>
+                        x.UserId == userId &&
+                        x.SiteId == SiteId
+                    ).ToListAsync();
+
+                if(userRoles.Any())
+                {
+                    _db.UserRoles.RemoveRange(userRoles);
+                }
 
                 _personSitesMappingService.DeletePersonSites(entity);
+
+                await _db.SaveChangesAsync();
 
                 return NoContent();
             }

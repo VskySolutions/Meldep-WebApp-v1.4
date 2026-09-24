@@ -2950,6 +2950,23 @@ namespace Vsky.Api.Controllers
 
                     _projectModuleService.UpdateProjectModule(module);
 
+                    //Update requirements
+                    var requirementList = await _requirementService.GetAllRequirementsByProjectModuleId(module.Id);
+                    if (requirementList != null && requirementList.Count > 0)
+                    {
+                        foreach (var requirement in requirementList)
+                        {
+                            var requirementEntity = await _requirementService.GetRequirementById(requirement.Id);
+                            if (requirementEntity != null)
+                            {
+                                requirementEntity.ProjectId = projectEntity.Id;
+                                requirementEntity.UpdatedById = LoggedUserId;
+                                requirementEntity.UpdatedOnUtc = GetDateTime;
+                                _requirementService.UpdateRequirement(requirementEntity);
+                            }
+                        }
+                    }
+
                     // Update Project Tasks
                     var tasksList = await _projectTaskService.GetAllTaskByProjectModuleIdForMoveModuleAsProject(module.Id);
                     if (tasksList != null && tasksList.Count > 0)
