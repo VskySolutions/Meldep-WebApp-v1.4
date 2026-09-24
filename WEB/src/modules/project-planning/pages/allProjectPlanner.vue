@@ -54,7 +54,8 @@
                 <q-tooltip anchor="bottom middle" self="top middle">Reset Filter</q-tooltip>
               </q-btn>
               <q-btn icon="o_chevron_left" size="sm" outline label="Back" no-caps class="text-primary no-space-between" @click="$router.back()">
-                <q-tooltip anchor="bottom middle" self="top middle">Back To Dashboard</q-tooltip>
+                <q-tooltip v-if="routeProjectId || fromProjectList" anchor="bottom middle" self="top middle">Back To List</q-tooltip>
+                <q-tooltip v-else anchor="bottom middle" self="top middle">Back To Dashboard</q-tooltip>
               </q-btn>
             </div>
           </q-card-section>
@@ -2103,7 +2104,7 @@
                                   />
                                 </q-td> -->
                                 <q-td style="width: 50% !important;">
-                                  <q-tooltip v-if="props.row.activityOwner">
+                                  <!-- <q-tooltip v-if="props.row.activityOwner">
                                     <div>
                                       <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
                                       <span>{{ projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.find(e => e.value === props.row.activityOwner)?.text || props.row.activityOwner }}</span>
@@ -2115,8 +2116,57 @@
                                   </span>
                                   <q-btn v-else size="xs" round icon="o_add" color="white" style="padding: 5px 5px;min-height: 15px;background-color: gray !important">
                                     <q-tooltip>Click to Add</q-tooltip>
+                                  </q-btn> -->
+                                  <span
+                                    v-if="props.row.activityOwner"
+                                    class="q-mr-md"
+                                    style="font-size: 12px;"
+                                  >
+                                    <span class="Person">
+                                      {{
+                                        getInitialsOwner(
+                                          projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value
+                                            .find(e => e.value === props.row.activityOwner)?.data
+                                          || props.row.activityOwner
+                                        )
+                                      }}
+                                    </span>
+
+                                    <q-tooltip>
+                                      <div>
+                                        <q-icon
+                                          name="o_person"
+                                          color="white"
+                                          size="xs"
+                                          class="q-mr-xs"
+                                        />
+                                        <span>
+                                          {{
+                                            projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value
+                                              .find(e => e.value === props.row.activityOwner)?.text
+                                            || props.row.activityOwner
+                                          }}
+                                        </span>
+                                      </div>
+                                    </q-tooltip>
+                                  </span>
+
+                                  <!-- No owner -->
+                                  <q-btn
+                                    v-else
+                                    size="xs"
+                                    round
+                                    icon="o_add"
+                                    color="white"
+                                    style="padding: 5px 5px; min-height: 15px; background-color: gray !important"
+                                    :disable="!canEditActivity(props.row)"
+                                  >
+                                    <q-tooltip>
+                                      {{ isViewer ? 'Viewer does not have permission to edit' : 'Click to Add' }}
+                                    </q-tooltip>
                                   </q-btn>
                                   <q-popup-edit
+                                    v-if="canEditActivity(props.row)"
                                     v-slot="scope"
                                     v-model="props.row.activityOwner"
                                     class="small-popup-title"
@@ -2175,6 +2225,16 @@
                                       />
                                     </div>
                                   </q-popup-edit>
+                                  <!-- <div
+                                    v-else
+                                    class="cursor-default"
+                                  >
+                                    {{ props.row.activityOwner?.person?.fullName || '' }}
+
+                                    <q-tooltip>
+                                      Viewer does not have permission to edit Activity Owner.
+                                    </q-tooltip>
+                                  </div> -->
                                 </q-td>
                                 <q-td class="hidden" style="width: 5% !important;">
                                   <span v-if="props.row.activityName" class="q-mr-md row inline items-center no-wrap" style="font-size: 12px;">
@@ -2658,6 +2718,7 @@ const selectedRequirementId = ref(requirementId.value || null);
 const selectedTaskId = ref(projectTaskId.value || null);
 
 const routeProjectId = history.state?.projectId;
+const fromProjectList = history.state?.fromProjectList;
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Customer Project List
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2705,6 +2766,9 @@ const {
     selectedSortOrderByProject: true
   }
 });
+
+const canEditActivity = row =>
+  (row.isEditable === true || row.newProjectActivity === true);
 
 const getAllCustomerProjectsList = async (props) => {
   loading.value = true;

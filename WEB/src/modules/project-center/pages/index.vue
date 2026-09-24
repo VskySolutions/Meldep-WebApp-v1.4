@@ -284,7 +284,7 @@
                         <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">{{ propsRequirements.row.title }}</q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
-                            v-if="propsRequirements.row.isEditable && !isViewer"
+                            v-if="propsRequirements.row.isEditable"
                             v-model="propsRequirements.row.status.id"
                             :options="requirementStatusDropdownSingleSelect.list.value"
                             :filter="requirementStatusDropdownSingleSelect.filter"
@@ -297,7 +297,7 @@
                         </q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
-                            v-if="propsRequirements.row.isEditable && !isViewer"
+                            v-if="propsRequirements.row.isEditable"
                             v-model="propsRequirements.row.priority.id"
                             :options="requirementPriorityDropdownSingleSelect.list.value"
                             :filter="requirementPriorityDropdownSingleSelect.filter"
@@ -344,7 +344,7 @@
                         <q-td style="width: 5%;">{{ propsIssue.row.type.dropDownValue }}</q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
-                            v-if="propsIssue.row.isEditable && !isViewer"
+                            v-if="propsIssue.row.isEditable"
                             v-model="propsIssue.row.status.id"
                             :options="issueStatusDropdownSingleSelect.list.value"
                             :filter="issueStatusDropdownSingleSelect.filter"

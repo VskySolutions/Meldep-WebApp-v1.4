@@ -169,7 +169,7 @@
                   icon="o_view_list"
                   outline
                   class="text-primary btnRounded q-ml-xs"
-                  @click="$router.push('/all-project-planner')"
+                  @click="$router.push({ path: `/all-project-planner`, state: {fromProjectList: true } })"
                 >
                   <q-tooltip>All project planner</q-tooltip>
                 </q-btn>

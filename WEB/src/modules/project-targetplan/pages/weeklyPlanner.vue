@@ -191,7 +191,7 @@
                             <q-item-section avatar><q-icon name="o_dashboard" size="xs" /></q-item-section>
                             <q-item-section>Center</q-item-section>
                           </q-item>
-                          <q-item v-if="props.row.isEditable" v-ripple clickable @click="$router.push({ path: `/all-project-planner`, state: {projectId: props.row.id } })">
+                          <q-item v-if="isFullAccess" v-ripple clickable @click="$router.push({ path: `/all-project-planner`, state: {projectId: props.row.projectId } })">
                             <q-item-section avatar><q-icon name="o_task" size="xs" /></q-item-section>
                             <q-item-section>Planner</q-item-section>
                           </q-item>

@@ -556,7 +556,7 @@ const projectColumns = [
 const defaultProjectState = {
   search: {
     searchText: "",
-    projectIds: selectedProjectId ? [selectedProjectId] : [],
+    projectIds: [],
     projectCoordinatorIds: [],
     projectLeadsIds: [],
     projectStatusIds: [],
@@ -594,16 +594,31 @@ const {
 
 const projectState = getProjectState();
 
-const activeProjectId = ref(
+// const activeProjectId = ref(
+//   projectState?.activeProjectId ||
+//   defaultProjectState.activeProjectId
+// );
+
+// const activeProjectName = ref(
+//   projectState?.projectName ||
+//   defaultProjectState.projectName
+// );
+
+const initialProjectId =
+  selectedProjectId ||
   projectState?.activeProjectId ||
-  defaultProjectState.activeProjectId
-);
+  null;
+
+const activeProjectId = ref(initialProjectId);
 
 const activeProjectName = ref(
-  projectState?.projectName ||
-  defaultProjectState.projectName
+  projectState?.projectName || ""
 );
 
+// If navigation provided a project, override localStorage project filter.
+if (selectedProjectId) {
+  search.value.projectIds = [selectedProjectId];
+}
 // Get/Map project list to table
 const getProjects = async (props) => {
   loading.value = true;

@@ -34,7 +34,7 @@
           <!-- <q-td>{{ propsTestCase.row.status.dropDownValue }}</q-td> -->
           <q-td style="width: 5%;">
             <q-select
-              v-if="propsTestCase.row.isEditable && !isViewer"
+              v-if="propsTestCase.row.isEditable"
               v-model="propsTestCase.row.status.id"
               outlined
               stack-label
@@ -79,15 +79,10 @@ import projectService from "modules/project/projects.service";
 import commonService from "services/common.service";
 import testcasesService from "modules/test-case/testCase.service";
 import { notifySuccess } from "assets/utils";
-import { useAuthStore } from "stores/auth";
 
 const props = defineProps({ projectId: { type: String, default: "" } });
 const projectId = props.projectId;
 const loading = ref(true);
-
-const authStore = useAuthStore();
-const user = authStore.user;
-const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const tableRef6 = ref();
 const rowsTestCases = ref([]);
@@ -195,8 +190,8 @@ const filterRows = (data, searchTerm, columns) => {
   );
 };
 
-const teseCaseColumns = columnsTestCases.value;
-const filteredTestCase = computed(() => filterRows(rowsTestCases.value, filterTestCase.value, teseCaseColumns));
+const testCaseColumns = columnsTestCases.value;
+const filteredTestCase = computed(() => filterRows(rowsTestCases.value, filterTestCase.value, testCaseColumns));
 
 // On page rendering
 onMounted(() => {

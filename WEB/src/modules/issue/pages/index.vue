@@ -156,9 +156,24 @@
               </q-menu>
               <div class="q-ml-xs">
                 <q-btn v-if="!isViewer" icon="o_add" outline label="Create Issue" no-caps class="text-primary btnRounded" @click="onIssueAdd(refreshIssueList)" />
-                <q-btn v-if="!isViewer" icon="o_checklist" outline no-caps class="text-primary btnRounded q-ml-sm" :disabled="multiSelectIssueIds.length === 0" @click.stop="showMultiSelectOptions = !showMultiSelectOptions">
+                <q-btn
+                  v-if="!isViewer"
+                  icon="o_checklist"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-sm"
+                  :disabled="multiSelectIssueIds.length === 0 ||
+                  hasNonEditableSelectedIssue"
+                  @click.stop="showMultiSelectOptions = !showMultiSelectOptions"
+                >
                   <q-badge v-if="multiSelectIssueIds?.length > 0" :label="multiSelectIssueIds.length" class="primary" floating />
-                  <q-tooltip>Multi Actions</q-tooltip>
+                  <q-tooltip>
+                    {{
+                      hasNonEditableSelectedIssue
+                        ? 'Some selected issues have only view permission.'
+                        : 'Multi Actions'
+                    }}
+                  </q-tooltip>
                 </q-btn>
                 <q-btn v-if="role === 'admin' && !isViewer" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
                   <q-tooltip>Manage Dropdowns</q-tooltip>
@@ -275,7 +290,19 @@
                   v-if="!isViewer"
                   class="text-center"
                 >
-                  <q-checkbox v-model="props.row.checkboxStatus" @update:model-value="onSelectCheckbox(props.row.project.id, props.row.project.name, props.row.id, props.row.name, $event)" />
+                  <q-checkbox
+                    v-model="props.row.checkboxStatus"
+                    @update:model-value="
+                      onSelectCheckbox(
+                        props.row.project.id,
+                        props.row.project.name,
+                        props.row.id,
+                        props.row.name,
+                        $event,
+                        props.row.isEditable
+                      )
+                    "
+                  />
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('issueNumber')" class="text-right">
                   #{{ props.row.issueNumber }}
@@ -539,7 +566,7 @@
 // Import libraries
 import { ref, onMounted, watch, computed } from "vue";
 import { useQuasar } from "quasar";
-import { notifySuccess, notifyError } from "assets/utils";
+import { notifySuccess, notifyError, notifyWarning } from "assets/utils";
 import { useAuthStore } from "stores/auth";
 import { useRoute } from "vue-router";
 
@@ -637,6 +664,13 @@ const activeEdit = ref({ rowId: null, field: null });
 const highlightedId = computed(() => {
   return activeRowId.value;
 });
+const multiSelectIssueEditableMap = ref({});
+
+const hasNonEditableSelectedIssue = computed(() =>
+  multiSelectIssueIds.value.some(
+    id => multiSelectIssueEditableMap.value[id] !== true
+  )
+);
 
 function setActiveRowIdInLocalStorage(id) {
   activeRowId.value = id;
@@ -943,13 +977,16 @@ const multiSelectProjectName = ref([]);
 const multiSelectIssueIds = ref([]);
 const multiSelectIssueNames = ref([]);
 
-const onSelectCheckbox = (projectId, projectName, issueId, issueName, flag) => {
+const onSelectCheckbox = (projectId, projectName, issueId, issueName, flag, isEditable) => {
   if (flag === true) {
     // Add the issueId to the multiSelectIssueIds array if it's not already present
     if (!multiSelectIssueIds.value.includes(issueId)) {
       multiSelectIssueIds.value.push(issueId);
       multiSelectIssueNames.value.push(issueName);
       multiSelectRequirementProjectMap.value[issueId] = projectId;
+
+      // Store Project Security permission for this issue
+      multiSelectIssueEditableMap.value[issueId] = isEditable === true;
 
       // Add projectId only if not already present
       if (!multiSelectProjectIds.value.includes(projectId)) {
@@ -967,7 +1004,9 @@ const onSelectCheckbox = (projectId, projectName, issueId, issueName, flag) => {
       multiSelectIssueNames.value.splice(index, 1);
     }
 
+    delete multiSelectIssueEditableMap.value[issueId];
     delete multiSelectRequirementProjectMap.value[issueId];
+
     // If no other selected task belongs to that project, remove the projectId
     const stillHasTaskForProject = Object.values(multiSelectRequirementProjectMap.value).some(pid => pid === removedProjectId);
     if (!stillHasTaskForProject) {
@@ -986,6 +1025,18 @@ const selectedFieldOptions = [
 ];
 
 const onSelectMultiOptions = () => {
+  if (hasNonEditableSelectedIssue.value) {
+    showMultiSelectOptions.value = false;
+
+    notifyWarning({
+      message: "Some selected issues have only view permission."
+    });
+
+    selectedField.value = null;
+    return;
+  }
+
+  if (multiSelectIssueIds.value.length === 0) return;
   activeRowId.value = multiSelectIssueIds.value;
   $q.dialog({
     component: selectMultiIssue,
@@ -1001,6 +1052,17 @@ const onSelectMultiOptions = () => {
 };
 
 const onLinkTaskToPlan = () => {
+  if (
+    multiSelectIssueIds.value.length === 0 ||
+    hasNonEditableSelectedIssue.value
+  ) {
+    notifyWarning({
+      message: "Some selected issues have only view permission."
+    });
+
+    selectedField.value = null;
+    return;
+  }
   const props = {
     projectId: multiSelectProjectIds.value[0],
     projectName: multiSelectProjectName.value[0],
@@ -1025,6 +1087,17 @@ const onLinkTaskToPlan = () => {
 };
 
 function onBulkIssuesConvertToTask (issueIds) {
+  if (
+    multiSelectIssueIds.value.length === 0 ||
+    hasNonEditableSelectedIssue.value
+  ) {
+    notifyWarning({
+      message: "Some selected issues have only view permission."
+    });
+
+    selectedField.value = null;
+    return;
+  }
   const selectedIssues = rows.value.filter(row => issueIds.includes(row.id));
   if (!selectedIssues.length) return;
 
@@ -1111,7 +1184,17 @@ function setDefaultsForMultiSelects () {
   multiSelectRequirementProjectMap.value = [];
   multiSelectIssueIds.value = [];
   multiSelectIssueNames.value = [];
+  multiSelectIssueEditableMap.value = {};
+
+  selectedField.value = null;
+  showMultiSelectOptions.value = false;
+
   localStorage.removeItem("selectedIssueIds");
+
+  // Reset checkbox state in the displayed rows
+  rows.value.forEach(row => {
+    row.checkboxStatus = false;
+  });
 }
 
 // ------------------------------------------------------------------------------------
@@ -1209,25 +1292,40 @@ function onClearFilters (key) {
 // Multi-Select change events
 // ----------------------------
 watch(selectedField, (newVal) => {
-  if (newVal) {
-    showMultiSelectOptions.value = false;
-    if (newVal === "linkToPlan") {
-      if (multiSelectProjectIds.value.length > 1) {
-        $q.notify({
-          type: "warning",
-          message: "Cannot link plan: selected issues are of multiple projects."
-        });
-        selectedField.value = null;
-        return;
-      }
-      onLinkTaskToPlan();
-      return;
-    } else if (newVal === "convertIntoTask") {
-      onBulkIssuesConvertToTask(multiSelectIssueIds.value);
+  if (!newVal) return;
+
+  showMultiSelectOptions.value = false;
+
+  // Validate permissions before executing any bulk action
+  if (hasNonEditableSelectedIssue.value) {
+    notifyWarning({
+      message: "Some selected issues have only view permission."
+    });
+
+    selectedField.value = null;
+    return;
+  }
+
+  if (multiSelectIssueIds.value.length === 0) {
+    selectedField.value = null;
+    return;
+  }
+  if (newVal === "linkToPlan") {
+    if (multiSelectProjectIds.value.length > 1) {
+      $q.notify({
+        type: "warning",
+        message: "Cannot link plan: selected issues are of multiple projects."
+      });
+      selectedField.value = null;
       return;
     }
-    onSelectMultiOptions(); // This opens the dialog for the selected action
+    onLinkTaskToPlan();
+    return;
+  } else if (newVal === "convertIntoTask") {
+    onBulkIssuesConvertToTask(multiSelectIssueIds.value);
+    return;
   }
+  onSelectMultiOptions(); // This opens the dialog for the selected action
 });
 
 watch(multiSelectIssueIds, () => {

@@ -60,7 +60,7 @@
           </q-td> -->
           <q-td style="width: 5%">
             <q-select
-              v-if="propsTask.row.isEditable && !isViewer"
+              v-if="propsTask.row.isEditable"
               v-model="propsTask.row.status.id"
               outlined
               stack-label
@@ -97,7 +97,6 @@
 import { notifySuccess, zwConfirm } from "assets/utils";
 import { ref, onMounted, computed } from "vue";
 import { useQuasar } from "quasar";
-import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
 import projectService from "modules/project/projects.service";
 import projectTaskService from "modules/project-tasks/projectTasks.service";
@@ -108,10 +107,6 @@ const props = defineProps({ projectId: { type: String, default: "" } });
 const projectId = props.projectId;
 const { toDate } = useFilters();
 const $q = useQuasar();
-
-const authStore = useAuthStore();
-const user = authStore.user;
-const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const loading = ref(true);
 const tableRef1 = ref();

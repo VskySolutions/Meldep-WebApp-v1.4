@@ -213,12 +213,12 @@
                   @click="onSendTimesheet"
                 />
                 <q-btn
-                  v-if="!isViewer"
                   icon="o_checklist"
                   outline
                   no-caps
                   class="text-primary btnRounded q-ml-sm"
-                  :disabled="ActivityIds.length === 0" @click.stop="showMultiSelectOptions = !showMultiSelectOptions"
+                  :disabled="ActivityIds.length === 0 || hasNonEditableSelectedActivity"
+                  @click.stop="showMultiSelectOptions = !showMultiSelectOptions"
                 >
                   <q-badge
                     v-if="ActivityIds?.length > 0"
@@ -226,7 +226,13 @@
                     class="primary"
                     floating
                   />
-                  <q-tooltip>Multi Actions</q-tooltip>
+                  <q-tooltip>
+                    {{
+                      isViewer && hasNonEditableSelectedActivity
+                        ? "Some selected activities do not have edit permission."
+                        : "Multi Actions"
+                    }}
+                  </q-tooltip>
                 </q-btn>
                 <!-- Button to Open Sorting Dialog -->
                 <q-btn
@@ -357,9 +363,6 @@
                   <template #header="headerProps">
                     <q-tr :props="headerProps" class="bg-grey-4 text-black">
                       <q-th
-                        v-if="!isViewer || props.row.activities?.some(
-                          activity => activity.isEditable === true && activity.project?.id === props.row.project?.id
-                        )"
                         auto-width
                         class="text-center"
                         :class="routeName === 'project-tast-activities'? 'hidden' : ''"
@@ -424,11 +427,11 @@
                       </q-tooltip> -->
                       <!-- Active / Checkbox -->
                       <q-td
-                        v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
                         class="text-center"
                         style="width: 5%;"
                       >
                         <div
+                          v-if="!isViewer || activityProps.row.isEditable"
                           :class="['dot-circle q-mr-xs hoverable-cell', activityProps.row.active ? 'dot-active' : 'dot-inactive']"
                           @click="() => { onSubmitProjectTaskActivityStatus(activityProps.row, refreshProjectTaskActivityList) }"
                         >
@@ -437,7 +440,13 @@
                         </div>
                         <q-checkbox
                           v-model="activityProps.row.checkboxStatus"
-                          @update:model-value="onSelectCheckbox(activityProps.row.id, activityProps.row.active, activityProps.row.activityStatus.dropDownValue, $event)"
+                          @update:model-value="onSelectCheckbox(
+                            activityProps.row.id,
+                            activityProps.row.active,
+                            activityProps.row.activityStatus.dropDownValue,
+                            $event,
+                            activityProps.row.isEditable
+                          )"
                         />
                       </q-td>
 
@@ -994,7 +1003,6 @@ const getProjectActivities = (props) => {
   ActivityIds.value = storedActivityIds ? storedActivityIds.split(",") : [];
   projectActivitiesService.getAllProjectActivitiesForExpandCollapse(payload).then((resp) => {
     rows.value = resp.data;
-    // console.log("Project Activities Response:", resp.data); // Log the response data for debugging
     rows.value = resp.data.map(project => {
       return {
         ...project,
@@ -1055,7 +1063,7 @@ const getProjectActivities = (props) => {
         })
       };
     });
-    console.log(rows.value);
+
     Object.assign(pagination.value, {
       page,
       rowsPerPage,
@@ -1063,6 +1071,7 @@ const getProjectActivities = (props) => {
       descending,
       rowsNumber: resp.total
     });
+
     saveDataTableState({
       search: search.value,
 
@@ -1397,13 +1406,24 @@ function onChangeActivityStatus (id, activityStatusId) {
 const ActivityIds = ref([]);
 const multiSelectTaskActivityStatusMap = ref({});
 const multiSelectTaskActivityActiveMap = ref({});
-const onSelectCheckbox = (itemId, isActive, activityStatus, flag) => {
+const multiSelectTaskActivityEditableMap = ref({});
+const hasNonEditableSelectedActivity = computed(() => {
+  // Apply isEditable restriction only to Viewers
+  if (!isViewer) return false;
+
+  return ActivityIds.value.some(
+    id => multiSelectTaskActivityEditableMap.value[id] !== true
+  );
+});
+
+const onSelectCheckbox = (itemId, isActive, activityStatus, flag, isEditable) => {
   if (flag === true) {
     // Add the itemId to the ProjectIds array if it's not already present
     if (!ActivityIds.value.includes(itemId)) {
       ActivityIds.value.push(itemId);
       multiSelectTaskActivityStatusMap.value[itemId] = activityStatus;
       multiSelectTaskActivityActiveMap.value[itemId] = isActive;
+      multiSelectTaskActivityEditableMap.value[itemId] = isEditable === true;
     }
   } else {
     // Find the index of the itemId in the ProjectIds array and remove it
@@ -1413,6 +1433,7 @@ const onSelectCheckbox = (itemId, isActive, activityStatus, flag) => {
     }
     delete multiSelectTaskActivityStatusMap.value[itemId];
     delete multiSelectTaskActivityActiveMap.value[itemId];
+    delete multiSelectTaskActivityEditableMap.value[itemId];
   }
   localStorage.setItem("selectedActivityIds", ActivityIds.value);
 };
@@ -1480,6 +1501,16 @@ const selectedFieldOptions = [
 ];
 
 const onSelectMultiOptions = () => {
+  if (isViewer && hasNonEditableSelectedActivity.value) {
+    notifyWarning({
+      message: "Some selected activities do not have edit permission."
+    });
+
+    selectedField.value = null;
+    showMultiSelectOptions.value = false;
+    return;
+  }
+
   activeRowId.value = ActivityIds.value;
 
   const selectedActivities = rows.value
@@ -1520,12 +1551,14 @@ const onSelectMultiOptions = () => {
 
 function setDefaultsForMultiSelects () {
   ActivityIds.value = [];
-  multiSelectTaskActivityStatusMap.value = [];
-  multiSelectTaskActivityActiveMap.value = [];
+  multiSelectTaskActivityStatusMap.value = {};
+  multiSelectTaskActivityActiveMap.value = {};
+  multiSelectTaskActivityEditableMap.value = {};
   selectedField.value = null;
+  showMultiSelectOptions.value = false;
+
   localStorage.removeItem("selectedActivityIds");
 }
-
 // function paginatedTotalHours(activities, pagination) {
 //   if (!activities?.length || !pagination) return "00:00";
 
