@@ -21,14 +21,6 @@
         </q-icon>
       </label>
     </div>
-
-    <!-- <div
-      :class="[
-        props.label
-          ? 'col-lg-7 col-md-7 col-sm-12 col-xs-12'
-          : 'col-12'
-      ]"
-    > -->
     <div
       :class="[
         props.label
@@ -37,49 +29,61 @@
       ]"
     >
       <q-select
+        ref="selectRef"
         v-model:input-value="inputValue"
         :model-value="props.modelValue"
+
         push
         class="q-mx-sm w-100 h-auto"
+
         clearable
         use-input
         use-chips
+        multiple
+        fill-input
+
         transition-show="jump-up"
         transition-hide="jump-up"
         hide-bottom-space
+
         :dense="true"
         :disable="disable"
-        multiple
-        fill-input
+
         input-debounce="0"
+
         :options="props.options"
+
         option-value="value"
         option-label="text"
+
         map-options
         emit-value
+
         :popup-content-class="customPopupContentClass"
+
         @update:model-value="updateValue"
-        @filter="props.filter"
+        @filter="handleFilter"
+
         @blur="resetInput"
         @popup-hide="resetInput"
       >
-      <template #selected-item="{ opt, removeAtIndex, index }">
-        <q-chip
-          removable
-          dense
-          class="q-mr-xs"
-          @remove="removeAtIndex(index)"
-        >
-          <div class="ellipsis" style="max-width: 150px;">
-            {{ opt.text }}
-          </div>
+        <template #selected-item="{ opt, removeAtIndex, index }">
+          <q-chip
+            removable
+            dense
+            class="q-mr-xs"
+            @remove="removeAtIndex(index)"
+          >
+            <div class="ellipsis" style="max-width: 150px;">
+              {{ opt.text }}
+            </div>
 
-          <q-tooltip>
-            {{ opt.text }}
-          </q-tooltip>
-        </q-chip>
-      </template>
-      <template
+            <q-tooltip>
+              {{ opt.text }}
+            </q-tooltip>
+          </q-chip>
+        </template>
+        <template
           v-if="props.options?.length > 0 && props.isShowAll"
           #append
         >
@@ -123,12 +127,18 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 
 const props = defineProps({
   label: String,
-  modelValue: [Array, String],
-  options: Array,
+  modelValue: {
+    type: [Array, String],
+    default: () => []
+  },
+  options: {
+    type: Array,
+    default: () => []
+  },
   filter: Function,
   showBgColor: { type: Boolean, default: false },
   disable: { type: Boolean, default: false },
@@ -146,12 +156,13 @@ const props = defineProps({
   },
   labelTooltip: {
     type: String,
-    default: ''
+    default: ""
   }
 });
 
 const emit = defineEmits(["update:modelValue"]);
 
+const selectRef = ref(null);
 const inputValue = ref("");
 
 const isAllSelected = computed(() => {
@@ -162,24 +173,63 @@ const isAllSelected = computed(() => {
   );
 });
 
-function resetInput() {
+async function clearSearchInput() {
+  // Clear Vue value
   inputValue.value = "";
+
+  // Clear Quasar internal input
+  if (selectRef.value) {
+    selectRef.value.updateInputValue("", true);
+  }
+
+  // Wait until DOM/component updates
+  await nextTick();
+
+  // Clear again after update
+  inputValue.value = "";
+
+  if (selectRef.value) {
+    selectRef.value.updateInputValue("", true);
+  }
+}
+
+function handleFilter(val, update, abort) {
+  if (props.filter) {
+    props.filter(val, update, abort);
+  } else {
+    update(() => {});
+  }
+}
+
+async function resetInput() {
+  await clearSearchInput();
 
   if (props.filter) {
     props.filter("", (callback) => callback());
   }
 }
 
-function updateValue(val) {
+async function updateValue(val) {
   emit("update:modelValue", val);
-  resetInput();
+
+  // Clear immediately
+  await clearSearchInput();
+
+  // Reset filtering
+  if (props.filter) {
+    props.filter("", (callback) => {
+      callback();
+    });
+  }
 }
 
-function handleSelectAllOptions(val) {
+async function handleSelectAllOptions(val) {
   if (val) {
     emit('update:modelValue', props.options.map(x => x.value));
   } else {
     emit('update:modelValue', []);
   }
+  // Also clear any typed search text
+  await clearSearchInput();
 }
 </script>

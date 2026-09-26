@@ -428,37 +428,60 @@
                 />
               </q-td>
               <q-td
-                v-if="selectedColumnNames.includes('project.name')"
-                class="common-q-td hoverable-cell"
-              >
-                <div class="row no-wrap items-center justify-between">
-                  <span>
-                    <span
-                      v-if="preProjectName !== props.row.project.name"
-                      :set="preProjectName = props.row.project.name"
-                      @click="onProjectView(props.row.project.id)"
-                    >
-                      {{ props.row.project.name }}
-                    </span>
-                  </span>
-                  <div
-                    v-if="shouldShowIcons(props.row.project.name, index)"
-                    class="row items-center q-gutter-sm q-ml-sm"
-                    style="flex-shrink: 0;"
+              v-if="selectedColumnNames.includes('project.name')"
+              class="common-q-td hoverable-cell"
+            >
+              <div class="row no-wrap items-center justify-between">
+                <span
+                  v-if="preProjectName !== props.row.project.name"
+                  :set="preProjectName = props.row.project.name"
+                  class="cursor-pointer"
+                  @click="onProjectView(props.row.project.id)"
+                >
+                  {{ props.row.project.name }}
+                </span>
+
+                <div
+                  v-if="
+                    props.rowIndex === 0 ||
+                    rows[props.rowIndex - 1]?.project?.name !== props.row.project.name
+                  "
+                  class="row items-center q-gutter-sm q-ml-sm"
+                  style="flex-shrink: 0;"
+                >
+                  <q-icon
+                    name="o_radio_button_checked"
+                    size="xs"
+                    class="cursor-pointer"
+                    @click="
+                      setActiveRowIdInLocalStorage(props.row.id);
+                      $router.push({
+                        path: '/project-center',
+                        state: { projectId: props.row.project.id }
+                      })
+                    "
                   >
-                    <q-icon
-                      name="o_radio_button_checked"
-                      size="xs" class="cursor-pointer"
-                      @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
-                    >
-                      <q-tooltip>Project Center</q-tooltip>
-                    </q-icon>
-                    <q-icon v-if="props.row.isEditable" name="o_developer_board" size="xs" class="cursor-pointer hidden" @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/project-planning/workboard', state: {projectId: props.row.project.id } })">
-                      <q-tooltip>Work Board</q-tooltip>
-                    </q-icon>
-                  </div>
+                    <q-tooltip>Project Center</q-tooltip>
+                  </q-icon>
+
+                  <q-icon
+                    v-if="props.row.isEditable"
+                    name="o_developer_board"
+                    size="xs"
+                    class="cursor-pointer hidden"
+                    @click="
+                      setActiveRowIdInLocalStorage(props.row.id);
+                      $router.push({
+                        path: '/project-planning/workboard',
+                        state: { projectId: props.row.project.id }
+                      })
+                    "
+                  >
+                    <q-tooltip>Work Board</q-tooltip>
+                  </q-icon>
                 </div>
-              </q-td>
+              </div>
+            </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('projectModule.name')"
                 class="common-q-td hoverable-cell"
@@ -1023,11 +1046,11 @@ const showFilter = ref(false);
 const searchLoader = ref(false);
 const showMultiSelectOptions = ref(false);
 const selectedField = ref(null);
-const multiSelectRequirementIds = ref([]);
-const multiSelectRequirementTitles = ref([]);
-const multiSelectRequirementProjectMap = ref({});
-const multiSelectProjectIds = ref([]);
-const multiSelectProjectName = ref([]);
+// const multiSelectRequirementIds = ref([]);
+// const multiSelectRequirementTitles = ref([]);
+// const multiSelectRequirementProjectMap = ref({});
+// const multiSelectProjectIds = ref([]);
+// const multiSelectProjectName = ref([]);
 const shownProjects = new Set();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -1043,7 +1066,76 @@ const manageDropDownTypes = ref([]);
 const { toDate } = useFilters();
 const showSortDialog = ref(false);
 const activeEdit = ref({ rowId: null, field: null });
-const multiSelectRequirementEditableMap = ref({});
+// const multiSelectRequirementEditableMap = ref({});
+const SELECTED_REQUIREMENT_IDS_KEY = "selectedRequirementIds";
+const SELECTED_REQUIREMENT_EDITABLE_MAP_KEY =
+  "selectedRequirementEditableMap";
+
+const getStoredSelectedRequirementIds = () => {
+  try {
+    const stored = localStorage.getItem(SELECTED_REQUIREMENT_IDS_KEY);
+
+    if (!stored) {
+      return [];
+    }
+
+    const parsed = JSON.parse(stored);
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn(
+      "Invalid selected requirement IDs in localStorage. Resetting.",
+      error
+    );
+
+    localStorage.removeItem(SELECTED_REQUIREMENT_IDS_KEY);
+    return [];
+  }
+};
+
+const getStoredSelectedRequirementEditableMap = () => {
+  try {
+    const stored = localStorage.getItem(
+      SELECTED_REQUIREMENT_EDITABLE_MAP_KEY
+    );
+
+    if (!stored) {
+      return {};
+    }
+
+    const parsed = JSON.parse(stored);
+
+    return parsed &&
+      typeof parsed === "object" &&
+      !Array.isArray(parsed)
+      ? parsed
+      : {};
+  } catch (error) {
+    console.warn(
+      "Invalid selected requirement editable map in localStorage. Resetting.",
+      error
+    );
+
+    localStorage.removeItem(
+      SELECTED_REQUIREMENT_EDITABLE_MAP_KEY
+    );
+
+    return {};
+  }
+};
+
+const multiSelectRequirementIds = ref(
+  getStoredSelectedRequirementIds()
+);
+
+const multiSelectRequirementTitles = ref([]);
+const multiSelectRequirementProjectMap = ref({});
+const multiSelectProjectIds = ref([]);
+const multiSelectProjectName = ref([]);
+
+const multiSelectRequirementEditableMap = ref(
+  getStoredSelectedRequirementEditableMap()
+);
 
 const highlightedId = computed(() => { return activeRowId.value; });
 
@@ -1126,17 +1218,43 @@ const getAllRequirement = async ({ pagination: p }) => {
       sorts
     });
 
-    const storedRequirementIds = JSON.parse(
-      localStorage.getItem("selectedRequirementIds") || "[]"
-    );
+    // const storedRequirementIds = JSON.parse(
+    //   localStorage.getItem("selectedRequirementIds") || "[]"
+    // );
+    const storedRequirementIds = getStoredSelectedRequirementIds();
     const resp = await requirementService.getAllRequirement(payload);
 
+    // rows.value = resp.data.map(requirement => {
+    //   return {
+    //     ...requirement,
+    //     checkboxStatus: storedRequirementIds.includes(requirement.id),
+    //     isNotes: requirement.project?.currentUserNotes ?? false,
+    //     isEditable: requirement.project?.currentUserManage,
+
+    //     requirementTags:
+    //       requirement.requirementTags?.map(tag => ({
+    //         text: tag.tags.name,
+    //         value: tag.tags.id,
+    //         color: tag.tags.color,
+    //         bgColor: tag.tags.bgColor
+    //       })) ?? []
+    //   };
+    // });
     rows.value = resp.data.map(requirement => {
+      const isEditable =
+        requirement.project?.currentUserManage ?? false;
+
+      // Refresh permission for already selected requirements
+      if (multiSelectRequirementIds.value.includes(requirement.id)) {
+        multiSelectRequirementEditableMap.value[requirement.id] =
+          isEditable;
+      }
+
       return {
         ...requirement,
         checkboxStatus: storedRequirementIds.includes(requirement.id),
         isNotes: requirement.project?.currentUserNotes ?? false,
-        isEditable: requirement.project?.currentUserManage,
+        isEditable,
 
         requirementTags:
           requirement.requirementTags?.map(tag => ({
@@ -1147,6 +1265,11 @@ const getAllRequirement = async ({ pagination: p }) => {
           })) ?? []
       };
     });
+
+    localStorage.setItem(
+      SELECTED_REQUIREMENT_EDITABLE_MAP_KEY,
+      JSON.stringify(multiSelectRequirementEditableMap.value)
+    );
 
     pagination.value = {
       ...pagination.value,
@@ -1309,14 +1432,14 @@ function resetTracking () {
   shownProjects.clear(); // Clear the set before rendering rows
 }
 
-function shouldShowIcons (projectName) {
-  if (shownProjects.has(projectName)) {
-    return false;
-  } else {
-    shownProjects.add(projectName);
-    return true;
-  }
-}
+// function shouldShowIcons (projectName) {
+//   if (shownProjects.has(projectName)) {
+//     return false;
+//   } else {
+//     shownProjects.add(projectName);
+//     return true;
+//   }
+// }
 
 const onSelectCheckbox = (projectId, projectName, requirementId, requirementTitle, flag, isEditable) => {
   if (flag === true) {
@@ -1355,9 +1478,18 @@ const onSelectCheckbox = (projectId, projectName, requirementId, requirementTitl
     }
   }
 
+  // localStorage.setItem(
+  //   "selectedRequirementIds",
+  //   JSON.stringify(multiSelectRequirementIds.value)
+  // );
   localStorage.setItem(
-    "selectedRequirementIds",
+    SELECTED_REQUIREMENT_IDS_KEY,
     JSON.stringify(multiSelectRequirementIds.value)
+  );
+
+  localStorage.setItem(
+    SELECTED_REQUIREMENT_EDITABLE_MAP_KEY,
+    JSON.stringify(multiSelectRequirementEditableMap.value)
   );
 };
 
@@ -1520,7 +1652,7 @@ function onBulkRequirementsConvertToTask (requirementIds) {
         setDefaultsForMultiSelects();
         // multiSelectRequirementIds.value = [];
         selectedField.value = null;
-        localStorage.removeItem("selectedRequirementIds");
+        // localStorage.removeItem("selectedRequirementIds");
         refreshRequirementList();
       })
       .finally(() => {
@@ -1531,14 +1663,37 @@ function onBulkRequirementsConvertToTask (requirementIds) {
   });
 }
 
+// function setDefaultsForMultiSelects () {
+//   multiSelectProjectIds.value = [];
+//   multiSelectProjectName.value = [];
+//   multiSelectRequirementProjectMap.value = {};
+//   multiSelectRequirementIds.value = [];
+//   multiSelectRequirementTitles.value = [];
+//   multiSelectRequirementEditableMap.value = {};
+//   localStorage.removeItem("selectedRequirementIds");
+// }
 function setDefaultsForMultiSelects () {
   multiSelectProjectIds.value = [];
   multiSelectProjectName.value = [];
+
   multiSelectRequirementProjectMap.value = {};
+
   multiSelectRequirementIds.value = [];
   multiSelectRequirementTitles.value = [];
+
   multiSelectRequirementEditableMap.value = {};
-  localStorage.removeItem("selectedRequirementIds");
+
+  selectedField.value = null;
+  showMultiSelectOptions.value = false;
+
+  localStorage.removeItem(SELECTED_REQUIREMENT_IDS_KEY);
+  localStorage.removeItem(
+    SELECTED_REQUIREMENT_EDITABLE_MAP_KEY
+  );
+
+  rows.value.forEach(row => {
+    row.checkboxStatus = false;
+  });
 }
 
 const onDeleteRequirementTag = (row, tagToRemove) => {
@@ -1884,7 +2039,7 @@ onMounted(async () =>  {
   tagsDropdown.load();
   requirementStatusDropdownSingleSelect.load("Requirement Status");
   requirementPriorityDropdownSingleSelect.load("Requirement Priority");
-  localStorage.removeItem("selectedRequirementIds");
+  // localStorage.removeItem("selectedRequirementIds");
   if (!activeRowId.value) {
     activeRowId.value = null;
   }

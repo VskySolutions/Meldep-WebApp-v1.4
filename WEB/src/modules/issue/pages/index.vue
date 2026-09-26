@@ -664,7 +664,60 @@ const activeEdit = ref({ rowId: null, field: null });
 const highlightedId = computed(() => {
   return activeRowId.value;
 });
-const multiSelectIssueEditableMap = ref({});
+// const multiSelectIssueEditableMap = ref({});
+const SELECTED_ISSUE_IDS_KEY = "selectedIssueIds";
+const SELECTED_ISSUE_EDITABLE_MAP_KEY = "selectedIssueEditableMap";
+
+const getStoredSelectedIssueIds = () => {
+  try {
+    const stored = localStorage.getItem(SELECTED_ISSUE_IDS_KEY);
+
+    if (!stored) {
+      return [];
+    }
+
+    const parsed = JSON.parse(stored);
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("Invalid selected issue IDs in localStorage. Resetting.", error);
+
+    localStorage.removeItem(SELECTED_ISSUE_IDS_KEY);
+    return [];
+  }
+};
+
+const getStoredSelectedIssueEditableMap = () => {
+  try {
+    const stored = localStorage.getItem(
+      SELECTED_ISSUE_EDITABLE_MAP_KEY
+    );
+
+    if (!stored) {
+      return {};
+    }
+
+    const parsed = JSON.parse(stored);
+
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed
+      : {};
+  } catch (error) {
+    console.warn(
+      "Invalid selected issue editable map in localStorage. Resetting.",
+      error
+    );
+
+    localStorage.removeItem(SELECTED_ISSUE_EDITABLE_MAP_KEY);
+    return {};
+  }
+};
+
+const multiSelectIssueIds = ref(getStoredSelectedIssueIds());
+
+const multiSelectIssueEditableMap = ref(
+  getStoredSelectedIssueEditableMap()
+);
 
 const hasNonEditableSelectedIssue = computed(() =>
   multiSelectIssueIds.value.some(
@@ -903,17 +956,28 @@ const getAllIssue = async ({ pagination: p }) => {
     sorts
   });
 
-  // setLocalStorage(localStorageKey, { ...search.value, pagination: props.pagination, activeRowId: activeRowId.value });
-  const storedIssueIds = localStorage.getItem("selectedIssueIds") || [];
+  const storedIssueIds = getStoredSelectedIssueIds();
   issuesService.getAllIssue(payload).then((resp) => {
-    rows.value = resp.data.map(requirement => {
+    rows.value = resp.data.map(issue => {
+      const isEditable = issue?.project?.currentUserManage ?? false;
+
+      // Refresh permission for already selected issues
+      if (multiSelectIssueIds.value.includes(issue.id)) {
+        multiSelectIssueEditableMap.value[issue.id] = isEditable;
+      }
+
       return {
-        ...requirement,
-        checkboxStatus: storedIssueIds.includes(requirement.id), // Initialize checkboxStatus for each row
-        isNotes: requirement.project?.currentUserNotes ?? false,
-        isEditable: requirement?.project.currentUserManage ?? false
+        ...issue,
+        checkboxStatus: storedIssueIds.includes(issue.id),
+        isNotes: issue.project?.currentUserNotes ?? false,
+        isEditable
       };
     });
+
+    localStorage.setItem(
+      SELECTED_ISSUE_EDITABLE_MAP_KEY,
+      JSON.stringify(multiSelectIssueEditableMap.value)
+    );
     statusSummary.value = resp.statusSummary;
     pagination.value = {
       ...pagination.value,
@@ -971,10 +1035,10 @@ const onConvertToTask = (id, projectId, projectModuleId, name, description, isIs
   });
 };
 
-const multiSelectRequirementProjectMap = ref([]);
+const multiSelectRequirementProjectMap = ref({});
 const multiSelectProjectIds = ref([]);
 const multiSelectProjectName = ref([]);
-const multiSelectIssueIds = ref([]);
+// const multiSelectIssueIds = ref([]);
 const multiSelectIssueNames = ref([]);
 
 const onSelectCheckbox = (projectId, projectName, issueId, issueName, flag, isEditable) => {
@@ -1014,7 +1078,17 @@ const onSelectCheckbox = (projectId, projectName, issueId, issueName, flag, isEd
       multiSelectProjectName.value = multiSelectProjectName.value.filter(x => x !== projectName);
     }
   }
-  localStorage.setItem("selectedIssueIds", multiSelectIssueIds.value);
+  // Persist selected issue IDs
+  localStorage.setItem(
+    SELECTED_ISSUE_IDS_KEY,
+    JSON.stringify(multiSelectIssueIds.value)
+  );
+
+  // Persist permission map
+  localStorage.setItem(
+    SELECTED_ISSUE_EDITABLE_MAP_KEY,
+    JSON.stringify(multiSelectIssueEditableMap.value)
+  );
 };
 
 const selectedFieldOptions = [
@@ -1165,9 +1239,7 @@ function onBulkIssuesConvertToTask (issueIds) {
     taskService.saveBulkTasks(payload)
       .then(() => {
         notifySuccess({ message: "Tasks are saved successfully." });
-        multiSelectIssueIds.value = [];
-        selectedField.value = null;
-        localStorage.removeItem("selectedIssueIds");
+        setDefaultsForMultiSelects();
         refreshIssueList();
       })
       .finally(() => {
@@ -1181,15 +1253,19 @@ function onBulkIssuesConvertToTask (issueIds) {
 function setDefaultsForMultiSelects () {
   multiSelectProjectIds.value = [];
   multiSelectProjectName.value = [];
-  multiSelectRequirementProjectMap.value = [];
+
+  multiSelectRequirementProjectMap.value = {};
+
   multiSelectIssueIds.value = [];
   multiSelectIssueNames.value = [];
+
   multiSelectIssueEditableMap.value = {};
 
   selectedField.value = null;
   showMultiSelectOptions.value = false;
 
-  localStorage.removeItem("selectedIssueIds");
+  localStorage.removeItem(SELECTED_ISSUE_IDS_KEY);
+  localStorage.removeItem(SELECTED_ISSUE_EDITABLE_MAP_KEY);
 
   // Reset checkbox state in the displayed rows
   rows.value.forEach(row => {
@@ -1364,13 +1440,6 @@ watch(activeRowId, (val) => {
   });
 });
 
-// watch(() => search.value.projectModuleIds, async (newValue, oldValue) => {
-//   debugger;
-//   if (search.value.projectModuleIds?.length === 0) search.value.requirementIds = [];
-//   if (search.value?.projectModuleIds?.length === 0 || newValue === oldValue) return;
-
-//   await requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
-// }, { immediate: true });
 watch(
   () => [...(search.value.projectModuleIds || [])],
   async (newValue, oldValue) => {
@@ -1383,9 +1452,6 @@ watch(
   },
   { immediate: true }
 );
-// onBeforeUnmount(() => {
-//   document.removeEventListener("click", handleDocumentClick);
-// });
 
 // ----------------------------------------------------------------------------------------------------------------
 // On page rendering
@@ -1401,7 +1467,6 @@ onMounted(() => {
   issuePriorityForDropdown.load("Issue Priority");
   issueStatusDropdownSingleSelect.load("Issue Status");
   issueTypeForDropdown.load("Issue Type");
-  localStorage.removeItem("selectedIssueIds");
   if (!activeRowId.value) {
     activeRowId.value = null;
   }

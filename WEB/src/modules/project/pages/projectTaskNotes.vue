@@ -1387,14 +1387,20 @@ onMounted(async () => {
 
   // project status
   await projectStatusDropdown.load("Project Status");
-  // set default in progress status
-  const inProgressStatusValue = projectStatusDropdown.getValueByLabel("in progress");
-  // Set Default values for advance filter
-  if (
-    !Array.isArray(search.value.projectStatusIds) ||
-    search.value.projectStatusIds.length === 0
-  ) {
-    search.value.projectStatusIds = [inProgressStatusValue];
+  // Set default status only when no specific project is selected
+  if (!selectedProjectId) {
+    const inProgressStatusValue =
+      projectStatusDropdown.getValueByLabel("in progress");
+
+    if (
+      !Array.isArray(search.value.projectStatusIds) ||
+      search.value.projectStatusIds.length === 0
+    ) {
+      search.value.projectStatusIds = [inProgressStatusValue];
+    }
+  } else {
+    // When redirected with a selected project, don't apply In Progress filter
+    search.value.projectStatusIds = [];
   }
 
   await projectActiveInActiveDropdown.load("Project Active Status");

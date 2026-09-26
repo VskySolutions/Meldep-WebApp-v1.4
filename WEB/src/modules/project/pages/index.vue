@@ -1916,7 +1916,12 @@ onMounted(async () => {
   projectTagsDropdown.load();
   activeEmployeesDropdown.load(user.siteId);
   customerNameDropdown.load();
-  companyContactNameDropdown.load();
+   if (!search.value.customerIds?.length) {
+    companyContactNameDropdown.load();
+  } else {
+    companyContactNameDropdown.load(search.value.customerIds);
+  }
+
   tagsDropdown.load();
   getProjectStatus("Project Status");
 
@@ -1975,12 +1980,22 @@ watch(
 );
 
 // Advance Filter:-  On Company/Customer Change
-watch(() => search.value.customerIds, async (newValue, oldValue) => {
-  if (newValue === oldValue) return;
-  if (newValue?.length === 0) companyContactNameDropdown.load();
+// watch(() => search.value.customerIds, async (newValue, oldValue) => {
+//   if (newValue === oldValue) return;
+//   if (newValue?.length === 0) companyContactNameDropdown.load();
 
-  companyContactNameDropdown.load(newValue);
-});
+//   companyContactNameDropdown.load(newValue);
+// });
+watch(
+  () => search.value.customerIds,
+  (newValue) => {
+    if (!newValue?.length) {
+      companyContactNameDropdown.load();
+    } else {
+      companyContactNameDropdown.load(newValue);
+    }
+  }
+);
 </script>
 <style scoped>
 .table-project .Custom-DataTable {

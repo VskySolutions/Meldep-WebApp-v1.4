@@ -127,7 +127,9 @@
                   no-caps
                   class="text-primary btnRounded no-space-between q-ml-sm"
                   @click="$router.back()"
-                />
+                >
+                  <q-tooltip anchor="bottom middle" self="top middle">Back To List</q-tooltip>
+                </q-btn>
               </div>
             </div>
           </div>

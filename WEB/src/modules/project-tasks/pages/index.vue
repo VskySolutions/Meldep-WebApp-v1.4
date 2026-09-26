@@ -976,7 +976,25 @@ const manageDropDownTypes = ref([]);
 const showManageDropdownOptions = ref(false);
 const showSortDialog = ref(false);
 const siteId = computed(() => authStore.user?.siteId);
-const multiSelectTaskEditableMap = ref({});
+
+const SELECTED_TASK_IDS_KEY = "selectedTaskIds";
+const SELECTED_TASK_EDITABLE_MAP_KEY = "selectedTaskEditableMap";
+
+const getStoredSelectedTaskIds = () => {
+  return JSON.parse(
+    localStorage.getItem(SELECTED_TASK_IDS_KEY) || "[]"
+  );
+};
+
+const getStoredSelectedTaskEditableMap = () => {
+  return JSON.parse(
+    localStorage.getItem(SELECTED_TASK_EDITABLE_MAP_KEY) || "{}"
+  );
+};
+
+const multiSelectTaskEditableMap = ref(
+  getStoredSelectedTaskEditableMap()
+);
 
 // ----------------------------------------------------------------------------------------------------------------
 // Local Storage:- DataTable and Advance Filter Values
@@ -1009,7 +1027,7 @@ const getAllProjectTaskList = async ({ pagination: p }) => {
     ...search.value
   };
 
-  const storedTaskIds = JSON.parse(localStorage.getItem("selectedTaskIds") || "[]");
+  const storedTaskIds = getStoredSelectedTaskIds();
   // dependent dropdown
   if (search.value.projectIds > 0 && search.value.projectModuleIds > 0) {
     const { projectIdsFiltered, projectModuleIdsFiltered } = convertProjectIdsAndModuleIds(search.value.projectIds, search.value.projectModuleIds);
@@ -1020,6 +1038,17 @@ const getAllProjectTaskList = async ({ pagination: p }) => {
     const resp = await projectTaskService.getProjectTasks(payload);
     const isAdmin = role === "admin";
     rows.value = resp.data.map(task => transformTaskRow(task, storedTaskIds, isAdmin));
+
+    rows.value.forEach(task => {
+      if (multiSelectTaskIds.value.includes(task.id)) {
+        multiSelectTaskEditableMap.value[task.id] = task.isEditable === true;
+      }
+    });
+
+    localStorage.setItem(
+      SELECTED_TASK_EDITABLE_MAP_KEY,
+      JSON.stringify(multiSelectTaskEditableMap.value)
+    );
 
     Object.assign(pagination.value, {
       page,
@@ -1434,7 +1463,7 @@ const {
 const multiSelectProjectIds = ref([]);
 const multiSelectProjectName = ref([]);
 const multiSelectTaskProjectMap = ref({});
-const multiSelectTaskIds = ref([]);
+const multiSelectTaskIds = ref(getStoredSelectedTaskIds());
 const multiSelectTaskNames = ref([]);
 const multiSelectTaskStatusMap = ref({});
 
@@ -1477,8 +1506,17 @@ const onSelectCheckbox = (projectId, projectName, projectStatus, taskId, taskNam
     }
   }
 
-  // Persist selections properly
-  localStorage.setItem("selectedTaskIds", JSON.stringify(multiSelectTaskIds.value));
+  // Persist selected IDs
+  localStorage.setItem(
+    SELECTED_TASK_IDS_KEY,
+    JSON.stringify(multiSelectTaskIds.value)
+  );
+
+  // Persist edit permissions
+  localStorage.setItem(
+    SELECTED_TASK_EDITABLE_MAP_KEY,
+    JSON.stringify(multiSelectTaskEditableMap.value)
+  );
 };
 
 const hasNonEditableSelectedTask = computed(() => {
@@ -1564,7 +1602,7 @@ function setDefaultsForMultiSelects () {
   multiSelectTaskProjectMap.value = [];
   multiSelectTaskIds.value = [];
   multiSelectTaskNames.value = [];
-  multiSelectTaskStatusMap.value = [];
+  multiSelectTaskStatusMap.value = {};
   localStorage.removeItem("selectedTaskIds");
 }
 
