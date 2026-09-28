@@ -629,7 +629,7 @@ namespace Vsky.Data
                 entity.ToTable("FilePathDetails");
                 entity.Property(e => e.ModuleId).HasMaxLength(450);
                 entity.Property(e => e.ModuleName).HasMaxLength(250);
-                entity.Property(e => e.FilePath).HasMaxLength(250);
+                entity.Property(e => e.FilePath);
                 entity.Property(e => e.FileName).HasMaxLength(250);
                 entity.Property(e => e.Note).HasMaxLength(250);
                 entity.Property(e => e.CreatedById).IsRequired().HasMaxLength(450);

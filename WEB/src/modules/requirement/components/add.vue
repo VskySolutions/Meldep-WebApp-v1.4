@@ -97,6 +97,35 @@
                 </div>
               </div>
               <div class="row q-col-gutter-x-md q-mb-md">
+                <div class="col-12">
+                  <div class="form-group">
+                    <label class="q-mb-xs text-black">Req. Scope
+                      <q-icon
+                        name="o_info"
+                        size="16px"
+                        class="q-ml-xs cursor-pointer text-grey-7"
+                      >
+                        <q-tooltip
+                          anchor="top middle"
+                          self="bottom middle"
+                          :offset="[0, 6]"
+                        >
+                          <div style="max-width: 320px; white-space: normal;">
+                            Enter the specific areas, processes, systems, or activities that are covered by the Requirement.
+                          </div>
+                        </q-tooltip>
+                      </q-icon>
+                    </label>
+                    <q-editor
+                      v-model="model.scope"
+                      :dense="$q.screen.lt.md"
+                      :toolbar="toolbar"
+                      :fonts="fonts"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-6 col-md-6 col-lg-4">
                   <formSingleSelectDropdown
                     v-model="model.requirementTypeId"
@@ -829,6 +858,7 @@ const model = ref({
   closeDateStr: format(new Date(), "MM/dd/yyyy"),
   description: "",
   shortDescription: "",
+  scope: "",
   editingStatus: 0,
   status: {
     dropDownValue: ""
@@ -952,6 +982,7 @@ const getRequirement = () => {
     model.value.actualEndDateStr = resp.actualEndDate ? format(resp.actualEndDate, "MM/dd/yyyy") : "";
     model.value.closeDateStr = resp.closeDate ? format(resp.closeDate, "MM/dd/yyyy") : "";
     model.value.description = resp.description ? resp.description : "";
+    model.value.scope = resp.scope ? resp.scope : "";
     model.value.shortDescription = resp.shortDescription ? resp.shortDescription : "";
     rows.value = resp.filePathDetails.map(item => ({
       ...item,

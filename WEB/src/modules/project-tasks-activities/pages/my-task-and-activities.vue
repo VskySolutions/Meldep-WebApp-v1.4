@@ -999,8 +999,11 @@ const getProjectActivities = (props) => {
   const sortsObj = Object.fromEntries(validSorts.map(s => [s.column, s.direction]));
   const payload = { page, pageSize: rowsPerPage, sortBy, sorts: sortsObj, descending, ...search.value };
 
-  const storedActivityIds = localStorage.getItem("selectedActivityIds");
-  ActivityIds.value = storedActivityIds ? storedActivityIds.split(",") : [];
+  // const storedActivityIds = localStorage.getItem("selectedActivityIds");
+  // ActivityIds.value = storedActivityIds ? storedActivityIds.split(",") : [];
+  const storedActivityIds = getStoredActivityIds();
+  ActivityIds.value = storedActivityIds;
+
   projectActivitiesService.getAllProjectActivitiesForExpandCollapse(payload).then((resp) => {
     rows.value = resp.data;
     rows.value = resp.data.map(project => {
@@ -1062,6 +1065,21 @@ const getProjectActivities = (props) => {
 
         })
       };
+    });
+
+    const selectedActivities = rows.value
+      .flatMap(project => project.activities || [])
+      .filter(activity => ActivityIds.value.includes(activity.id));
+
+    selectedActivities.forEach(activity => {
+      multiSelectTaskActivityStatusMap.value[activity.id] =
+        activity.activityStatus?.dropDownValue;
+
+      multiSelectTaskActivityActiveMap.value[activity.id] =
+        activity.active;
+
+      multiSelectTaskActivityEditableMap.value[activity.id] =
+        activity.isEditable === true;
     });
 
     Object.assign(pagination.value, {
@@ -1166,7 +1184,7 @@ initProjectTaskActivityActions(activeRowId);
 // Search records as per parameters
 const onSearch = () => {
   refreshProjectTaskActivityList();
-  ActivityIds.value = [];
+  // ActivityIds.value = [];
 };
 
 // Clear search
@@ -1403,10 +1421,34 @@ function onChangeActivityStatus (id, activityStatusId) {
   });
 }
 
-const ActivityIds = ref([]);
+// const ActivityIds = ref([]);
+// const multiSelectTaskActivityStatusMap = ref({});
+// const multiSelectTaskActivityActiveMap = ref({});
+// const multiSelectTaskActivityEditableMap = ref({});
+// const getStoredActivityIds = () => {
+//   try {
+//     return JSON.parse(localStorage.getItem("selectedActivityIds") || "[]");
+//   } catch {
+//     return [];
+//   }
+// };
+const getStoredActivityIds = () => {
+  try {
+    const stored = JSON.parse(
+      localStorage.getItem("selectedActivityIds") || "[]"
+    );
+
+    return Array.isArray(stored) ? stored : [];
+  } catch {
+    return [];
+  }
+};
+
+const ActivityIds = ref(getStoredActivityIds());
 const multiSelectTaskActivityStatusMap = ref({});
 const multiSelectTaskActivityActiveMap = ref({});
 const multiSelectTaskActivityEditableMap = ref({});
+
 const hasNonEditableSelectedActivity = computed(() => {
   // Apply isEditable restriction only to Viewers
   if (!isViewer) return false;
@@ -1416,26 +1458,67 @@ const hasNonEditableSelectedActivity = computed(() => {
   );
 });
 
-const onSelectCheckbox = (itemId, isActive, activityStatus, flag, isEditable) => {
+// const onSelectCheckbox = (itemId, isActive, activityStatus, flag, isEditable) => {
+//   if (flag === true) {
+//     // Add the itemId to the ProjectIds array if it's not already present
+//     if (!ActivityIds.value.includes(itemId)) {
+//       ActivityIds.value.push(itemId);
+//       multiSelectTaskActivityStatusMap.value[itemId] = activityStatus;
+//       multiSelectTaskActivityActiveMap.value[itemId] = isActive;
+//       multiSelectTaskActivityEditableMap.value[itemId] = isEditable === true;
+//     }
+//   } else {
+//     // Find the index of the itemId in the ProjectIds array and remove it
+//     const index = ActivityIds.value.indexOf(itemId);
+//     if (index !== -1) {
+//       ActivityIds.value.splice(index, 1); // Remove the item at the found index
+//     }
+//     delete multiSelectTaskActivityStatusMap.value[itemId];
+//     delete multiSelectTaskActivityActiveMap.value[itemId];
+//     delete multiSelectTaskActivityEditableMap.value[itemId];
+//   }
+//   // localStorage.setItem("selectedActivityIds", ActivityIds.value);
+//   localStorage.setItem(
+//     "selectedActivityIds",
+//     JSON.stringify(ActivityIds.value)
+//   );
+// };
+const onSelectCheckbox = (
+  itemId,
+  isActive,
+  activityStatus,
+  flag,
+  isEditable
+) => {
   if (flag === true) {
-    // Add the itemId to the ProjectIds array if it's not already present
     if (!ActivityIds.value.includes(itemId)) {
       ActivityIds.value.push(itemId);
-      multiSelectTaskActivityStatusMap.value[itemId] = activityStatus;
-      multiSelectTaskActivityActiveMap.value[itemId] = isActive;
-      multiSelectTaskActivityEditableMap.value[itemId] = isEditable === true;
+
+      multiSelectTaskActivityStatusMap.value[itemId] =
+        activityStatus;
+
+      multiSelectTaskActivityActiveMap.value[itemId] =
+        isActive;
+
+      multiSelectTaskActivityEditableMap.value[itemId] =
+        isEditable === true;
     }
   } else {
-    // Find the index of the itemId in the ProjectIds array and remove it
     const index = ActivityIds.value.indexOf(itemId);
+
     if (index !== -1) {
-      ActivityIds.value.splice(index, 1); // Remove the item at the found index
+      ActivityIds.value.splice(index, 1);
     }
+
     delete multiSelectTaskActivityStatusMap.value[itemId];
     delete multiSelectTaskActivityActiveMap.value[itemId];
     delete multiSelectTaskActivityEditableMap.value[itemId];
   }
-  localStorage.setItem("selectedActivityIds", ActivityIds.value);
+
+  localStorage.setItem(
+    "selectedActivityIds",
+    JSON.stringify(ActivityIds.value)
+  );
 };
 
 const onSendDailyPlan = () => {
@@ -1913,7 +1996,7 @@ onMounted(async () => {
     search.value.activityStatusIds = activityStatus;
   }
 
-  localStorage.removeItem("selectedActivityIds");
+  // localStorage.removeItem("selectedActivityIds");
 
   document.addEventListener("click", handleDocumentClick);
   refreshProjectTaskActivityList();

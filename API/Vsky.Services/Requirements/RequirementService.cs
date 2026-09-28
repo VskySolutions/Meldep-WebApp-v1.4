@@ -628,6 +628,7 @@ namespace Vsky.Services.Requirements
                 CloseDate = x.CloseDate,
                 Description = x.Description,
                 ShortDescription = x.ShortDescription,
+                Scope = x.Scope,
                 Notes = x.Notes,
                 ApprovalStatus = x.ApprovalStatus,
                 IdentifiedCustomerId = x.IdentifiedCustomerId,

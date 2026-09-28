@@ -11,7 +11,7 @@
           <div class="q-gutter-y-md">
             <q-card>
               <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator>
-                <q-tab v-if="!isManageDescription" name="1_tab" label="Manage Description" class="q-px-lg q-mr-md" />
+                <q-tab v-if="!isManageDescription" name="1_tab" label="Manage REQ. Description" class="q-px-lg q-mr-md" />
                 <q-tab v-if="!isManageDescription"name="2_tab" label="Requirement Info" class="q-px-lg" :disable="disableTab" />
                 <q-tab  v-if="!isManageDescription" name="3_tab" label="Document Reference List" class="q-px-lg" :disable="disableTab" />
               </q-tabs>
@@ -67,6 +67,35 @@
                             </q-icon>
                           </label>
                           <q-input v-model="model.shortDescription" outlined autogrow hint="The maximum length allowed is 200." maxlength="200" />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row q-col-gutter-x-md q-mb-md">
+                      <div class="col-12">
+                        <div class="form-group">
+                          <label class="q-mb-xs text-black">Req. Scope
+                            <q-icon
+                              name="o_info"
+                              size="16px"
+                              class="q-ml-xs cursor-pointer text-grey-7"
+                            >
+                              <q-tooltip
+                                anchor="top middle"
+                                self="bottom middle"
+                                :offset="[0, 6]"
+                              >
+                                <div style="max-width: 320px; white-space: normal;">
+                                  Enter the specific areas, processes, systems, or activities that are covered by the Requirement.
+                                </div>
+                              </q-tooltip>
+                            </q-icon>
+                          </label>
+                          <q-editor
+                            v-model="model.scope"
+                            :dense="$q.screen.lt.md"
+                            :toolbar="toolbar"
+                            :fonts="fonts"
+                          />
                         </div>
                       </div>
                     </div>
@@ -460,6 +489,7 @@ import requirementService from "../requirement.service";
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
 import formDate from "src/components/form-inputs/_formDate.vue";
 
+import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 // Shared Dropdowns
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 import projectModule from "src/modules/project/utils/dropdowns.js";
@@ -494,6 +524,7 @@ const mode = ref(null);
 const activeRowId = ref(null);
 const editingRow = ref(null);
 const editingLogRow = ref(null);
+const { fonts, toolbar } = getEditorConfig($q);
 
 const model = ref({
   projectId: props.projectIdAttr !== "" ? props.projectIdAttr : (props.projectIdValue !== "" ? props.projectIdValue : (projectIds !== "" ? projectIds : null)),
@@ -520,6 +551,7 @@ const model = ref({
   closeDateStr: format(new Date(), "MM/dd/yyyy"),
   description: "",
   shortDescription: "",
+  scope: "",
   editingStatus: 0,
   status: {
     dropDownValue: ""
@@ -547,7 +579,7 @@ const rules = {
 // ----------------------------------------------------------------------------------------------------------------
 
 const editingRowrules = {
-  filePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1), maxLength: maxLength(200) },
+  filePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1) },
   fileName: { required: helpers.withMessage("File Name is required", required) }
 };
 
@@ -577,6 +609,7 @@ const getRequirement = () => {
     model.value.actualEndDateStr = resp.actualEndDate ? format(resp.actualEndDate, "MM/dd/yyyy") : "";
     model.value.closeDateStr = resp.closeDate ? format(resp.closeDate, "MM/dd/yyyy") : "";
     model.value.description = resp.description ? resp.description : "";
+    model.value.scope = resp.scope ? resp.scope : "";
     model.value.shortDescription = resp.shortDescription ? resp.shortDescription : "";
     rows.value = resp.filePathDetails.map(item => ({
       ...item,

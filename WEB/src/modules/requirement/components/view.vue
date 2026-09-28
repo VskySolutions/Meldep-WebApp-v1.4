@@ -10,10 +10,11 @@
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator inline-label mobile-arrows>
-            <q-tab name="1_tab" label="View Description" class="q-px-lg q-mr-md" />
+            <q-tab name="1_tab" label="View REQ. Description" class="q-px-lg q-mr-md" />
             <q-tab name="2_tab" label="Description Overview" class="q-px-lg q-mr-md" />
-            <q-tab name="3_tab" label="Requirement Info." class="q-px-lg" />
-            <q-tab name="4_tab" label="Document Reference List" class="q-px-lg"/>
+            <q-tab name="3_tab" label="Requirement Scope" class="q-px-lg q-mr-md" />
+            <q-tab name="4_tab" label="Requirement Info." class="q-px-lg" />
+            <q-tab name="5_tab" label="Document Reference List" class="q-px-lg"/>
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated>
@@ -29,6 +30,16 @@
             />
             </q-tab-panel>
             <q-tab-panel name="3_tab">
+              <fieldset>
+                <legend>Req. Scope</legend>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="text-black RichTextEditor">
+                    <span v-html="model.scope || '-'"></span>
+                  </div>
+                </div>
+              </fieldset>
+            </q-tab-panel>
+            <q-tab-panel name="4_tab">
               <fieldset>
                 <legend>Requirement Info.</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
@@ -231,45 +242,45 @@
                     </q-table>
                   </fieldset>
                 </fieldset>
-              </q-tab-panel>
-              <q-tab-panel name="4_tab">
-                 <fieldset class="q-mb-lg">
-                    <legend>Document Reference List</legend>
-                    <q-table
-                      ref="tableRef"
-                      v-model:pagination="pagination"
-                      bordered class="no-shadow"
-                      :loading="loading"
-                      :rows="rows"
-                      :columns="columns"
-                      row-key="id"
-                      separator="cell"
-                      no-data-label="No data available"
-                      binary-state-sort
-                      :rows-per-page-options="[20, 50, 100, 200, 500]"
-                    >
-                      <template #header="props">
-                        <q-tr :props="props" class="bg-primary text-white">
-                          <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-                        </q-tr>
-                      </template>
-                      <template #body="props">
-                        <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
-                            <a :href="props.row.filePath" target="_blank" class="text-bluee">
-                              {{ props.row.filePath }}
-                            </a>
-                          </q-td>
-                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.fileName }}</q-td>
-                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 30%;">{{ props.row.note }}</q-td>
-                        </q-tr>
-                      </template>
-                    </q-table>
-                  </fieldset>
-              </q-tab-panel>
-            </q-tab-panels>
-          </div>
+            </q-tab-panel>
+            <q-tab-panel name="5_tab">
+                <fieldset class="q-mb-lg">
+                  <legend>Document Reference List</legend>
+                  <q-table
+                    ref="tableRef"
+                    v-model:pagination="pagination"
+                    bordered class="no-shadow"
+                    :loading="loading"
+                    :rows="rows"
+                    :columns="columns"
+                    row-key="id"
+                    separator="cell"
+                    no-data-label="No data available"
+                    binary-state-sort
+                    :rows-per-page-options="[20, 50, 100, 200, 500]"
+                  >
+                    <template #header="props">
+                      <q-tr :props="props" class="bg-primary text-white">
+                        <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+                      </q-tr>
+                    </template>
+                    <template #body="props">
+                      <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
+                          <a :href="props.row.filePath" target="_blank" class="text-bluee">
+                            {{ props.row.filePath }}
+                          </a>
+                        </q-td>
+                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.fileName }}</q-td>
+                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 30%;">{{ props.row.note }}</q-td>
+                      </q-tr>
+                    </template>
+                  </q-table>
+                </fieldset>
+            </q-tab-panel>
+          </q-tab-panels>
         </div>
+      </div>
       <!-- </q-card-section> -->
     </q-card>
   </q-dialog>
@@ -328,6 +339,7 @@ const model = ref({
   createdOnUtc: "",
   lastNote: "",
   shortDescription: "",
+  scope: "",
   project: {
     name: ""
   },
