@@ -832,7 +832,7 @@
                   @click="onRequirementEdit(props.row.id, true, refreshRequirementList)"
                 >
                   <q-tooltip>
-                    Manage Description
+                    Manage Req. Description
                   </q-tooltip>
                 </q-icon>
                 <a

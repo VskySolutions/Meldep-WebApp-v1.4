@@ -307,7 +307,7 @@
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">
                   <div class="form-group">
-                    <label class="q-mb-xs text-black">Description<span class="required">*</span></label>
+                    <label class="q-mb-xs text-black">Initial Req. Description<span class="required">*</span></label>
                     <q-editor
                       v-model="model.description"
                       :dense="$q.screen.lt.md"
