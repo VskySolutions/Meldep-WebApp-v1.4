@@ -568,7 +568,7 @@
                       <q-td style="width: 5%;" class="text-center actions">
                         <q-icon
                           v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
-                          name="o_article"
+                          name="o_description"
                           size="xs"
                           :class="[
                             'cursor-pointer q-mr-sm'
@@ -667,7 +667,7 @@
                         <q-icon
                           v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
                           name="o_timer"
-                          class="cursor-pointer q-mr-sm ss"
+                          class="cursor-pointer q-mr-sm ss hidden"
                           size="xs"
                           @click="onStartProjectTaskActivityTimer(activityProps.row, startNewTask)"
                         >

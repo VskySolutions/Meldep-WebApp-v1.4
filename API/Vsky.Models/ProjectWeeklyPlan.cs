@@ -165,6 +165,7 @@ namespace Vsky.Models
         public string PlanTypeId { get; set; }
         public DateTime Date { get; set; }
         public string Type { get; set; }
+        public string Description { get; set; }
         public string[] Ids { get; set; }
     }
     public class EmployeeEstimatedHoursDropdownList

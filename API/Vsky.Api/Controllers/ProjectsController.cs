@@ -2537,10 +2537,11 @@ namespace Vsky.Api.Controllers
 
                 string ProjectWeeklyPlanDateId = await _projectWeeklyDatesService.CheckIfProjectWeeklyPlanIsCreated(model.ProjectId, model.PlanTypeId, model.Date);
 
+                var newWeekDatemodel = new ProjectWeeklyPlanDates();
+
                 if (string.IsNullOrEmpty(ProjectWeeklyPlanDateId))
                 {
                     var ProjectWeeklyPlan = await _projectWeeklyService.GetByProjectId(SiteId, model.ProjectId);
-                    var newWeekDatemodel = new ProjectWeeklyPlanDates();
 
                     newWeekDatemodel.ProjectWeeklyPlanId = ProjectWeeklyPlan.Id;
                     newWeekDatemodel.WeekDate = model.Date;
@@ -2553,6 +2554,32 @@ namespace Vsky.Api.Controllers
                     _projectWeeklyDatesService.InsertProjectWeeklyPlanDates(newWeekDatemodel);
 
                     ProjectWeeklyPlanDateId = newWeekDatemodel.Id;
+                }
+
+                if(!string.IsNullOrEmpty(model.Description))
+                {
+                    var LineData = new ProjectWeeklyPlanDatesLines();
+
+                    LineData.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
+
+                    if (!string.IsNullOrEmpty(model.Description))
+                    {
+                        LineData.ExpectedDescription = await _azureBlobImageServices
+                            .ProcessHtmlAndManageImagesAsync(
+                                model.Description,
+                                SiteData.Name,
+                                "project-weeklymonthly",
+                                LineData.Id
+                            );
+                    }
+
+                    LineData.ExpectedDescriptionCreatedById = LoggedUserId;
+                    LineData.ExpectedDescriptionCreatedOnUtc = GetDateTime;
+                    LineData.ExpectedDescriptionUpdatedById = LoggedUserId;
+                    LineData.ExpectedDescriptionUpdatedOnUtc = GetDateTime;
+                    LineData.ActualDescription = "";
+
+                    _projectWeeklyDatesLinesService.InsertProjectWeeklyPlanDatesLines(LineData);
                 }
 
                 if (!string.IsNullOrEmpty(ProjectWeeklyPlanDateId) && model.Ids.Any())

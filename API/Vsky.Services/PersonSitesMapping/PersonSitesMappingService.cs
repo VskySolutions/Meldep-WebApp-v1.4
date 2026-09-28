@@ -66,7 +66,7 @@ namespace Vsky.Services.Persons
             bool lookup = false
         )
         {
-            var query = _personSitesMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.IsSharedUser == isSharedUser && x.SiteId == SiteId);
+            var query = _personSitesMappingRepository.TableNoTracking.Where(x => !x.Deleted && !x.Person.Deleted && x.IsSharedUser == isSharedUser && x.SiteId == SiteId);
 
             if (personIds != null && personIds.Any())
                 query = query.Where(x => personIds.Contains(x.PersonId));

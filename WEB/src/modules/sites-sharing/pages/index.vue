@@ -339,7 +339,7 @@ const onAdvanceSearch = () => {
 const onAdvanceClear = () => {
   search.value.personIds = [];
   search.value.primaryEmailAddress = "";
-  search.value.userStatus = "Active";
+  // search.value.userStatus = "Active";
   search.value.isSharedUser = true;
 
   pagination.value.page = 1;
@@ -378,7 +378,7 @@ const mapSingleFilterToLabel = (id, list, label) => {
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.personIds, isSharedPersonNameForDropdown.list, "Person Name"),
   ...(search.value.primaryEmailAddress ? { Email: search.value.primaryEmailAddress } : {}),
-  ...mapSingleFilterToLabel(search.value.userStatus, userStatusList, "User Status"),
+  // ...mapSingleFilterToLabel(search.value.userStatus, userStatusList, "User Status"),
    ...(search.value.isSharedUser !== null
     ? { "Is Shared": search.value.isSharedUser ? "Yes" : "No" }
     : {})
@@ -392,7 +392,7 @@ function onClearFilters(key) {
   } else if (key === "User Status") {
     search.value.userStatus = null;
   } else if (key === "Is Shared") {
-    search.value.isSharedUser = null;
+    search.value.isSharedUser = true;
   }
 
   pagination.value.page = 1;

@@ -1,6 +1,6 @@
 <template>
   <q-dialog ref="linkContainer" v-model="linkRequirementTaskIssueModal" class="project-message-dialog customDialog dialog-scrollable-content" persistent position="right">
-    <q-card style="width: 500px; max-width: 500px;">
+    <q-card style="width: 800px; max-width: 800px;">
       <q-card-section class="bg-primary text-white flex items-center q-pa-sm">
         <div class="q-space flex  fs-16">Link To Weekly/Monthly Plan?</div>
         <q-btn dense flat icon="o_close" @click="toggleLinkRequirementTaskIssueModal" />
@@ -8,11 +8,11 @@
       <q-card-section class="row q-pa-md">
         <div class="row full-width q-mb-md">
           <div class="col-12 q-mb-sm">
-            <label class="Cutomlabel" style="margin: 0px !important;">Project Name<span class="required">*</span></label>
+            <label class="Cutomlabel" style="margin: 0px !important;">Project Name</label>
             <q-input v-model="model.projectName" outlined hide-bottom-space :dense="true" :readonly="true" />
           </div>
           <div class="col-6">
-            <label class="Cutomlabel" style="margin: 0px !important;">Plan Type<span class="required">*</span></label>
+            <label class="Cutomlabel" style="margin: 0px !important;">Plan Type</label>
             <div class="q-gutter-sm">
               <q-radio
                 v-for="plan in ProjectPlanTypeDropdownSingleSelect.list.value"
@@ -49,9 +49,22 @@
           </div>
         </div>
         <div class="row full-width q-mb-md">
-          <div class="col-12">Selected {{ model.type }}<span class="required">*</span></div>
+          <div class="col-12">Selected {{ model.type }}</div>
           <div v-for="(name, index) in model.names" :key="name" class="col-12 q-px-sm q-mb-xs">
             {{ (index+1) + ") " + name }}
+          </div>
+        </div>
+        <div class="row full-width q-mb-md">
+          <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="q-mb-xs text-black"><label>Weekly/Monthly Plan Short Description</label></div>
+            <div class="form-group">
+              <q-editor
+                v-model="model.description"
+                :dense="$q.screen.lt.md"
+                :toolbar="toolbar"
+                :fonts="fonts"
+              />
+            </div>
           </div>
         </div>
         <div class="row full-width flex justify-center q-px-sm">
@@ -67,6 +80,7 @@
 import { ref, onMounted, watch } from "vue";
 import { useQuasar, date } from "quasar";
 import { notifySuccess } from "assets/utils";
+import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
 import projectService from "modules/project/projects.service";
 
@@ -78,6 +92,7 @@ import formMonthYearPicker from "src/components/form-inputs/_formMonthYearPicker
 import projectTargetPlanModule from "src/modules/project-targetplan/utils/dropdowns.js";
 
 const $q = useQuasar();
+const { fonts, toolbar } = getEditorConfig($q);
 
 const today = new Date();
 const minMonth = date.formatDate(today, "YYYY/MM");
@@ -105,7 +120,8 @@ const model = ref({
   date: null,
   type: props.type,
   ids: props?.ids ? props.ids : null,
-  names: props?.names ? props.names : null
+  names: props?.names ? props.names : null,
+  description: null
 });
 
 const onProjectPlanChanged = (selected) => {
@@ -171,6 +187,7 @@ const {
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
 const OnSave = () => {
+  debugger;
   const title = `Link ${model.value.type} To ${showWeeklyMonthlyCalendar.value ? "Monthly" : "Weekly"} Plan`;
   // show a warning message advising the user to create a task first before linking
   const message = props.hasTaskLink > 0
