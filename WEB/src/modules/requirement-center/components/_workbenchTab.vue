@@ -11,10 +11,16 @@
       >
         <q-tab name="requirementDescription">
           <div class="row items-center no-wrap">
-            Requirement Description
+            View REQ. Description
           </div>
         </q-tab>
-        
+
+        <q-tab name="requirementScope">
+          <div class="row items-center no-wrap">
+            Req. Scope
+          </div>
+        </q-tab>
+
         <q-tab name="requirementShortDescription">
           <div class="row items-center no-wrap">
             Requirement Short Description
@@ -29,7 +35,7 @@
 
         <q-tab name="qAndA">
           <div class="row items-center no-wrap">
-            Project Questions Answers 
+            Project Questions Answers
             <q-badge
               rounded
               color="grey-3"
@@ -40,7 +46,7 @@
             </q-badge>
           </div>
         </q-tab>
-        
+
         <q-tab name="actionItems">
           <div class="row items-center no-wrap">
             Action Items
@@ -123,7 +129,16 @@
               @select="selectedReqDescription = $event"
             />
           </q-tab-panel>
-          
+
+          <q-tab-panel name="requirementScope" class="q-pa-none">
+            <RequirementScopeDetails
+              :requirement-id="requirementId"
+              :project-id="projectId"
+              :active-tab="leftTab"
+              @select="selectedReqDescription = $event"
+            />
+          </q-tab-panel>
+
           <q-tab-panel name="requirementShortDescription" class="q-pa-none">
             <RequirementShortDescriptionDetails
               :requirement-id="requirementId"
@@ -151,7 +166,7 @@
               @count="projectQACount = $event"
             />
           </q-tab-panel>
-          
+
           <q-tab-panel name="actionItems" class="q-pa-none">
             <ProjectActionItemsTabularView
               :requirement-id="requirementId"
@@ -227,6 +242,7 @@ import RequirementDescriptionDetails from './details/_requirementDescriptionDeta
 import RequirementInfoDetails from './details/_requirementInfoDetails.vue';
 import RequirementFilesTabularView from './tabularView/_requirementFilesTabularView.vue';
 import RequirementShortDescriptionDetails from './details/_requirementShortDescriptionDetails.vue';
+import RequirementScopeDetails from './details/_requirementScopeDetails.vue';
 
 const props = defineProps({
   requirementId: String,
