@@ -531,7 +531,10 @@ namespace Vsky.Services.ProjectModules
                         Id = mapping.File.Id,
                         VirtualPath = mapping.File.VirtualPath,
                         MimeType = mapping.File.MimeType,
-                        SeoFilename = mapping.File.SeoFilename
+                        SeoFilename = mapping.File.SeoFilename,
+                        ExternalFileName = mapping.File.ExternalFileName,
+                        ExternalFilePath = mapping.File.ExternalFilePath,
+                        ExternalFileDescription = mapping.File.ExternalFileDescription
                     }
                 }).ToList()
             });

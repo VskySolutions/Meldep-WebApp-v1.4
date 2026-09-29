@@ -981,7 +981,7 @@
                           <q-item-section>Calendar</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="props.row.isEditable && !search.isTemplate"
+                          v-if="props.row.isEditable && !search.isTemplate && user.isFileUploadOrExternal"
                           v-ripple clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id); onProjectFilesView(props.row.id, props.row.name, refreshProjectList)"
                         >

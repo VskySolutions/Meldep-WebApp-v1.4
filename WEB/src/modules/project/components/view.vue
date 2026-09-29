@@ -150,8 +150,17 @@
               <fieldset class="q-mb-lg">
                 <legend>Project Files</legend>
                 <q-table
-                  ref="tableRef" v-model:pagination="filepagination" bordered class="no-shadow" :loading="loading" :rows="filesrows" :columns="fileColumns" row-key="id" separator="cell"
-                  binary-state-sort :rows-per-page-options="[20, 50, 100, 200, 500]"
+                  ref="tableRef"
+                  v-model:pagination="filepagination"
+                  bordered
+                  class="no-shadow"
+                  :loading="loading"
+                  :rows="filesrows"
+                  :columns="fileColumns"
+                  row-key="id"
+                  separator="cell"
+                  binary-state-sort
+                  :rows-per-page-options="[20, 50, 100, 200, 500]"
                 >
                   <template #header="props">
                     <q-tr :props="props" class="bg-primary text-white">
@@ -161,21 +170,23 @@
                   </template>
                   <template #body="props">
                     <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                      <!-- <q-td>
-                        <a :href="baseURL + props.row.file.virtualPath" target="_blank">
-                          {{ extractFileName(props.row.file.virtualPath) }}
+                      <q-td style="white-space: normal; overflow-wrap: anywhere;">
+                        <a
+                          v-if="props.row.filePath"
+                          :href="props.row.filePath"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {{ props.row.filePath }}
                         </a>
-                      </q-td> -->
-                      <q-td>{{ extractFileName(props.row.file.seoFilename) }}</q-td>
-                      <q-td>{{ props.row.createdBy.person.firstName + " " + props.row.createdBy.person.lastName }}</q-td>
-                      <q-td>{{ props.row.createdOnUtc.replaceAll("-", "/") }}</q-td>
-                      <q-td style="width: 5%;" class="text-center actions">
-                        <q-btn icon="o_visibility" size="sm" class="q-pr-xs" flat @click="viewFile(props.row.file.virtualPath)" />
-                        <q-btn icon="o_download" size="sm" class="q-pl-xs" flat @click="downloadFile(props.row.file.virtualPath)" />
-                        <!-- <q-icon name="o_download" class="cursor-pointer q-mr-sm" size="xs" @click="onDownload(props.row.file.virtualPath)">
-                          <q-tooltip>Download</q-tooltip>
-                        </q-icon> -->
-                        <!-- <a :href="baseURL + props.row.file.virtualPath" download target="_blank" class="q-mr-sm" rel="noopener noreferrer"><q-icon name="o_visibility" color="black" size="xs" /><q-tooltip>View</q-tooltip></a> -->
+                      </q-td>
+                      <q-td class="common-q-td">{{ props.row.fileName  }}</q-td>
+                      <q-td class="common-q-td">{{ props.row.fileDescription }}</q-td>
+                      <q-td class="common-q-td">{{ props.row.createdBy.person.firstName + " " + props.row.createdBy.person.lastName }}</q-td>
+                      <q-td class="common-q-td">{{ props.row.createdOnUtc.replaceAll("-", "/") }}</q-td>
+                      <q-td class="text-center actions">
+                        <q-btn v-if="!props.row.filePath" icon="o_visibility" size="sm" class="q-pr-xs" flat @click="viewFile(props.row.file.virtualPath)" />
+                        <q-btn v-if="!props.row.filePath" icon="o_download" size="sm" class="q-pl-xs" flat @click="downloadFile(props.row.file.virtualPath)" />
                       </q-td>
                     </q-tr>
                   </template>
@@ -339,7 +350,9 @@ const columns = ref([
 
 const filepagination = ref({ sortBy: "", descending: true, rowsPerPage: 20, page: 1 });
 const fileColumns = ref([
-  { name: "virtualPath", label: "File Name", field: "file.virtualPath", align: "left" },
+  { name: "externalFilePath", label: "File Path", field: "externalFilePath", align: "left" },
+  { name: "seoFilename", label: "File Name", field: "seoFilename", align: "left" },
+  { name: "fileDescription", label: "File Description", field: "fileDescription", align: "left" },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left" },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left" }
 ]);
@@ -461,7 +474,10 @@ const getProject = () => {
       };
     });
     filesrows.value = resp.projectFileList.map(item => ({
-      ...item
+      ...item,
+      filePath: item.file?.externalFilePath || "",
+      fileName: item.file?.externalFileName || extractFileName(item.file?.seoFilename) || "",
+      fileDescription: item.file?.externalFileDescription || "",
     }));
     servicesRows.value = (resp.infraProjectServices ?? []).map(row => {
       const service = row.infraAccountServices || {};

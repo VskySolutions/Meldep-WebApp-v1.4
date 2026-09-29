@@ -846,6 +846,7 @@ namespace Vsky.Services.Projects
                 ProjectFileList = x.ProjectFileList.Where(x => !x.Deleted).OrderByDescending(x => x.CreatedOnUtc).Select(mapping => new ProjectFiles
                 {
                     Id = mapping.Id,
+                    CreatedById = mapping.CreatedById,
                     CreatedBy = new ApplicationUser
                     {
                         Id = mapping.CreatedBy.Id,

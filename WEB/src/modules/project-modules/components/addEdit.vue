@@ -124,11 +124,12 @@
                         </div>
                       </div>
                     </div>
-                    <div class="row q-col-gutter-x-md q-mb-lg">
+                    <div v-if="isFileUploadOrExternal" class="row q-col-gutter-x-md q-mb-lg">
                       <div class="col-12 q-mb-xs text-black">Project Module Files</div>
                       <div class="col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12">
                         <div class="form-group">
                           <multiFileUploader
+                            :key="model.projectModuleFiles?.length"
                             :initialFiles="model.projectModuleFiles"
                             :allowedExtensions="[
                               '.pdf','.xls','.xlsx','.doc','.docx','.jpeg','.jpg','.png','.ppt','.pptx'
@@ -140,10 +141,10 @@
                         </div>
                       </div>
                     </div>
-                    <div class="row q-col-gutter-x-md q-mb-lg">
+                    <div v-if="isFileUploadOrExternal" class="row q-col-gutter-x-md q-mb-lg">
                       <div v-if="model.projectModuleFiles && model.projectModuleFiles.length > 0" class="row q-gutter-md">
                         <div
-                          v-for="(file, index) in model.projectModuleFiles"
+                          v-for="(file, index) in model.projectModuleFiles.filter(file => !file.file?.externalFileName?.trim() && !file.file?.externalFilePath?.trim())"
                           :key="index"
                           class="col-3 position-relative file-card text-center"
                           style="max-width: 140px; min-width: 140px;"
@@ -189,12 +190,134 @@
                         </div>
                       </div>
                     </div>
-                    <div align="center" class="q-gutter-sm justify-center">
-                      <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="onDialogCancel" />
-                      <q-btn v-if="tab === '1_tab'" label="Save & Next" type="submit" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps />
-                      <q-btn label="Save & Close" type="button" color="primary" class="actionBtn hidden" :loading="processingClose" :disable="processingClose" no-caps @click="onSubmitClose()" />
-                    </div>
                   </fieldset>
+                  <fieldset v-if="!isFileUploadOrExternal" class="q-mt-lg">
+                    <legend>Document Reference List</legend>
+                    <div class="flex items-center justify-end q-mb-md">
+                      <q-btn color="primary" icon="o_add" label="Add" no-caps @click="onAddDocumentReference" />
+                    </div>
+                    <q-table
+                      ref="tableRef"
+                      v-model:pagination="pagination"
+                      bordered
+                      class="no-shadow"
+                      :loading="loading"
+                      :rows="fileRows"
+                      :columns="documentReferenceColumns"
+                      row-key="id"
+                      separator="cell"
+                      no-data-label="No data available"
+                      binary-state-sort
+                    >
+                      <template #header="props">
+                        <q-tr :props="props" class="bg-primary text-white">
+                          <q-th
+                            v-for="col in props.cols"
+                            :key="col.name" :props="props"
+                          >
+                            {{ col.label }}
+                            <span v-if="['externalFilePath','externalFileName'].includes(col.name)" class="required">*</span>
+                          </q-th>
+                          <q-th auto-width class="text-center">Actions</q-th>
+                        </q-tr>
+                      </template>
+                      <template #top-row>
+                        <q-tr v-if="mode == 'addDocumentReference'" class="row-highlight">
+                          <q-td>
+                            <div>
+                              <q-input
+                                v-model="editingRow.externalFilePath"
+                                outlined
+                                stack-label
+                                hide-bottom-space
+                                :dense="true"
+                                :error="editingRowV$.externalFilePath.$error"
+                                :error-message="editingRowV$.externalFilePath.$errors[0]?.$message"
+                                @blur="editingRowV$.externalFilePath.$touch"
+                              />
+                            </div>
+                          </q-td>
+                          <q-td>
+                            <div>
+                              <q-input
+                                v-model="editingRow.externalFileName"
+                                outlined
+                                stack-label
+                                hide-bottom-space
+                                :dense="true"
+                                :error="editingRowV$.externalFileName.$error"
+                                :error-message="editingRowV$.externalFileName.$errors[0]?.$message"
+                                @blur="editingRowV$.externalFileName.$touch"
+                              />
+                            </div>
+                          </q-td>
+                          <q-td style="width: 350px;">
+                            <div>
+                              <q-input
+                                v-model="editingRow.externalFileDescription"
+                                outlined
+                                stack-label
+                                type="textarea"
+                                hide-bottom-space
+                                :dense="true"
+                                maxlength="500"
+                              />
+                            </div>
+                          </q-td>
+                          <q-td auto-width class="text-center">
+                            <q-icon name="o_save" size="xs" class="cursor-pointer q-mr-lg" @click="onFilePathSave()">
+                              <q-tooltip>Save</q-tooltip>
+                            </q-icon>
+                            <q-icon name="o_cancel" size="xs" color="red" class="cursor-pointer" @click="onFilePathCancel">
+                              <q-tooltip>Cancel</q-tooltip>
+                            </q-icon>
+                          </q-td>
+                        </q-tr>
+                      </template>
+                      <template #body="props">
+                        <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                          <q-td class="text-left" style="width: 40%;">
+                            <span
+                              :class="props.row.deleted ? 'text-delete' : ''"
+                              style="white-space: normal; word-break: break-word;"
+                            >
+                              <a :href="props.row.externalFilePath" target="_blank" class="text-bluee">
+                                {{ props.row.externalFilePath }}
+                              </a>
+                            </span>
+                          </q-td>
+                          <q-td class="text-left" style="width: 25%;">
+                            <span
+                              :class="props.row.deleted ? 'text-delete' : ''"
+                              style="white-space: normal; word-break: break-word;"
+                            >
+                              {{ props.row.externalFileName }}
+                            </span>
+                          </q-td>
+                          <q-td class="text-left">
+                            <span
+                              :class="props.row.deleted ? 'text-delete' : ''"
+                              style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
+                              v-html="props.row.externalFileDescription"
+                            />
+                          </q-td>
+                          <q-td auto-width class="text-center">
+                            <q-icon v-if="!props.row.deleted" name="o_delete_outline" color="red" size="xs" class="cursor-pointer" @click="onDeleteDocumentReference(props.row)">
+                              <q-tooltip>Delete</q-tooltip>
+                            </q-icon>
+                            <q-icon v-if="props.row.deleted" name="o_redo" size="xs" class="cursor-pointer" @click="onFilePathUndo(props.row)">
+                              <q-tooltip>Undo</q-tooltip>
+                            </q-icon>
+                          </q-td>
+                        </q-tr>
+                      </template>
+                    </q-table>
+                  </fieldset>
+                  <div align="center" class="q-gutter-sm justify-center q-mt-md">
+                    <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="onDialogCancel" />
+                    <q-btn v-if="tab === '1_tab'" label="Save & Next" type="submit" color="primary" class="actionBtn" :loading="processing" :disable="processing" no-caps />
+                    <q-btn label="Save & Close" type="button" color="primary" class="actionBtn hidden" :loading="processingClose" :disable="processingClose" no-caps @click="onSubmitClose()" />
+                  </div>
                 </q-tab-panel>
                 <q-tab-panel name="2_tab">
                   <fieldset class="q-mb-lg">
@@ -302,9 +425,10 @@
 
 <script setup>
 // Import libraries
-import { useDialogPluginComponent, useQuasar } from "quasar";
+import { useDialogPluginComponent, useQuasar, uid } from "quasar";
 import useVuelidate from "@vuelidate/core";
 import _ from "lodash";
+import { useAuthStore } from "stores/auth";
 import { isDate } from "validators/zw_validators.js";
 import useFilters from "composables/useFilters";
 import { required, helpers, minLength, maxLength } from "@vuelidate/validators";
@@ -351,11 +475,17 @@ const props = defineProps({
 const tab = ref(props.isCharter ? "2_tab" : "1_tab");
 const { toDate } = useFilters();
 const loading = ref(true);
+const mode = ref(null);
+const editingRow = ref(null);
+const activeRowId = ref(null);
 const processing = ref(false);
 const processingClose = ref(false);
 let oldStatus = null;
 const $q = useQuasar();
 const { fonts, toolbar } = getEditorConfig($q);
+const authStore = useAuthStore();
+const user = authStore.user;
+const isFileUploadOrExternal = user.isFileUploadOrExternal;
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
@@ -390,6 +520,13 @@ const model = ref({
   active: true,
   notes: ""
 });
+
+const fileRows = ref([]);
+const documentReferenceColumns = ref([
+  { name: "externalFilePath", label: "File Path", field: "externalFilePath", align: "left", sortable: true },
+  { name: "externalFileName", label: "File Name", field: "externalFileName", align: "left", sortable: true },
+  { name: "externalFileDescription", label: "File Description", field: "externalFileDescription", align: "left", sortable: true }
+]);
 
 const pagination = ref({ sortBy: "employeeName", descending: false, rowsPerPage: 20, page: 1 });
 const columns = [
@@ -598,6 +735,18 @@ const getProjectModule = async (projectModuleId) => {
         isInitialEditLoad: true
       });
     }
+
+    fileRows.value = resp.projectModuleFilesList
+    .filter(item => {
+      if (!isFileUploadOrExternal) {
+        return !(item.file?.mimeType && item.file?.seoFilename);
+      }
+      return true;
+    }).map(item => ({
+      ...item.file,
+      editing: false,
+      flag: "Edit"
+    }));
   } catch (error) {
     console.error(
       "Error while loading project module:",
@@ -869,6 +1018,17 @@ const rules = {
 // Validate rules
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 
+// ----------------------------------------------------------------------------------------------------------------
+// Document Reference List - Validation Rules
+// ----------------------------------------------------------------------------------------------------------------
+
+const editingRowrules = {
+  externalFilePath: { required: helpers.withMessage("File Path is required", required) },
+  externalFileName: { required: helpers.withMessage("File Name is required", required) }
+};
+
+const editingRowV$ = useVuelidate(editingRowrules, editingRow, { $lazy: true, $autoDirty: true });
+
 function validateSortOrder (value) {
   if (typeof value !== "string" && typeof value !== "number") return false;
   const str = String(value).trim();
@@ -907,6 +1067,72 @@ const refreshProjectDropdownList = () => {
 };
 
 const { projectModuleStatusForDropdownSingleSelect } = projectModuleOfProjectModule();
+
+function onAddDocumentReference () {
+  mode.value = "addDocumentReference";
+  editingRow.value = {
+    externalFilePath: "",
+    externalFileName: "",
+    externalFileDescription: ""
+  };
+  activeRowId.value = null;
+}
+
+function onDeleteDocumentReference (item) {
+  item.deleted = true;
+  const rowIndex = fileRows.value.findIndex((row) => row.id === item.id);
+  if (rowIndex !== -1) {
+    fileRows.value.splice(rowIndex, 1, {
+      ...fileRows.value[rowIndex],
+      id: item.id,
+      externalFileName: item.externalFileName,
+      externalFilePath: item.externalFilePath,
+      externalFileDescription: item.externalFileDescription,
+      flag: "Delete"
+    });
+  }
+  activeRowId.value = item.id;
+}
+
+async function onFilePathSave () {
+  if (mode.value === "addDocumentReference") {
+    if (!await editingRowV$.value.$validate()) {
+      return;
+    }
+    // check duplicate row
+    let isDuplicate = 0;
+    fileRows.value.forEach((item, index) => {
+      if (item.externalFileName.toLowerCase() === editingRow.value.externalFileName.toLowerCase()) {
+        isDuplicate = 1;
+      }
+    });
+    if (isDuplicate === 0) {
+      const newRow = {
+        id: uid(),
+        externalFileName: editingRow.value.externalFileName,
+        externalFilePath: editingRow.value.externalFilePath,
+        externalFileDescription: editingRow.value.externalFileDescription,
+        flag: "New"
+      };
+      fileRows.value.unshift(newRow);
+      mode.value = null;
+      activeRowId.value = null;
+    } else {
+      notifyError({ message: "Duplicate File Name." });
+    }
+  }
+}
+
+function onFilePathCancel () {
+  mode.value = null;
+  editingRow.value = null;
+  activeRowId.value = null;
+}
+
+function onFilePathUndo (item) {
+  item.deleted = false;
+  activeRowId.value = null;
+}
 
 // -------------------------------------------------------------------------------------------------------
 // Upload Image
@@ -1252,7 +1478,7 @@ const onSubmit = async (isClose = 0) => {
       });
     }
     toRaw(model.value.projectModuleFiles || []).forEach((file) => {
-      if (file.file && file.file.virtualPath) {
+      if (file.file) {
         formData.append(
           "ExistingFiles",
           JSON.stringify({
@@ -1263,6 +1489,35 @@ const onSubmit = async (isClose = 0) => {
       } else {
         formData.append("projectModuleFiles", file);
       }
+    });
+
+    const filePathDetails = toRaw(fileRows.value || []);
+
+    filePathDetails.forEach((file, index) => {
+      formData.append(
+        `filePathModelList[${index}].id`,
+        file.id ?? ""
+      );
+
+      formData.append(
+        `filePathModelList[${index}].externalFilePath`,
+        file.externalFilePath ?? ""
+      );
+
+      formData.append(
+        `filePathModelList[${index}].externalFileDescription`,
+        file.externalFileDescription ?? ""
+      );
+
+      formData.append(
+        `filePathModelList[${index}].externalFileName`,
+        file.externalFileName ?? ""
+      );
+
+    formData.append(
+      `filePathModelList[${index}].flag`,
+      file.flag ?? ""
+    );
     });
 
     // Save
@@ -1311,6 +1566,8 @@ watch(
   (newValue) => {
     if (newValue) {
       getProjectModule(newValue);
+    } else {
+    loading.value = false;
     }
   },
   {

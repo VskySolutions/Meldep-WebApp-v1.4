@@ -228,7 +228,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="row q-col-gutter-x-md q-mb-lg">
+                    <div v-if="isFileUploadOrExternal" class="row q-col-gutter-x-md q-mb-lg">
                       <div class="col-12 q-mb-xs text-black">Project Files</div>
                       <!-- File Uploader -->
                       <div class="col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12">
@@ -249,7 +249,7 @@
                       <!-- Display Files in Square Boxes with File Name Below -->
                       <div v-if="model.projectFiles && model.projectFiles.length > 0" class="row q-gutter-md">
                         <div
-                          v-for="(file, index) in model.projectFiles"
+                          v-for="(file, index) in model.projectFiles.filter(file => !file.file?.externalFileName?.trim() && !file.file?.externalFilePath?.trim())"
                           :key="index"
                           class="col-3 position-relative file-card text-center"
                           style="max-width: 140px; min-width: 140px;"
@@ -275,7 +275,7 @@
                       </div>
                     </div>
                   </fieldset>
-                  <fieldset class="q-mt-lg hidden">
+                  <fieldset v-if="!isFileUploadOrExternal" class="q-mt-lg">
                     <legend>Document Reference List</legend>
                     <div class="flex items-center justify-end q-mb-md">
                       <q-btn color="primary" icon="o_add" label="Add" no-caps @click="onAddDocumentReference" />
@@ -306,7 +306,7 @@
                         </q-tr>
                       </template>
                       <template #top-row>
-                        <q-tr v-if="mode == 'addDocumentReference' && editingRow" class="row-highlight">
+                        <q-tr v-if="mode == 'addDocumentReference'" class="row-highlight">
                           <q-td>
                             <div>
                               <q-input
@@ -361,38 +361,16 @@
                       <template #body="props">
                         <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
                           <q-td class="text-left" style="width: 40%;">
-                            <q-input
-                              v-if="mode == 'edit' && editingRow && props.row.id === activeRowId"
-                              v-model="editingRow.externalFilePath"
-                              outlined
-                              stack-label
-                              hide-bottom-space
-                              :dense="true"
-                              :error="editingRowV$.externalFilePath.$error"
-                              :error-message="editingRowV$.externalFilePath.$errors[0]?.$message"
-                              @blur="editingRowV$.externalFilePath.$touch"
-                            />
                             <span
                               :class="props.row.deleted ? 'text-delete' : ''"
                               style="white-space: normal; word-break: break-word;"
                             >
-                              <a :href="props.row.externalFilePath" target="_blank" class="text-bluee">
+                              <a :href="props.row.externalFilePath" target="_blank" class="text-blue">
                                 {{ props.row.externalFilePath }}
                               </a>
                             </span>
                           </q-td>
                           <q-td class="text-left" style="width: 25%;">
-                            <q-input
-                              v-if="mode == 'edit' && editingRow && props.row.id === activeRowId"
-                              v-model="editingRow.externalFileName"
-                              outlined
-                              stack-label
-                              hide-bottom-space
-                              :dense="true"
-                              :error="editingRowV$.externalFileName.$error"
-                              :error-message="editingRowV$.externalFileName.$errors[0]?.$message"
-                              @blur="editingRowV$.externalFileName.$touch"
-                            />
                             <span
                               :class="props.row.deleted ? 'text-delete' : ''"
                               style="white-space: normal; word-break: break-word;"
@@ -401,16 +379,6 @@
                             </span>
                           </q-td>
                           <q-td class="text-left">
-                            <q-input
-                              v-if="mode == 'edit' && editingRow && props.row.id === activeRowId"
-                              v-model="editingRow.externalFileDescription"
-                              outlined
-                              stack-label
-                              type="textarea"
-                              hide-bottom-space
-                              :dense="true"
-                              maxlength="500"
-                            />
                             <span
                               :class="props.row.deleted ? 'text-delete' : ''"
                               style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
@@ -418,22 +386,12 @@
                             />
                           </q-td>
                           <q-td auto-width class="text-center">
-                            <template v-if="mode == 'edit' && editingRow && props.row.id === activeRowId">
-                              <q-icon name="o_save" size="xs" class="cursor-pointer q-mr-lg" @click="onFilePathSave()">
-                                <q-tooltip>Save</q-tooltip>
-                              </q-icon>
-                              <q-icon name="o_cancel" size="xs" color="red" class="cursor-pointer" @click="onFilePathCancel">
-                                <q-tooltip>Cancel</q-tooltip>
-                              </q-icon>
-                            </template>
-                            <template v-else>
-                              <q-icon v-if="!props.row.deleted" name="o_delete_outline" color="red" size="xs" class="cursor-pointer" @click="onDeleteDocumentReference(props.row)">
-                                <q-tooltip>Delete</q-tooltip>
-                              </q-icon>
-                              <q-icon v-if="props.row.deleted" name="o_redo" size="xs" class="cursor-pointer" @click="onFilePathUndo(props.row)">
-                                <q-tooltip>Undo</q-tooltip>
-                              </q-icon>
-                            </template>
+                            <q-icon v-if="!props.row.deleted" name="o_delete_outline" color="red" size="xs" class="cursor-pointer" @click="onDeleteDocumentReference(props.row)">
+                              <q-tooltip>Delete</q-tooltip>
+                            </q-icon>
+                            <q-icon v-if="props.row.deleted" name="o_redo" size="xs" class="cursor-pointer q-ml-sm" @click="onFilePathUndo(props.row)">
+                              <q-tooltip>Undo</q-tooltip>
+                            </q-icon>
                           </q-td>
                         </q-tr>
                       </template>
@@ -1109,7 +1067,7 @@ function validateMandatoryProjectRoles() {
 // ----------------------------------------------------------------------------------------------------------------
 
 const editingRowrules = {
-  externalFilePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1), maxLength: maxLength(200) },
+  externalFilePath: { required: helpers.withMessage("File Path is required", required) },
   externalFileName: { required: helpers.withMessage("File Name is required", required) }
 };
 
@@ -1242,12 +1200,18 @@ const getProject = (projectId) => {
       return row;
     });
 
-    fileRows.value = resp.projectFileList.map(item => ({
+    fileRows.value = resp.projectFileList
+    .filter(item => {
+      if (!isFileUploadOrExternal) {
+        return !(item.file?.mimeType && item.file?.seoFilename);
+      }
+      return true;
+    })
+    .map(item => ({
       ...item.file,
       editing: false,
       flag: "Edit"
     }));
-
     rowCounter.value = counter;
 
     syncRowValidations();
@@ -1620,7 +1584,7 @@ const onSubmit = async (isClose = 0) => {
         formData.append("description", model.value.description);
 
         toRaw(model.value.projectFiles || []).forEach((file) => {
-          if (file.file && file.file.virtualPath) {
+          if (file.file) {
             // For existing files, append metadata instead of the file itself
             formData.append("ExistingFiles", JSON.stringify({
               id: file.id,
@@ -1998,6 +1962,8 @@ watch(
   (length) => {
     if (length > 0 && projectId) {
       getProject(projectId);
+    } else {
+    loading.value = false;
     }
   },
   { immediate: true }

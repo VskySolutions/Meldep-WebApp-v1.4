@@ -27,7 +27,7 @@
               <q-btn icon="o_visibility" size="sm" :disable="!selectedProjectId" outline no-caps color="primary" class="q-mr-xs" label="" @click="onProjectView(selectedProjectId)">
                 <q-tooltip anchor="bottom middle" self="top middle">View Project</q-tooltip>
               </q-btn>
-              <q-btn v-if="getProjectDetail(selectedProjectId)?.isEditable" icon="o_attach_file" size="sm" :disable="!selectedProjectId" outline no-caps color="primary" class="q-mr-xs" label="" @click="onProjectFilesView(selectedProjectId, storedProjectName, refreshProjectList)">
+              <q-btn v-if="getProjectDetail(selectedProjectId)?.isEditable && user.isFileUploadOrExternal" icon="o_attach_file" size="sm" :disable="!selectedProjectId" outline no-caps color="primary" class="q-mr-xs" label="" @click="onProjectFilesView(selectedProjectId, storedProjectName, refreshProjectList)">
                 <q-tooltip anchor="bottom middle" self="top middle">Project Files</q-tooltip>
               </q-btn>
               <q-btn v-if="getProjectDetail(selectedProjectId)?.isEditable || getProjectDetail(selectedProjectId)?.isNotes" icon="o_chat" size="sm" :disable="!selectedProjectId" outline no-caps color="primary" class="q-mr-xs" label="" style="position: relative;" @click="onProjectMessage(selectedProjectId)">
@@ -512,7 +512,7 @@
                                     <q-item-section avatar><q-icon name="o_calendar_view_month" size="xs" /></q-item-section>
                                     <q-item-section>Monthly Planner</q-item-section>
                                   </q-item>
-                                  <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectFilesView(props.row.id, props.row.name, refreshProjectList)">
+                                  <q-item v-if="props.row.isEditable && user.isFileUploadOrExternal" v-ripple clickable @click="onProjectFilesView(props.row.id, props.row.name, refreshProjectList)">
                                     <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
                                     <q-item-section>Files</q-item-section>
                                   </q-item>

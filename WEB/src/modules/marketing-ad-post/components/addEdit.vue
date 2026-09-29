@@ -542,7 +542,6 @@ function getAllProjectListForDropdown () {
     if (model.value.projectId) {
       getProject(model.value.projectId);
     }
-    console.log(responseData);
   });
 }
 
@@ -670,7 +669,6 @@ const isPreviewPdf = computed(() =>
     : /\.pdf$/i.test(model.value.virtualPath)
 );
 
-console.log("model.value.postDesignPic", model.value.postDesignPic);
 const previewSource = computed(() =>
   model.value.postDesignPic
     ? previewUrl.value
@@ -838,8 +836,23 @@ const onSubmit = async () => {
     }
     if (await v$.value.$validate()) {
       processing.value = true;
-      console.log(model.value);
-      await adPostService.saveAdPost(props.id, model.value);
+      const payload = {
+        adNumber: model.value.adNumber,
+        name: model.value.name,
+        description: model.value.description,
+        projectId: model.value.projectId,
+        customerId: model.value.customerId,
+        url: model.value.url,
+        imageType: model.value.imageType,
+        imageProviderClientId: model.value.imageProviderClientId,
+        imageProviderEmpId: model.value.imageProviderEmpId,
+        contentType: model.value.contentType,
+        contentProviderClientId: model.value.contentProviderClientId,
+        contentProviderEmpId: model.value.contentProviderEmpId,
+        caption: model.value.caption,
+        tags: model.value.tags
+      };
+      await adPostService.saveAdPost(props.id, payload);
       notifySuccess({ message: "Ad is saved successfully." });
       onDialogOK();
     }

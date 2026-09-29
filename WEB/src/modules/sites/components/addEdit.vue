@@ -74,8 +74,8 @@
                 />
                   <div class="col-xs-12 col-sm-6 col-md-4">
                     <div class="q-mb-xs text-black">Is file upload or external?</div>
-                    <q-radio v-model="model.isFileUploadOrExternal" :val="false" label="Upload File" />
-                    <q-radio v-model="model.isFileUploadOrExternal" :val="true" label="External File Path" />
+                    <q-radio v-model="model.isFileUploadOrExternal" :val="true" label="Upload File" />
+                    <q-radio v-model="model.isFileUploadOrExternal" :val="false" label="External File Path" />
                   </div>
               </div>
             </fieldset>

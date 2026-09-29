@@ -201,7 +201,7 @@
                             <q-item-section avatar><q-icon name="o_calendar_view_month" size="xs" /></q-item-section>
                             <q-item-section>Monthly Planner</q-item-section>
                           </q-item>
-                          <q-item v-ripple clickable @click="onProjectFilesView(props.row.projectId, props.row.name)">
+                          <q-item v-if="user.isFileUploadOrExternal" v-ripple clickable @click="onProjectFilesView(props.row.projectId, props.row.name)">
                             <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
                             <q-item-section>Files</q-item-section>
                           </q-item>

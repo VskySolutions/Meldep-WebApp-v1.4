@@ -67,6 +67,7 @@ namespace Vsky.Services.Projects
                 Id = x.Id,
                 FileId = x.FileId,
                 ProjectId = x.ProjectId,
+                CreatedById = x.CreatedById,
                 //File = new Picture
                 //{
                 //    Id = x.File.Id,

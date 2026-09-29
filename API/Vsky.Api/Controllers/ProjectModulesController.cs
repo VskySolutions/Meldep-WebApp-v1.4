@@ -305,44 +305,84 @@ namespace Vsky.Api.Controllers
                     var moduleData = await _projectModuleService.GetProjectModuleDetailsById(entity.Id);
 
                     string ProjectModuleId = entity.Id;
-                    if (model.ProjectModuleFiles != null && model.ProjectModuleFiles.Any())
+
+                    if (SiteData.IsFileUploadOrExternal)
                     {
-                        // Upload multiple files to Azure
-                        var urls = await _azureBlobImageServices.UploadFilesAsync(SiteData.Name, "project-modules", model.ProjectModuleFiles, entity.ProjectModuleNumber.ToString());
-                        int index = 0;
-
-                        foreach (var fileUrl in urls)
+                        if (model.ProjectModuleFiles != null && model.ProjectModuleFiles.Any())
                         {
-                            var file = model.ProjectModuleFiles[index];
+                            // Upload multiple files to Azure
+                            var urls = await _azureBlobImageServices.UploadFilesAsync(SiteData.Name, "project-modules", model.ProjectModuleFiles, entity.ProjectModuleNumber.ToString());
+                            int index = 0;
 
-                            var picture = new Picture
+                            foreach (var fileUrl in urls)
                             {
-                                SeoFilename = Path.GetFileName(file.FileName),
-                                MimeType = file.ContentType,
-                                VirtualPath = fileUrl, // Azure URL
-                                ModuleId = model.ProjectId,
-                                Module = moduleData.Project.Name,
-                                SubModuleId = ProjectModuleId,
-                                Sub_Module = entity.Name,
-                                Type = "Project Module",
-                                SiteId = SiteId,
-                                CreatedById = LoggedUserId,
-                                CreatedOnUtc = GetDateTime
-                            };
+                                var file = model.ProjectModuleFiles[index];
 
-                            _commonService.InsertPicture(picture);
+                                var picture = new Picture
+                                {
+                                    SeoFilename = Path.GetFileName(file.FileName),
+                                    MimeType = file.ContentType,
+                                    VirtualPath = fileUrl, // Azure URL
+                                    ModuleId = model.ProjectId,
+                                    Module = moduleData.Project.Name,
+                                    SubModuleId = ProjectModuleId,
+                                    Sub_Module = entity.Name,
+                                    Type = "Project Module",
+                                    SiteId = SiteId,
+                                    CreatedById = LoggedUserId,
+                                    CreatedOnUtc = GetDateTime
+                                };
 
-                            var ProjectModuleFiles = new ProjectModuleFiles
+                                _commonService.InsertPicture(picture);
+
+                                var ProjectModuleFiles = new ProjectModuleFiles
+                                {
+                                    FileId = picture.Id,
+                                    ProjectModuleId = ProjectModuleId,
+                                    CreatedById = LoggedUserId,
+                                    CreatedOnUtc = GetDateTime
+                                };
+
+                                _projectModuleFilesService.InsertProjectModuleFile(ProjectModuleFiles);
+
+                                index++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // external file path
+                        if (model.FilePathModelList != null && model.FilePathModelList.Any())
+                        {
+                            foreach (var item in model.FilePathModelList)
                             {
-                                FileId = picture.Id,
-                                ProjectModuleId = ProjectModuleId,
-                                CreatedById = LoggedUserId,
-                                CreatedOnUtc = GetDateTime
-                            };
+                                if (item.Flag != "New")
+                                    continue;
 
-                            _projectModuleFilesService.InsertProjectModuleFile(ProjectModuleFiles);
+                                // Create Picture record for external file
+                                var picture = await CreateExternalFilePath(
+                                    SiteId,
+                                    model.ProjectId,
+                                    moduleData.Project.Name,
+                                    ProjectModuleId,
+                                    entity.Name,
+                                    item.ExternalFileName,
+                                    item.ExternalFilePath,
+                                    item.ExternalFileDescription,
+                                    LoggedUserId,
+                                    GetDateTime
+                                );
 
-                            index++;
+                                var projectModuleFiles = new ProjectModuleFiles
+                                {
+                                    FileId = picture.Id,
+                                    ProjectModuleId = ProjectModuleId,
+                                    CreatedById = LoggedUserId,
+                                    CreatedOnUtc = GetDateTime
+                                };
+
+                                _projectModuleFilesService.InsertProjectModuleFile(projectModuleFiles);
+                            }
                         }
                     }
 
@@ -498,33 +538,38 @@ namespace Vsky.Api.Controllers
                     }
 
                     // Retrieve all file IDs from the project module files
-                    var allProjectModuleFileIds = (await _projectModuleFilesService.GetAllProjectModuleFilesByProjectModuleId(id))
-                                             .Select(file => file.Id)  // Extract Id from ProjectFiles
-                                             .ToList();
+                    //var allProjectModuleFileIds = (await _projectModuleFilesService.GetAllProjectModuleFilesByProjectModuleId(id))
+                    //                         .Select(file => file.Id)  // Extract Id from ProjectFiles
+                    //                         .ToList();
 
-                    var missingFileIds = allProjectModuleFileIds.ToList();
-                    if (model.ExistingFiles != null)
-                    {
-                        var existingFileIds = model.ExistingFiles.Select(fileJson =>
-                        {
-                            var file = JsonConvert.DeserializeObject<Picture>(fileJson);
-                            return file.Id.Trim().ToLower();
-                        })
-                        .ToList();
+                    //var missingFileIds = allProjectModuleFileIds.ToList();
+                    //if (model.ExistingFiles != null)
+                    //{
+                    //    var existingFileIds = model.ExistingFiles.Select(fileJson =>
+                    //    {
+                    //        var file = JsonConvert.DeserializeObject<Picture>(fileJson);
+                    //        return file.Id.Trim().ToLower();
+                    //    })
+                    //    .ToList();
 
-                        // Compare and find missing file IDs
-                        missingFileIds = allProjectModuleFileIds.Except(existingFileIds).ToList();
-                    }
+                    //    // Compare and find missing file IDs
+                    //    missingFileIds = allProjectModuleFileIds.Except(existingFileIds).ToList();
+                    //}
 
-                    if (missingFileIds.Any())
-                    {
-                        foreach (var projectModuleFilesId in missingFileIds)
-                        {
-                            var projectFileDate = await _projectModuleFilesService.GetProjectModuleFileById(projectModuleFilesId);
-                            if (projectFileDate != null)
-                                _projectModuleFilesService.DeleteProjectModuleFile(projectFileDate);
-                        }
-                    }
+                    //if (missingFileIds.Any())
+                    //{
+                    //    foreach (var projectModuleFilesId in missingFileIds)
+                    //    {
+                    //        var projectFileDate = await _projectModuleFilesService.GetProjectModuleFileById(projectModuleFilesId);
+                    //        if (projectFileDate != null)
+                    //            _projectModuleFilesService.DeleteProjectModuleFile(projectFileDate);
+                    //    }
+                    //}
+                   
+                    var allProjectModuleFiles = await _projectModuleFilesService.GetAllProjectModuleFilesByProjectModuleId(id);
+                    var allProjectModuleFileIds = allProjectModuleFiles.Select(file => file.Id.Trim().ToLower()).ToList();
+
+                    var existingFileIds = new List<string>();
 
                     // Set custom properties
                     if (model.StartDateStr != "" && model.StartDateStr != null)
@@ -556,50 +601,133 @@ namespace Vsky.Api.Controllers
 
                     var moduleData = await _projectModuleService.GetProjectModuleDetailsById(id);
 
-                    if (model.ProjectModuleFiles != null && model.ProjectModuleFiles.Any())
+                    if (SiteData.IsFileUploadOrExternal)
                     {
-                        int existingImagesCount = await _commonService.GetPicturesCountBySubModuleId(model.Id, "Project Module");
+                        var missingFileIds = new List<string>();
 
-                        // Upload multiple files to Azure
-                        var urls = await _azureBlobImageServices.UploadFilesAsync(SiteData.Name, "project-modules", model.ProjectModuleFiles, entity.ProjectModuleNumber.ToString(), existingImagesCount);
-                        int index = 0;
-
-                        foreach (var fileUrl in urls)
+                        if (model.ExistingFiles != null && model.ExistingFiles.Any())
                         {
-                            var file = model.ProjectModuleFiles[index];
+                            existingFileIds = model.ExistingFiles
+                                .Select(fileJson =>
+                                {
+                                    var file = JsonConvert.DeserializeObject<Picture>(fileJson);
+                                    return file.Id.Trim().ToLower();
+                                })
+                                .ToList();
 
-                            var picture = new Picture
+                            // Compare and find missing file IDs
+                            missingFileIds = allProjectModuleFileIds
+                                .Except(existingFileIds)
+                                .ToList();
+                        }
+                        else
+                        {
+                            // No existing files, so all project module files are missing
+                            missingFileIds = allProjectModuleFileIds.ToList();
+                        }
+
+                        foreach (var projectFilesId in missingFileIds)
+                        {
+                            var projectModuleFileData = await _projectModuleFilesService.GetProjectModuleFileById(projectFilesId);
+
+                            if (projectModuleFileData != null)
                             {
-                                SeoFilename = Path.GetFileName(file.FileName),
-                                MimeType = file.ContentType,
-                                VirtualPath = fileUrl, // Azure URL
-                                ModuleId = model.ProjectId,
-                                Module = moduleData.Project.Name,
-                                SubModuleId = id,
-                                Sub_Module = entity.Name,
-                                Type = "Project Module",
-                                SiteId = SiteId,
-                                CreatedById = LoggedUserId,
-                                CreatedOnUtc = GetDateTime
-                            };
+                                _projectModuleFilesService.DeleteProjectModuleFile(projectModuleFileData);
+                            }
+                        }
 
-                            _commonService.InsertPicture(picture);
+                        if (model.ProjectModuleFiles != null && model.ProjectModuleFiles.Any())
+                        {
+                            int existingImagesCount = await _commonService.GetPicturesCountBySubModuleId(model.Id, "Project Module");
 
-                            var ProjectModuleFiles = new ProjectModuleFiles
+                            // Upload multiple files to Azure
+                            var urls = await _azureBlobImageServices.UploadFilesAsync(SiteData.Name, "project-modules", model.ProjectModuleFiles, entity.ProjectModuleNumber.ToString(), existingImagesCount);
+                            int index = 0;
+
+                            foreach (var fileUrl in urls)
                             {
-                                FileId = picture.Id,
-                                ProjectModuleId = id,
-                                CreatedById = LoggedUserId,
-                                CreatedOnUtc = GetDateTime
-                            };
+                                var file = model.ProjectModuleFiles[index];
 
-                            _projectModuleFilesService.InsertProjectModuleFile(ProjectModuleFiles);
+                                var picture = new Picture
+                                {
+                                    SeoFilename = Path.GetFileName(file.FileName),
+                                    MimeType = file.ContentType,
+                                    VirtualPath = fileUrl, // Azure URL
+                                    ModuleId = model.ProjectId,
+                                    Module = moduleData.Project.Name,
+                                    SubModuleId = id,
+                                    Sub_Module = entity.Name,
+                                    Type = "Project Module",
+                                    SiteId = SiteId,
+                                    CreatedById = LoggedUserId,
+                                    CreatedOnUtc = GetDateTime
+                                };
 
-                            index++;
+                                _commonService.InsertPicture(picture);
+
+                                var ProjectModuleFiles = new ProjectModuleFiles
+                                {
+                                    FileId = picture.Id,
+                                    ProjectModuleId = id,
+                                    CreatedById = LoggedUserId,
+                                    CreatedOnUtc = GetDateTime
+                                };
+
+                                _projectModuleFilesService.InsertProjectModuleFile(ProjectModuleFiles);
+
+                                index++;
+                            }
                         }
                     }
+                    else
+                    {
+                        // external file path
+                        if (model.FilePathModelList != null && model.FilePathModelList.Any())
+                        {
+                            foreach (var item in model.FilePathModelList)
+                            {
+                                if (item.Flag == "New")
+                                {
+                                    // Create Picture record for external file
+                                    var picture = await CreateExternalFilePath(
+                                        SiteId,
+                                        model.ProjectId,
+                                        moduleData.Project.Name,
+                                        id,
+                                        entity.Name,
+                                        item.ExternalFileName,
+                                        item.ExternalFilePath,
+                                        item.ExternalFileDescription,
+                                        LoggedUserId,
+                                        GetDateTime
+                                    );
 
-                    if (model.Tab == "2_tab")
+                                    var projectModuleFiles = new ProjectModuleFiles
+                                    {
+                                        FileId = picture.Id,
+                                        ProjectModuleId = id,
+                                        CreatedById = LoggedUserId,
+                                        CreatedOnUtc = GetDateTime
+                                    };
+
+                                    _projectModuleFilesService.InsertProjectModuleFile(projectModuleFiles);
+                                }
+                                else if (item.Flag == "Delete")
+                                {
+                                    var projectModuleFile = allProjectModuleFiles
+                                        .FirstOrDefault(x =>
+                                            !string.IsNullOrEmpty(x.FileId) &&
+                                            x.FileId.Trim().ToLower() == item.Id.Trim().ToLower());
+
+                                    if (projectModuleFile != null)
+                                    {
+                                        _projectModuleFilesService.DeleteProjectModuleFile(projectModuleFile);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                        if (model.Tab == "2_tab")
                     {
                         if (model.ProjectModuleEmployeeMappings != null &&
                             model.ProjectModuleEmployeeMappings.Any())
@@ -826,6 +954,47 @@ namespace Vsky.Api.Controllers
             bool canDelete = !(hasActiveTasks || hasActiveActivities);
 
             return Ok(new { canDelete });
+        }
+
+        private async Task<Picture> CreateExternalFilePath(
+           string siteId,
+           string moduleId,
+           string moduleName,
+           string subModuleId,
+           string subModuleName,
+           string externalFileName,
+           string externalFilePath,
+           string externalFileDescription,
+           string loggedUserId,
+           DateTime createdOnUtc)
+        {
+            var picture = new Picture
+            {
+                Id = Guid.NewGuid().ToString(),
+
+                ModuleId = moduleId,
+                Module = moduleName,
+                SubModuleId = subModuleId,
+                Sub_Module = subModuleName,
+                Type = "Project Module",
+                SiteId = siteId,
+
+                ExternalFileName = externalFileName,
+                ExternalFilePath = externalFilePath,
+                ExternalFileDescription = externalFileDescription,
+
+                // No physical file is uploaded
+                SeoFilename = null,
+                MimeType = null,
+                VirtualPath = null,
+
+                CreatedById = loggedUserId,
+                CreatedOnUtc = createdOnUtc
+            };
+
+            _commonService.InsertPicture(picture);
+
+            return picture;
         }
 
     }

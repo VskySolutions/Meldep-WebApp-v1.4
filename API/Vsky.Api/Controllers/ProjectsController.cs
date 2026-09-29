@@ -1026,51 +1026,6 @@ namespace Vsky.Api.Controllers
                         bool IsProjectDueDateChanged = !string.IsNullOrEmpty(model.GoLiveDateStr) && DateTime.ParseExact(model.GoLiveDateStr, "MM/dd/yyyy", null) != entity.GoLiveDate;
                         bool IsPlanApproverChanged = model.PlanApproverId != entity.PlanApproverId;
 
-                        var allProjectFiles = await _projectFilesService.GetAllProjectFileByProjectId(SiteId, id);
-
-                        allProjectFiles = allProjectFiles?.ToList() ?? new List<ProjectFiles>();
-
-                        // Get existing uploaded Picture IDs
-                        var existingFileIds = new List<string>();
-
-                        if (model.ExistingFiles != null && model.ExistingFiles.Any())
-                        {
-                            existingFileIds = model.ExistingFiles
-                                .Select(fileJson =>
-                                {
-                                    var file = JsonConvert.DeserializeObject<Picture>(fileJson);
-                                    return file?.Id?.Trim().ToLower();
-                                })
-                                .Where(x => !string.IsNullOrEmpty(x))
-                                .ToList();
-                        }
-
-                        // Get existing external Picture IDs
-                        var existingExternalFileIds = new List<string>();
-                        if (model.FilePathModelList != null && model.FilePathModelList.Any()) 
-                        { 
-                            existingExternalFileIds = model.FilePathModelList.Where(x => x.Flag == "Edit" && !string.IsNullOrEmpty(x.Id))
-                                .Select(x => x.Id.Trim().ToLower())
-                                .ToList();
-                        }
-
-                        // Combine both types of existing Picture IDs
-                        var existingPictureIds = existingFileIds.Union(existingExternalFileIds).ToList();
-
-                        // Find ProjectFiles whose Picture is no longer present
-                        var missingProjectFiles = allProjectFiles
-                            .Where(x =>
-                                !string.IsNullOrEmpty(x.FileId) &&
-                                !existingPictureIds.Contains(x.FileId.Trim().ToLower()))
-                            .ToList();
-
-                        // Delete ProjectFiles mapping
-                        foreach (var projectFile in missingProjectFiles)
-                        {
-                            _projectFilesService.DeleteProjectFiles(projectFile);
-                        }
-
-                        //----------------
                         //var allProjectFileIds = (await _projectFilesService.GetAllProjectFileByProjectId(SiteId, id)).Select(file => file.Id).ToList();
 
                         //var missingFileIds = allProjectFileIds.ToList();
@@ -1096,7 +1051,13 @@ namespace Vsky.Api.Controllers
                         //    }
                         //}
 
-                        // Set the user who updated the project and the current UTC time for tracking purposes
+                        var allProjectFiles = await _projectFilesService.GetAllProjectFileByProjectId(SiteId, id);
+
+                        var allProjectFileIds = allProjectFiles
+                            .Select(file => file.Id.Trim().ToLower())
+                            .ToList();
+                        var existingFileIds = new List<string>();
+                      
                         entity.CustomerId = model.CustomerId;
                         entity.CompanyContactId = model.CompanyContactId;
                         entity.ProjectTypeId = model.ProjectTypeId;
@@ -1129,10 +1090,46 @@ namespace Vsky.Api.Controllers
                         entity.UpdatedOnUtc = GetDateTime;
                         _projectService.UpdateProject(entity);
 
+
                         if(SiteData.IsFileUploadOrExternal)
                         {
+                            var missingFileIds = new List<string>();
+
+                            if (model.ExistingFiles != null && model.ExistingFiles.Any())
+                            {
+                                existingFileIds = model.ExistingFiles
+                                    .Select(fileJson =>
+                                    {
+                                        var file = JsonConvert.DeserializeObject<Picture>(fileJson);
+                                        return file.Id.Trim().ToLower();
+                                    })
+                                    .ToList();
+
+                                // Compare and find missing file IDs
+                                missingFileIds = allProjectFileIds
+                                    .Except(existingFileIds)
+                                    .ToList();
+                            }
+                            else
+                            {
+                                // No existing files, so all project files are missing
+                                missingFileIds = allProjectFileIds.ToList();
+                            }
+
+                            foreach (var projectFilesId in missingFileIds)
+                            {
+                                var projectFileData = await _projectFilesService
+                                    .GetProjectFileById(projectFilesId);
+
+                                if (projectFileData != null)
+                                {
+                                    _projectFilesService.DeleteProjectFiles(projectFileData);
+                                }
+                            }
+
                             if (model.ProjectFiles != null && model.ProjectFiles.Any())
                             {
+                               
                                 int existingImagesCount = await _commonService.GetPicturesCountBySubModuleId(id, "Projects");
 
                                 // Upload multiple files to Azure
@@ -1205,25 +1202,16 @@ namespace Vsky.Api.Controllers
 
                                         _projectFilesService.InsertProjectFile(projectFile);
                                     }
-                                    else if (item.Flag == "Edit")
+                                    else if (item.Flag == "Delete")
                                     {
-                                        if (string.IsNullOrEmpty(item.Id))
-                                           continue;
+                                        var projectFile = allProjectFiles
+                                            .FirstOrDefault(x =>
+                                                !string.IsNullOrEmpty(x.FileId) &&
+                                                x.FileId.Trim().ToLower() == item.Id.Trim().ToLower());
 
-                                        var picture = await _commonService.GetByPictureId(item.Id);
-                                        if (picture != null)
+                                        if (projectFile != null)
                                         {
-                                            picture.ModuleId = id;
-                                            picture.Module = entity.Name;
-                                            picture.SubModuleId = id;
-                                            picture.Sub_Module = entity.Name;
-                                            picture.Type = "Projects";
-                                            picture.SiteId = SiteId;
-                                            picture.ExternalFileName = item.ExternalFileName;
-                                            picture.ExternalFilePath = item.ExternalFilePath;
-                                            picture.ExternalFileDescription = item.ExternalFileDescription;
-
-                                            _commonService.UpdatePicture(picture);
+                                            _projectFilesService.DeleteProjectFiles(projectFile);
                                         }
                                     }
                                 }

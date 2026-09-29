@@ -278,8 +278,6 @@ let selectedPlanId = null;
 let selectedProjectModuleId = null;
 let selectedRequirementId = null;
 
-console.log(selectedProjectModuleId, "selectedProjectModuleId");
-console.log(selectedRequirementId, "selectedRequirementId");
 // ----------------------------------------------------------------------------------------------------------------
 // Define model
 // ----------------------------------------------------------------------------------------------------------------

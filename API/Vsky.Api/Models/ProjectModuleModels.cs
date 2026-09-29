@@ -58,6 +58,7 @@ namespace Vsky.Api.Models
         public virtual ICollection<ProjectActivity> ProjectActivities { get; set; } = new List<ProjectActivity>();
         public virtual ICollection<ProjectTask> ProjectTasks { get; set; } = new List<ProjectTask>();
         public virtual ICollection<ProjectTaskModel> ProjectTaskModel { get; set; } = new List<ProjectTaskModel>();
+        public virtual ICollection<PicturesModel> FilePathModelList { get; set; } = new List<PicturesModel>();
         public virtual ICollection<ProjectModuleFilesModel> ProjectModuleFilesList { get; set; } = new List<ProjectModuleFilesModel>();
         public virtual ICollection<ProjectModulesUserMapping> ProjectModulesUserMappings { get; set; } = new List<ProjectModulesUserMapping>();
         public virtual ICollection<ProjectModuleEmployeeMapping> ProjectModuleEmployeeMappings { get; set; } = new List<ProjectModuleEmployeeMapping>();

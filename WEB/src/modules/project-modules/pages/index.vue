@@ -210,7 +210,7 @@
                       <q-item-section>View</q-item-section>
                     </q-item>
                     <q-item
-                      v-if="props.row.isEditable"  v-ripple clickable @click="onProjectFilesAdd(props.row.id, props.row.name, props.row.project.name)">
+                      v-if="props.row.isEditable && user.isFileUploadOrExternal"  v-ripple clickable @click="onProjectFilesAdd(props.row.id, props.row.name, props.row.project.name)">
                       <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
                       <q-item-section>Files</q-item-section>
                     </q-item>
