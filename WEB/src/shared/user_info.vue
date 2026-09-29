@@ -85,7 +85,7 @@
             <q-item-label>Change Password</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item v-ripple :to="{ name: 'help_desk' }" clickable>
+        <q-item v-if="showHelpDesk" v-ripple :to="{ name: 'help_desk' }" clickable>
           <q-item-section avatar>
             <q-icon name="support_agent" color="orange" class="material-icons-outlined" />
           </q-item-section>
@@ -157,6 +157,13 @@ const user = authStore.user;
 const rolesNames = user?.roles?.length > 0 ? user.roles : "";
 const sharedSites = ref([]);
 const loadingSharedSites = ref(false);
+
+const props = defineProps({
+  showHelpDesk: {
+    type: Boolean,
+    default: false
+  }
+});
 
 // ---------------------------------------------------------------------------------------------------
 // local storage

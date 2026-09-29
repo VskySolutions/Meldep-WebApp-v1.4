@@ -200,7 +200,9 @@
           </div>
           <div class="column items-center" />
           <!-- Here is User-info component -->
-          <user-info />
+          <user-info
+           :show-help-desk="helpDeskModule?.customSiteModuleMenuList?.length > 0"
+          />
         </div>
       </q-toolbar>
     </q-header>
