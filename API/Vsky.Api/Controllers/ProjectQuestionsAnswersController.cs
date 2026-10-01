@@ -62,6 +62,7 @@ namespace Vsky.Api.Controllers
                     searchModel.SearchText,
                     searchModel.Title,
                     searchModel.ProjectIds,
+                    searchModel.ProjectModuleIds,
                     searchModel.RequirementIds,
                     searchModel.SortBy,
                     searchModel.Sorts,

@@ -25,6 +25,10 @@ export default {
     return http.get("/requirement/requirementTags/dropdown/list").then(response => response.data);
   },
 
+  getRequirementWorkProgressNotes (requirementId) {
+    return http.get(`/requirement/workProgressNotes?requirementId=${requirementId}`).then(response => response.data);
+  },
+
   getAllRequirementDescriptionsById (id, latestOnTop) {
     return http.get(`/requirement/requirement-change-log/?id=${id}&latestOnTop=${latestOnTop}`).then(response => response.data);
   },

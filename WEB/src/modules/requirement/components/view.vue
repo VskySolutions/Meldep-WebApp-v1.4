@@ -267,8 +267,15 @@
                     <template #body="props">
                       <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
                         <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
-                          <a :href="props.row.filePath" target="_blank" class="text-bluee">
+                          <!-- <a :href="props.row.filePath" target="_blank" class="text-bluee">
                             {{ props.row.filePath }}
+                          </a> -->
+                          <a
+                            :href="props.row.filePath"
+                            target="_blank"
+                            class="text-bluee"
+                          >
+                            {{ getFileNameFromPath(props.row.filePath) || props.row.fileName }}
                           </a>
                         </q-td>
                         <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.fileName }}</q-td>
@@ -429,6 +436,21 @@ const getRequirement = () => {
     loading.value = false;
   });
 };
+
+function getFileNameFromPath(filePath) {
+  if (!filePath) return "";
+
+  try {
+    const url = new URL(filePath);
+
+    const fileName = url.searchParams.get("file");
+
+    return fileName ? decodeURIComponent(fileName) : "";
+  } catch {
+    return "";
+  }
+}
+
 // View popup
 const onViewTask = (id) => {
   $q.dialog({

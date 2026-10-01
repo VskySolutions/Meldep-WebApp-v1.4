@@ -865,7 +865,7 @@ const rules = {
 // ----------------------------------------------------------------------------------------------------------------
 
 const editingRowrules = {
-  filePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1), maxLength: maxLength(200) },
+  filePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1) },
   fileName: { required: helpers.withMessage("File Name is required", required) }
 };
 

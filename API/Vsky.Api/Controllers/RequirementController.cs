@@ -259,6 +259,25 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GetRequirementWorkProgressNotes
+        [HttpGet("workProgressNotes")]
+        public IActionResult GetRequirementWorkProgressNotes(string requirementId = null)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var list = _requirementService.GetRequirementWorkProgressNotes(SiteId, requirementId);
+                var model = _mapper.Map<List<RequirementWorkProgressNote>>(list);
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region CreateRequirement
         // Title: CreateRequirement
         // Description: This endpoint handles the creation of a new Requirement. It maps the Requirement model to the Requirement entity, sets the creation details, and inserts the Requirement into the database. 

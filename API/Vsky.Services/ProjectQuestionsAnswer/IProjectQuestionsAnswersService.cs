@@ -14,6 +14,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
             string searchText,
             string title,
             List<string> projectIds,
+            List<string> moduleIds,
             List<string> requirementIds,
             string sortBy,
             Dictionary<string, string> sorts,

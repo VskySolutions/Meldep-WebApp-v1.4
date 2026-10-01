@@ -436,13 +436,25 @@
                         :error-message="editingRowV$.filePath.$errors[0]?.$message"
                         @blur="editingRowV$.filePath.$touch"
                       />
-                      <span
+                      <!-- <span
                         v-else :class="props.row.deleted ? 'text-delete' : ''"
                         style="white-space: normal; word-break: break-word;"
                       >
                         <a :href="props.row.filePath" target="_blank" class="text-bluee">
                           {{ props.row.filePath }}
                          </a>
+                      </span> -->
+                      <span
+                        v-else
+                        :class="props.row.deleted ? 'text-delete' : ''"
+                      >
+                        <a
+                          :href="props.row.filePath"
+                          target="_blank"
+                          class="text-bluee"
+                        >
+                          {{ getFileNameFromPath(props.row.filePath) || props.row.fileName }}
+                        </a>
                       </span>
                     </q-td>
                     <q-td class="text-left" style="width: 25%;">
@@ -922,7 +934,7 @@ const rules = {
 // ----------------------------------------------------------------------------------------------------------------
 
 const editingRowrules = {
-  filePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1), maxLength: maxLength(200) },
+  filePath: { required: helpers.withMessage("File Path is required", required), minLength: minLength(1) },
   fileName: { required: helpers.withMessage("File Name is required", required) }
 };
 
@@ -999,6 +1011,20 @@ const getRequirement = () => {
     loading.value = false;
   });
 };
+
+function getFileNameFromPath(filePath) {
+  if (!filePath) return "";
+
+  try {
+    const url = new URL(filePath);
+
+    const fileName = url.searchParams.get("file");
+
+    return fileName ? decodeURIComponent(fileName) : "";
+  } catch {
+    return "";
+  }
+}
 
 const readonlyRequirement = computed(() => {
   return model.value.editingStatus === 2 ? "readonly" : "";

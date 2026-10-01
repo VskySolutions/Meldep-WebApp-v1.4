@@ -568,7 +568,7 @@
                       <q-td style="width: 5%;" class="text-center actions">
                         <q-icon
                           v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
-                          name="o_description"
+                          name="o_note_add"
                           size="xs"
                           :class="[
                             'cursor-pointer q-mr-sm'

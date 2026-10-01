@@ -22,6 +22,8 @@ namespace Vsky.Services.Requirements
         #region Define Services
         private readonly IRepository<Requirement> _requirementRepository;
         private readonly IRepository<Notes> _notesRepository;
+        private readonly IRepository<ProjectTask> _projectTaskRepository;
+        private readonly IRepository<ProjectActivity> _projectActivityRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IRepository<VWProjectRequirementStatusSummary> _vWProjectRequirementStatusSummary;
         private readonly ICommonService _commonService;
@@ -32,6 +34,8 @@ namespace Vsky.Services.Requirements
 
         public RequirementService(IRepository<Requirement> requirementRepository,
             IRepository<Notes> notesRepository,
+            IRepository<ProjectTask> projectTaskRepository,
+            IRepository<ProjectActivity> projectActivityRepository,
             UserManager<ApplicationUser> userManager,
             IRepository<VWProjectRequirementStatusSummary> vWProjectRequirementStatusSummary,
             ICommonService commonService,
@@ -40,6 +44,8 @@ namespace Vsky.Services.Requirements
         {
             _requirementRepository = requirementRepository;
             _notesRepository = notesRepository;
+            _projectTaskRepository = projectTaskRepository;
+            _projectActivityRepository = projectActivityRepository;
             _userManager = userManager;
             _vWProjectRequirementStatusSummary = vWProjectRequirementStatusSummary;
             _commonService = commonService;
@@ -244,7 +250,8 @@ namespace Vsky.Services.Requirements
                 {
                     Id = x.Project.Id,
                     Name = x.Project.Name,
-                    CurrentUserManage =
+                    CurrentUserManage = 
+                    IsAdmin ||
                     x.Project.CreatedById == LoggedUserId ||
                     x.CreatedById == LoggedUserId ||
                     x.Project.ProjectEmployeeMappings
@@ -921,6 +928,168 @@ namespace Vsky.Services.Requirements
                     }
                 })
                 .ToListAsync();
+        }
+        #endregion
+
+        #region GetRequirementWorkProgressNotes
+        public List<RequirementWorkProgressNote> GetRequirementWorkProgressNotes(
+            string siteId,
+            string requirementId,
+            bool latestOnTop = true)
+        {
+            // Get all tasks under the requirement
+            var tasks = _projectTaskRepository.TableNoTracking
+                .Where(x =>
+                    x.SiteId == siteId &&
+                    x.RequirementId == requirementId &&
+                    !x.Deleted)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Name
+                })
+                .ToList();
+
+            if (!tasks.Any())
+                return new List<RequirementWorkProgressNote>();
+
+            var taskIds = tasks.Select(x => x.Id).ToList();
+
+            // Get all activities under those tasks
+            var activities = _projectActivityRepository.TableNoTracking
+                .Where(x =>
+                    x.SiteId == siteId &&
+                    taskIds.Contains(x.TaskId) &&
+                    !x.Deleted)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Name,
+                    x.TaskId
+                })
+                .ToList();
+
+            var activityIds = activities.Select(x => x.Id).ToList();
+
+            // Get task notes
+            var taskNotes = _notesRepository.TableNoTracking
+                .Where(x =>
+                    x.SiteId == siteId &&
+                    x.Type == "Project Task" &&
+                    taskIds.Contains(x.SubModuleId) &&
+                    !x.Deleted)
+                .Select(x => new RequirementWorkProgressNote
+                {
+                    Id = x.Id,
+                    Note = x.Note,
+                    NoteType = "Task",
+                    RecordId = x.SubModuleId,
+                    CreatedById = x.CreatedById,
+                    CreatedOnUtc = x.CreatedOnUtc,
+
+                    User = new ApplicationUser
+                    {
+                        Id = x.User.Id,
+                        UserName = x.User.UserName,
+                        Person = new Person
+                        {
+                            Id = x.User.PersonId,
+                            FirstName = x.User.Person.FirstName,
+                            LastName = x.User.Person.LastName,
+                            FullName =
+                                x.User.Person.FirstName + " " +
+                                x.User.Person.LastName
+                        }
+                    }
+                })
+                .ToList();
+
+            // Get activity notes
+            var activityNotes = new List<RequirementWorkProgressNote>();
+
+            if (activityIds.Any())
+            {
+                activityNotes = _notesRepository.TableNoTracking
+                    .Where(x =>
+                        x.SiteId == siteId &&
+                        x.Type == "Project Activities" &&
+                        activityIds.Contains(x.SubModuleId) &&
+                        !x.Deleted)
+                    .Select(x => new RequirementWorkProgressNote
+                    {
+                        Id = x.Id,
+                        Note = x.Note,
+                        NoteType = "Activity",
+                        RecordId = x.SubModuleId,
+                        CreatedById = x.CreatedById,
+                        CreatedOnUtc = x.CreatedOnUtc,
+
+                        User = new ApplicationUser
+                        {
+                            Id = x.User.Id,
+                            UserName = x.User.UserName,
+                            Person = new Person
+                            {
+                                Id = x.User.PersonId,
+                                FirstName = x.User.Person.FirstName,
+                                LastName = x.User.Person.LastName,
+                                FullName =
+                                    x.User.Person.FirstName + " " +
+                                    x.User.Person.LastName
+                            }
+                        }
+                    })
+                    .ToList();
+            }
+
+            // Add task/activity information
+            foreach (var note in taskNotes)
+            {
+                var task = tasks.FirstOrDefault(x => x.Id == note.RecordId);
+
+                if (task != null)
+                {
+                    note.TaskId = task.Id;
+                    note.TaskName = task.Name;
+                    note.RecordName = task.Name;
+                }
+            }
+
+            foreach (var note in activityNotes)
+            {
+                var activity = activities.FirstOrDefault(x => x.Id == note.RecordId);
+
+                if (activity != null)
+                {
+                    note.ActivityId = activity.Id;
+                    note.ActivityName = activity.Name;
+                    note.RecordName = activity.Name;
+
+                    note.TaskId = activity.TaskId;
+
+                    var task = tasks.FirstOrDefault(x => x.Id == activity.TaskId);
+
+                    if (task != null)
+                    {
+                        note.TaskName = task.Name;
+                    }
+                }
+            }
+
+            // Combine task + activity notes
+            var result = taskNotes
+                .Concat(activityNotes)
+                .OrderByDescending(x => x.CreatedOnUtc)
+                .ToList();
+
+            if (!latestOnTop)
+            {
+                result = result
+                    .OrderBy(x => x.CreatedOnUtc)
+                    .ToList();
+            }
+
+            return result;
         }
         #endregion
 

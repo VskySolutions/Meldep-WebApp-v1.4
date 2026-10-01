@@ -148,11 +148,21 @@
                 {{ props.row.projectName }}
               </div>
 
-              <div class="text-caption text-grey-7">
-                <strong>Assigned To:</strong>
-                {{ props.row.owner }}
-                •
-                {{ props.row.dueDate }}
+              <div
+                v-if="props.row.owner?.trim() || props.row.dueDate?.trim()"
+                class="text-caption text-grey-7"
+              >
+                <template v-if="props.row.owner?.trim()">
+                  <strong>Task Owner:</strong>
+                  {{ props.row.owner }}
+                </template>
+
+                <template v-if="props.row.owner?.trim() && props.row.dueDate?.trim()">, </template>
+
+                <template v-if="props.row.dueDate?.trim()">
+                  <strong>Due Date:</strong>
+                  {{ props.row.dueDate }}
+                </template>
               </div>
             </div>
           </q-td>
@@ -255,7 +265,7 @@ const getTasksByRequirementId = async ({ pagination: p }) => {
       priorityTextColor: item.priority?.color ?? '#000',
       priorityBgColor: item.priority?.bgColor ?? '#e0e0e0'
     }));
-
+console.log(tasks.value);
     if (tasks.value.length) {
       selectedTask.value = tasks.value[0].id;
       emit("select", tasks.value[0]);

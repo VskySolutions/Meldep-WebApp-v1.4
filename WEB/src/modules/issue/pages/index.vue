@@ -515,7 +515,7 @@
                           <q-item
                             v-ripple clickable
                             :class="{ 'disabled-icon': props.row.status.dropDownValue === 'Converted to Task' }"
-                            @click="setActiveRowIdInLocalStorage(props.row.id); onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.name, props.row.description, true)"
+                            @click="setActiveRowIdInLocalStorage(props.row.id); onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.requirement.id, props.row.name, props.row.description, true)"
                           >
                             <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
                             <q-item-section>Convert into Task</q-item-section>
@@ -1011,7 +1011,7 @@ const toggleExpand = (rowId) => {
   }
 };
 
-const onConvertToTask = (id, projectId, projectModuleId, name, description, isIssueConverted) => {
+const onConvertToTask = (id, projectId, projectModuleId, requirementId, name, description, isIssueConverted) => {
   activeRowId.value = id;
   // Collect created task numbers from related mappings
   const taskNumbers = [];
@@ -1026,7 +1026,7 @@ const onConvertToTask = (id, projectId, projectModuleId, name, description, isIs
   });
   $q.dialog({
     component: editProjectTask,
-    componentProps: { issueId: id, issueProjectId: projectId, issueModuleId: projectModuleId, name, description, isIssueConverted, taskNumbers }
+    componentProps: { issueId: id, issueProjectId: projectId, issueModuleId: projectModuleId, requirementId, name, description, isIssueConverted, taskNumbers }
   }).onOk(() => {
     refreshIssueList();
   }).onCancel(() => {

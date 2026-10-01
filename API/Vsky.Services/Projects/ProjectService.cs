@@ -600,36 +600,32 @@ namespace Vsky.Services.Projects
         )
         {
             var data = await _projectRepository.TableNoTracking
-                .Where(x =>
-                    !x.Deleted &&
-                    x.SiteId == siteId &&
-                    x.Id == projectId &&
-                    x.CompanyContact != null &&
-                    !x.CompanyContact.Deleted &&
-                    x.Customer != null &&
-                    !x.Customer.Deleted)
-                .Select(x => new
-                {
-                    PersonId = x.CompanyContact.Person.Id,
-                    FullName =
-                        (x.CompanyContact.Person.FirstName ?? "") +
-                        " " +
-                        (x.CompanyContact.Person.LastName ?? ""),
-                    CompanyName = x.Customer.Name
-                })
-                .ToListAsync();
-
-            return data
-                .Select(x => new CompanyContacts
+            .Where(x =>
+                !x.Deleted &&
+                x.SiteId == siteId &&
+                x.Id == projectId &&
+                x.Customer != null &&
+                !x.Customer.Deleted)
+            .SelectMany(x => x.Customer.Company.CompanyContacts
+                .Where(cc =>
+                    !cc.Deleted &&
+                    cc.Person != null &&
+                    !cc.Person.Deleted)
+                .Select(cc => new CompanyContacts
                 {
                     Person = new Person
                     {
-                        Id = x.PersonId,
-                        FullName = $"{x.FullName}"
+                        Id = cc.Person.Id,
+                        FullName =
+                            (cc.Person.FirstName ?? "") +
+                            " " +
+                            (cc.Person.LastName ?? "")
                     }
-                })
-                .OrderBy(x => x.Person.FullName)
-                .ToList();
+                }))
+            .OrderBy(x => x.Person.FullName)
+            .ToListAsync();
+
+            return data;
         }
         #endregion
 

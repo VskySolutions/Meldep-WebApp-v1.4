@@ -177,7 +177,9 @@ const getTestCasesByRequirementId = async ({ pagination: p }) => {
 
     emit('summary', {
       total: rows.value.length,
-      passed: rows.value.filter(r => r.statusName === 'Resolved').length
+      passed: rows.value.filter(r =>
+        ['Resolved', 'Pass'].includes(r.statusName)
+      ).length
     });
   } catch (err) {
     console.error(err);
@@ -187,10 +189,14 @@ const getTestCasesByRequirementId = async ({ pagination: p }) => {
   }
 };
 
+// const passedCount = computed(() =>
+//   rows.value.filter(r => r.status?.dropDownValue === 'Resolved').length
+// )
 const passedCount = computed(() =>
-  rows.value.filter(r => r.status?.dropDownValue === 'Resolved').length
+  rows.value.filter(r =>
+    ['Resolved', 'Pass'].includes(r.status?.dropDownValue)
+  ).length
 )
-
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions
 // ------------------------------------------------------------------------------------

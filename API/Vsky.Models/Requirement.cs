@@ -105,4 +105,31 @@ namespace Vsky.Models
         public virtual Tags Tags { get; set; }
         public virtual ApplicationUser User { get; set; }
     }
+
+    public class RequirementWorkProgressNote
+    {
+        public string Id { get; set; }
+
+        public string Note { get; set; }
+
+        public string NoteType { get; set; } // Task / Activity
+
+        public string RecordId { get; set; }
+
+        public string RecordName { get; set; }
+
+        public string? TaskId { get; set; }
+
+        public string TaskName { get; set; }
+
+        public string? ActivityId { get; set; }
+
+        public string ActivityName { get; set; }
+
+        public string CreatedById { get; set; }
+
+        public DateTime CreatedOnUtc { get; set; }
+
+        public ApplicationUser User { get; set; }
+    }
 }

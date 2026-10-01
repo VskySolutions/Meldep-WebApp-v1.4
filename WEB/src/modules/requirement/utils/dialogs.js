@@ -2,6 +2,7 @@ import { useQuasar } from "quasar";
 import addRequirement from "modules/requirement/components/add.vue";
 import editRequirement from "modules/requirement/components/edit.vue";
 import viewRequirement from "modules/requirement/components/view.vue";
+import viewRequirementNotesProgressUpdates from "modules/requirement/components/requirementNotesProgressUpdates.vue";
 
 let $q;
 let activeRowId;
@@ -15,6 +16,16 @@ export function onRequirementView (id) {
   activeRowId.value = id;
   $q.dialog({
     component: viewRequirement,
+    componentProps: { id }
+  }).onOk(() => { activeRowId.value = id; })
+    .onCancel(() => { activeRowId.value = id; })
+    .onDismiss(() => { activeRowId.value = id; });
+}
+
+export function onRequirementNotesProgressUpdates (id) {
+  activeRowId.value = id;
+  $q.dialog({
+    component: viewRequirementNotesProgressUpdates,
     componentProps: { id }
   }).onOk(() => { activeRowId.value = id; })
     .onCancel(() => { activeRowId.value = id; })

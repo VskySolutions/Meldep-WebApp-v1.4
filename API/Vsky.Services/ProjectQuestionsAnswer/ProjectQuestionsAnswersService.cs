@@ -46,6 +46,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
             string searchText,
             string title,
             List<string> projectIds,
+            List<string> moduleIds,
             List<string> requirementIds,
             string sortBy,
             Dictionary<string, string> sorts,
@@ -80,6 +81,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                 query = query.Where(x => x.Title.ToLower().Contains(title));
 
             if (projectIds?.Any() == true) query = query.Where(x => projectIds.Contains(x.ProjectId));
+            if (moduleIds?.Any() == true) query = query.Where(x => moduleIds.Contains(x.Requirement.ProjectModuleId));
             if (requirementIds?.Any() == true) query = query.Where(x => requirementIds.Contains(x.RequirementId));
 
             if (!string.IsNullOrWhiteSpace(searchText))

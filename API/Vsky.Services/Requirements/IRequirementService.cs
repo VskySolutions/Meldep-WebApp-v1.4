@@ -86,6 +86,13 @@ namespace Vsky.Services.Requirements
         Task<List<Requirement>> GetAllRequirementDescriptionsById(string siteId, string id, bool latestOnTop);
         #endregion
 
+        #region GetRequirementWorkProgressNotes
+        List<RequirementWorkProgressNote> GetRequirementWorkProgressNotes(
+            string siteId,
+            string requirementId,
+            bool latestOnTop = true);
+        #endregion
+
         #region InsertRequirement
         void InsertRequirement(Requirement entity);
         #endregion

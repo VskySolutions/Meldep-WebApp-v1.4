@@ -14,6 +14,7 @@ namespace Vsky.Api.Models
         public string ProjectId { get; set; }
         public string RequirementId { get; set; }
         public List<string> ProjectIds { get; set; }
+        public List<string> ProjectModuleIds { get; set; }
         public List<string> RequirementIds { get; set; }
     }
     public record ProjectQuestionsAnswersListModel : BasePagedListModel<ProjectQuestionsAnswersModel>

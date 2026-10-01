@@ -603,7 +603,7 @@ const model = ref({
   isIssueConverted: props.isIssueConverted,
   isRequirementConverted: props.isRequirementConverted,
   issueId: props.issueId,
-  requirementId: props.requirementIdAttr !== "" ? props.requirementIdAttr : null,
+  requirementId: props.requirementIdAttr !== "" ? props.requirementIdAttr : (props.requirementId !== "" ? props.requirementId : null),
   status: {
     dropDownValue: ""
   }

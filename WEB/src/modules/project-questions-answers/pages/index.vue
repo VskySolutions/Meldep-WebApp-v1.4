@@ -49,6 +49,12 @@
                         :filter="projectNameDropdown.filter"
                       />
                       <multiSelectDropdown
+                        v-model="search.projectModuleIds"
+                        label="Project Module"
+                        :options="projectModulesByProjectIdForDropdown.list.value"
+                        :filter="projectModulesByProjectIdForDropdown.filter"
+                      />
+                      <multiSelectDropdown
                         v-model="search.requirementIds"
                         label="Requirement"
                         :options="requirementsByProjectModuleIdForDropdown.list.value"
@@ -362,6 +368,7 @@ import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown
 // SOP Change :- Shared Dropdowns
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
+import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 // import manageDropdownModule from "src/modules/dropdown/utils/dropdowns.js";
 
 // SOP Change :- Shared Scripts DataTable Features
@@ -585,6 +592,7 @@ const onSearch = () => {
 const onClear = () => {
   search.value.title = "";
   search.value.projectIds = [];
+  search.value.projectModuleIds = [];
   search.value.requirementIds = [];
   saveDataTableState({
     search: {
@@ -682,28 +690,32 @@ const mapFilterToLabel = (ids, list, label) => {
 const appliedFilters = computed(() => ({
   ...(search.value.title ? { "Question": search.value.title } : {}),
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
+  ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
   ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement")
 }));
-
-function getFilterCount (key) {
-  switch (key) {
-  case "Project Name": return search.value.projectIds?.length || 0;
-  case "Requirement": return search.value.requirementIds?.length || 0;
-  default: return null;
-  }
-}
 
 function onClearFilters (key) {
   if (key === "Question") {
     search.value.title = "";
   } else if (key === "Project Name") {
     search.value.projectIds = [];
+  } else if (key === "Project Module") {
+    search.value.projectModuleIds = [];
+    search.value.requirementIds = [];
   } else if (key === "Requirement") {
     search.value.requirementIds = [];
   }
   refreshQuestionsAnswersList();
 }
 
+function getFilterCount (key) {
+  switch (key) {
+  case "Project Name": return search.value.projectIds?.length || 0;
+  case "Project Module": return search.value.projectModuleIds?.length || 0;
+  case "Requirement": return search.value.requirementIds?.length || 0;
+  default: return null;
+  }
+}
 // ------------------------------------------------------------------------------------
 // Advance Filter :- All Dropdowns (SOP Change)
 // ------------------------------------------------------------------------------------
@@ -711,6 +723,7 @@ const {
   projectNameDropdown
 } = projectModule();
 
+const { projectModulesByProjectIdForDropdown } = projectModuleOfProjectModule();
 const { requirementsByProjectModuleIdForDropdown } = requirementModule();
 
 // ----------------------------
@@ -722,11 +735,29 @@ watch(() => search.value.searchText, () => {
   refreshQuestionsAnswersList();
 });
 
+// watch(() => search.value.projectIds, async (newValue, oldValue) => {
+//   if (search.value?.projectIds?.length === 0) search.value.requirementIds = [];
+//   if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
+
+//   requirementsByProjectModuleIdForDropdown.load('', newValue);
+// }, { immediate: true });
+
 watch(() => search.value.projectIds, async (newValue, oldValue) => {
-  if (search.value?.projectIds?.length === 0) search.value.requirementIds = [];
   if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
 
-  requirementsByProjectModuleIdForDropdown.load('', newValue);
+  if (!selectedProjectId) search.value.projectModuleIds = [];
+  await projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
+}, { immediate: true });
+
+watch(() => search.value.projectModuleIds, (newValue, oldValue) => {
+  if (search.value.projectModuleIds?.length === 0) {
+    search.value.requirementIds = [];
+    return;
+  }
+  if (search.value?.projectModuleIds?.length === 0 || newValue === oldValue) return;
+
+  if (newValue == null) return;
+    requirementsByProjectModuleIdForDropdown.load(newValue);
 }, { immediate: true });
 
 watch(activeRowId, (val) => {
@@ -754,7 +785,9 @@ onBeforeUnmount(() => {
 onMounted(async () => {
   tableRef.value.requestServerInteraction();
   projectNameDropdown.load();
-  if (search.value.projectIds.length > 0) requirementsByProjectModuleIdForDropdown.load('', search.value.projectIds);
+  if (search.value.projectIds?.length > 0) projectModulesByProjectIdForDropdown.load(search.value.isTemplate, false, search.value.projectIds);
+
+  if (search.value.projectModuleIds?.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
 
   document.addEventListener("click", handleDocumentClick);
 });

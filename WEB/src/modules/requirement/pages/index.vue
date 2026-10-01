@@ -835,6 +835,17 @@
                     Manage Req. Description
                   </q-tooltip>
                 </q-icon>
+                <q-icon
+                  v-if="props.row.isEditable"
+                  name="o_note_alt"
+                  class="cursor-pointer q-mr-sm hidden"
+                  size="xs"
+                  @click="onRequirementNotesProgressUpdates(props.row.id)"
+                >
+                  <q-tooltip>
+                    Req. Work & Progress Updates
+                  </q-tooltip>
+                </q-icon>
                 <a
                   v-if="props.row.isEditable || props.row.isNotes"
                   style="position: relative;"
@@ -1006,7 +1017,8 @@ import {
   initRequirementDialogs,
   onRequirementView,
   onRequirementAdd,
-  onRequirementEdit
+  onRequirementEdit,
+  onRequirementNotesProgressUpdates
 } from "src/modules/requirement/utils/dialogs.js";
 
 // Shared Common Dialogs

@@ -2,7 +2,7 @@
   <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" persistent full-height position="right" @hide="onDialogHide">
     <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width:1200px !important; max-width: 100vw !important;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div class="text-h2 text-white">Task Assignment</div>
+        <div class="text-h2 text-white">Edit Activity</div>
         <q-btn v-close-popup icon="o_close" class="close" color="white" flat round dense />
       </q-card-section>
       <q-separator />

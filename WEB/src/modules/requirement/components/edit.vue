@@ -392,12 +392,24 @@
                               :error-message="editingRowV$.filePath.$errors[0]?.$message"
                               @blur="editingRowV$.filePath.$touch"
                             />
-                            <span
+                            <!-- <span
                               v-else :class="props.row.deleted ? 'text-delete' : ''"
                               style="white-space: normal; word-break: break-word;"
                             >
                               <a :href="props.row.filePath" target="_blank" class="text-bluee">
                                 {{ props.row.filePath }}
+                              </a>
+                            </span> -->
+                            <span
+                              v-else
+                              :class="props.row.deleted ? 'text-delete' : ''"
+                            >
+                              <a
+                                :href="props.row.filePath"
+                                target="_blank"
+                                class="text-bluee"
+                              >
+                                {{ getFileNameFromPath(props.row.filePath) || props.row.fileName }}
                               </a>
                             </span>
                           </q-td>
@@ -621,6 +633,19 @@ const getRequirement = () => {
   });
 };
 
+function getFileNameFromPath(filePath) {
+  if (!filePath) return "";
+
+  try {
+    const url = new URL(filePath);
+
+    const fileName = url.searchParams.get("file");
+
+    return fileName ? decodeURIComponent(fileName) : "";
+  } catch {
+    return "";
+  }
+}
 // ----------------------------------------------------------------------------------------------------------------
 // Custom Functions
 // ----------------------------------------------------------------------------------------------------------------
