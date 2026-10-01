@@ -251,6 +251,15 @@
                 />
                 <q-btn
                   v-if="!isViewer"
+                  icon="o_add"
+                  outline
+                  label="Add Data Mapping"
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="onAddRequirementDataMapping(refreshRequirementList)"
+                />
+                <q-btn
+                  v-if="!isViewer"
                   icon="o_checklist"
                   outline
                   no-caps
@@ -816,7 +825,7 @@
               <q-td class="text-center actions">
                 <q-icon
                   name="o_visibility"
-                  class="cursor-pointer q-mr-sm hidden"
+                  class="cursor-pointer q-mr-sm"
                   size="xs"
                   @click="onRequirementView(props.row.id)"
                 >
@@ -843,7 +852,7 @@
                   @click="onAddRequirementDataMapping(props.row.id, refreshRequirementList)"
                 >
                   <q-tooltip>
-                    Add/Edit Data Mappings
+                    Add Data Mappings
                   </q-tooltip>
                 </q-icon>
                 <a
@@ -1018,13 +1027,8 @@ import {
   onRequirementView,
   onRequirementAdd,
   onRequirementEdit,
-  onRequirementNotesProgressUpdates
-} from "src/modules/requirement/utils/dialogs.js";
-
-import {
-  initRequirementDataMappingDialogs,
   onAddRequirementDataMapping
-} from "src/modules/requirement-data-mapping/utils/dialogs.js";
+} from "src/modules/requirement/utils/dialogs.js";
 
 // Shared Common Dialogs
 import {
@@ -1844,7 +1848,6 @@ initCommonDialogs(activeRowId);
 initProjectTaskDialogs(activeRowId);
 initSiteDialogs(activeRowId);
 initRequirementActions(activeRowId);
-initRequirementDataMappingDialogs(activeRowId);
 
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Initialization Of All DropDowns

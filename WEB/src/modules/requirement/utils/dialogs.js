@@ -53,7 +53,6 @@ export function onRequirementAdd (
     });
 }
 
-
 export function onRequirementEdit (id, isManageDescription = false, refresh) {
   activeRowId.value = id;
   $q.dialog({

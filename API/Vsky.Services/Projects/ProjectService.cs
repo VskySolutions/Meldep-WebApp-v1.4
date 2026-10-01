@@ -643,7 +643,9 @@ namespace Vsky.Services.Projects
                 ProjectCount = g.Count()
             });
 
-            var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && x.Id == id).Select(x => new Project
+            var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && x.Id == id);
+
+            query = query.Select(x => new Project
             {
                 Id = x.Id,
                 CustomerId = x.CustomerId,
@@ -688,7 +690,7 @@ namespace Vsky.Services.Projects
                     Person = new Person
                     {
                         Id = x.ProjectCoordinator.Person.Id,
-                        FullName = x.ProjectCoordinator.Person.LastName + " " + x.ProjectCoordinator.Person.LastName
+                        FullName = x.ProjectCoordinator.Person.FirstName + " " + x.ProjectCoordinator.Person.LastName
                     }
                 },
                 CompanyContact = new CompanyContacts
@@ -719,6 +721,16 @@ namespace Vsky.Services.Projects
                     Id = x.ProjectCategoriesSubCategories.Id,
                     DropDownValue = x.ProjectCategoriesSubCategories.DropDownValue,
                     Description = x.ProjectCategoriesSubCategories.Description,
+                },
+                PlanApprover = new Employee
+                {
+
+                    Id = x.PlanApprover.Id,
+                    Person = new Person
+                    {
+                        Id = x.PlanApprover.Person.Id,
+                        FullName = x.PlanApprover.Person.FirstName + " " + x.PlanApprover.Person.LastName
+                    }
                 },
                 CreatedBy = new ApplicationUser
                 {
@@ -875,7 +887,13 @@ namespace Vsky.Services.Projects
                         StartDate = m.InfraAccountServices.StartDate,
                         EndDate = m.InfraAccountServices.EndDate,
                         Price = m.InfraAccountServices.InfraAccountServicesPriceHistory.Where(ph => !ph.Deleted).OrderByDescending(ph => ph.CreatedOnUtc).Select(ph => ph.Price).FirstOrDefault(),
-                        ActualPriceInDollar = Math.Round(
+                        ActualPriceInDollar =
+                        serviceCounts
+                            .Where(c => c.InfraServiceId == m.InfraServiceId)
+                            .Select(c => c.ProjectCount)
+                            .FirstOrDefault() > 0
+                            ?
+                        Math.Round(
                                (decimal)m.InfraAccountServices.InfraAccountServicesPriceHistory
                                 .Where(ph => !ph.Deleted)
                                 .OrderByDescending(ph => ph.CreatedOnUtc)
@@ -886,7 +904,8 @@ namespace Vsky.Services.Projects
                                 .Select(c => c.ProjectCount)
                                 .FirstOrDefault(),
                             2
-                        ),
+                        )
+                        : 0,
                         WalletNumber = m.InfraAccountServices.WalletNumber,
                         Instructions = m.InfraAccountServices.Instructions,
                         ItemType = new DropDown

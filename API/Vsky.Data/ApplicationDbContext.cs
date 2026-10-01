@@ -191,6 +191,8 @@ namespace Vsky.Data
         public virtual DbSet<RequirementChangeLog> RequirementChangeLog { get; set; }
         public virtual DbSet<RequirementTags> RequirementTags { get; set; }
         public virtual DbSet<RequirementPinned> RequirementPinned { get; set; }
+        public virtual DbSet<RequirementDataMapping> RequirementDataMapping { get; set; }
+        public virtual DbSet<RequirementDataMappingNotes> RequirementDataMappingNotes { get; set; }
 
         //Marketing -> Ad Post & Job Create
         public virtual DbSet<AdPost> AdPost { get; set; }
@@ -2124,6 +2126,20 @@ namespace Vsky.Data
                 entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.AspNetUserId);
             });
 
+            builder.Entity<RequirementDataMapping>(entity =>
+            {
+                entity.ToTable("Requirement_DataMapping");
+
+                entity.HasOne(r => r.Requirement).WithMany().HasForeignKey(r => r.RequirementId);
+            });
+
+            builder.Entity<RequirementDataMappingNotes>(entity =>
+            {
+                entity.ToTable("Requirement_DataMapping_Notes");
+
+                entity.HasOne(r => r.RequirementDataMapping).WithMany(r => r.RequirementDataMappingNotes).HasForeignKey(r => r.RequirementDataMappingId);
+            });
+            
             #endregion
 
             #region Marketing -> Ad Post & Job Post

@@ -121,4 +121,13 @@ namespace Vsky.Api.Models
     public record RequirementUploadModel : BaseEntityModel
     {
     }
+
+    // Requirement Data Mapping
+    public record RequirementDataMappingsSearchModel : BaseSearchModel
+    {
+        public string SearchText { get; set; }
+        public List<string> RequirementIds { get; set; }
+        public string Source { get; set; }
+        public string Target { get; set; }
+    }
 }

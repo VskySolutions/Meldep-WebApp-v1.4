@@ -121,6 +121,7 @@ using Vsky.Services.ReportRoleGroupMappings;
 using Vsky.Services.ReportSetting;
 using Vsky.Services.ReportSettingDetail;
 using Vsky.Services.ReportUserMappings;
+using Vsky.Services.RequirementDataMappings;
 using Vsky.Services.Requirements;
 using Vsky.Services.RequirementsColor;
 using Vsky.Services.RequirementsPinned;
@@ -406,6 +407,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<IModulesMenusService, ModulesMenusService>();
             builder.Services.AddScoped<ISitesModulesService, SitesModulesService>();
             builder.Services.AddScoped<ISitesModifiedLogsService, SitesModifiedLogsService>();
+
             builder.Services.AddScoped<IRequirementService, RequirementService>();
             builder.Services.AddScoped<IRequirementGroupService, RequirementGroupService>();
             builder.Services.AddScoped<IRequirementsPinnedService, RequirementsPinnedService>();
@@ -413,6 +415,9 @@ namespace Vsky.Api
             builder.Services.AddScoped<IFilePathDetailsService, FilePathDetailsService>();
             builder.Services.AddScoped<IRequirementChangeLogService, RequirementChangeLogService>();
             builder.Services.AddScoped<IRequirementTagService, RequirementTagService>();
+            builder.Services.AddScoped<IRequirementDataMappingService, RequirementDataMappingService>();
+            builder.Services.AddScoped<IRequirementDataMappingNotesService, RequirementDataMappingNotesService>();
+
             builder.Services.AddScoped<IAdPostService, AdPostService>();
             builder.Services.AddScoped<IAdPostChannelService, AdPostChannelService>();
             builder.Services.AddScoped<IAdPostingStatusService, AdPostingStatusService>();

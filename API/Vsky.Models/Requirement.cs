@@ -106,6 +106,75 @@ namespace Vsky.Models
         public virtual ApplicationUser User { get; set; }
     }
 
+    // Requirement Data Mapping
+    public class RequirementDataMappingList
+    {
+        public virtual ICollection<RequirementDataMapping> RequirementDataMappingsList { get; set; } = new List<RequirementDataMapping>();
+        public int Total { get; set; }
+    }
+
+    public class RequirementDataMappingNoteList
+    {
+        public virtual ICollection<RequirementDataMappingNotes> RequirementDataMappingNotesList { get; set; } = new List<RequirementDataMappingNotes>();
+        public int Total { get; set; }
+    }
+
+    public class RequirementDataMapping : BaseEntity
+    {
+        public string RequirementId { get; set; }
+        public string Source { get; set; }
+        public string Target { get; set; }
+
+        public string CreatedById { get; set; }
+        public DateTime CreatedOnUtc { get; set; }
+        public string UpdatedById { get; set; }
+        public DateTime? UpdatedOnUtc { get; set; }
+        public bool Deleted { get; set; }
+
+        public virtual Requirement Requirement { get; set; }
+        public virtual ApplicationUser CreatedBy { get; set; }
+        public virtual ApplicationUser UpdatedBy { get; set; }
+        public virtual ICollection<RequirementDataMappingNotes> RequirementDataMappingNotes { get; set; } = new List<RequirementDataMappingNotes>();
+    }
+    public class SaveRequirementDataMappings
+    {
+        public string RequirementId { get; set; }
+        public List<SaveRequirementDataMapping> DataMappings { get; set; } = new();
+    }
+
+    public class SaveRequirementDataMapping
+    {
+        public string Id { get; set; }
+        public string Source { get; set; }
+        public string Target { get; set; }
+        public bool Deleted { get; set; }
+        public List<SaveRequirementDataMappingNotes> Notes { get; set; } = new();
+    }
+
+    public class RequirementDataMappingNotes : BaseEntity
+    {
+        public string RequirementDataMappingId { get; set; }
+        public string Note { get; set; }
+
+        public string CreatedById { get; set; }
+        public DateTime CreatedOnUtc { get; set; }
+        public string UpdatedById { get; set; }
+        public DateTime? UpdatedOnUtc { get; set; }
+        public bool Deleted { get; set; }
+
+        public virtual RequirementDataMapping RequirementDataMapping { get; set; }
+        public virtual ApplicationUser CreatedBy { get; set; }
+        public virtual ApplicationUser UpdatedBy { get; set; }
+    }
+
+    public class SaveRequirementDataMappingNotes
+    {
+        public string Id { get; set; }
+        public string RequirementDataMappingId { get; set; }
+        public string Note { get; set; }
+        public bool Deleted { get; set; }
+    }
+
     public class RequirementWorkProgressNote
     {
         public string Id { get; set; }

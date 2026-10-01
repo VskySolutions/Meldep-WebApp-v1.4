@@ -1079,7 +1079,7 @@ namespace Vsky.Api.Controllers
                         {
                             var helpDeskTopicQuestions = new HelpDeskTopicQuestions
                             {
-                                TopicId = masterWorkspace.Id,
+                                TopicId = helpDeskTopic.Id,
                                 Question = masterAreaValue.Question,
                                 Description = masterAreaValue.Description,
                                 IsActive = masterAreaValue.IsActive,
