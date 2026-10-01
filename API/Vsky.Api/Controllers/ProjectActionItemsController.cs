@@ -74,6 +74,7 @@ namespace Vsky.Api.Controllers
                     employeeId,
                     searchModel.SearchText,
                     searchModel.ProjectIds,
+                    searchModel.ProjectModuleIds,
                     searchModel.RequirementIds,
                     searchModel.PriorityIds,
                     searchModel.Title,

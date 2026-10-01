@@ -61,6 +61,7 @@ namespace Vsky.Services.ProjectActionItem
             string employeeId,
             string SearchText,
             List<string> projectIds,
+            List<string> projectModuleIds,
             List<string> requirementIds,
             List<string> priorityIds,
             string title,
@@ -99,6 +100,9 @@ namespace Vsky.Services.ProjectActionItem
 
             if (projectIds != null && projectIds.Any())
                 query = query.Where(x => projectIds.Contains(x.ProjectId));
+
+            if (projectModuleIds != null && projectModuleIds.Any())
+                query = query.Where(x => projectModuleIds.Contains(x.Requirement.ProjectModuleId));
 
             if (requirementIds != null && requirementIds.Any())
                 query = query.Where(x => requirementIds.Contains(x.RequirementId));

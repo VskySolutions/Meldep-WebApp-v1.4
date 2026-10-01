@@ -226,6 +226,10 @@ const props = defineProps({
     type: String,
     required: true
   },
+  activeTab: {
+    type: String,
+    default: ''
+  }
 });
 
 const loading = ref(false);
@@ -248,7 +252,7 @@ const projectId = ref('');
 const projectModuleId = ref('');
 const getTestCasesByRequirementId = async ({ pagination: p }) => {
   const { page, rowsPerPage, sortBy, descending } = p;
-  
+
   search.value.fromDate = search.value.fromDate
     ? toDate(search.value.fromDate)
     : null;
@@ -461,6 +465,10 @@ watch(
     refreshTestCaseList();
   }
 );
+
+watch(() => props.activeTab, () => {
+  showFilter.value = false;
+});
 
 onMounted(async () => {
   if (props.projectId) testPlansByProjectIdForDropdown.load(props.projectId);

@@ -17,6 +17,7 @@ namespace Vsky.Services.ProjectActionItem
             string employeeId,
             string SearchText,
             List<string> projectIds,
+            List<string> projectModuleIds,
             List<string> requirementIds,
             List<string> priorityIds,
             string title,

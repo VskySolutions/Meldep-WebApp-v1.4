@@ -41,6 +41,12 @@
                         :filter="projectNameDropdown.filter"
                       />
                       <multiSelectDropdown
+                        v-model="search.projectModuleIds"
+                        label="Project Module"
+                        :options="projectModulesByProjectIdForDropdown.list.value"
+                        :filter="projectModulesByProjectIdForDropdown.filter"
+                      />
+                      <multiSelectDropdown
                         v-model="search.requirementIds"
                         label="Requirement"
                         :disable="!search.projectIds"
@@ -378,6 +384,7 @@ import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown
 
 // SOP Change :- Shared Dropdowns
 import projectModule from "src/modules/project/utils/dropdowns.js";
+import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 import projectActionItemModule from "src/modules/project-action-items/utils/dropdowns.js";
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 import employeeModule from "src/modules/employee/utils/dropdowns.js";
@@ -643,6 +650,7 @@ const onAdvanceSearch = () => {
 // Clear search
 const onAdvanceClear = () => {
   search.value.projectIds = [];
+  search.value.projectModuleIds = [];
   search.value.requirementIds = [];
   search.value.priorityIds = [];
   search.value.title = "";
@@ -731,6 +739,7 @@ const mapFilterToLabel = (ids, list, label) => {
 
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
+  ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
   ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
   ...mapFilterToLabel(search.value.priorityIds, projectActionItemPriorityForDropdown.list, "Priority"),
   ...mapFilterToLabel(search.value.customerIds, customerNameDropdown.list, "Customer"),
@@ -743,6 +752,7 @@ const appliedFilters = computed(() => ({
 function getFilterCount (key) {
   switch (key) {
   case "Project Name": return search.value.projectIds?.length || 0;
+  case "Project Module": return search.value.projectModuleIds?.length || 0;
   case "Requirement": return search.value.requirementIds?.length || 0;
   case "Priority": return search.value.priorityIds?.length || 0;
   case "Customer": return search.value.customerIds?.length || 0;
@@ -754,6 +764,9 @@ function getFilterCount (key) {
 function onClearFilters (key) {
   if (key === "Project Name") {
     search.value.projectIds = [];
+  } else if (key === "Project Module") {
+    search.value.projectModuleIds = [];
+    search.value.requirementIds = [];
   } else if (key === "Requirement") {
     search.value.requirementIds = [];
   } else if (key === "Priority") {
@@ -781,7 +794,7 @@ function onClearFilters (key) {
 // ------------------------------------------------------------------------------------
 
 const { projectNameDropdown } = projectModule();
-
+const { projectModulesByProjectIdForDropdown } = projectModuleOfProjectModule();
 const {
   projectActionItemPriorityForDropdown
 } = projectActionItemModule();
@@ -816,8 +829,31 @@ watch(activeRowId, (val) => {
 watch(() => search.value.projectIds, async (newValue, oldValue) => {
   if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
 
-  search.value.requirementIds = [];
-  requirementsByProjectModuleIdForDropdown.load('', newValue);
+  if (!newValue?.length) {
+    search.value.projectModuleIds = [];
+    search.value.requirementIds = [];
+    return;
+  }
+
+  const isInitialLoad = !oldValue;
+  await projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
+
+  // Clear modules only when project was changed by the user
+  if (!isInitialLoad) {
+    search.value.projectModuleIds = [];
+    search.value.requirementIds = [];
+  }
+}, { immediate: true });
+
+watch(() => search.value.projectModuleIds, (newValue, oldValue) => {
+  if (search.value.projectModuleIds?.length === 0) {
+    search.value.requirementIds = [];
+    return;
+  }
+  if (search.value?.projectModuleIds?.length === 0 || newValue === oldValue) return;
+
+  if (newValue == null) return;
+    requirementsByProjectModuleIdForDropdown.load(newValue);
 }, { immediate: true });
 
 onBeforeUnmount(() => {
@@ -831,9 +867,10 @@ onBeforeUnmount(() => {
 onMounted(async () => {
   refreshProjectActionItemsList();
   projectNameDropdown.load();
+  if (search.value.projectIds.length > 0) projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
   customerNameDropdown.load();
   activeEmployeesDropdown.load();
-  if (search.value.projectIds.length > 0) requirementsByProjectModuleIdForDropdown.load('', search.value.projectIds);
+  if (search.value.projectModuleIds?.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
   await projectActionItemPriorityForDropdown.load("Project Action Item Priority");
 
   // const setPriority = projectActionItemPriorityForDropdown.getValuesByLabels(["Medium"]);

@@ -121,7 +121,7 @@
             separator="cell"
             no-data-label="No data available"
             binary-state-sort
-            :rows-per-page-options="[15,30,50,100]"
+            :rows-per-page-options="[20, 50, 100, 200, 500]"
             @request="getAllInfraDatabaseForList"
           >
             <template #loading>

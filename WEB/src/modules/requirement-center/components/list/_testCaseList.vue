@@ -454,13 +454,6 @@ watch(
   }
 );
 
-watch(
-  () => props.activeTab,
-  () => {
-    showFilter.value = false;
-  }
-);
-
 onMounted(async () => {
   if (props.projectId) testPlansByProjectIdForDropdown.load(props.projectId);
   activeEmployeesDropdown.load();

@@ -186,6 +186,10 @@ const props = defineProps({
   projectId: {
     type: String,
     required: true
+  },
+  activeTab: {
+    type: String,
+    default: ''
   }
 });
 
@@ -211,7 +215,7 @@ const projectModuleId = ref('');
 const getTasksByRequirementId = async ({ pagination: p }) => {
   loading.value = true;
   const { page, rowsPerPage, sortBy, descending } = p;
-  
+
   // sanitize task number
   const taskNumber = (search.value.projectTaskNumber || "").replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "");
   search.value.projectTaskNumber = taskNumber || "0";
@@ -441,6 +445,10 @@ watch(
     refreshProjectTaskList();
   }
 );
+
+watch(() => props.activeTab, () => {
+  showFilter.value = false;
+});
 
 onMounted(async () => {
   activeEmployeesDropdown.load(user.siteId);

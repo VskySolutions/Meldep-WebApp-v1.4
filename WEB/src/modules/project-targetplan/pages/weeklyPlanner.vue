@@ -147,7 +147,7 @@
               separator="cell"
               no-data-label="No data available"
               binary-state-sort
-              :rows-per-page-options="[15,30,50,100]"
+              :rows-per-page-options="[20, 50, 100, 200, 500]"
               @request="getProjects"
             >
               <template #loading>
@@ -185,7 +185,7 @@
                             <q-item-section avatar><q-icon name="o_visibility" size="xs" /></q-item-section>
                             <q-item-section>View</q-item-section>
                           </q-item>
-                          <q-item v-if="isFullAccess" v-ripple clickable @click="$router.push({ path: '/project-planning/workboard', state: {projectId: props.row.projectId } })">
+                          <q-item v-if="isFullAccess" class="hidden" v-ripple clickable @click="$router.push({ path: '/project-planning/workboard', state: {projectId: props.row.projectId } })">
                             <q-item-section avatar><q-icon name="o_developer_board" size="xs" /></q-item-section>
                             <q-item-section>Work Board</q-item-section>
                           </q-item>

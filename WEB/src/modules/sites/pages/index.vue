@@ -99,7 +99,7 @@
       <q-separator />
       <q-table
         ref="tableRef" v-model:pagination="pagination" :class="rows.length === 0 ? 'Custom-DataTable' : 'Custom-DataTable my-sticky-header-table'" :loading="loading" :rows="rows" :columns="columns" row-key="id" separator="cell"
-        no-data-label="No data available" binary-state-sort :rows-per-page-options="[15, 30, 50 ,100]" @request="getSites"
+        no-data-label="No data available" binary-state-sort :rows-per-page-options="[20, 50, 100, 200, 500]" @request="getSites"
       >
         <template #loading>
           <q-inner-loading showing color="primary">

@@ -68,7 +68,7 @@
           </q-card>
         </q-menu>
       </div>
-      
+
       <div class="row items-center q-gutter-sm">
         <q-btn
           icon="o_open_in_new"
@@ -190,6 +190,10 @@ const props = defineProps({
   requirementId: {
     type: String,
     required: true
+  },
+  activeTab: {
+    type: String,
+    default: ''
   }
 })
 
@@ -220,7 +224,7 @@ const getIssuesByRequirementId = async ({ pagination: p }) => {
 
   const number = search.value.issueNumber ? search.value.issueNumber.replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "") : "";
   search.value.issueNumber = number || "0";
-  
+
   const payload = {
     searchText: search.value.searchText,
     requirementId: props.requirementId,
@@ -411,6 +415,10 @@ watch(
     refreshIssueList();
   }
 );
+
+watch(() => props.activeTab, () => {
+  showFilter.value = false;
+});
 
 // ----------------------------------------------------------------------------------------------------------------
 // On page rendering

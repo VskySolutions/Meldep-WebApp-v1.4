@@ -135,11 +135,11 @@
           <q-td style="width:40%;" class="hoverable-cell" @click="onProjectActionItemsView(props.row.id)">
             {{ props.row.title }}
           </q-td>
-          
+
           <q-td style="width:40%;">
             {{ props.row.customer.name }}
           </q-td>
-          
+
           <q-td style="width:40%;">
             {{ props.row.employee.person.fullName }}
           </q-td>
@@ -147,7 +147,7 @@
           <q-td style="width:40%;">
             {{ props.row.dueDate }}
           </q-td>
-          
+
           <q-td style="width:40%;">
             {{ props.row.priority.dropDownValue }}
           </q-td>
@@ -189,6 +189,10 @@ const props = defineProps({
   requirementId: {
     type: String,
     required: true
+  },
+  activeTab: {
+    type: String,
+    default: ''
   }
 });
 
@@ -394,6 +398,10 @@ watch(
     refreshProjectActionItemsList();
   }
 );
+
+watch(() => props.activeTab, () => {
+  showFilter.value = false;
+});
 
 onMounted(async () => {
   activeEmployeesDropdown.load(user.siteId);

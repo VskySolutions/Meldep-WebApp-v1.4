@@ -287,6 +287,7 @@ const timesheetSearchModel = ref({});
 const onSelectGroup = group => {
   selectedGroup.value = group;
 };
+
 </script>
 <style>
 .full-height {

@@ -205,14 +205,27 @@
                           label="Active"
                           :dense="true"
                         />-->
+                       <div>
                         <div class="q-mb-xs q-mt-md text-black">
                           Archive/Unarchive
                         </div>
-                        <q-checkbox
-                          v-model="model.isArchived"
-                          :label="model.isArchived ? 'Archived' : 'Unarchived'"
-                          :dense="true"
-                        />
+
+                        <div class="row items-center no-wrap q-gutter-sm">
+                          <q-radio
+                            v-model="model.isArchived"
+                            :val="true"
+                            label="Archived"
+                            dense
+                          />
+
+                          <q-radio
+                            v-model="model.isArchived"
+                            :val="false"
+                            label="Unarchived"
+                            dense
+                          />
+                        </div>
+                      </div>
                       </div>
                     </div>
                     <div class="row q-col-gutter-x-md q-mb-lg">
@@ -1579,7 +1592,7 @@ const onSubmit = async (isClose = 0) => {
         formData.append("projectPriorityId", model.value.projectPriorityId);
         formData.append("projectTypeId", model.value.projectTypeId);
         formData.append("planApproverId", model.value.planApproverId);
-        formData.append("active", model.value.active);
+        formData.append("isArchived", model.value.isArchived);
         formData.append("isTemplate", model.value.isTemplate ?? false);
         formData.append("description", model.value.description);
 

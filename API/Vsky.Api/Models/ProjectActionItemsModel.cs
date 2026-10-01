@@ -8,6 +8,7 @@ namespace Vsky.Api.Models
     {
         public string SearchText { get; set; }
         public List<string> ProjectIds { get; set; }
+        public List<string> ProjectModuleIds { get; set; }
         public string ProjectId { get; set; }
         public string RequirementId { get; set; }
         public List<string> RequirementIds { get; set; }

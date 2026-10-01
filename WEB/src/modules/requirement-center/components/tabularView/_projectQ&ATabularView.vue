@@ -186,6 +186,10 @@ const props = defineProps({
   requirementId: {
     type: String,
     required: true
+  },
+  activeTab: {
+    type: String,
+    default: ''
   }
 });
 
@@ -351,5 +355,9 @@ watch(
     refreshProjectQAList();
   }
 );
+
+watch(() => props.activeTab, () => {
+  showFilter.value = false;
+});
 
 </script>

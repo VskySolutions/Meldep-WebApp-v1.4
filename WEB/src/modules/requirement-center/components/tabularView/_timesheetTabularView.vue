@@ -367,6 +367,10 @@ const props = defineProps({
   requirementId: {
     type: String,
     required: true
+  },
+  activeTab: {
+    type: String,
+    default: ''
   }
 });
 
@@ -1171,6 +1175,10 @@ watch(
     }
   }
 );
+
+watch(() => props.activeTab, () => {
+  showFilter.value = false;
+});
 
 /* --------------------------------------------------------------------------
  * Mounted
