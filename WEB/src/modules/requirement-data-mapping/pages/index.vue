@@ -251,15 +251,6 @@
                 />
                 <q-btn
                   v-if="!isViewer"
-                  icon="o_add"
-                  outline
-                  label="Add Data Mapping"
-                  no-caps
-                  class="text-primary btnRounded q-ml-xs"
-                  @click="onAddRequirementDataMapping(refreshRequirementList)"
-                />
-                <q-btn
-                  v-if="!isViewer"
                   icon="o_checklist"
                   outline
                   no-caps
@@ -825,7 +816,7 @@
               <q-td class="text-center actions">
                 <q-icon
                   name="o_visibility"
-                  class="cursor-pointer q-mr-sm"
+                  class="cursor-pointer q-mr-sm hidden"
                   size="xs"
                   @click="onRequirementView(props.row.id)"
                 >
@@ -834,14 +825,25 @@
                   </q-tooltip>
                 </q-icon>
                 <q-icon
-                  v-if="props.row.isEditable"
+                  v-if="props.row.isEditable && !isViewer"
                   name="o_description"
                   class="cursor-pointer q-mr-sm"
                   size="xs"
                   @click="onRequirementEdit(props.row.id, true, refreshRequirementList)"
                 >
                   <q-tooltip>
-                    Manage Description
+                    Manage Req. Description
+                  </q-tooltip>
+                </q-icon>
+                <q-icon
+                  v-if="props.row.isEditable"
+                  name="o_note_alt"
+                  class="cursor-pointer q-mr-sm hidden"
+                  size="xs"
+                  @click="onRequirementNotesProgressUpdates(props.row.id)"
+                >
+                  <q-tooltip>
+                    Req. Work & Progress Updates
                   </q-tooltip>
                 </q-icon>
                 <q-icon
@@ -852,7 +854,7 @@
                   @click="onAddRequirementDataMapping(props.row.id, refreshRequirementList)"
                 >
                   <q-tooltip>
-                    Add Data Mappings
+                    Add/Edit Data Mappings
                   </q-tooltip>
                 </q-icon>
                 <a
@@ -959,7 +961,7 @@
     v-model="showSortDialog"
     :columns="columns"
     :multi-sort="multiSort"
-    :exclude-columns="['Task','Tags', 'Draft/Confirmed', 'Last Note']"
+    :exclude-columns="['Task','Tags', 'Draft/Confirmed', 'Note']"
     @add="addSortLevel"
     @remove="removeSortLevel"
     @apply="applyMultiSort"
@@ -1027,8 +1029,13 @@ import {
   onRequirementView,
   onRequirementAdd,
   onRequirementEdit,
-  onAddRequirementDataMapping
+  onRequirementNotesProgressUpdates
 } from "src/modules/requirement/utils/dialogs.js";
+
+import {
+  initRequirementDataMappingDialogs,
+  onAddRequirementDataMapping
+} from "src/modules/requirement-data-mapping/utils/dialogs.js";
 
 // Shared Common Dialogs
 import {
@@ -1191,7 +1198,7 @@ const columns = ref([
   { name: "workspace.dropDownValue", label: "Workspace", field: "workspace.dropDownValue", align: "left", sortable: true, default: false },
   { name: "requirementEntered.person.firstName", label: "Entered By", field: "requirementEntered.person.firstName", align: "left", sortable: true, default: false },
   { name: "approvalStatusDropDown.dropDownValue", label: "Approval Status", field: "approvalStatusDropDown.dropDownValue", align: "left", sortable: true, default: false },
-  { name: "lastNote", label: "Last Note", field: "lastNote", align: "left", sortable: false, default: true },
+  { name: "lastNote", label: "Note", field: "lastNote", align: "left", sortable: false, default: true },
   { name: "plannedStartDate", label: "Planned Start Date", field: "plannedStartDate", align: "center", sortable: true, default: false },
   { name: "plannedEndDate", label: "Planned End Date", field: "plannedEndDate", align: "center", sortable: true, default: false },
   { name: "actualStartDate", label: "Actual Start Date", field: "actualStartDate", align: "center", sortable: true, default: false },
@@ -1848,6 +1855,7 @@ initCommonDialogs(activeRowId);
 initProjectTaskDialogs(activeRowId);
 initSiteDialogs(activeRowId);
 initRequirementActions(activeRowId);
+initRequirementDataMappingDialogs(activeRowId);
 
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Initialization Of All DropDowns
