@@ -180,7 +180,7 @@
                   </div>
                   <div v-if="model.lastNote" class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-12 col-md-12">
-                      <div class="q-mb-xs">Last Note :</div>
+                      <div class="q-mb-xs">Note :</div>
                       <div class="text-black">
                         <span v-html="model.lastNote" />
                       </div>
