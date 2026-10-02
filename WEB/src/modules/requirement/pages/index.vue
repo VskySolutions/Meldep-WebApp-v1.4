@@ -838,7 +838,7 @@
                 <q-icon
                   v-if="props.row.isEditable"
                   name="o_note_alt"
-                  class="cursor-pointer q-mr-sm hidden"
+                  class="cursor-pointer q-mr-sm"
                   size="xs"
                   @click="onRequirementNotesProgressUpdates(props.row.id)"
                 >
@@ -861,7 +861,7 @@
                   v-if="props.row.isEditable || props.row.isNotes"
                   style="position: relative;"
                   class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
-                  @click="onNoteAdd(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, `${props.row.project.name} : ${props.row.title}`, refreshRequirementList)"
+                  @click="onNoteAdd(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, `${props.row.project.name} : ${props.row.title}`, refreshRequirementList, true)"
                 >
                   <q-tooltip anchor="bottom middle" self="top middle">
                     Note

@@ -586,8 +586,13 @@ if (TaskId) {
 }
 
 const readonlyProject = props.projectIdAttr || props.issueProjectId ? "readonly" : "";
-const readonlyProjectModule = props.moduleIdAttr ? "readonly" : "";
-const readonlyRequirement = props.requirementIdAttr ? "readonly" : "";
+const readonlyProjectModule = props.moduleIdAttr || props.issueModuleId ? "readonly" : "";
+const isReadonlyRequirement =
+  !!props.requirementIdAttr ||
+  ((props.isRequirementConverted || props.isIssueConverted) &&
+    !!props.requirementId);
+
+const readonlyRequirement = isReadonlyRequirement ? "readonly" : "";
 
 // Define model values
 const model = ref({

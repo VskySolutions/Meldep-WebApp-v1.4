@@ -515,7 +515,7 @@
                           <q-item
                             v-ripple clickable
                             :class="{ 'disabled-icon': props.row.status.dropDownValue === 'Converted to Task' }"
-                            @click="setActiveRowIdInLocalStorage(props.row.id); onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.requirement.id, props.row.name, props.row.description, true)"
+                            @click="setActiveRowIdInLocalStorage(props.row.id); onConvertToTask(props.row.id, props.row.projectId, props.row.projectModuleId, props.row.requirement?.id, props.row.name, props.row.description, true)"
                           >
                             <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
                             <q-item-section>Convert into Task</q-item-section>

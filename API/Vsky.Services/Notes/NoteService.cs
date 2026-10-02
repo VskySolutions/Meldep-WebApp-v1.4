@@ -59,11 +59,17 @@ namespace Vsky.Services.Note
             Sub_Module = x.Sub_Module,
             Type = x.Type,
             Note = x.Note,
+            NoteTypeId = x.NoteTypeId,
             CreatedById = x.CreatedById,
             CreatedOnUtc = x.CreatedOnUtc,
             //CreatedDateStr = x.CreatedOnUtc.ToString("MM/dd/yyyy hh:mm:ss tt"),
             UpdatedById = x.UpdatedById,
             UpdatedOnUtc = x.UpdatedOnUtc,
+            NoteType = new DropDown
+            {
+                Id = x.NoteType.Id,
+                DropDownValue = x.NoteType.DropDownValue
+            },
             User = new ApplicationUser
             {
                 Id = x.User.Id,

@@ -5,38 +5,36 @@
   >
     <q-timeline color="secondary">
       <q-timeline-entry
-        v-for="(responseLogDescription, index) in allResponseLogDescriptions"
+        v-for="(responseLogDescription, index) in notes"
         :key="index"
         :subtitle="
-        showDescriptionInfo
-          ? `${responseLogDescription.createdOnUtc} - ${responseLogDescription.createdBy?.person?.fullName}`
-          : ''
+        `${responseLogDescription.createdOnUtc} - ${responseLogDescription.user?.person?.firstName} ${responseLogDescription.user?.person?.lastName}`
         "
         :icon="done_all"
         :color="'primary'"
       >
-        <div v-if="allResponseLogDescriptions.length">
+        <div v-if="notes.length">
           <div
             class="note-wrapper"
           >
               <div
                 class="text-black note-text"
-                v-html="responseLogDescription.description || ''"/>
+                v-html="responseLogDescription.note || ''"/>
               <q-separator v-if="showDescriptionInfo" class="q-my-sm" />
           </div>
         </div>
       </q-timeline-entry>
     </q-timeline>
-    <div v-if="allResponseLogDescriptions.length === 0">
-      <h5 class="text-center text-grey">No Descriptions Available</h5>
+    <div v-if="notes.length === 0">
+      <h5 class="text-center text-grey">No Notes Available</h5>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, watch } from "vue";
 import _ from "lodash";
 
-import requirementService from "../requirement.service";
+import commonService from "services/common.service";
 
 // Props values i.e. come from query string
 const props = defineProps({
@@ -46,74 +44,18 @@ const props = defineProps({
 
 // common variables
 const loading = ref(true);
-const allResponseLogDescriptions = ref([]);
+const notes = ref([]);
 
 // Get all descriptions and change logs
-const getAllRequirementDescriptionsById = async () => {
-  if (!props.id) return;
+const getAllRequirementNoteByTypeAndRecord = () => {
   loading.value = true;
-  try {
-    const resp = await requirementService.getAllRequirementDescriptionsById(
-      props.id, true
+  commonService.getAllNoteByTypeAndRecord(props.id, 'Requirement', true).then((resp) => {
+    notes.value = _.cloneDeep(resp).filter(
+      (x) => x.noteType?.dropDownValue === "Client Question"
     );
-    const requirementsList = resp.requirementList || [];
-    const responseLogDescriptions = [];
-
-    const hasDescription = (description) => {
-      if (!description) return false;
-
-      const text = description
-        .replace(/<br\s*\/?>/gi, "")
-        .replace(/&nbsp;/gi, "")
-        .replace(/<[^>]*>/g, "")
-        .trim();
-
-      return text.length > 0;
-    };
-
-    requirementsList.forEach((requirement) => {
-      if (hasDescription(requirement.description)) {
-        responseLogDescriptions.push({
-          id: requirement.id,
-          description: requirement.description,
-          createdOnUtc: requirement.createdOnUtc,
-          createdById: requirement.createdById,
-          createdBy: requirement.createdBy,
-          editingStatus: requirement.editingStatus,
-          isRequirementDescription: true
-        });
-      }
-
-      // Add change logs only when description exists
-      (requirement.requirementChangeLog || []).forEach((responseLogDescriptionItem) => {
-        if (hasDescription(responseLogDescriptionItem.description)) {
-            responseLogDescriptions.push({
-              id: responseLogDescriptionItem.id,
-              description: responseLogDescriptionItem.description,
-              createdOnUtc: responseLogDescriptionItem.createdOnUtc,
-              createdById: responseLogDescriptionItem.createdById,
-              createdBy: responseLogDescriptionItem.createdBy,
-              isRequirementDescription: false
-            });
-          }
-      });
-    });
-
-    responseLogDescriptions.sort(
-      (a, b) =>
-        new Date(b.createdOnUtc).getTime() -
-        new Date(a.createdOnUtc).getTime()
-    );
-
-    allResponseLogDescriptions.value = responseLogDescriptions;
-  } catch (error) {
-    console.error(
-      "Error while loading requirement descriptions:",
-      error
-    );
-  } finally {
+  }).finally(() => {
     loading.value = false;
-  }
+  });
 };
 
 // Watch requirement ID
@@ -121,16 +63,11 @@ watch(
   () => props.id,
   (newId) => {
     if (newId) {
-      getAllRequirementDescriptionsById();
+      getAllRequirementNoteByTypeAndRecord();
     }
   },
   { immediate: true }
 );
-
-// On page rendering
-onMounted(() => {
-  getAllRequirementDescriptionsById();
-});
 
 </script>
 <style scoped>

@@ -60,6 +60,12 @@ export default function requirementModule () {
     valueKey: "id"
   });
 
+  const noteTypeListSingleSelect = useSingleSelectDropdown(commonService.getDropDown, {
+    labelKey: "dropdownValue",
+    valueKey: "id",
+    dataKey: "sortOrder"
+  });
+
   return {
     requirementStatusForDropdown,
     requirementsByProjectModuleIdForDropdown,
@@ -70,6 +76,7 @@ export default function requirementModule () {
     requirementIdentifiedUserTypeDropdownSingleSelect,
     requirementApprovalStatusDropdownSingleSelect,
     requirementTypeDropdownSingleSelect,
-    requirementTypeForDropdown
+    requirementTypeForDropdown,
+    noteTypeListSingleSelect
   };
 }

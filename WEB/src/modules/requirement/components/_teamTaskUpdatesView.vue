@@ -28,18 +28,6 @@
               <div class="text-subtitle1 text-weight-medium">
                 {{ task.taskName }}
               </div>
-
-              <!-- <div
-                v-if="task.taskUser"
-                class="text-caption text-grey-7"
-              >
-                <q-icon
-                  name="o_person"
-                  size="14px"
-                  class="q-mr-xs"
-                />
-                {{ task.taskUser }}
-              </div> -->
             </div>
           </div>
         </q-card-section>
@@ -88,19 +76,6 @@
             :key="activity.activityId"
             class="q-mb-md"
           >
-            <!-- Activity Header -->
-            <!-- <div class="row items-center q-mb-sm">
-              <q-icon
-                name="o_check_circle"
-                size="18px"
-                class="q-mr-sm"
-              />
-
-              <div class="text-body2 text-weight-medium">
-                {{ activity.activityName }}
-              </div>
-            </div> -->
-
             <!-- Activity Notes -->
             <q-timeline
               v-if="activity.notes.length"

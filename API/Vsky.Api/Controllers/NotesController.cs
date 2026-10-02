@@ -101,6 +101,7 @@ namespace Vsky.Api.Controllers
                         Editentity.Module = model.Module;
                         Editentity.ModuleId = model.ModuleId;
                         Editentity.Sub_Module = model.Sub_Module;
+                        Editentity.NoteTypeId = model.NoteTypeId;
 
                         if (!string.IsNullOrEmpty(model.Note))
                         {
@@ -136,6 +137,7 @@ namespace Vsky.Api.Controllers
                         Addentity.Module = model.Module;
                         Addentity.ModuleId = model.ModuleId;
                         Addentity.Sub_Module = model.Sub_Module;
+                        Addentity.NoteTypeId = model.NoteTypeId;
 
                         if (!string.IsNullOrEmpty(model.Note))
                         {

@@ -10,11 +10,11 @@ export function initCommonDialogs (rowRef) {
   activeRowId = rowRef;
 }
 
-export function onNoteAdd (id, type, moduleId, module, name, label, refresh) {
+export function onNoteAdd (id, type, moduleId, module, name, label, refresh, showNoteType = false) {
   activeRowId.value = id;
   $q.dialog({
     component: addEditNotes,
-    componentProps: { id, type, moduleId, module, name, label }
+    componentProps: { id, type, moduleId, module, name, label, showNoteType }
   }).onOk(() => {
     refresh?.();
   })

@@ -18,6 +18,7 @@ namespace Vsky.Models
         public string Module { get; set; }
         public string ModuleId { get; set; }
         public string Sub_Module { get; set; }
+        public string NoteTypeId { get; set; }
         public DateTime CreatedOnUtc { get; set; }
 
         [NotMapped]
@@ -27,6 +28,7 @@ namespace Vsky.Models
         public string UpdatedById { get; set; }
         public bool Deleted { get; set; }
         public virtual ApplicationUser User { get; set; }
+        public virtual DropDown NoteType { get; set; }
         public virtual Site Site { get; set; }
     }
 }
