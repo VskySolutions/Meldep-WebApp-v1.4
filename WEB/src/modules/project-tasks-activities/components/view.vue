@@ -9,14 +9,14 @@
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator>
-            <q-tab name="1_tab" label="Description" class="q-px-lg q-mr-md" />
+            <q-tab name="1_tab" label="Activity Details" class="q-px-lg q-mr-md" />
             <q-tab name="2_tab" label="Activity Info." class="q-px-lg q-mr-md" />
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated class="q-mt-xs">
             <q-tab-panel name="1_tab">
               <fieldset>
-                <legend>Description</legend>
+                <legend>Activity Details</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="text-black RichTextEditor">
                     <span v-html="model.description || '-'"></span>

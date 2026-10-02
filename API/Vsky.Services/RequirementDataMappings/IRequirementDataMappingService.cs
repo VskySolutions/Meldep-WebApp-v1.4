@@ -27,6 +27,26 @@ namespace Vsky.Services.RequirementDataMappings
         );
         #endregion
 
+        #region GetAllRequirementDataMappingGroups
+        //Task<List<RequirementDataMappingGroup>> GetAllRequirementDataMappingGroups(string siteId);
+        Task<IPagedList<RequirementDataMappingGroup>> GetAllRequirementDataMappingGroups(
+            string SiteId,
+            string loggedUserId,
+            string SearchText,
+            List<string> projectIds,
+            List<string> projectModuleIds,
+            List<string> requirementIds,
+            string source,
+            string target,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        );
+        #endregion
+
         #region GetById
         Task<RequirementDataMapping> GetRequirementDataMappingById(string id);
         #endregion

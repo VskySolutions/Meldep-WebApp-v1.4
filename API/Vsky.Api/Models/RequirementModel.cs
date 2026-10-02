@@ -127,6 +127,8 @@ namespace Vsky.Api.Models
     {
         public string SearchText { get; set; }
         public List<string> RequirementIds { get; set; }
+        public List<string> ProjectIds { get; set; }
+        public List<string> ProjectModuleIds { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
     }

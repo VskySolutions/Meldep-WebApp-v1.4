@@ -118,6 +118,12 @@ namespace Vsky.Models
         public virtual ICollection<RequirementDataMappingNotes> RequirementDataMappingNotesList { get; set; } = new List<RequirementDataMappingNotes>();
         public int Total { get; set; }
     }
+    public class RequirementDataMappingGroupList
+    {
+        //public List<RequirementDataMappingGroup> DataMappingGroupList { get; set; } = new List<RequirementDataMappingGroup>();
+        public virtual ICollection<RequirementDataMappingGroup> DataMappingGroupList { get; set; } = new List<RequirementDataMappingGroup>();
+        public int Total { get; set; }
+    }
 
     public class RequirementDataMapping : BaseEntity
     {
@@ -149,6 +155,13 @@ namespace Vsky.Models
         public string Target { get; set; }
         public bool Deleted { get; set; }
         public List<SaveRequirementDataMappingNotes> Notes { get; set; } = new();
+    }
+    public class RequirementDataMappingGroup
+    {
+        public string RequirementId { get; set; }
+        public string RequirementTitle { get; set; }
+
+        public List<RequirementDataMapping> DataMappings { get; set; } = new List<RequirementDataMapping>();
     }
 
     public class RequirementDataMappingNotes : BaseEntity

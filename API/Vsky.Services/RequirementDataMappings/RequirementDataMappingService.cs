@@ -123,6 +123,236 @@ namespace Vsky.Services.RequirementDataMappings
         }
         #endregion
 
+        #region GetAllRequirementDataMappingGroups
+        //public async Task<List<RequirementDataMappingGroup>> GetAllRequirementDataMappingGroups(string siteId)
+        //{
+        //    var query = _requirementDataMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.Requirement.SiteId == siteId)
+        //        .Select(x => new
+        //        {
+        //            RequirementId = x.RequirementId,
+        //            RequirementTitle = x.Requirement.Title,
+
+        //            Mapping = new RequirementDataMapping
+        //            {
+        //                Id = x.Id,
+        //                RequirementId = x.RequirementId,
+        //                Source = x.Source,
+        //                Target = x.Target,
+        //                CreatedOnUtc = x.CreatedOnUtc,
+        //                CreatedBy = new ApplicationUser
+        //                {
+        //                    Id = x.CreatedBy.Id,
+        //                    UserName = x.CreatedBy.UserName,
+        //                    Person = new Person
+        //                    {
+        //                        Id = x.CreatedBy.Person.Id,
+        //                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+        //                    }
+        //                },
+        //                RequirementDataMappingNotes =
+        //                    x.RequirementDataMappingNotes
+        //                        .Where(n => !n.Deleted)
+        //                        .OrderBy(n => n.CreatedOnUtc)
+        //                        .Select(n => new RequirementDataMappingNotes
+        //                        {
+        //                            Id = n.Id,
+        //                            RequirementDataMappingId =
+        //                                n.RequirementDataMappingId,
+        //                            Note = n.Note,
+        //                            CreatedOnUtc = n.CreatedOnUtc
+        //                        })
+        //                        .ToList()
+        //            }
+        //        });
+
+        //    var result = await query.ToListAsync();
+
+        //    return result
+        //        .GroupBy(x => new
+        //        {
+        //            x.RequirementId,
+        //            x.RequirementTitle
+        //        })
+        //        .Select(x => new RequirementDataMappingGroup
+        //        {
+        //            RequirementId = x.Key.RequirementId,
+        //            RequirementTitle = x.Key.RequirementTitle,
+        //            DataMappings = x
+        //                .Select(m => m.Mapping)
+        //                .OrderByDescending(m => m.CreatedOnUtc)
+        //                .ToList()
+        //        })
+        //        .ToList();
+        //}
+
+        public async Task<IPagedList<RequirementDataMappingGroup>> GetAllRequirementDataMappingGroups(
+            string SiteId,
+            string loggedUserId,
+            string SearchText,
+            List<string> projectIds,
+            List<string> projectModuleIds,
+            List<string> requirementIds,
+            string source,
+            string target,
+            string sortBy,
+            Dictionary<string, string> sorts,
+            bool descending,
+            int page = 1,
+            int pageSize = int.MaxValue,
+            bool lookup = false
+        )
+        {
+            var query = _requirementDataMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.Requirement.SiteId == SiteId);
+
+            if (requirementIds != null && requirementIds.Any())
+            {
+                query = query.Where(x => requirementIds.Contains(x.RequirementId));
+            }
+
+            if (projectIds != null && projectIds.Any())
+            {
+                query = query.Where(x => projectIds.Contains(x.Requirement.Project.Id));
+            }
+
+            if (projectModuleIds != null && projectModuleIds.Any())
+            {
+                query = query.Where(x => projectModuleIds.Contains(x.Requirement.ProjectModule.Id));
+            }
+
+            if (!string.IsNullOrWhiteSpace(source))
+            {
+                source = source.Trim().ToLower();
+
+                query = query.Where(x => x.Source.ToLower().Contains(source));
+            }
+
+            if (!string.IsNullOrWhiteSpace(target))
+            {
+                target = target.Trim().ToLower();
+
+                query = query.Where(x =>
+                    x.Target.ToLower().Contains(target));
+            }
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                SearchText = SearchText.Trim().ToLower();
+
+                query = query.Where(x =>
+                    x.Requirement.Title.ToLower().Contains(SearchText) ||
+                    x.Source.ToLower().Contains(SearchText) ||
+                    x.Target.ToLower().Contains(SearchText));
+            }
+
+            // Get the Requirement IDs after applying all filters
+            var requirementQuery = query
+                .Select(x => new
+                {
+                    RequirementId = x.RequirementId,
+                    RequirementTitle = x.Requirement.Title,
+                    CreatedOnUtc = x.CreatedOnUtc
+                })
+                .GroupBy(x => new
+                {
+                    x.RequirementId,
+                    x.RequirementTitle
+                })
+                .Select(x => new RequirementDataMappingGroup
+                {
+                    RequirementId = x.Key.RequirementId,
+                    RequirementTitle = x.Key.RequirementTitle
+                });
+
+            // Sorting Requirement groups
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                if (sortBy == "requirementTitle")
+                {
+                    requirementQuery = descending
+                        ? requirementQuery.OrderByDescending(x => x.RequirementTitle)
+                        : requirementQuery.OrderBy(x => x.RequirementTitle);
+                }
+                else
+                {
+                    requirementQuery = requirementQuery.OrderBy(x => x.RequirementTitle);
+                }
+            }
+            else
+            {
+                requirementQuery = requirementQuery.OrderBy(x => x.RequirementTitle);
+            }
+
+            // Pagination happens at Requirement level
+            var pagedRequirements = new PagedList<RequirementDataMappingGroup>(
+                requirementQuery,
+                page,
+                pageSize
+            );
+
+            // Get only the Requirement IDs for the current page
+            var pagedRequirementIds = pagedRequirements
+                .Select(x => x.RequirementId)
+                .ToList();
+
+            // Get mappings for the current page Requirements
+            var mappingQuery = _requirementDataMappingRepository.TableNoTracking
+                .Where(x =>
+                    !x.Deleted &&
+                    pagedRequirementIds.Contains(x.RequirementId))
+                .Select(x => new RequirementDataMapping
+                {
+                    Id = x.Id,
+                    RequirementId = x.RequirementId,
+                    Source = x.Source,
+                    Target = x.Target,
+                    CreatedOnUtc = x.CreatedOnUtc,
+
+                    CreatedBy = new ApplicationUser
+                    {
+                        Id = x.CreatedBy.Id,
+                        UserName = x.CreatedBy.UserName,
+                        Person = new Person
+                        {
+                            Id = x.CreatedBy.Person.Id,
+                            FullName =
+                                x.CreatedBy.Person.FirstName +
+                                " " +
+                                x.CreatedBy.Person.LastName
+                        }
+                    },
+
+                    RequirementDataMappingNotes =
+                        x.RequirementDataMappingNotes
+                            .Where(n => !n.Deleted)
+                            .OrderBy(n => n.CreatedOnUtc)
+                            .Select(n => new RequirementDataMappingNotes
+                            {
+                                Id = n.Id,
+                                RequirementDataMappingId =
+                                    n.RequirementDataMappingId,
+                                Note = n.Note,
+                                CreatedOnUtc = n.CreatedOnUtc
+                            })
+                            .ToList()
+                });
+
+            var mappings = await mappingQuery.ToListAsync();
+
+            // Put mappings under their Requirement
+            foreach (var requirement in pagedRequirements)
+            {
+                requirement.DataMappings = mappings
+                    .Where(x =>
+                        x.RequirementId == requirement.RequirementId)
+                    .OrderByDescending(x => x.CreatedOnUtc)
+                    .ToList();
+            }
+
+            return pagedRequirements;
+        }
+        #endregion
+
         #region GetRequirementDataMappingsByRequirementId
         public async Task<List<RequirementDataMapping>> GetRequirementDataMappingsByRequirementId(string requirementId)
         {

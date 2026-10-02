@@ -846,17 +846,6 @@
                     Req. Work & Progress Updates
                   </q-tooltip>
                 </q-icon>
-                <q-icon
-                  v-if="!isViewer"
-                  name="o_add"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="onAddRequirementDataMapping(props.row.id, refreshRequirementList)"
-                >
-                  <q-tooltip>
-                    Add/Edit Data Mappings
-                  </q-tooltip>
-                </q-icon>
                 <a
                   v-if="props.row.isEditable || props.row.isNotes"
                   style="position: relative;"
@@ -895,6 +884,14 @@
                       >
                         <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
                         <q-item-section>Convert into Task</q-item-section>
+                      </q-item>
+                      <q-item
+                        v-if="props.row.isEditable"
+                        v-ripple clickable
+                        @click="onEditRequirementDataMapping(props.row.id, true, refreshRequirementList)"
+                      >
+                        <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
+                        <q-item-section>Edit Data Mapping</q-item-section>
                       </q-item>
                       <q-item v-if="props.row.isEditable">
                         <q-item-section avatar>
@@ -1034,7 +1031,7 @@ import {
 
 import {
   initRequirementDataMappingDialogs,
-  onAddRequirementDataMapping
+  onEditRequirementDataMapping
 } from "src/modules/requirement-data-mapping/utils/dialogs.js";
 
 // Shared Common Dialogs
@@ -1855,7 +1852,7 @@ initCommonDialogs(activeRowId);
 initProjectTaskDialogs(activeRowId);
 initSiteDialogs(activeRowId);
 initRequirementActions(activeRowId);
-initRequirementDataMappingDialogs(activeRowId);
+initRequirementDataMappingDialogs();
 
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Initialization Of All DropDowns

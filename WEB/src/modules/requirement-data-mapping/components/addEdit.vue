@@ -16,9 +16,22 @@
                   <div class="row items-end q-mb-sm q-col-gutter-x-md">                    
                     <div class="col-4 col-sm-4 col-md-4">
                       <formSingleSelectDropdown
+                        v-if="!isRequirementReadonly"
                         v-model="model.requirementId"
                         label="Requirement"
-                        :readonly="true"
+                        :readonly="isRequirementReadonly"
+                        :required="true"
+                        :options="requirementsByProjectModuleIdForDropdown.list.value"
+                        :filter="requirementsByProjectModuleIdForDropdown.filter"
+                        :error="modelV$.requirementId.$error"
+                        :error-message="modelV$.requirementId.$errors?.[0]?.$message"
+                        @blur="modelV$.requirementId.$touch()"
+                      />
+                      <formSingleSelectDropdown
+                        v-else
+                        v-model="model.requirementId"
+                        label="Requirement"
+                        :readonly="isRequirementReadonly"
                         :required="false"
                         :options="requirementsByProjectModuleIdForDropdown.list.value"
                         :filter="requirementsByProjectModuleIdForDropdown.filter"
@@ -72,7 +85,7 @@
                             @blur="getRowValidation(props.row)?.target?.$touch()"
                           />
                         </q-td>
-                        <q-td style="white-space: normal; overflow-wrap: break-word; width: 50%;">
+                        <q-td class="hidden" style="white-space: normal; overflow-wrap: break-word; width: 50%;">
                           <q-editor
                           v-model="props.row.note"
                           :dense="$q.screen.lt.md"
@@ -83,9 +96,9 @@
                         </q-td>
                         <q-td class="text-center" style="width: 10%;">
                           <q-icon
-                            name="o_description"
+                            name="o_assignment"
                             class="cursor-pointer q-mr-sm"
-                            size="sm"
+                            size="xs"
                             @click="onRequirementDataMappingNoteEdit(props.row.id)"
                           >
                             <q-tooltip>
@@ -94,7 +107,7 @@
                           </q-icon>
                           <q-icon
                             name="o_delete"
-                            size="sm"
+                            size="xs"
                             class="cursor-pointer text-red"
                             @click="deleteRow(props.rowIndex)"
                           >
@@ -147,7 +160,8 @@ const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
 
 // define props
 const props = defineProps({
-  id: { type: String, default: "" }
+  id: { type: String, default: "" },
+  isRequirementReadonly: { type: String, default: "" }
 });
 
 // Common variables
@@ -159,8 +173,7 @@ const processingClose = ref(false);
 const DataMappingRows = ref([]);
 const rowValidations = ref([]);
 let requirementId = props.id;
-
-// const activeRowId = null;
+const isRequirementReadonly = props.isRequirementReadonly;
 
 const model = ref({
   requirementId: props.id ? requirementId : ""
@@ -169,12 +182,12 @@ const model = ref({
 // Data Mapping
 const DataMappingColumns = ref([
   { name: "source", label: "Source", field: "source", align: "left", sortable: false },
-  { name: "target", label: "Target", field: "target", align: "left" },
-  { name: "note", label: "Note", field: "note", align: "left" }
+  { name: "target", label: "Target", field: "target", align: "left" }
+  // { name: "note", label: "Note", field: "note", align: "left" }
 ]);
 
 // get data mapping details on edit mode
-const getRequirementDataMapping = () => {
+const getRequirementDataMapping = (requirementId) => {
   loading.value = true;
   requirementDataMappingService.getRequirementDataMapping(requirementId).then((resp) => {
     DataMappingRows.value = resp.requirementDataMappingsList.map(item => ({
@@ -196,9 +209,9 @@ const getRequirementDataMapping = () => {
   });
 };
 
-const refreshDataMappingList = () => {
-  getRequirementDataMapping();
-};
+// const refreshDataMappingList = () => {
+//   getRequirementDataMapping();
+// };
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
@@ -251,6 +264,11 @@ const getRowValidation = (row) => {
   return rowValidations.value[index]?.value;
 };
 
+const modelRules = {
+  requirementId: { required: helpers.withMessage("Requirement is required", required) }
+};
+
+const modelV$ = useVuelidate(modelRules, model, { $lazy: true, $autoDirty: true });
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On Save & Next or Save & Close
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -259,6 +277,18 @@ const onSubmit = async () => {
   processing.value = true;
   try {
     let isValid = true;
+
+    // validate requirement only when it is not readonly
+    if (!isRequirementReadonly) {
+      await modelV$.value.$touch();
+
+      const isRequirementValid = await modelV$.value.$validate();
+
+      if(!isRequirementValid) {
+        isValid = false;
+      }
+    }
+
     const nonDeletedRows = DataMappingRows.value.filter(row => !row.deleted);
 
     // At least one mapping is required
@@ -321,10 +351,13 @@ const onSubmit = async () => {
 
     // Save data mappings
     const resp = await requirementDataMappingService.saveRequirementDataMapping(payload);
+    console.log("Saved mappings:", resp.data);
+    const requirementId = resp.data?.[0]?.requirementId;
+
     notifySuccess({
       message: "Data mapping is saved successfully."
     });
-    refreshDataMappingList();
+    await getRequirementDataMapping(model.value.requirementId);
 
   } catch (error) {
     console.error("Error in submitting the data mapping:", error);
@@ -340,7 +373,7 @@ const onSubmit = async () => {
 // watches a data property with the same name i.e. immediate effect
 watch(() => requirementId, (newValue, oldValue) => {
   if (newValue) {
-    getRequirementDataMapping();
+    getRequirementDataMapping(requirementId);
   }
 }, { immediate: true });
 

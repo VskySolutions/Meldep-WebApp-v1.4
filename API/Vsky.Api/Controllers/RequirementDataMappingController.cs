@@ -94,22 +94,58 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
-        #region Get Data Mapping Notes
+        #region GetAllGroupRequirementDataMappings
+        //[HttpGet("get-all-data-mappings-group")]
+        //public async Task<IActionResult> GetAllRequirementDataMappingGroups()
+        //{
+        //    try
+        //    {
+        //        var SiteId = _globalVariable.SiteId;
+        //        var data = await _requirementDataMappingService.GetAllRequirementDataMappingGroups(SiteId);
 
-        [HttpGet("get-data-mapping-notes/{requirementDataMappingId}")]
-        public async Task<IActionResult> GetAllRequirementDataMappingNotes(
-            string requirementDataMappingId)
+        //        var model = new RequirementDataMappingGroupList
+        //        {
+        //            DataMappingGroupList = data,
+        //            Total = data.Count
+        //        };
+
+        //        return Ok(model);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
+        
+        [HttpPost("get-all-data-mappings-group")]
+        public async Task<IActionResult> GetAllRequirementDataMappingGroups(RequirementDataMappingsSearchModel searchModel)
         {
             try
             {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
 
-                var notes = await _requirementDataMappingNotesService.GetAllRequirementDataMappingNotesByRequirementMappingId(SiteId, requirementDataMappingId, true);
+                //var data = await _requirementDataMappingService.GetAllRequirementDataMappingGroups(SiteId);
+                var data = await _requirementDataMappingService.GetAllRequirementDataMappingGroups(
+                    SiteId,
+                    LoggedUserId,
+                    searchModel.SearchText,
+                    searchModel.ProjectIds,
+                    searchModel.ProjectModuleIds,
+                    searchModel.RequirementIds,
+                    searchModel.Source,
+                    searchModel.Target,
+                    searchModel.SortBy,
+                    searchModel.Sorts,
+                    searchModel.Descending,
+                    searchModel.Page,
+                    searchModel.PageSize
+                );
 
-                var model = new RequirementDataMappingNoteList
+                var model = new RequirementDataMappingGroupList
                 {
-                    RequirementDataMappingNotesList = notes,
-                    Total = notes.Count
+                    DataMappingGroupList = data,
+                    Total = data.Count
                 };
 
                 return Ok(model);
@@ -119,7 +155,6 @@ namespace Vsky.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
         #endregion
 
         #region Get Data Mappings
@@ -157,6 +192,8 @@ namespace Vsky.Api.Controllers
                     var SiteId = _globalVariable.SiteId;
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                    var savedMappings = new List<RequirementDataMapping>();
 
                     if (model.DataMappings != null && model.DataMappings.Any())
                     {
@@ -263,8 +300,11 @@ namespace Vsky.Api.Controllers
                                     }
                                 }
                             }
+
+                            // Add saved mapping to return list
+                            savedMappings.Add(mapping);
                         }
-                        return Ok();
+                        return Ok(savedMappings);
                     }
                 }
 
@@ -299,6 +339,33 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region Data Mapping Notes
+
+        #region Get Data Mapping Notes
+
+        [HttpGet("get-data-mapping-notes/{requirementDataMappingId}")]
+        public async Task<IActionResult> GetAllRequirementDataMappingNotes(string requirementDataMappingId)
+        {
+            try
+            {
+                var SiteId = _globalVariable.SiteId;
+
+                var notes = await _requirementDataMappingNotesService.GetAllRequirementDataMappingNotesByRequirementMappingId(SiteId, requirementDataMappingId, true);
+
+                var model = new RequirementDataMappingNoteList
+                {
+                    RequirementDataMappingNotesList = notes,
+                    Total = notes.Count
+                };
+
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        #endregion
 
         #region AddNote
         [HttpPost("save-note")]

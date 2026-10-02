@@ -187,7 +187,6 @@ const {
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
 const OnSave = () => {
-  debugger;
   const title = `Link ${model.value.type} To ${showWeeklyMonthlyCalendar.value ? "Monthly" : "Weekly"} Plan`;
   // show a warning message advising the user to create a task first before linking
   const message = props.hasTaskLink > 0

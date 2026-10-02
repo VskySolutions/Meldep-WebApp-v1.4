@@ -14,6 +14,11 @@ export default {
     return http.get(`/requirement-data-mappings/get-data-mapping-notes/${requirementDataMappingId}`).then(response => response.data);
   },
 
+  getAllRequirementDataMappingGroups (model) {
+    // return http.get("/requirement-data-mappings/get-all-data-mappings-group").then(response => response.data);
+    return http.post("/requirement-data-mappings/get-all-data-mappings-group", model).then(response => response.data);
+  },
+
   saveRequirementDataMapping (model) {
     return http.post("/requirement-data-mappings/save-data-mappings", model).then(response => response.data);
   },
