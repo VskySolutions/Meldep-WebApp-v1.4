@@ -529,6 +529,10 @@ const onSubmit = async () => {
     // Reset form
     activeRowId.value = null;
     model.value.notes = "";
+    const generalNoteValue =
+      await noteTypeListSingleSelect.getValueByLabel("General Note");
+
+    model.value.noteTypeId = generalNoteValue;
 
     getAllNoteByTypeAndRecord();
   } catch (error) {

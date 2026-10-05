@@ -74,7 +74,6 @@ namespace Vsky.Models
         public virtual Person ContributorCustomer { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }
-        public virtual ICollection<ProjectQuestionsAnswersResponseLog> ProjectQuestionsAnswersResponseLog { get; set; } = new List<ProjectQuestionsAnswersResponseLog>();
     }
     public class SaveProjectQuestionsAnswers
     {

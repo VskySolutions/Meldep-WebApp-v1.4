@@ -836,7 +836,7 @@
                   </q-tooltip>
                 </q-icon>
                 <q-icon
-                  v-if="props.row.isEditable"
+                  v-if="props.row.isEditable || props.row.isNotes"
                   name="o_note_alt"
                   class="cursor-pointer q-mr-sm"
                   size="xs"

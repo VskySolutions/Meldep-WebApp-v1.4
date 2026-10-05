@@ -8,6 +8,7 @@
     <div>
       <q-select
         ref="selectRef"
+        v-model:input-value="inputValue"
         :model-value="props.modelValue"
         :options="displayOptions"
         option-value="value"
@@ -105,6 +106,7 @@
 import { ref, watch, computed, nextTick } from "vue";
 
 const selectRef = ref(null);
+const inputValue = ref("");
 
 const props = defineProps({
   label: String,
@@ -151,7 +153,7 @@ const props = defineProps({
    */
   clearSearchOnSelect: {
     type: Boolean,
-    default: false
+    default: true
   },
 
   wrapperClass: {
@@ -179,77 +181,148 @@ watch(
 );
 
 const displayOptions = computed(() => filteredOptions.value);
+async function clearSearchInput() {
+  // Clear Vue's input value
+  inputValue.value = "";
 
+  // Clear Quasar's internal input value
+  if (selectRef.value) {
+    selectRef.value.updateInputValue("", true);
+  }
+
+  // Wait for Vue/Quasar to update
+  await nextTick();
+
+  // Clear again because fill-input can restore the value
+  inputValue.value = "";
+
+  if (selectRef.value) {
+    selectRef.value.updateInputValue("", true);
+  }
+}
 /**
  * Selection changed.
  */
+// async function updateValue(val) {
+//   emit("update:modelValue", val || []);
+
+//   /*
+//    * Only clear the search box when explicitly requested.
+//    *
+//    * This is enabled only in Project Charter:
+//    *
+//    * :clear-search-on-select="true"
+//    */
+//   if (props.clearSearchOnSelect) {
+//     await nextTick();
+
+//     selectRef.value?.updateInputValue("");
+
+//     /*
+//      * Restore all options after clearing search.
+//      * This ensures the next search starts from the
+//      * complete list.
+//      */
+//     filteredOptions.value = [...(props.options || [])];
+//   }
+// }
 async function updateValue(val) {
   emit("update:modelValue", val || []);
 
-  /*
-   * Only clear the search box when explicitly requested.
-   *
-   * This is enabled only in Project Charter:
-   *
-   * :clear-search-on-select="true"
-   */
-  if (props.clearSearchOnSelect) {
-    await nextTick();
+  // Only clear search when explicitly enabled
+  if (!props.clearSearchOnSelect) {
+    return;
+  }
 
-    selectRef.value?.updateInputValue("");
+  // Clear the inline search text
+  await clearSearchInput();
 
-    /*
-     * Restore all options after clearing search.
-     * This ensures the next search starts from the
-     * complete list.
-     */
+  // Reset the filter so all options are available again
+  if (typeof props.filter === "function") {
+    props.filter("", (callback) => {
+      callback();
+    });
+  } else {
     filteredOptions.value = [...(props.options || [])];
   }
 }
-
 /**
  * Search/filter.
  */
-function handleFilter(val, update, abort) {
-  const needle = String(val || "")
-    .toLowerCase()
-    .trim();
+// function handleFilter(val, update, abort) {
+//   const needle = String(val || "")
+//     .toLowerCase()
+//     .trim();
 
+//   /*
+//    * If a shared dropdown filter is supplied,
+//    * allow it to perform the actual filtering.
+//    */
+//   if (typeof props.filter === "function") {
+//     props.filter(
+//       val,
+//       () => {
+//         update(() => {
+//           /*
+//            * IMPORTANT:
+//            * Do not blindly clear the search value here.
+//            *
+//            * The parent filter updates its own list.
+//            * We use the latest props.options.
+//            */
+//           filteredOptions.value = [...(props.options || [])];
+//         });
+//       },
+//       abort
+//     );
+
+//     return;
+//   }
+
+//   /*
+//    * Local filtering fallback.
+//    */
+//   update(() => {
+//     if (!needle) {
+//       filteredOptions.value = [...(props.options || [])];
+//       return;
+//     }
+
+//     filteredOptions.value = (props.options || []).filter(option =>
+//       String(option.text || "")
+//         .toLowerCase()
+//         .includes(needle)
+//     );
+//   });
+// }
+function handleFilter(val, update, abort) {
   /*
    * If a shared dropdown filter is supplied,
-   * allow it to perform the actual filtering.
+   * let the parent continue to own the filtering.
+   *
+   * IMPORTANT:
+   * Pass Quasar's update callback directly.
+   * Do not wrap it and replace the options here.
    */
   if (typeof props.filter === "function") {
-    props.filter(
-      val,
-      () => {
-        update(() => {
-          /*
-           * IMPORTANT:
-           * Do not blindly clear the search value here.
-           *
-           * The parent filter updates its own list.
-           * We use the latest props.options.
-           */
-          filteredOptions.value = [...(props.options || [])];
-        });
-      },
-      abort
-    );
-
+    props.filter(val, update, abort);
     return;
   }
 
   /*
    * Local filtering fallback.
    */
+  const needle = String(val || "")
+    .toLowerCase()
+    .trim();
+
   update(() => {
     if (!needle) {
       filteredOptions.value = [...(props.options || [])];
       return;
     }
 
-    filteredOptions.value = (props.options || []).filter(option =>
+    filteredOptions.value = (props.options || []).filter((option) =>
       String(option.text || "")
         .toLowerCase()
         .includes(needle)

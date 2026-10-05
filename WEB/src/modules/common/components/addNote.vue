@@ -47,7 +47,11 @@
 
           <q-separator />
 
-          <q-tab-panels v-model="tab" animated>
+          <q-tab-panels
+            v-model="tab"
+            animated
+            keep-alive
+          >
             <q-tab-panel name="1_tab">
               <viewTeamTaskUpdates :id="props.id" />
             </q-tab-panel>
