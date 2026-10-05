@@ -532,9 +532,13 @@ namespace Vsky.Services.Requirements
         #endregion
 
         #region GetAllRequirementListForDropdown
-        public async Task<List<CommonDropDown>> GetAllRequirementListForDropdown(string siteId, string projectModuleId = null, string projectId = null)
+        public async Task<List<CommonDropDown>> GetAllRequirementListForDropdown(string siteId, string projectModuleId = null, string projectId = null, string requirementType = null)
         {
-            var query = _requirementRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active);
+            var query = _requirementRepository.TableNoTracking
+                .Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active);
+
+            if (!string.IsNullOrEmpty(requirementType))
+                query = query.Where(x => x.RequirementType.DropDownValue.Contains(requirementType));
 
             if (!string.IsNullOrWhiteSpace(projectModuleId))
             {
@@ -818,7 +822,14 @@ namespace Vsky.Services.Requirements
                     ProjectTaskNumber = m.ProjectTaskNumber,
                     Status = new DropDown { Id = m.Status.Id, DropDownValue = m.Status.DropDownValue }
                 }).ToList(),
-                LastNote = notesQuery.Where(n => n.SubModuleId == x.Id).OrderByDescending(n => n.CreatedOnUtc).Select(n => n.Note).FirstOrDefault()
+                LastNote = notesQuery.Where(n => n.SubModuleId == x.Id).OrderByDescending(n => n.CreatedOnUtc).Select(n => n.Note).FirstOrDefault(),
+                RequirementDataMapping = x.RequirementDataMapping.Where(d => !d.Deleted && d.RequirementId == x.Id)
+                .Select(d => new RequirementDataMapping
+                {
+                    Id = d.Id,
+                    Target = d.Target,
+                    Source = d.Source
+                }).ToList()
             });
             var item = await query.FirstOrDefaultAsync();
             return item;

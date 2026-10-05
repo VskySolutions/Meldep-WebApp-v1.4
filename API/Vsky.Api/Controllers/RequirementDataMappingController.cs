@@ -29,7 +29,6 @@ namespace Vsky.Api.Controllers
         private readonly IAzureBlobImageServices _azureBlobImageServices;
         private readonly ISitesModifiedLogsService _sitesModifiedLogsService;
         private readonly IDropDownService _dropDownService;
-
         #endregion
 
         #region Services Initializations      
@@ -148,6 +147,37 @@ namespace Vsky.Api.Controllers
                     Total = data.Count
                 };
 
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetAllDataMappingByRequirementId
+        [HttpPost("data-mappings-list")]
+        public IActionResult GetAllDataMappingByRequirementId(RequirementDataMappingsSearchModel searchModel)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var list = _requirementDataMappingService.GetAllDataMappingByRequirementId(
+                    SiteId,
+                    searchModel.RequirementId,
+                    searchModel.SortBy,
+                    searchModel.Descending,
+                    searchModel.Page,
+                    searchModel.PageSize
+                );
+
+                var model = new RequirementDataMappingList
+                {
+                    RequirementDataMappingsList = list,
+                    Total = list.TotalCount
+                };
                 return Ok(model);
             }
             catch (Exception ex)

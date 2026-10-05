@@ -90,6 +90,7 @@ namespace Vsky.Models
         public virtual ICollection<RequirementTags> RequirementTags { get; set; } = new List<RequirementTags>();
         public virtual ICollection<RequirementPinned> RequirementPinned { get; set; } = new List<RequirementPinned>();
         public virtual ICollection<RequirementColor> RequirementColors { get; set; } = new List<RequirementColor>();
+        public virtual ICollection<RequirementDataMapping> RequirementDataMapping { get; set; } = new List<RequirementDataMapping>();
     }
 
     public class RequirementTags : BaseEntity
@@ -158,8 +159,12 @@ namespace Vsky.Models
     }
     public class RequirementDataMappingGroup
     {
+        public string MappingId { get; set; }
         public string RequirementId { get; set; }
         public string RequirementTitle { get; set; }
+        public DateTime? UpdatedOnUtc { get; set; }
+        public string Source { get; set; }
+        public string Target { get; set; }
 
         public List<RequirementDataMapping> DataMappings { get; set; } = new List<RequirementDataMapping>();
     }

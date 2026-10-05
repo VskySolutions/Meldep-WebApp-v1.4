@@ -19,6 +19,10 @@ export default {
     return http.post("/requirement-data-mappings/get-all-data-mappings-group", model).then(response => response.data);
   },
 
+  getAllDataMappingByRequirementId (model) {
+    return http.post("/requirement-data-mappings/data-mappings-list", model).then(response => response.data);
+  },
+
   saveRequirementDataMapping (model) {
     return http.post("/requirement-data-mappings/save-data-mappings", model).then(response => response.data);
   },

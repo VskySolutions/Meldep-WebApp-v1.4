@@ -172,13 +172,13 @@ namespace Vsky.Api.Controllers
         // Title: GetAllRequirementListForDropdown
         // Description: This endpoint retrieves the list of Requirements. 
         [HttpGet("dropdown/list")]
-        public async Task<IActionResult> GetAllRequirementListForDropdown(string ProjectModuleId = null, string ProjectId = null)
+        public async Task<IActionResult> GetAllRequirementListForDropdown(string ProjectModuleId = null, string ProjectId = null, string requirementType = null)
         {
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var list = await _requirementService.GetAllRequirementListForDropdown(SiteId, ProjectModuleId, ProjectId);
+                var list = await _requirementService.GetAllRequirementListForDropdown(SiteId, ProjectModuleId, ProjectId, requirementType);
                 var model = _mapper.Map<List<CommonDropDown>>(list);
                 return Ok(model);
             }

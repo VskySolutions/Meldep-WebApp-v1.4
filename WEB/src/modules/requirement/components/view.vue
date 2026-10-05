@@ -1,6 +1,6 @@
 <template>
   <q-dialog ref="dialogRef" class="customDialog" persistent position="right" @hide="onDialogHide">
-    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 1200px; height: 100%; max-height: 100% !important;max-width: 100vw;">
+    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 1300px; height: 100%; max-height: 100% !important;max-width: 100vw;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
         <div class="text-h2 text-white q-mr-lg" style="flex-grow: 1;">{{ model.title }}</div>
         <q-btn v-close-popup icon="o_close" class="close" color="white" flat round dense />
@@ -15,6 +15,7 @@
             <q-tab name="3_tab" label="Requirement Scope" class="q-px-lg q-mr-md" />
             <q-tab name="4_tab" label="Requirement Info." class="q-px-lg" />
             <q-tab name="5_tab" label="Document Reference List" class="q-px-lg"/>
+            <q-tab name="6_tab" label="Data Mapping List" class="q-px-lg"/>
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated>
@@ -244,46 +245,51 @@
                 </fieldset>
             </q-tab-panel>
             <q-tab-panel name="5_tab">
-                <fieldset class="q-mb-lg">
-                  <legend>Document Reference List</legend>
-                  <q-table
-                    ref="tableRef"
-                    v-model:pagination="pagination"
-                    bordered class="no-shadow"
-                    :loading="loading"
-                    :rows="rows"
-                    :columns="columns"
-                    row-key="id"
-                    separator="cell"
-                    no-data-label="No data available"
-                    binary-state-sort
-                    :rows-per-page-options="[20, 50, 100, 200, 500]"
-                  >
-                    <template #header="props">
-                      <q-tr :props="props" class="bg-primary text-white">
-                        <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
-                      </q-tr>
-                    </template>
-                    <template #body="props">
-                      <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
-                          <!-- <a :href="props.row.filePath" target="_blank" class="text-bluee">
-                            {{ props.row.filePath }}
-                          </a> -->
-                          <a
-                            :href="props.row.filePath"
-                            target="_blank"
-                            class="text-bluee"
-                          >
-                            {{ getFileNameFromPath(props.row.filePath) || props.row.fileName }}
-                          </a>
-                        </q-td>
-                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.fileName }}</q-td>
-                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 30%;">{{ props.row.note }}</q-td>
-                      </q-tr>
-                    </template>
-                  </q-table>
-                </fieldset>
+              <fieldset class="q-mb-lg">
+                <legend>Document Reference List</legend>
+                <q-table
+                  ref="tableRef"
+                  v-model:pagination="pagination"
+                  bordered class="no-shadow"
+                  :loading="loading"
+                  :rows="rows"
+                  :columns="columns"
+                  row-key="id"
+                  separator="cell"
+                  no-data-label="No data available"
+                  binary-state-sort
+                  :rows-per-page-options="[20, 50, 100, 200, 500]"
+                >
+                  <template #header="props">
+                    <q-tr :props="props" class="bg-primary text-white">
+                      <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+                    </q-tr>
+                  </template>
+                  <template #body="props">
+                    <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+                      <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
+                        <!-- <a :href="props.row.filePath" target="_blank" class="text-bluee">
+                          {{ props.row.filePath }}
+                        </a> -->
+                        <a
+                          :href="props.row.filePath"
+                          target="_blank"
+                          class="text-bluee"
+                        >
+                          {{ getFileNameFromPath(props.row.filePath) || props.row.fileName }}
+                        </a>
+                      </q-td>
+                      <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.fileName }}</q-td>
+                      <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 30%;">{{ props.row.note }}</q-td>
+                    </q-tr>
+                  </template>
+                </q-table>
+              </fieldset>
+            </q-tab-panel>
+            <q-tab-panel name="6_tab">
+              <viewDataMapping
+                :id="selectedRequirementId"
+              />
             </q-tab-panel>
           </q-tab-panels>
         </div>
@@ -303,6 +309,7 @@ import requirementService from "../requirement.service";
 import viewProjectTask from "modules/project-tasks/components/view.vue";
 
 import viewDescriptionSimpleView from "src/modules/requirement/components/_description_simple_view.vue";
+import viewDataMapping from "src/modules/requirement-data-mapping/components/_data_mapping_tab.vue";
 
 
 // Props values i.e. come from query string

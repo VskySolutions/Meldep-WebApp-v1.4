@@ -43,15 +43,43 @@
                       <multiSelectDropdown
                         v-model="search.projectModuleIds"
                         label="Project Module"
+                        :disable="!search.projectIds"
                         :options="projectModulesByProjectIdForDropdown.list.value"
                         :filter="projectModulesByProjectIdForDropdown.filter"
                       />
                       <multiSelectDropdown
                         v-model="search.requirementIds"
                         label="Requirement"
+                        :disable="!search.projectModuleIds"
                         :options="requirementsByProjectModuleIdForDropdown.list.value"
                         :filter="requirementsByProjectModuleIdForDropdown.filter"
                       />
+                      <div class="row items-center q-mb-sm">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel q-mt-sm fs-13">Source</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <q-input
+                            v-model="search.source"
+                            fill-input
+                            class="q-mx-sm w-100 h-auto"
+                            :dense="true"
+                          />
+                        </div>
+                      </div>
+                      <div class="row items-center q-mb-sm">
+                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                          <label class="Cutomlabel q-mt-sm fs-13">Target</label>
+                        </div>
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <q-input
+                            v-model="search.target"
+                            fill-input
+                            class="q-mx-sm w-100 h-auto"
+                            :dense="true"
+                          />
+                        </div>
+                      </div>
                       <!-- Search and Clear Buttons -->
                       <div class="row justify-end q-gutter-sm q-mb-sm">
                         <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showFilter = false; onAdvanceSearch(); }" />
@@ -69,7 +97,7 @@
                   outline
                   label="Add Data Mapping"
                   no-caps
-                  class="text-primary btnRounded"
+                  class="text-primary btnRounded q-ml-xs"
                   @click="onAddRequirementDataMapping(false, refreshDataMappingList)"
                 />
                  <!-- Reset Column Width -->
@@ -94,7 +122,7 @@
                 <q-btn
                   color="primary"
                   icon="o_sort"
-                  class="btnRounded q-ml-xs"
+                  class="btnRounded q-ml-xs hidden"
                   @click="showSortDialog = true"
                 >
                   <q-badge v-if="selectedSortCount > 0" color="green" floating class="q-ml-xs">
@@ -164,7 +192,8 @@
                   </q-icon>
                   <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
                 </q-th>
-                <q-th></q-th>
+                <!-- <q-th></q-th> -->
+              <q-th auto-width class="text-center">Actions</q-th>
               </q-tr>
             </template>
             <template #body="props">
@@ -200,10 +229,43 @@
                 <q-td v-if="selectedColumnNames.includes('note')" class="RichTextEditor common-q-td hidden">
                   <div v-html="mapping.requirementDataMappingNotes[0]?.note" />
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('createdById')" class="text-left common-q-td">
+                <q-td
+                  v-if="selectedColumnNames.includes('createdBy.person.firstName')"
+                  class="common-q-td"
+                >
                   {{ mapping.createdBy?.person.fullName }}
                 </q-td>
-                <q-td></q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('createdOnUtc')"
+                  class="common-q-td"
+                >
+                  {{ mapping.createdOnUtc }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedBy.person.firstName')"
+                  class="common-q-td"
+                >
+                  {{ mapping.updatedBy?.person.fullName }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedOnUtc')"
+                  class="common-q-td"
+                >
+                  {{ mapping.updatedOnUtc }}
+                </q-td>
+                <q-td class="text-center actions">
+                  <q-icon
+                  v-if="mapping.requirementDataMappingNotes.length > 0"
+                    name="o_visibility"
+                    class="cursor-pointer q-mr-sm"
+                    @click="onRequirementDataMappingNoteEdit(mapping.id, false)"
+                  >
+                    <q-tooltip>
+                      View Notes
+                    </q-tooltip>
+                  </q-icon>
+                </q-td>
+                <!-- <q-td></q-td> -->
               </q-tr>
               <q-separator />
             </template>
@@ -225,7 +287,6 @@
 <script setup>
 // Import libraries
 import { ref, onMounted, watch, computed } from "vue";
-import { useQuasar } from "quasar";
 import { useAuthStore } from "stores/auth";
 
 import requirementDataMappingService from "../requirementDataMapping.service";
@@ -252,14 +313,14 @@ import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 import {
   initRequirementDataMappingDialogs,
   onAddRequirementDataMapping,
-  onEditRequirementDataMapping
+  onEditRequirementDataMapping,
+  onRequirementDataMappingNoteEdit
 } from "src/modules/requirement-data-mapping/utils/dialogs.js";
 
 // ----------------------------------------------------------------------------------------------------------------
 // Common variables
 // ----------------------------------------------------------------------------------------------------------------
 
-const $q = useQuasar();
 const authStore = useAuthStore();
 const user = authStore.user;
 const loading = ref(true);
@@ -276,8 +337,12 @@ const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
-  { name: "source", label: "Source", field: "source", align: "left", sortable: true, default: true },
-  { name: "target", label: "Target", field: "target", align: "left", sortable: true, default: true }
+  { name: "source", label: "Source", field: "source", align: "left", sortable: false, default: true },
+  { name: "target", label: "Target", field: "target", align: "left", sortable: false, default: true },
+  { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: false, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: false, default: false },
+  { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: false, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: false, default: false }
   // { name: "note", label: "Note", field: "note", align: "left", sortable: false, default: true }
 ]);
 
@@ -506,10 +571,16 @@ initRequirementDataMappingDialogs();
 // Advance Filter:- Applied Filter Labels.
 // ----------------------------------------------------------------------------------------------------------------
 
-const mapFilterToLabel = (id, list, label) => {
-  if (id == null || id === "") return {};
-  const match = list.value.find(item => item.value === id);
-  const text = match ? match.text : id;
+const mapFilterToLabel = (ids, list, label) => {
+  if (!Array.isArray(ids) || !ids.length) return {};
+
+  const text = ids
+    .map(id => {
+      const match = list.value.find(item => item.value === id);
+      return match ? match.text : id;
+    })
+    .join(", ");
+
   return { [label]: text };
 };
 

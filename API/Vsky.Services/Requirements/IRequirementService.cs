@@ -48,7 +48,7 @@ namespace Vsky.Services.Requirements
         #endregion
 
         #region GetAllRequirementListForDropdown
-        Task<List<CommonDropDown>> GetAllRequirementListForDropdown(string siteId, string projectModuleId = null, string projectId = null);
+        Task<List<CommonDropDown>> GetAllRequirementListForDropdown(string siteId, string projectModuleId = null, string projectId = null, string requirementType = null);
         #endregion
 
         List<VWProjectRequirementStatusSummary> GetRequirementStatusSummaryByProjectIds(List<string> projectIds);

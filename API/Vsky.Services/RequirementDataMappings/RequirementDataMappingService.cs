@@ -307,6 +307,7 @@ namespace Vsky.Services.RequirementDataMappings
                     Source = x.Source,
                     Target = x.Target,
                     CreatedOnUtc = x.CreatedOnUtc,
+                    UpdatedOnUtc = x.UpdatedOnUtc,
 
                     CreatedBy = new ApplicationUser
                     {
@@ -319,6 +320,18 @@ namespace Vsky.Services.RequirementDataMappings
                                 x.CreatedBy.Person.FirstName +
                                 " " +
                                 x.CreatedBy.Person.LastName
+                        }
+                    },
+                    UpdatedBy = new ApplicationUser
+                    {
+                        Id = x.UpdatedBy.Id,
+                        Person = new Person
+                        {
+                            Id = x.UpdatedBy.Person.Id,
+                            FullName =
+                                x.UpdatedBy.Person.FirstName +
+                                " " +
+                                x.UpdatedBy.Person.LastName
                         }
                     },
 
@@ -350,6 +363,35 @@ namespace Vsky.Services.RequirementDataMappings
             }
 
             return pagedRequirements;
+        }
+        #endregion
+
+        #region GetAllDataMappingByRequirementId
+        public IPagedList<RequirementDataMapping> GetAllDataMappingByRequirementId(string SiteId, string requirementId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
+        {
+            var query = _requirementDataMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.Requirement.SiteId == SiteId && x.RequirementId == requirementId);
+
+            query = query.OrderByDescending(x => x.CreatedOnUtc).Select(x => new RequirementDataMapping
+            {
+                Id = x.Id,
+                Source = x.Source,
+                Target = x.Target,
+                CreatedOnUtc = x.CreatedOnUtc,
+                CreatedBy = new ApplicationUser
+                {
+                    Id = x.CreatedBy.Id,
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.Person.Id,
+                        FirstName = x.CreatedBy.Person.FirstName,
+                        LastName = x.CreatedBy.Person.LastName,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+                    }
+                },
+            });
+
+            var list = new PagedList<RequirementDataMapping>(query, page, pageSize);
+            return list;
         }
         #endregion
 

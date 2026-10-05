@@ -23,7 +23,7 @@
             :icon="done_all"
             :color="'primary'"
           >
-            <div class="fs-14 note-row">
+            <div v-if="isManageNotes" class="fs-14 note-row">
               <template v-if="editingNoteId === notes.id && storedUser === notes.createdBy.userName">
                 <div class="relative">
                   <div class="col-11">
@@ -89,14 +89,21 @@
                 </q-menu>
               </q-btn>
             </div>
+            <div v-else>              
+              <div class="fs-14 note-row">
+                <div class="note-wrapper RichTextEditor">
+                  <span class="text-black note-text" v-html="notes.note" />
+                </div>
+              </div>
+            </div>
           </q-timeline-entry>
         </q-timeline>
         <div v-if="allDataMappingNotes.length === 0">
-          <h5 class="text-center text-red">No Notes Available</h5>
+          <h5 class="text-center text-red q-mt-md">No Notes Available</h5>
         </div>
       </div>
       <!-- Footer -->
-      <div class="bg-white" style="position: sticky; bottom: 0; z-index: 10; border-top: 0px solid #ccc;">
+      <div v-if="isManageNotes" class="bg-white" style="position: sticky; bottom: 0; z-index: 10; border-top: 0px solid #ccc;">
         <div class="row items-center no-wrap">
           <div class="col-11">
             <q-editor
@@ -145,7 +152,8 @@ const { dialogRef, onDialogHide } = useDialogPluginComponent();
 
 // Props values i.e. come from query string
 const props = defineProps({
-  id: { type: String, default: "" }
+  id: { type: String, default: "" },
+  isManageNotes: { type: Boolean, default: "" }
 });
 
 // common variables
@@ -164,7 +172,7 @@ const editingNotesValue  = ref("");
 const originalNotesValue  = ref("");
 const newNote = ref("");
 const isCancelling = ref(false);
-const filteredUsers = ref([]);
+const isManageNotes = props.isManageNotes;
 
 const isEditorEmpty = (html = "") => {
   return html

@@ -886,7 +886,7 @@
                         <q-item-section>Convert into Task</q-item-section>
                       </q-item>
                       <q-item
-                        v-if="props.row.isEditable"
+                        v-if="props.row.isEditable && props.row.requirementType.dropDownValue == 'Data Integration'"
                         v-ripple clickable
                         @click="onEditRequirementDataMapping(props.row.id, true, refreshRequirementList)"
                       >

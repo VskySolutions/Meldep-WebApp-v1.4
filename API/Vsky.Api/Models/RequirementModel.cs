@@ -83,6 +83,7 @@ namespace Vsky.Api.Models
         public virtual ICollection<RequirementChangeLog> RequirementChangeLog { get; set; } = new List<RequirementChangeLog>();
         public virtual ICollection<ProjectTask> ProjectTaskRelatedMappings { get; set; } = new List<ProjectTask>();
         public virtual ICollection<RequirementTags> RequirementTags { get; set; } = new List<RequirementTags>();
+        public virtual ICollection<RequirementDataMapping> RequirementDataMapping { get; set; } = new List<RequirementDataMapping>();
     }
 
     public record RequirementSearchModel : BaseSearchModel
@@ -127,6 +128,7 @@ namespace Vsky.Api.Models
     {
         public string SearchText { get; set; }
         public List<string> RequirementIds { get; set; }
+        public string RequirementId { get; set; }
         public List<string> ProjectIds { get; set; }
         public List<string> ProjectModuleIds { get; set; }
         public string Source { get; set; }

@@ -2,7 +2,7 @@
   <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" persistent full-height position="right" @hide="onDialogHide">
     <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width:1500px !important; max-width: 100vw !important;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div class="text-h2 text-white">{{ id ? "Edit" : "Add" }} Req. Data Mapping</div>
+        <div class="text-h2 text-white">{{ id ? "Edit" : "Add" }} Data Mapping</div>
         <q-btn v-close-popup icon="o_close" class="close" color="white" flat round dense />
       </q-card-section>
       <q-separator />
@@ -11,7 +11,7 @@
           <div class="q-gutter-y-md">
             <q-card>              
               <fieldset>
-                <legend>Req. Data Mapping Info</legend>
+                <legend>Data Mapping Info</legend>
                 <div>
                   <div class="row items-end q-mb-sm q-col-gutter-x-md">                    
                     <div class="col-4 col-sm-4 col-md-4">
@@ -96,10 +96,20 @@
                         </q-td>
                         <q-td class="text-center" style="width: 10%;">
                           <q-icon
+                            name="o_visibility"
+                            class="cursor-pointer q-mr-sm"
+                            size="xs"
+                            @click="onRequirementDataMappingNoteEdit(props.row.id, false)"
+                          >
+                            <q-tooltip>
+                              View Notes
+                            </q-tooltip>
+                          </q-icon>
+                          <q-icon
                             name="o_assignment"
                             class="cursor-pointer q-mr-sm"
                             size="xs"
-                            @click="onRequirementDataMappingNoteEdit(props.row.id)"
+                            @click="onRequirementDataMappingNoteEdit(props.row.id, true)"
                           >
                             <q-tooltip>
                               Manage Notes
@@ -351,8 +361,6 @@ const onSubmit = async () => {
 
     // Save data mappings
     const resp = await requirementDataMappingService.saveRequirementDataMapping(payload);
-    console.log("Saved mappings:", resp.data);
-    const requirementId = resp.data?.[0]?.requirementId;
 
     notifySuccess({
       message: "Data mapping is saved successfully."
@@ -378,7 +386,7 @@ watch(() => requirementId, (newValue, oldValue) => {
 }, { immediate: true });
 
 onMounted(() => {
-  requirementsByProjectModuleIdForDropdown.load('', '');
+  requirementsByProjectModuleIdForDropdown.load('', '', 'Data Integration');
 });
 </script>
 <style>
