@@ -96,6 +96,7 @@
                         </q-td>
                         <q-td class="text-center" style="width: 10%;">
                           <q-icon
+                           v-if="props.row.id"
                             name="o_visibility"
                             class="cursor-pointer q-mr-sm"
                             size="xs"
@@ -106,6 +107,7 @@
                             </q-tooltip>
                           </q-icon>
                           <q-icon
+                           v-if="props.row.id"
                             name="o_assignment"
                             class="cursor-pointer q-mr-sm"
                             size="xs"
@@ -177,7 +179,7 @@ const props = defineProps({
 // Common variables
 const $q = useQuasar();
 const { fonts, toolbar, rowToolbar } = getEditorConfig($q);
-const loading = ref(true);
+const loading = ref(false);
 const processing = ref(false);
 const processingClose = ref(false);
 const DataMappingRows = ref([]);

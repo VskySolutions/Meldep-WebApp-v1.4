@@ -54,9 +54,11 @@
             {{ (index+1) + ") " + name }}
           </div>
         </div>
-        <div class="row full-width q-mb-md">
+        <div v-if="model.names.length === 1" class="row full-width q-mb-md">
           <div class="col-12 col-sm-12 col-md-12 col-lg-12">
-            <div class="q-mb-xs text-black"><label>Weekly/Monthly Plan Short Description</label></div>
+            <div class="q-mb-xs text-black">
+              <label>Weekly/Monthly Plan Short Description</label>
+            </div>
             <div class="form-group">
               <q-editor
                 v-model="model.description"
