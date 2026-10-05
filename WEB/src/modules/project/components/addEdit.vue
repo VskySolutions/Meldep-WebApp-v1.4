@@ -214,14 +214,14 @@
                           <q-radio
                             v-model="model.isArchived"
                             :val="true"
-                            label="Archived"
+                            label="Archive"
                             dense
                           />
 
                           <q-radio
                             v-model="model.isArchived"
                             :val="false"
-                            label="Unarchived"
+                            label="Unarchive"
                             dense
                           />
                         </div>
@@ -1592,6 +1592,7 @@ const onSubmit = async (isClose = 0) => {
         formData.append("projectPriorityId", model.value.projectPriorityId);
         formData.append("projectTypeId", model.value.projectTypeId);
         formData.append("planApproverId", model.value.planApproverId);
+        formData.append("active", model.value.active);
         formData.append("isArchived", model.value.isArchived);
         formData.append("isTemplate", model.value.isTemplate ?? false);
         formData.append("description", model.value.description);

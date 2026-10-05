@@ -26,6 +26,7 @@ namespace Vsky.Services.Projects
             List<string> priorityIds,
             List<string> typeIds,
             int status,
+            int archiveStatus,
             List<string> customerIds,
             List<string> companyContactIds,
             string singleCustomerId,

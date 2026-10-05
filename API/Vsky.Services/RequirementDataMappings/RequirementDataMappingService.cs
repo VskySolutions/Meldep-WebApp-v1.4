@@ -364,6 +364,16 @@ namespace Vsky.Services.RequirementDataMappings
                 RequirementId = x.RequirementId,
                 Source = x.Source,
                 Target = x.Target,
+                CreatedOnUtc = x.CreatedOnUtc,
+                CreatedBy = new ApplicationUser
+                {
+                    Id = x.CreatedBy.Id,
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.PersonId,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+                    }
+                },
                 Requirement = new Requirement
                 {
                     Id = x.Requirement.Id,

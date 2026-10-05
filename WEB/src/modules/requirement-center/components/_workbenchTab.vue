@@ -33,6 +33,18 @@
           </div>
         </q-tab>
 
+        <q-tab name="requirementDataMappings">
+          <div class="row items-center no-wrap">
+            Requirement Data Mappings
+          </div>
+        </q-tab>
+
+        <q-tab name="requirementNotes">
+          <div class="row items-center no-wrap">
+            Notes
+          </div>
+        </q-tab>
+
         <q-tab name="qAndA">
           <div class="row items-center no-wrap">
             Project Questions Answers
@@ -157,6 +169,23 @@
             />
           </q-tab-panel>
 
+          <q-tab-panel name="requirementDataMappings" class="q-pa-none">
+            <RequirementDataMappingsTabularView
+              :requirement-id="requirementId"
+              :active-tab="leftTab"
+              @select="selectedReqDataMappings = $event"
+            />
+          </q-tab-panel>
+
+          <q-tab-panel name="requirementNotes" class="q-pa-none">
+            <RequirementNoteDetails
+              :id="requirementId"
+              notes-type="Requirement"
+              :active-tab="leftTab"
+              @select="selectedReqNotes = $event"
+            />
+          </q-tab-panel>
+
           <q-tab-panel name="qAndA" class="q-pa-none">
             <ProjectQATabularView
               :requirement-id="requirementId"
@@ -243,6 +272,8 @@ import RequirementInfoDetails from './details/_requirementInfoDetails.vue';
 import RequirementFilesTabularView from './tabularView/_requirementFilesTabularView.vue';
 import RequirementShortDescriptionDetails from './details/_requirementShortDescriptionDetails.vue';
 import RequirementScopeDetails from './details/_requirementScopeDetails.vue';
+import RequirementNoteDetails from './details/_requirementNoteDetails.vue';
+import RequirementDataMappingsTabularView from './tabularView/_requirementDataMappingTabularView.vue';
 
 const props = defineProps({
   requirementId: String,
@@ -282,6 +313,8 @@ const selectedQA = ref(null);
 const selectedReqDescription = ref(null);
 const selectedActionItems = ref(null);
 const selectedReqFiles = ref(null);
+const selectedReqNotes = ref(null);
+const selectedReqDataMappings = ref(null);
 const timesheetSearchModel = ref({});
 
 const onSelectGroup = group => {

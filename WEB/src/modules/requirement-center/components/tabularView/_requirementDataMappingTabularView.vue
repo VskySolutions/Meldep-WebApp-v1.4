@@ -7,7 +7,7 @@
           icon="o_open_in_new"
           size="sm"
           outline
-          class="text-primary q-ml-md"
+          class="text-primary q-ml-md hidden"
           style="padding: 3px 7px; min-height: 30px;"
           @click="$router.push({ path: '/requirement',
             state: {
@@ -44,16 +44,17 @@
         </template>
         <template #body="props">
           <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
-              <a :href="props.row.filePath" target="_blank" class="text-bluee">
-                {{ props.row.filePath }}
-              </a>
+            <q-td style="width: 15%;">
+              {{ props.row.source }}
             </q-td>
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">
-              {{ props.row.fileName }}
+            <q-td style="width: 15%;">
+              {{ props.row.target }}
             </q-td>
-            <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 30%;">
-              {{ props.row.note }}
+            <q-td style="width: 20%;">
+              {{ props.row.createdBy.person.fullName }}
+            </q-td>
+            <q-td style="width: 25%;">
+              {{ props.row.createdOnUtc }}
             </q-td>
           </q-tr>
         </template>
@@ -65,7 +66,7 @@
 import { computed, ref, watch } from 'vue';
 import { useAuthStore } from "stores/auth";
 
-import requirementService from "modules/requirement/requirement.service";
+import requirementDataMappingService from "modules/requirement-data-mapping/requirementDataMapping.service";
 
 // Shared DataTable Views
 import useSiteTableState from "composables/dataTable/useSiteTableState.js";
@@ -89,18 +90,18 @@ const projectModuleId = ref('');
 
 const pagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 const columns = ref([
-  { name: "filePath", label: "File Path", field: "filePath", align: "left", sortable: true },
-  { name: "fileName", label: "File Name", field: "fileName", align: "left", sortable: true },
-  { name: "note", label: "Notes", field: "note", align: "left", sortable: true }
+  { name: "source", label: "File Path", field: "source", align: "left", sortable: true },
+  { name: "target", label: "File Name", field: "target", align: "left", sortable: true },
+  { name: "createdBy.person.fullName", label: "Created By", field: "createdBy.person.fullName", align: "left", sortable: true },
+  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true },
+
 ]);
 
-const getRequirement = () => {
+const getRequirementDataMapping = () => {
   loading.value = true;
-  requirementService.getRequirementDetails(props.requirementId).then((resp) => {
-    rows.value = resp.filePathDetails.map(item => ({
-      ...item,
-      editing: false,
-      flag: "Edit"
+  requirementDataMappingService.getRequirementDataMapping(props.requirementId).then((resp) => {
+    rows.value = (resp.requirementDataMappingsList || []).map(item => ({
+        ...item,
     }));
   }).finally(() => {
     loading.value = false;
@@ -109,7 +110,7 @@ const getRequirement = () => {
 
 const {
 } = useSiteTableState({
-  storageKey: "requirement-Center-Requirement-Files-Tabular-List",
+  storageKey: "requirement-Center-Requirement-Data-Mapping-Tabular-List",
   siteId: siteId,
   defaultPagination: {
     sortBy: "createdOnUtc",
@@ -126,7 +127,7 @@ const {
 watch(
   () => props.requirementId,
   async () => {
-    await getRequirement(
+    await getRequirementDataMapping(
       props.requirementId
     );
   },

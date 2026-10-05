@@ -204,7 +204,7 @@
         :rows="priceChanges"
         :columns="priceChangeColumns"
         row-key="serviceId"
-        :pagination="{ rowsPerPage: 8 }"
+        :pagination="{ rowsPerPage: 5 }"
         no-data-label="No price changes recorded for the selected filters"
       >
         <template #body-cell-previousPrice="props">
@@ -255,7 +255,7 @@
         :rows="dataQuality?.items || []"
         :columns="dataQualityColumns"
         row-key="serviceId"
-        :pagination="{ rowsPerPage: 8 }"
+        :pagination="{ rowsPerPage: 5 }"
         no-data-label="All in-scope services have complete billing data"
       >
         <template #body-cell-missingFields="props">

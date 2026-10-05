@@ -81,6 +81,7 @@ namespace Vsky.Services.Projects
             List<string> priorityIds,
             List<string> typeIds,
             int status,
+            int archiveStatus,
             List<string> customerIds,
             List<string> companyContactIds,
             string singleCustomerId,
@@ -107,6 +108,8 @@ namespace Vsky.Services.Projects
             if (statusIds?.Any() == true) query = query.Where(x => statusIds.Contains(x.ProjectStatusId));
             if (status == 0) query = query.Where(x => !x.Active);
             else if (status == 1) query = query.Where(x => x.Active);
+            if (archiveStatus == 0) query = query.Where(x => !x.IsArchived);
+            else if (archiveStatus == 1) query = query.Where(x => x.IsArchived);
             if (teamMemberIds?.Any() == true) query = query.Where(x => x.ProjectEmployeeMappings.Any(m => teamMemberIds.Contains(m.EmployeeId)));
             if (coordinatorIds?.Any() == true)
             {

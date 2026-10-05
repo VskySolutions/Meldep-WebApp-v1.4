@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -204,12 +205,18 @@ namespace Vsky.Api.Controllers
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
                 int Status = 2;
+                int archiveStatus = 2;
                 //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
                 var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
                 if (!string.IsNullOrWhiteSpace(searchModel.StatusId))
                 {
                     var activeStatus = _dropDownService.GetDropDownById(searchModel.StatusId).GetAwaiter().GetResult();
                     Status = activeStatus.DropDownValue == "Active" ? 1 : (activeStatus.DropDownValue == "Inactive" ? 0 : 2);
+                }
+                if (!string.IsNullOrWhiteSpace(searchModel.ArchiveStatusId))
+                {
+                    var archivedStatus = _dropDownService.GetDropDownById(searchModel.ArchiveStatusId).GetAwaiter().GetResult();
+                    archiveStatus = archivedStatus.DropDownValue == "Archive" ? 1 : (archivedStatus.DropDownValue == "Unarchive" ? 0 : 2);
                 }
 
                 // Fetch a list of projects based on search criterias
@@ -230,6 +237,7 @@ namespace Vsky.Api.Controllers
                     searchModel.ProjectPriorityIds,
                     searchModel.ProjectTypeIds,
                     Status,
+                    archiveStatus,
                     searchModel.CustomerIds,
                     searchModel.CompanyContactIds,
                     searchModel.CustomerId,

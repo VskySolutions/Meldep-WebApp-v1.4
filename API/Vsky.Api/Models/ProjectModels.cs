@@ -144,6 +144,7 @@ namespace Vsky.Api.Models
         public List<string> TechnicalLeadIds { get; set; }
         public List<string> ProjectStatusIds { get; set; }
         public string StatusId { get; set; }
+        public string ArchiveStatusId { get; set; }
         public string CustomerId { get; set; }
         public List<string> ProjectPriorityIds { get; set; }
         public List<string> ProjectTypeIds { get; set; }

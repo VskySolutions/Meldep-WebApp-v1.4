@@ -136,7 +136,7 @@
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          {{ props.row.filePath }}
+                          {{ getFileNameFromPath(props.row.filePath) || props.row.fileName }}
                         </a>
                       </q-td>
                       <q-td class="common-q-td">{{ props.row.fileName  }}</q-td>
@@ -320,6 +320,20 @@ const getProjectModuleDetails = () => {
     loading.value = false;
   });
 };
+
+function getFileNameFromPath(filePath) {
+  if (!filePath) return "";
+
+  try {
+    const url = new URL(filePath);
+
+    const fileName = url.searchParams.get("file");
+
+    return fileName ? decodeURIComponent(fileName) : "";
+  } catch {
+    return "";
+  }
+}
 
 function extractFileName (path) {
   return path ? path.split("/").pop() : "Unknown File";

@@ -302,7 +302,6 @@ import _ from "lodash";
 import requirementService from "../requirement.service";
 import viewProjectTask from "modules/project-tasks/components/view.vue";
 
-import viewDescriptionTimeLineView from "src/modules/requirement/components/_description_timeline_view.vue";
 import viewDescriptionSimpleView from "src/modules/requirement/components/_description_simple_view.vue";
 
 

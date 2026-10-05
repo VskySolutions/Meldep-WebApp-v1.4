@@ -95,6 +95,11 @@ export default function projectModule () {
     valueKey: "id"
   });
 
+  const projectArchiveUnarchiveDropdown = useSingleSelectDropdown(commonService.getDropDown, {
+    labelKey: "dropdownValue",
+    valueKey: "id"
+  });
+
   const projectApproverDropdownSingleSelect = useSingleSelectDropdown(employeesService.getAllActiveEmployeesListForDropdown, {
     labelKey: "person.fullName",
     valueKey: "id"
@@ -134,12 +139,12 @@ export default function projectModule () {
     valueKey: "id",
     dataKey: "sitesProjectRolesPermissions"
   });
-  
+
   const customerContactByProjectIdDropdownSingleSelect = useSingleSelectDropdown(projectService.getAllCustomerContactListByProjectIdForDropdown, {
     labelKey: "person.fullName",
     valueKey: "person.id"
   });
-  
+
   return {
     projectNameDropdown,
     projectNameDropdownSingleSelect,
@@ -147,6 +152,7 @@ export default function projectModule () {
     projectUserByProjectIdDropdownSingleSelect,
     projectCategoriesDropdown,
     projectActiveInActiveDropdown,
+    projectArchiveUnarchiveDropdown,
     projectApproverDropdownSingleSelect,
     projectPriorityDropdownSingleSelect,
     projectPrioritiesDropdown,

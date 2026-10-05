@@ -121,6 +121,11 @@
                         labelTooltip="Determines whether the project is currently available for use across the application. Active projects are displayed and available to users; Inactive projects are hidden from the overall application."
                         :options="projectActiveInActiveDropdown.list.value"
                       />
+                      <singleSelectDropdown
+                        v-model="search.archiveStatusId"
+                        label="Archive/Unarchive"
+                        :options="projectArchiveUnarchiveDropdown.list.value"
+                      />
                       <multiSelectDropdown
                         v-model="search.projectTagIds"
                         label="Tags"
@@ -1712,6 +1717,7 @@ const onAdvanceClear = () => {
     projectCategoryIds: [],
     projectStatusIds: [],
     statusId: null,
+    projectArchiveStatusId: null,
     projectCoordinatorIds: [],
     projectLeadsIds: [],
     projectManagerIds: [],
@@ -1767,7 +1773,8 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectPriorityIds, projectPrioritiesDropdown.list, "Priority"),
   ...mapFilterToLabel(search.value.projectTypeIds, projectTypesDropdown.list, "Type"),
   ...mapFilterToLabel(search.value.projectTagIds, projectTagsDropdown.list, "Tags"),
-  ...mapSingleFilterToLabel(search.value.statusId, projectActiveInActiveDropdown.list, "Active/Inactive")
+  ...mapSingleFilterToLabel(search.value.statusId, projectActiveInActiveDropdown.list, "Active/Inactive"),
+  ...mapSingleFilterToLabel(search.value.archiveStatusId, projectArchiveUnarchiveDropdown.list, "Archive/Unarchive")
 }));
 
 const onClearFilters = (key) => {
@@ -1791,6 +1798,8 @@ const onClearFilters = (key) => {
     search.value.projectStatusIds = [];
   } else if (key === "Active/Inactive") {
     search.value.statusId = null;
+  } else if (key === "Archive/Unarchive") {
+    search.value.archiveStatusId = null;
   } else if (key === "Priority") {
     search.value.projectPriorityIds = [];
   } else if (key === "Type") {
@@ -1827,6 +1836,7 @@ const {
   projectNameDropdown,
   projectCategoriesDropdown,
   projectActiveInActiveDropdown,
+  projectArchiveUnarchiveDropdown,
   projectPrioritiesDropdown,
   projectTypesDropdown,
   projectTagsDropdown
@@ -1934,6 +1944,9 @@ onMounted(async () => {
   // Get Project Active/InActive and Set default to Active
   await projectActiveInActiveDropdown.load("Project Active Status");
   const activeValue = await projectActiveInActiveDropdown.getValueByLabel("Active");
+
+  await projectArchiveUnarchiveDropdown.load("Project Archive Status");
+  const unarchiveValue = await projectArchiveUnarchiveDropdown.getValueByLabel("Unarchive");
   // const setProjectStatus = projectStatusList.value.find(status => status.text.toLowerCase() === "in progress");
   const defaultProjectStatuses = projectStatusList.value
   .filter(status =>
@@ -1945,6 +1958,7 @@ onMounted(async () => {
 
   // Set Default values for advance filter
   if (search.value.statusId === null || search.value.statusId === undefined) search.value.statusId = activeValue;
+  if (search.value.archiveStatusId === null || search.value.archiveStatusId === undefined) search.value.archiveStatusId = unarchiveValue;
   // if (search.value.projectStatusIds?.length === 0) search.value.projectStatusIds = [setProjectStatus.value];
 
   if (search.value.projectStatusIds?.length === 0) {
