@@ -537,7 +537,7 @@ namespace Vsky.Services.Requirements
             var query = _requirementRepository.TableNoTracking
                 .Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active);
 
-            if (!string.IsNullOrEmpty(requirementType))
+            if (!string.IsNullOrEmpty(requirementType) && requirementType != "undefined")
                 query = query.Where(x => x.RequirementType.DropDownValue.Contains(requirementType));
 
             if (!string.IsNullOrWhiteSpace(projectModuleId))

@@ -77,7 +77,7 @@
                       />
                       <formSingleSelectDropdown
                         v-model="model.companyContactId"
-                        label="Contact"
+                        label="Customer Contact"
                         required
                         :options="companyContactDropdownSingleSelect.list.value"
                         :filter="companyContactDropdownSingleSelect.filter"

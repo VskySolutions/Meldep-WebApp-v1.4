@@ -61,7 +61,8 @@
                           <template v-if="!isPreviousTargetMonth">
                             <formSingleSelectDropdown
                               v-model="props.row.assignedToId"
-                              :options="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value"
+                              :isClearable="false"
+                              :options="getActivityOwnerOptions(props.row)"
                               :filter="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.filter"
                               :error="rowValidations[props.rowIndex]?.value?.assignedToId.$error"
                               :error-message="rowValidations[props.rowIndex]?.value?.assignedToId.$errors[0]?.$message"
@@ -348,6 +349,20 @@ const {
   projectTaskActivityNameForDropdownSingleSelect
 } = projectTasksActivities();
 
+const getActivityOwnerOptions = (currentRow) => {
+  const selectedOwnerIds = new Set(
+    TaskActivityRows.value
+      .filter(row => !row.deleted && row !== currentRow && row.assignedToId)
+      .map(row => row.assignedToId)
+  );
+
+  return projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.map(
+    employee => ({
+      ...employee,
+      disable: selectedOwnerIds.has(employee.value)
+    })
+  );
+};
 // ------------------------------------------------------------------------------------
 // Validation rules
 // ------------------------------------------------------------------------------------

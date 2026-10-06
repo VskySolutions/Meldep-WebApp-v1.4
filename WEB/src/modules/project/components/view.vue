@@ -60,7 +60,7 @@
                     </div>
                   </div>
                   <div class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Company Contact</div>
+                    <div class="q-mb-xs">Customer Contact</div>
                     <div class="text-black">
                       {{ model.companyContact.person.fullName ? model.companyContact.person.fullName : "-" }}
                     </div>
