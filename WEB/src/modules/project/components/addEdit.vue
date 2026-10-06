@@ -77,7 +77,7 @@
                       />
                       <formSingleSelectDropdown
                         v-model="model.companyContactId"
-                        label="Customer Contact"
+                        label="Company Contact"
                         required
                         :options="companyContactDropdownSingleSelect.list.value"
                         :filter="companyContactDropdownSingleSelect.filter"
@@ -230,7 +230,7 @@
                     </div>
                     <div class="row q-col-gutter-x-md q-mb-lg">
                       <div class="col-12 col-sm-12 col-md-12 col-lg-12">
-                        <div class="q-mb-xs text-black"><label>Description</label></div>
+                        <div class="q-mb-xs text-black"><label>Project Description</label></div>
                         <div class="form-group">
                           <q-editor
                             v-model="model.description"

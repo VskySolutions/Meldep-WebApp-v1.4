@@ -96,7 +96,7 @@
                         </q-td>
                         <q-td class="text-center" style="width: 10%;">
                           <q-icon
-                           v-if="props.row.id"
+                            v-if="props.row.id"
                             name="o_visibility"
                             class="cursor-pointer q-mr-sm"
                             size="xs"
@@ -105,9 +105,16 @@
                             <q-tooltip>
                               View Notes
                             </q-tooltip>
+                            <!-- <q-badge
+                              v-if="props.row.requirementDataMappingNotes > 0"
+                              style="position: absolute; right: -16px; top: -15px;"
+                              color="green"
+                              text-color="white"
+                              :label="props.row.requirementDataMappingNotes.length"
+                            /> -->
                           </q-icon>
                           <q-icon
-                           v-if="props.row.id"
+                            v-if="props.row.id"
                             name="o_assignment"
                             class="cursor-pointer q-mr-sm"
                             size="xs"

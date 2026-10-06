@@ -54,7 +54,7 @@
                   <formMultiSelectDropdown
                     v-if="contributorTypeText === 'Customer'"
                     v-model="model.contributorCustomerIds"
-                    label="Customer Contacts"
+                    label="Company Contacts"
                     :required="false"
                     :disable="!model.projectId"
                     :options="customerContactByProjectIdDropdownSingleSelect.list.value"
