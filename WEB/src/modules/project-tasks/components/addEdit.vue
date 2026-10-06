@@ -701,7 +701,7 @@ const getProjectTask = () => {
     oldStatus = model.value.status.dropDownValue;
     // const formatted = Number(resp.sortOrder).toFixed(3);
     // fraction.value = formatted;
-    model.value.estimateTime = toPrice(resp.estimateTime);
+    model.value.estimateTime = formatEstimateTime(resp.estimateTime);
     model.value.startDateStr = resp.startDate ? toDate(resp.startDate) : "";
     model.value.endDateStr = resp.endDate ? toDate(resp.endDate) : "";
     model.value.description = resp.description ? resp.description : "";
