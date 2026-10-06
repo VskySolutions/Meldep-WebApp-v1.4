@@ -2191,7 +2191,7 @@
                                       option-value="value"
                                       option-label="text"
                                       dropdown-icon="o_arrow_drop_down"
-                                      :options="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value"
+                                      :options="getActivityOwnerOptions(props.row)"
                                       @filter="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.filter"
                                     >
                                       <template #option="{ itemProps, opt }">
@@ -4973,6 +4973,20 @@ function getDropDown (typeName, currentStatusLabel = null) {
   });
 }
 
+const getActivityOwnerOptions = (currentRow) => {
+  const selectedOwnerIds = new Set(
+    projectActivities.value
+      .filter(row => row.id !== currentRow.id && row.assignedToId)
+      .map(row => row.assignedToId)
+  );
+
+  return projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.map(
+    employee => ({
+      ...employee,
+      disable: selectedOwnerIds.has(employee.value)
+    })
+  );
+};
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions (SOP Change)
 // ------------------------------------------------------------------------------------
