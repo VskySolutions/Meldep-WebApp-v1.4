@@ -167,6 +167,9 @@ namespace Vsky.Models
         public string Type { get; set; }
         public string Description { get; set; }
         public string[] Ids { get; set; }
+        public int[] Numbers { get; set; }
+        public string[] Names { get; set; }
+
     }
     public class EmployeeEstimatedHoursDropdownList
     {

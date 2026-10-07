@@ -773,7 +773,7 @@
                       </div>
                     </td>
                   </tr>
-                  <tr v-if="planDate.projectWeeklyPlanDatesReqTaskIssueMapping?.length > 0">
+                  <tr class="" v-if="planDate.projectWeeklyPlanDatesReqTaskIssueMapping?.length > 0">
                     <td class="text-center">External Linked</td>
                     <td colspan="3">
                       <div class="row">

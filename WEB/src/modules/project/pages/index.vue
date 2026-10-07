@@ -59,8 +59,8 @@
                       <multiSelectDropdown
                         v-model="search.projectIds"
                         label="Name"
-                        :options="projectNameDropdown.list.value"
-                        :filter="projectNameDropdown.filter"
+                        :options="allProjectNameDropdown.list.value"
+                        :filter="allProjectNameDropdown.filter"
                       />
                       <multiSelectDropdown
                         v-model="search.projectCategoryIds"
@@ -1763,7 +1763,7 @@ const mapSingleFilterToLabel = (id, list, label) => {
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.customerIds, customerNameDropdown.list, "Customer"),
   ...mapFilterToLabel(search.value.companyContactIds, companyContactNameDropdown.list, "Company Contact"),
-  ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Name"),
+  ...mapFilterToLabel(search.value.projectIds, allProjectNameDropdown.list, "Name"),
   ...mapFilterToLabel(search.value.projectCategoryIds, projectCategoriesDropdown.list, "Category"),
   ...mapFilterToLabel(search.value.projectCoordinatorIds, activeEmployeesDropdown.list, "Coordinator"),
   ...mapFilterToLabel(search.value.projectLeadsIds, activeEmployeesDropdown.list, "Leads"),
@@ -1833,7 +1833,7 @@ const getFilterCount = (key) => {
 // ------------------------------------------------------------------------------------
 
 const {
-  projectNameDropdown,
+  allProjectNameDropdown,
   projectCategoriesDropdown,
   projectActiveInActiveDropdown,
   projectArchiveUnarchiveDropdown,
@@ -1896,23 +1896,23 @@ const getProjectStatusFilter = (val, update, abort) => {
 // On page rendering (SOP Change)
 // ------------------------------------------------------------------------------------
 function loadProjectNameDropdown() {
-  const statusText =
-    projectActiveInActiveDropdown
-      .getLabelByValue(search.value.statusId)
-      ?.toLowerCase()
-      ?.trim();
+  // const statusText =
+  //   projectActiveInActiveDropdown
+  //     .getLabelByValue(search.value.statusId)
+  //     ?.toLowerCase()
+  //     ?.trim();
 
-  let isActive;
+  // let isActive;
 
-  if (statusText === 'inactive') {
-    isActive = false;
-  } else if (statusText === 'active') {
-    isActive = true;
-  } else {
-    isActive = null;
-  }
+  // if (statusText === 'inactive') {
+  //   isActive = false;
+  // } else if (statusText === 'active') {
+  //   isActive = true;
+  // } else {
+  //   isActive = null;
+  // }
 
-  projectNameDropdown.load(search.value.isTemplate, isActive);
+  allProjectNameDropdown.load(search.value.isTemplate);
 }
 
 onMounted(async () => {
@@ -1983,15 +1983,15 @@ watch(() => search.value.searchText, () => {
   refreshProjectList();
 });
 
-watch(
-  () => search.value.statusId,
-  (newVal, oldVal) => {
-    if (newVal === oldVal) return;
+// watch(
+//   () => search.value.statusId,
+//   (newVal, oldVal) => {
+//     if (newVal === oldVal) return;
 
-    search.value.projectIds = [];
-    loadProjectNameDropdown();
-  }
-);
+//     search.value.projectIds = [];
+//     loadProjectNameDropdown();
+//   }
+// );
 
 // Advance Filter:-  On Company/Customer Change
 // watch(() => search.value.customerIds, async (newValue, oldValue) => {

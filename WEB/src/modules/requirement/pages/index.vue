@@ -424,7 +424,17 @@
                 <q-checkbox
                   v-model="props.row.checkboxStatus"
                   size="sm"
-                  @update:model-value="onSelectCheckbox(props.row.projectId, props.row.project.name, props.row.id, props.row.title, $event, props.row.isEditable)"
+                  @update:model-value="
+                    onSelectCheckbox(
+                      props.row.projectId,
+                      props.row.project.name,
+                      props.row.id,
+                      props.row.requirementNumber,
+                      props.row.title,
+                      $event,
+                      props.row.isEditable
+                    )
+                  "
                 />
               </q-td>
               <q-td
@@ -1156,6 +1166,7 @@ const multiSelectRequirementIds = ref(
 const multiSelectRequirementTitles = ref([]);
 const multiSelectRequirementProjectMap = ref({});
 const multiSelectProjectIds = ref([]);
+const multiSelectRequirementNumbers = ref([]);
 const multiSelectProjectName = ref([]);
 
 const multiSelectRequirementEditableMap = ref(
@@ -1466,11 +1477,12 @@ function resetTracking () {
 //   }
 // }
 
-const onSelectCheckbox = (projectId, projectName, requirementId, requirementTitle, flag, isEditable) => {
+const onSelectCheckbox = (projectId, projectName, requirementId, requirementNumber, requirementTitle, flag, isEditable) => {
   if (flag === true) {
     if (!multiSelectRequirementIds.value.includes(requirementId)) {
       // Add the itemId to the multiSelectRequirementIds array if it's not already present
       multiSelectRequirementIds.value.push(requirementId);
+      multiSelectRequirementNumbers.value.push(requirementNumber);
       multiSelectRequirementTitles.value.push(requirementTitle);
       multiSelectRequirementProjectMap.value[requirementId] = projectId;
 
@@ -1490,6 +1502,7 @@ const onSelectCheckbox = (projectId, projectName, requirementId, requirementTitl
     if (index !== -1) {
       multiSelectRequirementIds.value.splice(index, 1);
       multiSelectRequirementTitles.value.splice(index, 1);
+      multiSelectRequirementNumbers.value.splice(index, 1);
     }
 
     delete multiSelectRequirementEditableMap.value[requirementId];
@@ -1562,8 +1575,9 @@ const onLinkTaskToPlan = () => {
   const props = {
     projectId: multiSelectProjectIds.value[0],
     projectName: multiSelectProjectName.value[0],
-    type: "Requirements",
+    type: "Requirement",
     ids: multiSelectRequirementIds.value,
+    numbers: multiSelectRequirementNumbers.value,
     names: multiSelectRequirementTitles.value,
     hasTaskLink: rows.value.some(
       r => multiSelectRequirementIds.value.includes(r.id) &&

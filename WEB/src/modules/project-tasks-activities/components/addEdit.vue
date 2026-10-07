@@ -634,7 +634,6 @@ const onSubmit = async () => {
           formData.append("projectTaskActivityFiles", file);
         }
       });
-      console.log("Submitting form data:", formData);
       activityService.saveProjectActivity(props.id, formData).then((resp) => {
         notifySuccess({ message: "Project activity is saved successfully." });
         onDialogOK();

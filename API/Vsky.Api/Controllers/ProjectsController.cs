@@ -7,6 +7,7 @@ using AutoMapper;
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Pqc.Crypto.Lms;
 using Vsky.Api.ApiErrors;
@@ -381,6 +382,39 @@ namespace Vsky.Api.Controllers
 
                 var list = await _projectService.GetProjectsListForDropdown(SiteId, LoggedUserId, employeeId, isTemplate, ActiveStatus, isAllProject);
                 var model = _mapper.Map<List<CommonDropDown>>(list);
+                return Ok(model);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetAllProjectsForDropdown
+        // Title: GetAllProjectsForDropdown
+        // Description: This endpoint retrieves all projects for the dropdown without applying an activity status filter.
+        [HttpGet("dropdown/all-projects")]
+        public async Task<IActionResult> GetAllProjectsForDropdown(
+            bool isTemplate)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+
+                var list = await _projectService.GetProjectsListForDropdown(
+                    SiteId,
+                    LoggedUserId,
+                    employeeId,
+                    isTemplate,
+                    "all",
+                    false
+                    );
+
+                var model = _mapper.Map<List<CommonDropDown>>(list);
+
                 return Ok(model);
             }
             catch (Exception ex)
@@ -2551,39 +2585,46 @@ namespace Vsky.Api.Controllers
 
                     ProjectWeeklyPlanDateId = newWeekDatemodel.Id;
                 }
-
-                if(!string.IsNullOrEmpty(model.Description))
-                {
-                    var LineData = new ProjectWeeklyPlanDatesLines();
-
-                    LineData.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
-
-                    if (!string.IsNullOrEmpty(model.Description))
-                    {
-                        LineData.ExpectedDescription = await _azureBlobImageServices
-                            .ProcessHtmlAndManageImagesAsync(
-                                model.Description,
-                                SiteData.Name,
-                                "project-weeklymonthly",
-                                LineData.Id
-                            );
-                    }
-
-                    LineData.ExpectedDescriptionCreatedById = LoggedUserId;
-                    LineData.ExpectedDescriptionCreatedOnUtc = GetDateTime;
-                    LineData.ExpectedDescriptionUpdatedById = LoggedUserId;
-                    LineData.ExpectedDescriptionUpdatedOnUtc = GetDateTime;
-                    LineData.ActualDescription = "";
-
-                    _projectWeeklyDatesLinesService.InsertProjectWeeklyPlanDatesLines(LineData);
-                }
-
+                int index = 0;
                 if (!string.IsNullOrEmpty(ProjectWeeklyPlanDateId) && model.Ids.Any())
                 {
                     var GetAllExistingMappings = await _projectWeeklyPlanDatesReqTaskIssueMappingService.GetAllByProjectWeeklyPlanDatesId(ProjectWeeklyPlanDateId);
+
                     foreach (var id in model.Ids)
                     {
-                        if (model.Type == "Requirements" && !GetAllExistingMappings.Any(m => m.RequirementId == id))
+                        if ((model.Type == "Requirement" && GetAllExistingMappings.Any(m => m.RequirementId == id)) ||
+                           (model.Type == "Project Task" && GetAllExistingMappings.Any(m => m.TaskId == id)) ||
+                           (model.Type == "Issue" && GetAllExistingMappings.Any(m => m.IssueId == id)))
+                        {
+                            index++;
+                            continue;
+                        }
+
+
+                        var LineData = new ProjectWeeklyPlanDatesLines();
+                        LineData.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
+                        model.Description = $"<strong>{model.Type} - {model.Numbers[index]} - {model.Names[index]}</strong>";
+
+                        if (!string.IsNullOrEmpty(model.Description))
+                        {
+                            LineData.ExpectedDescription = await _azureBlobImageServices
+                                 .ProcessHtmlAndManageImagesAsync(
+                                     model.Description,
+                                     SiteData.Name,
+                                     "project-weeklymonthly",
+                                     LineData.Id
+                                 );
+                        }
+
+                        LineData.ExpectedDescriptionCreatedById = LoggedUserId;
+                        LineData.ExpectedDescriptionCreatedOnUtc = GetDateTime;
+                        LineData.ExpectedDescriptionUpdatedById = LoggedUserId;
+                        LineData.ExpectedDescriptionUpdatedOnUtc = GetDateTime;
+                        LineData.ActualDescription = "";
+
+                        _projectWeeklyDatesLinesService.InsertProjectWeeklyPlanDatesLines(LineData);
+
+                        if (model.Type == "Requirement")
                         {
                             var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
                             newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
@@ -2593,7 +2634,7 @@ namespace Vsky.Api.Controllers
                             _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
                         }
 
-                        if (model.Type == "Project Tasks" && !GetAllExistingMappings.Any(m => m.TaskId == id))
+                        if (model.Type == "Project Task")
                         {
                             var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
                             newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
@@ -2603,7 +2644,7 @@ namespace Vsky.Api.Controllers
                             _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
                         }
 
-                        if (model.Type == "Issues" && !GetAllExistingMappings.Any(m => m.IssueId == id))
+                        if (model.Type == "Issue")
                         {
                             var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
                             newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
@@ -2612,6 +2653,7 @@ namespace Vsky.Api.Controllers
                             newMapping.CreatedOnUtc = GetDateTime;
                             _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
                         }
+                        index++;
                     }
                     return Ok();
                 }

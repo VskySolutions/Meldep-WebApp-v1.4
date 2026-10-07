@@ -152,6 +152,7 @@ export const onSubmitLinkProjectTasksToPlan = (
   multiSelectProjectName,
   multiSelectTaskIds,
   multiSelectTaskNames,
+  multiSelectTaskNumbers,
   refreshProjectTaskList,
   setDefaultsForMultiSelects
 ) => {
@@ -168,8 +169,9 @@ export const onSubmitLinkProjectTasksToPlan = (
   const props = {
     projectId: multiSelectProjectIds.value[0],
     projectName: multiSelectProjectName.value[0],
-    type: "Project Tasks",
+    type: "Project Task",
     ids: multiSelectTaskIds.value,
+    numbers: multiSelectTaskNumbers.value,
     names: multiSelectTaskNames.value
   };
 

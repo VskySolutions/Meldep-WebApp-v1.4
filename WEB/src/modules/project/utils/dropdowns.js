@@ -9,6 +9,12 @@ export default function projectModule () {
     labelKey: "text",
     valueKey: "value"
   });
+
+  const allProjectNameDropdown = useMultiSelectDropdown(projectService.getAllProjectsForDropdown,{
+    labelKey: "text",
+    valueKey: "value"
+  });
+
   // Single Select
   const projectNameDropdownSingleSelect = useSingleSelectDropdown(projectService.getProjectsListForDropdown, {
     labelKey: "text",
@@ -147,6 +153,7 @@ export default function projectModule () {
 
   return {
     projectNameDropdown,
+    allProjectNameDropdown,
     projectNameDropdownSingleSelect,
     projectUsersByProjectIdForDropdown,
     projectUserByProjectIdDropdownSingleSelect,

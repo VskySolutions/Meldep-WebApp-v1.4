@@ -59,6 +59,10 @@ export default {
     return http.get(`/projects/allDropdown/list?isTemplate=${isTemplate}&ActiveStatus=${ActiveStatus}&isAllProject=${isAllProject}`
     ).then(response => response.data);
   },
+  getAllProjectsForDropdown(isTemplate = false, isAllProject = false) {
+    return http.get(`/projects/dropdown/all-projects?isTemplate=${isTemplate}&isAllProject=${isAllProject}`
+    ).then(response => response.data);
+  },
   getAllProjectTagListForDropdown () {
     return http.get("/projects/projectTags/dropdown/list").then(response => response.data);
   },
@@ -125,7 +129,7 @@ export default {
   },
   getProjectSwimlanesById (id) {
     return http.get(`project-swimlane/get-project-swimlanes-by-id/${id}`).then(response => response.data);
-  },  
+  },
   getAllCustomerContactListByProjectIdForDropdown (projectId) {
     return http.get(`/projects/project-customer-contact-dropdown/list?projectId=${projectId}`).then(response => response.data);
   },

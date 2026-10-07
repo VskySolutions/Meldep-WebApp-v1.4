@@ -108,6 +108,7 @@ const props = defineProps({
   projectName: { type: String, default: "" },
   type: { type: String, default: "" },
   ids: { type: Array, default: () => [] },
+  numbers: { type: Array, default: () => [] },
   names: { type: Array, default: () => [] },
   hasTaskLink: { type: Number, default: 0 }
 });
@@ -122,6 +123,7 @@ const model = ref({
   date: null,
   type: props.type,
   ids: props?.ids ? props.ids : null,
+  numbers: props?.numbers ? props.numbers : null,
   names: props?.names ? props.names : null,
   description: null
 });

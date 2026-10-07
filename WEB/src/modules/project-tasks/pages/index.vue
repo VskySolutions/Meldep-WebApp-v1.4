@@ -334,6 +334,7 @@
                         props.row.project.name,
                         props.row.project.projectStatus.dropDownValue,
                         props.row.id,
+                        props.row.projectTaskNumber,
                         props.row.name,
                         $event,
                         props.row.isEditable
@@ -1464,14 +1465,16 @@ const multiSelectProjectIds = ref([]);
 const multiSelectProjectName = ref([]);
 const multiSelectTaskProjectMap = ref({});
 const multiSelectTaskIds = ref(getStoredSelectedTaskIds());
+const multiSelectTaskNumbers = ref([]);
 const multiSelectTaskNames = ref([]);
 const multiSelectTaskStatusMap = ref({});
 
-const onSelectCheckbox = (projectId, projectName, projectStatus, taskId, taskName, flag, isEditable) => {
+const onSelectCheckbox = (projectId, projectName, projectStatus, taskId, taskNumber, taskName,  flag, isEditable) => {
   if (flag === true) {
     if (!multiSelectTaskIds.value.includes(taskId)) {
       // Add the taskId to the multiSelectTaskIds array if it's not already present
       multiSelectTaskIds.value.push(taskId);
+      multiSelectTaskNumbers.value.push(taskNumber);
       multiSelectTaskNames.value.push(taskName);
       multiSelectTaskStatusMap.value[taskId] = projectStatus;
       multiSelectTaskProjectMap.value[taskId] = projectId;
@@ -1493,6 +1496,7 @@ const onSelectCheckbox = (projectId, projectName, projectStatus, taskId, taskNam
     if (taskIndex !== -1) {
       multiSelectTaskIds.value.splice(taskIndex, 1);
       multiSelectTaskNames.value.splice(taskIndex, 1);
+      multiSelectTaskNumbers.value.splice(taskIndex, 1);
     }
     delete multiSelectTaskStatusMap.value[taskId];
     delete multiSelectTaskProjectMap.value[taskId];
@@ -1837,6 +1841,7 @@ watch(selectedField, (newVal) => {
         multiSelectProjectName,
         multiSelectTaskIds,
         multiSelectTaskNames,
+        multiSelectTaskNumbers,
         refreshProjectTaskList,
         setDefaultsForMultiSelects
       );

@@ -297,6 +297,7 @@
                         props.row.project.id,
                         props.row.project.name,
                         props.row.id,
+                        props.row.issueNumber,
                         props.row.name,
                         $event,
                         props.row.isEditable
@@ -1040,13 +1041,15 @@ const multiSelectProjectIds = ref([]);
 const multiSelectProjectName = ref([]);
 // const multiSelectIssueIds = ref([]);
 const multiSelectIssueNames = ref([]);
+const multiSelectIssueNumbers = ref([]);
 
-const onSelectCheckbox = (projectId, projectName, issueId, issueName, flag, isEditable) => {
+const onSelectCheckbox = (projectId, projectName, issueId, issueNumber, issueName, flag, isEditable) => {
   if (flag === true) {
     // Add the issueId to the multiSelectIssueIds array if it's not already present
     if (!multiSelectIssueIds.value.includes(issueId)) {
       multiSelectIssueIds.value.push(issueId);
       multiSelectIssueNames.value.push(issueName);
+      multiSelectIssueNumbers.value.push(issueNumber);
       multiSelectRequirementProjectMap.value[issueId] = projectId;
 
       // Store Project Security permission for this issue
@@ -1066,6 +1069,7 @@ const onSelectCheckbox = (projectId, projectName, issueId, issueName, flag, isEd
     if (index !== -1) {
       multiSelectIssueIds.value.splice(index, 1);
       multiSelectIssueNames.value.splice(index, 1);
+      multiSelectIssueNumbers.value.splice(index, 1);
     }
 
     delete multiSelectIssueEditableMap.value[issueId];
@@ -1140,8 +1144,9 @@ const onLinkTaskToPlan = () => {
   const props = {
     projectId: multiSelectProjectIds.value[0],
     projectName: multiSelectProjectName.value[0],
-    type: "Issues",
+    type: "Issue",
     ids: multiSelectIssueIds.value,
+    numbers: multiSelectIssueNumbers.value,
     names: multiSelectIssueNames.value,
     hasTaskLink: rows.value.some(
       r => multiSelectIssueIds.value.includes(r.id) &&
