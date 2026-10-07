@@ -489,7 +489,6 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
-        //new bs
         #region GetAllClientListForDropdown
         // Title: GetAllClientListForDropdown
         // Description: This endpoint retrieves the list of Client For Dropdown

@@ -31,7 +31,6 @@ namespace Vsky.Services.Companies
         Task<List<CompanyContacts>> GetAllCustomerContactListForDropdown(string SiteId, string statusId);
         #endregion
 
-        //new bs 
         #region GetAllContactListForDropdown
         Task<List<CompanyContacts>> GetAllContactListForDropdown(string SiteId, string customerId);
         #endregion

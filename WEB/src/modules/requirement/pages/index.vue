@@ -386,7 +386,6 @@
                 highlightedId == props.row.id ? 'highlight'
                   : ''
               ]"
-              :set="(preProjectName = null, preProjectModuleName = null, resetTracking())"
             >
               <q-td
                   v-if="!isViewer">
@@ -442,9 +441,8 @@
               class="common-q-td hoverable-cell"
             >
               <div class="row no-wrap items-center justify-between">
+    <template v-if="isFirstProjectRow(props.rowIndex)">
                 <span
-                  v-if="preProjectName !== props.row.project.name"
-                  :set="preProjectName = props.row.project.name"
                   class="cursor-pointer"
                   @click="onProjectView(props.row.project.id)"
                 >
@@ -452,10 +450,6 @@
                 </span>
 
                 <div
-                  v-if="
-                    props.rowIndex === 0 ||
-                    rows[props.rowIndex - 1]?.project?.name !== props.row.project.name
-                  "
                   class="row items-center q-gutter-sm q-ml-sm"
                   style="flex-shrink: 0;"
                 >
@@ -490,6 +484,7 @@
                     <q-tooltip>Work Board</q-tooltip>
                   </q-icon>
                 </div>
+    </template>
               </div>
             </q-td>
               <q-td
@@ -1086,7 +1081,7 @@ const selectedField = ref(null);
 // const multiSelectRequirementProjectMap = ref({});
 // const multiSelectProjectIds = ref([]);
 // const multiSelectProjectName = ref([]);
-const shownProjects = new Set();
+// const shownProjects = new Set();
 const route = useRoute();
 const authStore = useAuthStore();
 const user = authStore.user;
@@ -1464,9 +1459,9 @@ const onRestorePreviousRequirementColor = (requirementColor) => {
   previousColor.value = requirementColor ?? "#e0e0e0"; // Store previous color before opening picker
 };
 
-function resetTracking () {
-  shownProjects.clear(); // Clear the set before rendering rows
-}
+// function resetTracking () {
+//   shownProjects.clear(); // Clear the set before rendering rows
+// }
 
 // function shouldShowIcons (projectName) {
 //   if (shownProjects.has(projectName)) {
@@ -1476,6 +1471,16 @@ function resetTracking () {
 //     return true;
 //   }
 // }
+function isFirstProjectRow(rowIndex) {
+  if (rowIndex === 0) {
+    return true;
+  }
+
+  const currentRow = rows.value[rowIndex];
+  const previousRow = rows.value[rowIndex - 1];
+
+  return currentRow?.project?.id !== previousRow?.project?.id;
+}
 
 const onSelectCheckbox = (projectId, projectName, requirementId, requirementNumber, requirementTitle, flag, isEditable) => {
   if (flag === true) {

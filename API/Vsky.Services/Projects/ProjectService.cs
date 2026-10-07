@@ -537,7 +537,7 @@ namespace Vsky.Services.Projects
                 Name = x.Name,
                 ProjectStatus = new DropDown { Id = x.ProjectStatus.Id, DropDownValue = x.ProjectStatus.DropDownValue },
                 StartDate = x.StartDate,
-                Customer = new CompanyClients { Id = x.Customer.Id, Name = x.Customer.Company != null ? x.Customer.Company.Name : string.Join(" ", x.Customer.Person.FirstName, x.Customer.Person.LastName).Trim() }, // from bs
+                Customer = new CompanyClients { Id = x.Customer.Id, Name = x.Customer.Company != null ? x.Customer.Company.Name : string.Join(" ", x.Customer.Person.FirstName, x.Customer.Person.LastName).Trim() },
                 TotalModuleCount = x.ProjectModules.Count(m => !m.Deleted && !m.Project.Deleted && !m.IsMoved && m.ProjectModuleStatus.DropDownValue != "Close"),
                 TotalTasksCount = x.ProjectTasks.Count(m => !m.Deleted && !m.IsMoved && !m.ProjectModule.Deleted && !m.ProjectModule.IsMoved && !m.Project.Deleted && m.Project.Active)
             });
