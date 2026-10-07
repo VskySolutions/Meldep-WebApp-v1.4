@@ -502,7 +502,6 @@ const getAllItemSubcategoryAttributeValuesByAttributeId = (name, fieldType, id) 
     .then((resp) => {
       itemSubcategoryAttributesValues.value = resp;
       activeRowId.value = id;
-      // console.log(resp);
     })
     .finally(() => {
       isLoading.value = false;
@@ -520,7 +519,6 @@ const getAllItemSubcategoryList = () => {
       const responseData = resp.map((item) => ({ text: item.name, value: item.id })).sort((a, b) => a.text.localeCompare(b.text));
       itemSubcategoryList.value = responseData;
       itemSubcategoryFilter.value = responseData;
-      // console.log(responseData);
     })
     .finally(() => {
     });

@@ -710,10 +710,8 @@ const handleAddPerson = (row = null, refreshPersonNameDropdown) => {
         if (row) {
           row.personId = newPersonId;
           getPersonById(newPersonId, row);
-          // console.log("row.personId", row.personId);
         } else {
           model.value.personId = newPersonId;
-          // console.log("model.personId ", model.value.personId);
         }
       }, 100);
     }
@@ -876,11 +874,10 @@ watch(() => props.id, (newValue, oldValue) => {
 
 onMounted(async() => {
   await customerTypesDropdownSingleSelect.load("Customer Type");
-  // console.log("customerTypesDropdownSingleSelect", customerTypesDropdownSingleSelect);
   personNameDropdownSingleSelect.load();
   activeEmployeesDropdownSingleSelect.load();
   companyNameDropdownSingleSelect.load();
-  parentCustomerDropdownSingleSelect.load();
+  parentCustomerDropdownSingleSelect.load(props.id);
 });
 
 </script>

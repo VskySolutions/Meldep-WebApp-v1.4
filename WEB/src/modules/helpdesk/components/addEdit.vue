@@ -568,8 +568,6 @@ const roleSupportTeamOrAdmin = user?.roles?.includes("admin") || user?.roles?.in
 const isCompanyReadonly = ref(false);
 const $q = useQuasar();
 
-// console.log("authStore.user", authStore.user);
-
 // Define model values
 const model = ref({
   topicId: "",
@@ -711,7 +709,6 @@ const employeeListFilter = ref([]);
 function getAllEmployeesListForDropdown () {
   employeesService.getAllActiveEmployeesListForDropdown().then((resp) => {
     const responseData = resp.map((item) => ({ text: item.person.fullName, value: item.id, primaryEmailAddress: item.person.primaryEmailAddress })).sort((a, b) => a.text.localeCompare(b.text));
-    // console.log("emp", resp);
     employeeList.value = responseData;
     employeeListFilter.value = responseData;
   });
@@ -1202,7 +1199,6 @@ const onSubmit = async () => {
 
     // Also pass the helpDeskFlag for general status tracking
     formData.append("helpDeskFlag", model.value.helpDeskFlag || "no_change");
-    // console.log(formData);
 
     await helpDeskService.saveHelpDesk(props.id, formData);
 

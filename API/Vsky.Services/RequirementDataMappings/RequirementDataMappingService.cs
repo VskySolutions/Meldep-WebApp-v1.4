@@ -308,7 +308,20 @@ namespace Vsky.Services.RequirementDataMappings
                     Target = x.Target,
                     CreatedOnUtc = x.CreatedOnUtc,
                     UpdatedOnUtc = x.UpdatedOnUtc,
-
+                    Requirement = new Requirement
+                    {
+                        Id = x.Requirement.Id,
+                        Project = new Project
+                        {
+                            Id = x.Requirement.Project.Id,
+                            Name = x.Requirement.Project.Name
+                        },
+                        ProjectModule = new ProjectModule
+                        {
+                            Id = x.Requirement.ProjectModule.Id,
+                            Name = x.Requirement.ProjectModule.Name
+                        }
+                    },
                     CreatedBy = new ApplicationUser
                     {
                         Id = x.CreatedBy.Id,

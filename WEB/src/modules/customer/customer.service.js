@@ -59,7 +59,7 @@ export default {
       : "/customer/parentCustomerList/dropdownlist"; // add mode: get all
     return http.get(url).then(response => response.data);
   },
-  getAllParentCustomerList () {
-    return http.get("/customer/parentCustomerList/list").then(response => response.data);
+  getAllParentCustomerList (customerId) {
+    return http.get(`/customer/parentCustomerList/list?customerId=${customerId}`).then(response => response.data);
   }
 };

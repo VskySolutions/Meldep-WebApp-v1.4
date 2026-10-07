@@ -392,7 +392,6 @@ function viewFile (file) {
   // Use Google Docs Viewer for Documents
   if (supportedFormats.includes(fileExtension)) {
     viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-    // console.log("googleDocsViewer", viewerUrl);
   }
 
   // Open new window

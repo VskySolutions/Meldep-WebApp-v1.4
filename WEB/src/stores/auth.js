@@ -144,7 +144,6 @@ export const useAuthStore = defineStore("auth", {
 
     // 🔹 NEW FUNCTION: Store JWT Token from URL
     setTokenFromUrl (token) {
-      // console.log("auth.Token" + token);
       if (token) {
         this.setToken(token);
       }
@@ -152,7 +151,6 @@ export const useAuthStore = defineStore("auth", {
 
     // 🔹 Helper function to store token in LocalStorage & set auth header
     setToken (token) {
-      // console.log("setToken.Token" + token);
       LocalStorage.set("token", token);
       this.token = token;
     },

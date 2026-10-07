@@ -269,7 +269,6 @@ const getAllSOPTemplates = (props) => {
         ...data
       };
     });
-    // console.log(rows.value);
     pagination.value.page = page;
     pagination.value.rowsPerPage = rowsPerPage;
     pagination.value.sortBy = sortBy;

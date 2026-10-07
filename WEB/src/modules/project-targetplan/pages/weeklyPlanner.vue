@@ -1405,7 +1405,6 @@ function isWeekendAlreadyPlanned (weekendDate, list) {
 const filterRequestMapping = (mappings, type) => {
   if (type.toLowerCase() === "requirement") {
     const data = (mappings || []).filter(m => m.requirementId);
-    // console.log(data);
     return data;
   }
   if (type.toLowerCase() === "tasks") {

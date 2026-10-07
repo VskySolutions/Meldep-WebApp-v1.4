@@ -819,7 +819,6 @@ const onCountryChange = async (countryId) => {
     // phoneNumberPattern.value = resp.phoneNumberPattern || '';
     // zipCodePattern.value = resp.zipCodePattern || '';
     // zipCodeLabel.value = resp.zipCodeLabel || 'Postal Code';
-    // console.log(resp);
   } catch (error) {
     console.error('Error fetching country details:', error);
   }

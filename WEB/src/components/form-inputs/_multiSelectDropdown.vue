@@ -47,7 +47,7 @@
         hide-bottom-space
 
         :dense="true"
-        :disable="disable"
+        :disable="props.disable"
 
         input-debounce="0"
 
@@ -159,6 +159,7 @@ const props = defineProps({
     default: ""
   }
 });
+console.log("disable", props.disable);
 
 const emit = defineEmits(["update:modelValue"]);
 

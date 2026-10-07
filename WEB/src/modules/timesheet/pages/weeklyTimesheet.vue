@@ -978,8 +978,6 @@ onMounted(() => {
 
   selectedWeekLabel.value = currentSunday;
   onWeekSelect(currentSunday);
-
-  // console.log("projectTasksWithProjectForDropdown", projectTasksWithProjectForDropdown.list);
 });
 
 </script>

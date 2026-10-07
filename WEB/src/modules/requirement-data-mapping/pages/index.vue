@@ -43,14 +43,14 @@
                       <multiSelectDropdown
                         v-model="search.projectModuleIds"
                         label="Project Module"
-                        :disable="!search.projectIds"
+                        :disable="!search.projectIds?.length"
                         :options="projectModulesByProjectIdForDropdown.list.value"
                         :filter="projectModulesByProjectIdForDropdown.filter"
                       />
                       <multiSelectDropdown
                         v-model="search.requirementIds"
                         label="Requirement"
-                        :disable="!search.projectModuleIds"
+                        :disable="!search.projectModuleIds?.length"
                         :options="requirementsByProjectModuleIdForDropdown.list.value"
                         :filter="requirementsByProjectModuleIdForDropdown.filter"
                       />
@@ -200,8 +200,9 @@
               <q-tr
                 :props="props"
                 :class="activeRowId == props.row.id ? 'highlight' : ''"
+                :set="(preProjectName = null, preProjectModuleName = null, resetTracking())"
               >
-                <q-td :colspan="computedColumns.length" style="background: #dbf2ff;" class="text-center text-bold">
+                <q-td :colspan="computedColumns.length" style="background: #dbf2ff;" class="text-center text-bold text-primary">
                   {{ props.row.requirementTitle }}
                 </q-td>
                 <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
@@ -216,10 +217,62 @@
                 </q-td>
               </q-tr>
               <q-tr
-                v-for="mapping in props.row.dataMappings"
+                v-for="(mapping, mappingIndex) in props.row.dataMappings"
                 :key="mapping.id"
                 :class="highlightedId == mapping.id ? 'highlight' : ''"
               >
+                <q-td
+                  v-if="selectedColumnNames.includes('requirement.project.name')"
+                  class="common-q-td hoverable-cell"
+                >
+                  <div class="row no-wrap items-center justify-between">
+                    <span
+                      v-if="preProjectName !== mapping.requirement.project.name"
+                      :set="preProjectName = mapping.requirement.project.name"
+                      class="cursor-pointer"
+                      @click="onProjectView(mapping.requirement.project.id)"
+                    >
+                      {{ mapping.requirement.project.name }}
+                    </span>
+
+                    <div
+                      v-if="
+                        mappingIndex === 0 ||
+                        props.row.dataMappings[mappingIndex - 1]?.requirement?.project?.name !==
+                          mapping.requirement?.project?.name
+                      "
+                      class="row items-center q-gutter-sm q-ml-sm"
+                      style="flex-shrink: 0;"
+                    >
+                      <q-icon
+                        name="o_radio_button_checked"
+                        size="xs"
+                        class="cursor-pointer"
+                        @click="
+                          setActiveRowIdInLocalStorage(mapping.id);
+                          $router.push({
+                            path: '/project-center',
+                            state: { projectId: mapping.requirement.project.id }
+                          })
+                        "
+                      >
+                        <q-tooltip>Project Center</q-tooltip>
+                      </q-icon>
+                    </div>
+                  </div>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('requirement.projectModule.name')"
+                  class="common-q-td hoverable-cell"
+                  @click="onProjectModuleView(mapping.requirement?.projectModule.id)"
+                >
+                  <span
+                  v-if="preProjectModuleName !== mapping.requirement.projectModule.name"
+                  :set="preProjectModuleName = mapping.requirement.projectModule.name"
+                  >
+                    {{ mapping.requirement.projectModule.name }}
+                  </span>
+                </q-td>
                 <q-td v-if="selectedColumnNames.includes('source')" class="text-left common-q-td">
                   {{ mapping.source }}
                 </q-td>
@@ -317,6 +370,18 @@ import {
   onRequirementDataMappingNoteEdit
 } from "src/modules/requirement-data-mapping/utils/dialogs.js";
 
+// SOP Change :- Shared Project Dialogs
+import {
+  initProjectDialogs,
+  onProjectView
+} from "src/modules/project/utils/dialogs.js";
+
+// Shared Project Module Dialogs
+import {
+  initProjectModuleDialogs,
+  onProjectModuleView
+} from "src/modules/project-modules/utils/dialogs.js";
+
 // ----------------------------------------------------------------------------------------------------------------
 // Common variables
 // ----------------------------------------------------------------------------------------------------------------
@@ -327,6 +392,7 @@ const loading = ref(true);
 const showFilter = ref(false);
 const searchLoader = ref(false);
 const showSortDialog = ref(false);
+const shownProjects = new Set();
 const selectedProjectId = history.state?.projectId;
 const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
@@ -337,8 +403,10 @@ const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
-  { name: "source", label: "Source", field: "source", align: "left", sortable: false, default: true },
-  { name: "target", label: "Target", field: "target", align: "left", sortable: false, default: true },
+  { name: "requirement.project.name", label: "Project", field: "requirement.project.name", align: "left", sortable: true, default: true },
+  { name: "requirement.projectModule.name", label: "Module", field: "requirement.projectModule.name", align: "left", sortable: true, default: true },
+  { name: "source", label: "Source", field: "source", align: "left", sortable: true, default: true },
+  { name: "target", label: "Target", field: "target", align: "left", sortable: true, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: false, default: false },
   { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: false, default: false },
   { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: false, default: false },
@@ -451,6 +519,10 @@ const lsSorts = sorts.value || null;
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals
 // ----------------------------------------------------------------------------------------------------------------
+
+function resetTracking () {
+  shownProjects.clear(); // Clear the set before rendering rows
+}
 
 const highlightedId = computed(() => { return activeRowId.value; });
 
@@ -567,6 +639,8 @@ const onAdvanceClear = () => {
 // DataTable:- Initialization Of Dialogs, Actions
 // ------------------------------------------------------------------------------------
 initRequirementDataMappingDialogs();
+initProjectDialogs(activeRowId);
+initProjectModuleDialogs(activeRowId);
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Applied Filter Labels.
 // ----------------------------------------------------------------------------------------------------------------
@@ -586,7 +660,7 @@ const mapFilterToLabel = (ids, list, label) => {
 
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
-  ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Modules"),
+  ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
   ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
   ...(search.value.source ? { Source: search.value.source } : {}),
   ...(search.value.target ? { Target: search.value.target } : {})
@@ -633,11 +707,29 @@ watch(() => search.value.searchText, () => {
   refreshDataMappingList();
 });
 
-watch(() => search.value.projectIds, async (newValue, oldValue) => {
-  if (!newValue || newValue === oldValue) return;
+// watch(() => search.value.projectIds, async (newValue, oldValue) => {
+//   if (!newValue || newValue === oldValue) return;
 
-  search.value.projectModuleIds = [];
+//   search.value.projectModuleIds = [];
+//   await projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
+// }, { immediate: true });
+
+watch(() => search.value.projectIds, async (newValue, oldValue) => {
+  if (search.value?.projectIds?.length === 0 || newValue === oldValue) return;
+
+  if (!newValue?.length) {
+    search.value.projectModuleIds = [];
+    return;
+  }
+
+  const isInitialLoad = !oldValue;
+  // search.value.projectModuleIds = [];
   await projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
+
+  // Clear modules only when project was changed by the user
+  if (!isInitialLoad) {
+    search.value.projectModuleIds = [];
+  }
 }, { immediate: true });
 
 watch(() => search.value.projectModuleIds, (newValue, oldValue) => {
@@ -648,7 +740,7 @@ watch(() => search.value.projectModuleIds, (newValue, oldValue) => {
   if (search.value?.projectModuleIds?.length === 0 || newValue === oldValue) return;
 
   if (newValue == null) return;
-    requirementsByProjectModuleIdForDropdown.load(newValue);
+    requirementsByProjectModuleIdForDropdown.load(newValue, '', 'Data Integration');
 }, { immediate: true });
 
 watch(activeRowId, (val) => {
@@ -676,7 +768,7 @@ onMounted(() => {
   projectNameDropdown.load();
 
   if (search.value.projectIds) projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
-  if (search.value.projectModuleIds?.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
+  if (search.value.projectModuleIds?.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds, '', 'Data Integration');
 
   if (!activeRowId.value) {
     activeRowId.value = null;

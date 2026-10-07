@@ -116,7 +116,6 @@ const getTags = (tagId) => {
   loading.value = true;
   tagMasterService.getTags(tagId).then((resp) => {
     model.value = _.cloneDeep(resp);
-    // console.log(resp);
   }).finally(() => {
     loading.value = false;
   });

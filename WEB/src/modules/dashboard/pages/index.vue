@@ -1281,7 +1281,6 @@ const getEmployeeLeaveListForDashboard = () => {
 const getEmployeeLeaveListForMovReg = () => {
   loading.value = true;
   const today = toDate(new Date());
-  // console.log(today);
   if (!movementRegDate.value) {
     movementRegDate.value = today;
   }
@@ -1307,8 +1306,6 @@ const getAllModuleMenusForDashboard = () => {
   loading.value = true;
   moduleService.getAllModuleMenusForDashboard().then((resp) => {
     quickLinkRows.value = resp;
-    // console.log("quickLinkRows-resp", resp);
-    // console.log("quickLinkRows", quickLinkRows.value);
   }).finally(() => {
     loading.value = false;
   });

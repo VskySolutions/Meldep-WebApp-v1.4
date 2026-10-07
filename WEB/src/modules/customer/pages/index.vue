@@ -320,7 +320,7 @@
                 <q-td auto-width class="text-center actions">
                   <q-icon
                     name="o_visibility"
-                    class="cursor-pointer q-mr-sm"
+                    class="cursor-pointer q-mr-sm hidden"
                     @click="onCustomerView(props.row.id)"
                   >
                     <q-tooltip>View</q-tooltip>

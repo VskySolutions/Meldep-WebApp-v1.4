@@ -29,7 +29,6 @@ defineEmits([...useDialogPluginComponent.emits]);
 const { dialogRef, onDialogHide } = useDialogPluginComponent();
 
 const props = defineProps({ item: { type: Object, default: null } });
-// console.log(props);
 
 // const model = ref({});
 

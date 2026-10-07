@@ -1314,17 +1314,14 @@ function isWeekendAlreadyPlanned (monthDate, list) {
 const filterRequestMapping = (mappings, type) => {
   if (type.toLowerCase() === "requirement") {
     const data = (mappings || []).filter(m => m.requirementId);
-    // console.log(data);
     return data;
   }
   if (type.toLowerCase() === "tasks") {
     const data = (mappings || []).filter(m => m.taskId);
-    // console.log(data);
     return data;
   }
   if (type.toLowerCase() === "issue") {
     const data = (mappings || []).filter(m => m.issueId);
-    // console.log(data);
     return data;
   }
 };

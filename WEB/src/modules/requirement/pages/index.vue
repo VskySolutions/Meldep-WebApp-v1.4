@@ -1651,8 +1651,6 @@ function onBulkRequirementsConvertToTask (requirementIds) {
     projectTaskModel: taskModels
   };
 
-  // console.log(payload);
-
   let message = "<hr/>Are you sure you want to convert selected requirements to task?";
   const taskNames = Object.keys(createdTasks);
 
@@ -1866,6 +1864,7 @@ initCommonDialogs(activeRowId);
 initProjectTaskDialogs(activeRowId);
 initSiteDialogs(activeRowId);
 initRequirementActions(activeRowId);
+initProjectModuleDialogs(activeRowId);
 initRequirementDataMappingDialogs();
 
 // ----------------------------------------------------------------------------------------------------------------

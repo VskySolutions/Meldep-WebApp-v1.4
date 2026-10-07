@@ -258,12 +258,10 @@ function viewFile (file) {
   const imageFormats = ["jpg", "jpeg", "png", "gif", "svg"];
 
   let viewerUrl = fileUrl;
-  // console.log("fileUrl", fileUrl);
 
   // Use Google Docs Viewer for Documents
   if (supportedFormats.includes(fileExtension)) {
     viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-    // console.log("googleDocsViewer", viewerUrl);
   }
 
   // Open new window

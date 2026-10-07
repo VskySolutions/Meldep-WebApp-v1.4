@@ -232,7 +232,6 @@ function viewFile (file) {
   // Use Google Docs Viewer for Documents
   if (supportedFormats.includes(fileExtension)) {
     viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-    // console.log("googleDocsViewer", viewerUrl);
   }
 
   // Open new window
@@ -456,7 +455,6 @@ const onSubmit = async () => {
   // console.log(key, value);
   // }
   formData.append("id", props.id);
-  // console.log("formData", formData);
   projectModulesService.saveProjectModuleFiles(formData).then((resp) => {
     notifySuccess({ message: "Files are saved successfully." });
     getProjectModuleDetails({ pagination: pagination.value });

@@ -532,13 +532,13 @@ namespace Vsky.Api.Controllers
 
 
         [HttpGet("parentCustomerList/list")]
-        public async Task<IActionResult> GetAllParentCustomerList()
+        public async Task<IActionResult> GetAllParentCustomerList(string customerId = null)
         {
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
-                var list = await _companyClientsService.GetAllParentCustomerList(SiteId);
+                var list = await _companyClientsService.GetAllParentCustomerList(SiteId, customerId);
                 var model = _mapper.Map<List<CompanyClientsModel>>(list);
                 return Ok(model);
             }

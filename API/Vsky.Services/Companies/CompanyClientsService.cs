@@ -503,11 +503,29 @@ namespace Vsky.Services.Companies
 
         #endregion
 
-        public async Task<List<CompanyClients>> GetAllParentCustomerList(string SiteId)
+        //public async Task<List<CompanyClients>> GetAllParentCustomerList(string SiteId)
+        //{
+        //    var query = _companyClientsRepository.TableNoTracking.Where(x => !x.Deleted);
+        //    var parentCustomerIds = await query.Where(x => x.ParentCustomerId != null).Select(x => x.ParentCustomerId).Distinct().ToListAsync();
+        //    var parentCustomers = await query.Where(x => parentCustomerIds.Contains(x.Id)).Include(x => x.Company).Include(x => x.Person).OrderBy(x => x.Company != null ? x.Company.Name : x.Person.FirstName).ToListAsync();
+        //    return parentCustomers;
+        //}
+        public async Task<List<CompanyClients>> GetAllParentCustomerList(string SiteId, string customerId = null)
         {
-            var query = _companyClientsRepository.TableNoTracking.Where(x => !x.Deleted);
-            var parentCustomerIds = await query.Where(x => x.ParentCustomerId != null).Select(x => x.ParentCustomerId).Distinct().ToListAsync();
-            var parentCustomers = await query.Where(x => parentCustomerIds.Contains(x.Id)).Include(x => x.Company).Include(x => x.Person).OrderBy(x => x.Company != null ? x.Company.Name : x.Person.FirstName).ToListAsync();
+            var query = _companyClientsRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
+
+            // When editing, exclude the current customerId
+            if(!string.IsNullOrEmpty(customerId))
+            {
+                query = query.Where(x => x.Id != customerId);
+            }
+
+            var parentCustomers = await query
+                .Include(x => x.Company)
+                .Include(x => x.Person)
+                .OrderBy(x => x.Company != null ? x.Company.Name : x.Person.FirstName)
+                .Distinct()
+                .ToListAsync();
             return parentCustomers;
         }
 

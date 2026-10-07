@@ -23,7 +23,7 @@ namespace Vsky.Services.Companies
 
         Task<IList<CompanyClients>> GetAllCompanyClients(string companyId);
         Task<List<CompanyClients>> GetAllClientListForDropdown(string SiteId);
-        Task<List<CompanyClients>> GetAllParentCustomerList(string SiteId);
+        Task<List<CompanyClients>> GetAllParentCustomerList(string SiteId, string customerId = null);
         Task<List<CompanyClients>> GetAllParentCustomerListForDropdown(string siteId, string customerId = null);
 
         #region GetCustomerByCompanyId
