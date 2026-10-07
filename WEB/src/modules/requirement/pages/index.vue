@@ -437,56 +437,56 @@
                 />
               </q-td>
               <q-td
-              v-if="selectedColumnNames.includes('project.name')"
-              class="common-q-td hoverable-cell"
-            >
-              <div class="row no-wrap items-center justify-between">
-    <template v-if="isFirstProjectRow(props.rowIndex)">
-                <span
-                  class="cursor-pointer"
-                  @click="onProjectView(props.row.project.id)"
-                >
-                  {{ props.row.project.name }}
-                </span>
+                v-if="selectedColumnNames.includes('project.name')"
+                class="common-q-td hoverable-cell"
+              >
+                <div class="row no-wrap items-center justify-between">
+                  <template v-if="isFirstProjectRow(props.row)">
+                    <span
+                      class="cursor-pointer"
+                      @click="onProjectView(props.row.project.id)"
+                    >
+                      {{ props.row.project.name }}
+                    </span>
 
-                <div
-                  class="row items-center q-gutter-sm q-ml-sm"
-                  style="flex-shrink: 0;"
-                >
-                  <q-icon
-                    name="o_radio_button_checked"
-                    size="xs"
-                    class="cursor-pointer"
-                    @click="
-                      setActiveRowIdInLocalStorage(props.row.id);
-                      $router.push({
-                        path: '/project-center',
-                        state: { projectId: props.row.project.id }
-                      })
-                    "
-                  >
-                    <q-tooltip>Project Center</q-tooltip>
-                  </q-icon>
+                    <div
+                      class="row items-center q-gutter-sm q-ml-sm"
+                      style="flex-shrink: 0;"
+                    >
+                      <q-icon
+                        name="o_radio_button_checked"
+                        size="xs"
+                        class="cursor-pointer"
+                        @click="
+                          setActiveRowIdInLocalStorage(props.row.id);
+                          $router.push({
+                            path: '/project-center',
+                            state: { projectId: props.row.project.id }
+                          })
+                        "
+                      >
+                        <q-tooltip>Project Center</q-tooltip>
+                      </q-icon>
 
-                  <q-icon
-                    v-if="props.row.isEditable"
-                    name="o_developer_board"
-                    size="xs"
-                    class="cursor-pointer hidden"
-                    @click="
-                      setActiveRowIdInLocalStorage(props.row.id);
-                      $router.push({
-                        path: '/project-planning/workboard',
-                        state: { projectId: props.row.project.id }
-                      })
-                    "
-                  >
-                    <q-tooltip>Work Board</q-tooltip>
-                  </q-icon>
+                      <q-icon
+                        v-if="props.row.isEditable"
+                        name="o_developer_board"
+                        size="xs"
+                        class="cursor-pointer hidden"
+                        @click="
+                          setActiveRowIdInLocalStorage(props.row.id);
+                          $router.push({
+                            path: '/project-planning/workboard',
+                            state: { projectId: props.row.project.id }
+                          })
+                        "
+                      >
+                        <q-tooltip>Work Board</q-tooltip>
+                      </q-icon>
+                    </div>
+                  </template>
                 </div>
-    </template>
-              </div>
-            </q-td>
+              </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('projectModule.name')"
                 class="common-q-td hoverable-cell"
@@ -1081,7 +1081,6 @@ const selectedField = ref(null);
 // const multiSelectRequirementProjectMap = ref({});
 // const multiSelectProjectIds = ref([]);
 // const multiSelectProjectName = ref([]);
-// const shownProjects = new Set();
 const route = useRoute();
 const authStore = useAuthStore();
 const user = authStore.user;
@@ -1459,27 +1458,23 @@ const onRestorePreviousRequirementColor = (requirementColor) => {
   previousColor.value = requirementColor ?? "#e0e0e0"; // Store previous color before opening picker
 };
 
-// function resetTracking () {
-//   shownProjects.clear(); // Clear the set before rendering rows
-// }
+function isFirstProjectRow(row) {
+  const currentIndex = rows.value.findIndex(
+    item => item.id === row.id
+  );
 
-// function shouldShowIcons (projectName) {
-//   if (shownProjects.has(projectName)) {
-//     return false;
-//   } else {
-//     shownProjects.add(projectName);
-//     return true;
-//   }
-// }
-function isFirstProjectRow(rowIndex) {
-  if (rowIndex === 0) {
+  if (currentIndex === -1) {
+    return false;
+  }
+
+  if (currentIndex === 0) {
     return true;
   }
 
-  const currentRow = rows.value[rowIndex];
-  const previousRow = rows.value[rowIndex - 1];
+  const currentProjectId = row.project?.id;
+  const previousProjectId = rows.value[currentIndex - 1]?.project?.id;
 
-  return currentRow?.project?.id !== previousRow?.project?.id;
+  return currentProjectId !== previousProjectId;
 }
 
 const onSelectCheckbox = (projectId, projectName, requirementId, requirementNumber, requirementTitle, flag, isEditable) => {
