@@ -240,7 +240,9 @@
                         v-if="preProjectName !== props.row.project.name"
                         :set="preProjectName = props.row.project.name"
                         @click="onProjectView(props.row.project.id)"
-                      >{{ props.row.project.name }}
+                      >
+                        {{ props.row.project.name }}
+                        <q-tooltip>View Project</q-tooltip>
                       </span>
                     </span>
                     <div
@@ -275,10 +277,12 @@
                 >
                   <span v-if="props.row.requirement?.title">
                     {{ props.row.requirement?.title }}
+                    <q-tooltip>View Requirement</q-tooltip>
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('title')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" @click="onProjectActionItemsView(props.row.id)">
                   {{ props.row.title }}
+                  <q-tooltip>View Action Item</q-tooltip>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('customerId')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.customer.name }}

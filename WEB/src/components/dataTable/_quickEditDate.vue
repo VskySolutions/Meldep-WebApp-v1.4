@@ -25,7 +25,7 @@
           />
         </q-popup-proxy>
 
-        <q-tooltip>Change Date</q-tooltip>
+        <q-tooltip>{{ changeDateTooltip }}</q-tooltip>
       </q-icon>
 
       <!-- History -->
@@ -36,7 +36,7 @@
         size="xs"
         @click.stop="emitHistory"
       >
-        <q-tooltip>Data Change Log</q-tooltip>
+        <q-tooltip>{{ changeLogTooltip }}</q-tooltip>
       </q-icon>
 
     </div>
@@ -56,7 +56,9 @@ const props = defineProps({
   showHistory: {
     type: Boolean,
     default: false
-  }
+  },
+  changeDateTooltip: { type: String, default: "Change Date" },
+  changeLogTooltip: { type: String, default: "Data Change Log" }
 });
 
 const emit = defineEmits([

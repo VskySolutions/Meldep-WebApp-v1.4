@@ -46,7 +46,7 @@
           <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
             <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
               <a :href="props.row.filePath" target="_blank" class="text-bluee">
-                {{ props.row.filePath }}
+                {{ getFileNameFromPath(props.row.filePath) || props.row.fileName }}
               </a>
             </q-td>
             <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">
@@ -119,6 +119,19 @@ const {
   }
 });
 
+function getFileNameFromPath(filePath) {
+  if (!filePath) return "";
+
+  try {
+    const url = new URL(filePath);
+
+    const fileName = url.searchParams.get("file");
+
+    return fileName ? decodeURIComponent(fileName) : "";
+  } catch {
+    return "";
+  }
+}
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load
 // --------------------------------------------------------------------------------------------------------------------------------------------------

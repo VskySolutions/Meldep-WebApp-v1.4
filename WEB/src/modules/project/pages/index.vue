@@ -381,6 +381,7 @@
                   <div class="row no-wrap items-center justify-between">
                     <span v-if="props.row.showCustomerName" class="hoverable-cell" @click="setActiveRowIdInLocalStorage(props.row.id); onCustomerView(props.row.customer.id)">
                       {{ props.row.customer.name }}
+                      <q-tooltip>View Customer</q-tooltip>
                     </span>
                     <div v-if="props.row.isEditable" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
                       <q-icon
@@ -410,6 +411,7 @@
                       @click="onProjectView(props.row.id)"
                     >
                       {{ props.row.name }}
+                      <q-tooltip>View Project</q-tooltip>
                     </span>
                     <div class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
                       <q-icon
@@ -452,6 +454,8 @@
                     :editable="props.row.isEditable"
                     :date-options="disableBeforeStartDate(props.row.startDate)"
                     :show-history="true"
+                    changeDateTooltip="Change Due Date"
+                    changeLogTooltip="Due Date Change Log"
                     @submit="({ rowId, value }) => onSubmitProjectEndDate(rowId, value, refreshProjectList)"
                     @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Due Date')"
                   />
@@ -587,6 +591,7 @@
                     :options="projectPrioritiesDropdown.list.value"
                     :active-edit="activeEdit"
                     :show-history="false"
+                    tooltip="Priority Change Log"
                     @cancel="activeEdit = { rowId: null, field: null }"
                     @submit="({ rowId, value }) => onSubmitProjectPriority(rowId, value, refreshProjectList)"
                   />
@@ -607,6 +612,7 @@
                     :options="projectStatusList"
                     :active-edit="activeEdit"
                     :show-history="true"
+                    tooltip="Status Change Log"
                     @popup-show="handlePopupShow(props.row.projectStatus.dropDownValue)"
                     @cancel="activeEdit = { rowId: null, field: null }"
                     @submit="({ rowId, value }) => onSubmitProjectStatus(rowId, value, refreshProjectList)"

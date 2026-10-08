@@ -352,6 +352,7 @@
                         @click="onProjectView(props.row.project.id)"
                       >
                         {{ props.row.project.name }}
+                        <q-tooltip>View Project</q-tooltip>
                       </span>
                     </span>
                   </div>
@@ -366,6 +367,7 @@
                     :set="preProjectModuleName = props.row.projectModule.name"
                   >
                     {{ props.row.projectModule.name }}
+                    <q-tooltip>View Project Module</q-tooltip>
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('requirement.requirementNumber')"
@@ -375,6 +377,7 @@
                 >
                   <span v-if="props.row.requirement?.requirementNumber">
                     #{{ props.row.requirement?.requirementNumber }}
+                    <q-tooltip>View Requirement</q-tooltip>
                   </span>
                 </q-td>
                 <q-td
@@ -388,6 +391,7 @@
                       @click="onProjectTaskView(props.row.id)"
                     >
                       {{ props.row.name }}
+                    <q-tooltip>View Project Task</q-tooltip>
                     </span>
                     <!-- Change log icon -->
                     <q-icon
@@ -397,7 +401,7 @@
                       clickable
                       @click="onSiteModifiedLog(props.row.id, props.row.name, 'Task Name', refreshProjectTaskList)"
                     >
-                      <q-tooltip>Data Change Log</q-tooltip>
+                      <q-tooltip>Task Name Change Log</q-tooltip>
                     </q-icon>
                   </div>
                 </q-td>
@@ -443,6 +447,8 @@
                     :editable="props.row.isEditable"
                     :date-options="disableBeforeStartDate(props.row.startDateStr)"
                     :show-history="true"
+                    changeDateTooltip="Change Due Date"
+                    changeLogTooltip="Due Date Change Log"
                     @submit="({ rowId, value }) => onSubmitProjectTaskEndDate(rowId, value, refreshProjectTaskList)"
                     @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Due Date')"
                   />
@@ -463,6 +469,7 @@
                     :options="projectTaskStatusListRaw"
                     :active-edit="activeEdit"
                     :show-history="true"
+                    tooltip="Status Change Log"
                     @popup-show=" handlePopupShow(props.row.status.dropDownValue, props.row.project.projectStatus.dropDownValue)"
                     @cancel="activeEdit = { rowId: null, field: null }"
                     @submit="({ rowId, value }) => onSubmitProjectTaskStatus(projectTaskStatusListWithDisables, rowId, value, refreshProjectTaskList)"
@@ -484,6 +491,7 @@
                     :options="projectTaskPrioritiesForDropdown.list.value"
                     :active-edit="activeEdit"
                     :show-history="true"
+                    tooltip="Priority Change Log"
                     @filter="projectTaskPrioritiesForDropdown.filter"
                     @cancel="activeEdit = { rowId: null, field: null }"
                     @submit="({ rowId, value }) => onSubmitProjectTaskPriority(rowId, value, refreshProjectTaskList)"
@@ -523,7 +531,7 @@
                       clickable
                       @click.stop="onSiteModifiedLog(props.row.id, props.row.name, 'Task Owner', refreshProjectTaskList)"
                     >
-                      <q-tooltip>Data Change Log</q-tooltip>
+                      <q-tooltip>Task Owner Change Log</q-tooltip>
                     </q-icon>
                   </div>
 

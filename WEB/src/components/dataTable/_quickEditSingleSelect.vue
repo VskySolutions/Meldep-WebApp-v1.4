@@ -125,7 +125,7 @@
           class="cursor-pointer"
           @click.stop="emitHistory"
         >
-          <q-tooltip>Data Change Log</q-tooltip>
+          <q-tooltip>{{ tooltip }}</q-tooltip>
         </q-icon>
 
       </div>
@@ -151,7 +151,8 @@ const props = defineProps({
   filter: Function,
   activeEdit: Object,
   showHistory: { type: Boolean, default: false },
-  widthpx: { type: String, default: '' }
+  widthpx: { type: String, default: '' },
+  tooltip: { type: String, default: "Data Change Log" }
 });
 
 const emit = defineEmits([

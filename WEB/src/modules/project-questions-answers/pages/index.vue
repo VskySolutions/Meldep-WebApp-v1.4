@@ -174,32 +174,33 @@
                 :class="[
                   highlightedId == props.row.id ? 'highlight' : ''
                 ]"
-                :set="(preProjectName = null, preRequirement = null, resetTracking())"
               >
                 <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
                   <div class="row no-wrap items-center justify-between">
-                    <span style="flex: 1; word-break: break-word; white-space: normal;">
-                      <span
-                        v-if="preProjectName !== props.row.project.name"
-                        :set="preProjectName = props.row.project.name"
-                        @click="onProjectView(props.row.project.id)"
-                      >{{ props.row.project.name }}
+                    <template v-if="isFirstProjectRow(props.row)">
+                      <span style="flex: 1; word-break: break-word; white-space: normal;">
+                        <span
+                          @click="onProjectView(props.row.project.id)"
+                        >
+                        {{ props.row.project.name }}
+                        <q-tooltip>View Project</q-tooltip>
+                        </span>
                       </span>
-                    </span>
-                    <div
-                      v-if="shouldShowIcons(props.row.project.name, index)"
-                      class="row items-center q-gutter-sm q-ml-sm"
-                      style="flex-shrink: 0;"
-                    >
-                      <q-icon
-                        name="o_radio_button_checked" size="xs"
-                        class="cursor-pointer"
-                        @click="setActiveRowIdInLocalStorage(props.row.id);
-                                $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                      <div
+                        class="row items-center q-gutter-sm q-ml-sm"
+                        style="flex-shrink: 0;"
                       >
-                        <q-tooltip>Project Center</q-tooltip>
-                      </q-icon>
-                    </div>
+                        <q-icon
+                          name="o_radio_button_checked"
+                          size="xs"
+                          class="cursor-pointer"
+                          @click="setActiveRowIdInLocalStorage(props.row.id);
+                                  $router.push({ path: '/project-center', state: { projectId: props.row.project.id } })"
+                        >
+                          <q-tooltip>Project Center</q-tooltip>
+                        </q-icon>
+                      </div>
+                    </template>
                   </div>
                 </q-td>
                 <q-td
@@ -207,32 +208,38 @@
                   class="common-q-td hoverable-cell"
                 >
                   <div class="row no-wrap items-center justify-between">
-                    <span>
-                      <span
-                        v-if="preRequirement !== props.row.requirement?.title"
-                        :set="preRequirement = props.row.requirement?.title"
-                        class="cursor-pointer"
-                        @click="onRequirementView(props.row.requirement?.id)"
-                      >
-                        {{ props.row.requirement?.title }}
+                    <template v-if="isFirstProjectRow(props.row)">
+                      <span>
+                        <span
+                          class="cursor-pointer"
+                          @click="onRequirementView(props.row.requirement?.id)"
+                        >
+                          {{ props.row.requirement?.title }}
+                          <q-tooltip>View Requirement</q-tooltip>
+                        </span>
                       </span>
-                    </span>
-                    <div
-                      class="row items-center q-gutter-sm q-ml-sm"
-                      style="flex-shrink: 0;"
-                    >
-                      <q-icon
-                        name="o_radio_button_checked"
-                        size="xs" class="cursor-pointer"
-                        @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.requirement?.id } })"
+                      <div
+                        class="row items-center q-gutter-sm q-ml-sm"
+                        style="flex-shrink: 0;"
                       >
-                        <q-tooltip>Requirement Center</q-tooltip>
-                      </q-icon>
-                    </div>
+                        <q-icon
+                          name="o_radio_button_checked"
+                          size="xs" class="cursor-pointer"
+                          @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.requirement?.id } })"
+                        >
+                          <q-tooltip>Requirement Center</q-tooltip>
+                        </q-icon>
+                      </div>
+                    </template>
                   </div>
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('title')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" class="cursor-pointer" @click="onQuestionAnswersView(props.row.id)">
+                <q-td v-if="selectedColumnNames.includes('title')"
+                  style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
+                  class="common-q-td hoverable-cell"
+                  @click="onQuestionAnswersView(props.row.id)"
+                >
                   {{ props.row.title }}
+                  <q-tooltip>View Project Q&A</q-tooltip>
                 </q-td>
                 <q-td
                   v-if="selectedColumnNames.includes('lastAnswer')"
@@ -494,6 +501,50 @@ if (selectedProjectId.value) {
   });
 }
 
+function isFirstProjectRow(row) {
+  const currentIndex = rows.value.findIndex(
+    item => item.id === row.id
+  );
+
+  if (currentIndex === -1) {
+    return false;
+  }
+
+  if (currentIndex === 0) {
+    return true;
+  }
+
+  const currentProjectId = row.project?.id;
+  const previousProjectId = rows.value[currentIndex - 1]?.project?.id;
+
+  return currentProjectId !== previousProjectId;
+}
+
+function isFirstRequirementRow(row) {
+  const currentIndex = rows.value.findIndex(
+    item => item.id === row.id
+  );
+
+  if (currentIndex === -1) {
+    return false;
+  }
+
+  if (currentIndex === 0) {
+    return true;
+  }
+
+  const currentProjectId = row.project?.id;
+  const currentRequirementId = row.requirement?.id;
+
+  const previousProjectId = rows.value[currentIndex - 1]?.project?.id;
+  const previousRequirementId = rows.value[currentIndex - 1]?.requirement?.id;
+
+  return (
+    currentProjectId !== previousProjectId ||
+    currentRequirementId !== previousRequirementId
+  );
+}
+
 // Get/Map project list to table
 const getAllQuestionAnswers = async ({ pagination: p }) => {
   const { page, rowsPerPage, sortBy, descending } = p;
@@ -601,19 +652,6 @@ const onClear = () => {
   });
   onSearch();
 };
-
-function resetTracking () {
-  shownProjects.clear(); // Clear the set before rendering rows
-}
-
-function shouldShowIcons (projectName) {
-  if (shownProjects.has(projectName)) {
-    return false;
-  } else {
-    shownProjects.add(projectName);
-    return true;
-  }
-}
 
 const lsSorts = sorts.value || null;
 // ----------------------------------------------------------------------------------------------------------------

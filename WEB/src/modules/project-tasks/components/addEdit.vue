@@ -402,7 +402,7 @@
                             <q-td style="width: 100%;">
                               <formSingleSelectDropdown
                                 v-model="props.row.assignedToId"
-                                :options="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value"
+                                :options="getActivityOwnerOptions(props.row)"
                                 :filter="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.filter"
                                 :error="rowValidations[props.rowIndex]?.value?.assignedToId.$error"
                                 :error-message="rowValidations[props.rowIndex]?.value?.assignedToId.$errors[0]?.$message"
@@ -931,7 +931,20 @@ function getAllTaskStatusesfilter (val, update, abort) {
   });
 }
 
+const getActivityOwnerOptions = (currentRow) => {
+  const selectedOwnerIds = new Set(
+    TaskActivitiesRows.value
+      .filter(row => row.id !== currentRow.id && row.assignedToId)
+      .map(row => row.assignedToId)
+  );
 
+  return projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.map(
+    employee => ({
+      ...employee,
+      disable: selectedOwnerIds.has(employee.value)
+    })
+  );
+};
 // -------------------------------------------------------------------------------------------------------
 // Upload Image
 // -------------------------------------------------------------------------------------------------------
