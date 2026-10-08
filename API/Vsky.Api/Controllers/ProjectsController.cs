@@ -2603,18 +2603,21 @@ namespace Vsky.Api.Controllers
 
                         var LineData = new ProjectWeeklyPlanDatesLines();
                         LineData.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
-                        model.Description = $"<strong>{model.Type} - {model.Numbers[index]} - {model.Names[index]}</strong>";
 
-                        if (!string.IsNullOrEmpty(model.Description))
+                        var description = $"<strong>{model.Type} - {model.Numbers[index]} - {model.Names[index]}</strong>";
+
+                        if (!string.IsNullOrWhiteSpace(model.Description))
                         {
-                            LineData.ExpectedDescription = await _azureBlobImageServices
+                            description += $"<br/>{model.Description}";
+                        }
+
+                        LineData.ExpectedDescription = await _azureBlobImageServices
                                  .ProcessHtmlAndManageImagesAsync(
-                                     model.Description,
+                                     description,
                                      SiteData.Name,
                                      "project-weeklymonthly",
                                      LineData.Id
                                  );
-                        }
 
                         LineData.ExpectedDescriptionCreatedById = LoggedUserId;
                         LineData.ExpectedDescriptionCreatedOnUtc = GetDateTime;
