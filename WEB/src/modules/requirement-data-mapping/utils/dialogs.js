@@ -11,10 +11,11 @@ export function initRequirementDataMappingDialogs () {
   // activeRowId = rowRef;
 }
 export function onAddRequirementDataMapping (
+  requirementId,
   isRequirementReadonly,
   refresh
 ) {
-  const componentProps = { isRequirementReadonly };
+  const componentProps = { id: requirementId, isRequirementReadonly };
   $q.dialog({
     component: addEditDataMapping,
     componentProps

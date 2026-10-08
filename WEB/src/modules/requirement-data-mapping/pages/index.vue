@@ -98,7 +98,7 @@
                   label="Add Data Mapping"
                   no-caps
                   class="text-primary btnRounded q-ml-xs"
-                  @click="onAddRequirementDataMapping(false, refreshDataMappingList)"
+                  @click="onAddRequirementDataMapping(search.requirementIds?.[0], false, refreshDataMappingList)"
                 />
                  <!-- Reset Column Width -->
                 <q-btn
@@ -403,10 +403,10 @@ const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 const tableRef = ref();
 const rows = ref([]);
 const columns = ref([
-  { name: "requirement.project.name", label: "Project", field: "requirement.project.name", align: "left", sortable: true, default: true },
-  { name: "requirement.projectModule.name", label: "Module", field: "requirement.projectModule.name", align: "left", sortable: true, default: true },
-  { name: "source", label: "Source", field: "source", align: "left", sortable: true, default: true },
-  { name: "target", label: "Target", field: "target", align: "left", sortable: true, default: true },
+  { name: "requirement.project.name", label: "Project", field: "requirement.project.name", align: "left", sortable: false, default: false },
+  { name: "requirement.projectModule.name", label: "Module", field: "requirement.projectModule.name", align: "left", sortable: false, default: false },
+  { name: "source", label: "Source", field: "source", align: "left", sortable: false, default: true },
+  { name: "target", label: "Target", field: "target", align: "left", sortable: false, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: false, default: false },
   { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: false, default: false },
   { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: false, default: false },
