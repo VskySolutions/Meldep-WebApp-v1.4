@@ -505,6 +505,7 @@ namespace Vsky.Api.Controllers
                     entity.CustomerOwnerId = model.CustomerOwnerId;
                     entity.Title = model.Title;
                     entity.Notes = model.Notes;
+                    entity.ShortDescription = model.ShortDescription;
                     entity.StatusId = model.StatusId;
                     entity.IdentifiedUserType = model.IdentifiedUserType;
                     entity.EditingStatus = model.EditingStatus;

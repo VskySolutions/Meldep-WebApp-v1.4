@@ -2,7 +2,24 @@
   <q-dialog ref="dialogRef" class="customDialog" persistent full-height position="right" @hide="onDialogHide">
     <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 1300px !important; max-width: 95vw !important;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div class="text-h2 text-white">  {{ isManageDescription ? 'Manage Req. Description' : 'Edit Requirement' }}</div>
+        <div class="text-h2 text-white">  {{ isManageDescription ? 'Manage Requirement Log' : 'Edit Requirement' }}
+          <q-icon
+            v-if="isManageDescription"
+            name="o_info"
+            size="16px"
+            class="q-ml-xs cursor-pointer text-white"
+          >
+            <q-tooltip
+              anchor="top middle"
+              self="bottom middle"
+              :offset="[0, 6]"
+            >
+              <div style="max-width: 320px; white-space: normal;">
+                Detailed information about the Requirement.
+              </div>
+            </q-tooltip>
+          </q-icon>
+        </div>
         <q-btn v-close-popup icon="o_close" class="close" color="white" flat round dense />
       </q-card-section>
       <q-separator />
@@ -11,7 +28,23 @@
           <div class="q-gutter-y-md">
             <q-card>
               <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator>
-                <q-tab v-if="!isManageDescription" name="1_tab" label="Manage REQ. Description" class="q-px-lg q-mr-md" />
+                <q-tab v-if="!isManageDescription" name="1_tab" label="Manage Requirement Log" class="q-px-lg q-mr-md">
+                  <q-icon
+                    name="o_info"
+                    size="16px"
+                    class="q-ml-xs cursor-pointer text-grey-7"
+                  >
+                    <q-tooltip
+                      anchor="top middle"
+                      self="bottom middle"
+                      :offset="[0, 6]"
+                    >
+                      <div style="max-width: 320px; white-space: normal;">
+                        Detailed information about the requirement.
+                      </div>
+                    </q-tooltip>
+                  </q-icon>
+                </q-tab>
                 <q-tab v-if="!isManageDescription"name="2_tab" label="Requirement Info" class="q-px-lg" :disable="disableTab" />
                 <q-tab  v-if="!isManageDescription" name="3_tab" label="Document Reference List" class="q-px-lg" :disable="disableTab" />
               </q-tabs>
@@ -73,7 +106,7 @@
                     <div class="row q-col-gutter-x-md q-mb-md">
                       <div class="col-12">
                         <div class="form-group">
-                          <label class="q-mb-xs text-black">Req. Scope
+                          <label class="q-mb-xs text-black">Initial Scope
                             <q-icon
                               name="o_info"
                               size="16px"

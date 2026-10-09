@@ -6,7 +6,7 @@
           <span v-html="model.scope" />
         </div>
         <div v-else>
-          <span class="text-grey">No scope available</span>
+          <span class="text-grey">No initial scope available</span>
         </div>
       </div>
     </div>

@@ -99,7 +99,7 @@
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">
                   <div class="form-group">
-                    <label class="q-mb-xs text-black">Req. Scope
+                    <label class="q-mb-xs text-black">Initial Scope
                       <q-icon
                         name="o_info"
                         size="16px"
@@ -307,7 +307,23 @@
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">
                   <div class="form-group">
-                    <label class="q-mb-xs text-black">Initial Req. Description<span class="required">*</span></label>
+                    <label class="q-mb-xs text-black">Requirement Log<span class="required">*</span>
+                      <q-icon
+                        name="o_info"
+                        size="16px"
+                        class="q-ml-xs cursor-pointer text-grey-7"
+                      >
+                        <q-tooltip
+                          anchor="top middle"
+                          self="bottom middle"
+                          :offset="[0, 6]"
+                        >
+                          <div style="max-width: 320px; white-space: normal;">
+                            Enter detailed information about the requirement.
+                          </div>
+                        </q-tooltip>
+                      </q-icon>
+                    </label>
                     <q-editor
                       v-model="model.description"
                       :dense="$q.screen.lt.md"
@@ -923,7 +939,7 @@ const rules = {
   },
   description: {
     descriptionRequired: helpers.withMessage(
-      "Description is required",
+      "Requirement Log is required",
       descriptionRequired
     )
   }

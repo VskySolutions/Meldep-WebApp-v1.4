@@ -11,19 +11,64 @@
       >
         <q-tab name="requirementDescription">
           <div class="row items-center no-wrap">
-            View REQ. Description
+            View Requirement Log
+            <q-icon
+              name="o_info"
+              size="16px"
+              class="q-ml-xs cursor-pointer text-grey-7"
+            >
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 6]"
+              >
+                <div style="max-width: 320px; white-space: normal;">
+                  Detailed information about the Requirement.
+                </div>
+              </q-tooltip>
+           </q-icon>
           </div>
         </q-tab>
 
         <q-tab name="requirementScope">
           <div class="row items-center no-wrap">
-            Req. Scope
+            Initial Scope
+            <q-icon
+              name="o_info"
+              size="16px"
+              class="q-ml-xs cursor-pointer text-grey-7"
+            >
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 6]"
+              >
+                <div style="max-width: 320px; white-space: normal;">
+                  Specific areas, processes, systems, or activities covered by the Requirement.
+                </div>
+              </q-tooltip>
+            </q-icon>
           </div>
         </q-tab>
 
         <q-tab name="requirementShortDescription">
           <div class="row items-center no-wrap">
             Requirement Short Description
+            <q-icon
+              name="o_info"
+              size="16px"
+              class="q-ml-xs cursor-pointer text-grey-7"
+            >
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 6]"
+              >
+                <div style="max-width: 320px; white-space: normal;">
+                  Description of the Requirement used in the Requirement List, Week Planner, and Monthly Planner.
+                </div>
+              </q-tooltip>
+            </q-icon>
           </div>
         </q-tab>
 

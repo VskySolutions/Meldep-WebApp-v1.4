@@ -430,6 +430,7 @@
                       props.row.id,
                       props.row.requirementNumber,
                       props.row.title,
+                      props.row.shortDescription,
                       $event,
                       props.row.isEditable
                     )
@@ -575,6 +576,7 @@
                   :options="requirementStatusDropdownSingleSelect.list.value"
                   :active-edit="activeEdit"
                   :show-history="true"
+                  tooltip="Status Change Log"
                   @filter="requirementStatusDropdownSingleSelect.filter"
                   @cancel="activeEdit = { rowId: null, field: null }"
                   @submit="({ rowId, value }) => onSubmitRequirementStatus(rowId, value, refreshRequirementList)"
@@ -837,7 +839,7 @@
                   @click="onRequirementEdit(props.row.id, true, refreshRequirementList)"
                 >
                   <q-tooltip>
-                    Manage Req. Description
+                    Manage Requirement Log
                   </q-tooltip>
                 </q-icon>
                 <q-icon
@@ -1162,6 +1164,7 @@ const multiSelectRequirementProjectMap = ref({});
 const multiSelectProjectIds = ref([]);
 const multiSelectRequirementNumbers = ref([]);
 const multiSelectProjectName = ref([]);
+const multiSelectRequirementShortDescriptions = ref([]);
 
 const multiSelectRequirementEditableMap = ref(
   getStoredSelectedRequirementEditableMap()
@@ -1477,13 +1480,14 @@ function isFirstProjectRow(row) {
   return currentProjectId !== previousProjectId;
 }
 
-const onSelectCheckbox = (projectId, projectName, requirementId, requirementNumber, requirementTitle, flag, isEditable) => {
+const onSelectCheckbox = (projectId, projectName, requirementId, requirementNumber, requirementTitle, requirementShortDescription, flag, isEditable) => {
   if (flag === true) {
     if (!multiSelectRequirementIds.value.includes(requirementId)) {
       // Add the itemId to the multiSelectRequirementIds array if it's not already present
       multiSelectRequirementIds.value.push(requirementId);
       multiSelectRequirementNumbers.value.push(requirementNumber);
       multiSelectRequirementTitles.value.push(requirementTitle);
+      multiSelectRequirementShortDescriptions.value.push(requirementShortDescription);
       multiSelectRequirementProjectMap.value[requirementId] = projectId;
 
       multiSelectRequirementEditableMap.value[requirementId] = isEditable;
@@ -1503,6 +1507,7 @@ const onSelectCheckbox = (projectId, projectName, requirementId, requirementNumb
       multiSelectRequirementIds.value.splice(index, 1);
       multiSelectRequirementTitles.value.splice(index, 1);
       multiSelectRequirementNumbers.value.splice(index, 1);
+      multiSelectRequirementShortDescriptions.value.splice(index, 1);
     }
 
     delete multiSelectRequirementEditableMap.value[requirementId];
@@ -1579,6 +1584,10 @@ const onLinkTaskToPlan = () => {
     ids: multiSelectRequirementIds.value,
     numbers: multiSelectRequirementNumbers.value,
     names: multiSelectRequirementTitles.value,
+    shortDescriptions:
+      multiSelectRequirementIds.value.length === 1
+        ? multiSelectRequirementShortDescriptions.value[0]
+        : null,
     hasTaskLink: rows.value.some(
       r => multiSelectRequirementIds.value.includes(r.id) &&
   (!r.projectTaskRelatedMappings?.length))

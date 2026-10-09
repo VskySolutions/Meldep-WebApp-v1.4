@@ -10,9 +10,57 @@
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator inline-label mobile-arrows>
-            <q-tab name="1_tab" label="View REQ. Description" class="q-px-lg q-mr-md" />
-            <q-tab name="2_tab" label="Description Overview" class="q-px-lg q-mr-md" />
-            <q-tab name="3_tab" label="Requirement Scope" class="q-px-lg q-mr-md" />
+            <q-tab name="1_tab" label="View Requirement Log" class="q-px-lg q-mr-md">
+              <q-icon
+                name="o_info"
+                size="16px"
+                class="q-ml-xs cursor-pointer text-grey-7"
+              >
+                <q-tooltip
+                  anchor="top middle"
+                  self="bottom middle"
+                  :offset="[0, 6]"
+                >
+                  <div style="max-width: 320px; white-space: normal;">
+                    Detailed information about the requirement.
+                  </div>
+                </q-tooltip>
+              </q-icon>
+            </q-tab>
+            <q-tab name="2_tab" label="Requirement Log Overview" class="q-px-lg q-mr-md">
+              <q-icon
+                name="o_info"
+                size="16px"
+                class="q-ml-xs cursor-pointer text-grey-7"
+              >
+                <q-tooltip
+                  anchor="top middle"
+                  self="bottom middle"
+                  :offset="[0, 6]"
+                >
+                  <div style="max-width: 320px; white-space: normal;">
+                    Requirement Log details displayed without Created By and Created Date information.
+                  </div>
+                </q-tooltip>
+              </q-icon>
+            </q-tab>
+            <q-tab name="3_tab" label="Initial Scope" class="q-px-lg q-mr-md">
+              <q-icon
+                name="o_info"
+                size="16px"
+                class="q-ml-xs cursor-pointer text-grey-7"
+              >
+                <q-tooltip
+                  anchor="top middle"
+                  self="bottom middle"
+                  :offset="[0, 6]"
+                >
+                  <div style="max-width: 320px; white-space: normal;">
+                    Specific areas, processes, systems, or activities covered by the Requirement.
+                  </div>
+                </q-tooltip>
+              </q-icon>
+            </q-tab>
             <q-tab name="4_tab" label="Requirement Info." class="q-px-lg" />
             <q-tab name="5_tab" label="Document Reference List" class="q-px-lg"/>
             <q-tab name="6_tab" label="Data Mapping List" class="q-px-lg"/>
@@ -32,7 +80,7 @@
             </q-tab-panel>
             <q-tab-panel name="3_tab">
               <fieldset>
-                <legend>Req. Scope</legend>
+                <legend>Initial Scope</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="text-black RichTextEditor">
                     <span v-html="model.scope || '-'"></span>
@@ -47,6 +95,28 @@
                   <div class="col-12">
                     <div class="q-mb-xs">Requirement :</div>
                     <div class="text-black">{{ model.title }}</div>
+                  </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12">
+                    <div class="q-mb-xs">Short Description
+                      <q-icon
+                        name="o_info"
+                        size="16px"
+                        class="q-ml-xs cursor-pointer text-grey-7"
+                      >
+                        <q-tooltip
+                          anchor="top middle"
+                          self="bottom middle"
+                          :offset="[0, 6]"
+                        >
+                          <div style="max-width: 320px; white-space: normal;">
+                            Description of the Requirement used in the Requirement List, Week Planner, and Monthly Planner.
+                          </div>
+                        </q-tooltip>
+                      </q-icon> :
+                    </div>
+                    <div class="text-black">{{ model.shortDescription || '-' }}</div>
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">

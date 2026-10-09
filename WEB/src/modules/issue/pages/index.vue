@@ -1148,6 +1148,7 @@ const onLinkTaskToPlan = () => {
     ids: multiSelectIssueIds.value,
     numbers: multiSelectIssueNumbers.value,
     names: multiSelectIssueNames.value,
+     shortDescriptions: null,
     hasTaskLink: rows.value.some(
       r => multiSelectIssueIds.value.includes(r.id) &&
   (!r.projectTaskRelatedMappings?.length))

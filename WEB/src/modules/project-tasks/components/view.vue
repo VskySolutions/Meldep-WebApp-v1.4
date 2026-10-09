@@ -177,6 +177,22 @@
                           @click="onViewRequirement(model.requirement.id)"
                         >
                           {{ '#' + (model.requirement?.requirementNumber ?? '') + ' (' + (model.requirement?.status?.dropDownValue ?? '') + ')' }}
+                          <q-icon
+                            v-if="model.requirement?.shortDescription"
+                            name="o_info"
+                            size="16px"
+                            class="q-ml-xs cursor-pointer text-grey-7"
+                          >
+                            <q-tooltip
+                              anchor="top middle"
+                              self="bottom middle"
+                              :offset="[0, 6]"
+                            >
+                              <div style="max-width: 320px; white-space: normal;">
+                                {{ model.requirement.shortDescription }}
+                              </div>
+                            </q-tooltip>
+                          </q-icon>
                         </span>
                       </span>
                       <span v-else>-</span>

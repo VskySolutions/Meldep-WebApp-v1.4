@@ -9,8 +9,18 @@
       </q-input>
     </div>
     <q-table
-      ref="tableRef" v-model:pagination="pagination" bordered class="no-shadow" :loading="loading" :rows="rows" :columns="columns" row-key="id" :filter="filter" separator="cell"
-      binary-state-sort :rows-per-page-options="[20, 50, 100, 200, 500]"
+      ref="tableRef"
+      v-model:pagination="pagination"
+      bordered
+      class="no-shadow"
+      :loading="loading"
+      :rows="rows"
+      :columns="columns"
+      row-key="id"
+      :filter="filter"
+      separator="cell"
+      binary-state-sort
+      :rows-per-page-options="[20, 50, 100, 200, 500]"
     >
       <template #header="props">
         <q-tr :props="props" class="bg-primary text-white">
@@ -22,12 +32,23 @@
         <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''" :set="(preSourceName = null,preSubModuleName = null)">
           <q-td style="width: 10%"><span v-if="preSourceName !== props.row.type" :set="preSourceName = props.row.type">{{ props.row.type }}</span></q-td>
           <q-td style="width: 10%"><span v-if="preSubModuleName !== props.row.sub_Module" :set="preSubModuleName = props.row.sub_Module">{{ props.row.sub_Module }}</span></q-td>
-          <q-td>{{ extractFileName(props.row.seoFilename) }}</q-td>
+          <q-td style="white-space: normal; overflow-wrap: anywhere;">
+            <a
+              v-if="props.row.filePath"
+              :href="props.row.filePath"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ getFileNameFromPath(props.row.filePath) || props.row.fileName }}
+            </a>
+          </q-td>
+          <q-td class="common-q-td">{{ props.row.fileName  }}</q-td>
+          <q-td class="common-q-td">{{ props.row.fileDescription }}</q-td>
           <q-td>{{ props.row.createdBy.person.fullName }}</q-td>
           <q-td>{{ props.row.createdOnUtc }}</q-td>
           <q-td style="width: 5%;" class="text-center actions">
-            <q-btn icon="o_visibility" size="sm" class="q-pr-xs" flat @click="viewFile(props.row.virtualPath)" />
-            <q-btn icon="o_download" size="sm" class="q-pl-xs" flat @click="downloadFile(props.row.virtualPath)" />
+            <q-btn v-if="!props.row.filePath" icon="o_visibility" size="sm" class="q-pr-xs" flat @click="viewFile(props.row.virtualPath)" />
+            <q-btn v-if="!props.row.filePath" icon="o_download" size="sm" class="q-pl-xs" flat @click="downloadFile(props.row.virtualPath)" />
           </q-td>
         </q-tr>
       </template>
@@ -49,7 +70,9 @@ const loading = ref(true);
 const columns = ref([
   { name: "type", label: "Source", field: "type", align: "left" },
   { name: "sub_Module", label: "Source Name", field: "sub_Module", align: "left" },
-  { name: "virtualPath", label: "File Name", field: "virtualPath", align: "left" },
+  { name: "filePath", label: "File Path", field: "filePath", align: "left" },
+  { name: "fileName", label: "File Name", field: "fileName", align: "left" },
+  { name: "fileDescription", label: "File Description", field: "fileDescription", align: "left" },
   { name: "createdBy.person.fullName", label: "Created By", field: "createdByPersonFullName", align: "left", sortable: false },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left" }
 ]);
@@ -77,12 +100,30 @@ const getAllFilesByProjectId = (propss) => {
   projectService.getAllFilesByProjectId(payload).then((resp) => {
     rows.value = resp.data.map(item => ({
       ...item,
+      filePath: item.externalFilePath || "",
+      fileName: item.externalFileName || extractFileName(item.seoFilename) || "",
+      fileDescription: item.externalFileDescription || "",
       createdByPersonFullName: item.createdBy?.person?.fullName
     }));
   }).finally(() => {
     loading.value = false;
   });
 };
+
+function getFileNameFromPath(filePath) {
+  if (!filePath) return "";
+
+  try {
+    const url = new URL(filePath);
+
+    const fileName = url.searchParams.get("file");
+
+    return fileName ? decodeURIComponent(fileName) : "";
+  } catch {
+    return "";
+  }
+}
+
 function extractFileName (path) {
   return path ? path.split("/").pop() : "Unknown File";
 }

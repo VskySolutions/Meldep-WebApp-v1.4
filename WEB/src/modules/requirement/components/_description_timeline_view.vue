@@ -91,7 +91,7 @@
       </q-timeline-entry>
     </q-timeline>
     <div v-if="allResponseLogDescriptions.length === 0">
-      <h5 class="text-center text-grey">No Descriptions Available</h5>
+      <h5 class="text-center text-grey">No Requirement Log Available</h5>
     </div>
   </div>
   <div class="bg-white" style="position: sticky; bottom: 0; z-index: 10; border-top: 0px solid #ccc;">
@@ -100,7 +100,7 @@
         <q-editor
           v-model="responseLogDescription"
           class="q-ml-lg"
-          placeholder="Type your description..."
+          placeholder="Type your requirement log..."
           :dense="$q.screen.lt.md"
           :toolbar="toolbar"
           :fonts="fonts"

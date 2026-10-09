@@ -350,8 +350,8 @@ const columns = ref([
 
 const filepagination = ref({ sortBy: "", descending: true, rowsPerPage: 20, page: 1 });
 const fileColumns = ref([
-  { name: "externalFilePath", label: "File Path", field: "externalFilePath", align: "left" },
-  { name: "seoFilename", label: "File Name", field: "seoFilename", align: "left" },
+  { name: "filePath", label: "File Path", field: "filePath", align: "left" },
+  { name: "fileName", label: "File Name", field: "fileName", align: "left" },
   { name: "fileDescription", label: "File Description", field: "fileDescription", align: "left" },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left" },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left" }

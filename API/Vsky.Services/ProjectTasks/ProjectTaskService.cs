@@ -1133,6 +1133,7 @@ namespace Vsky.Services.ProjectTasks
                         Id = x.Requirement.Id,
                         Title = x.Requirement.Title,
                         RequirementNumber = x.Requirement.RequirementNumber,
+                        ShortDescription = x.Requirement.ShortDescription,
                         Status = new DropDown { DropDownValue = x.Requirement.Status.DropDownValue }
                     },
                 Area = new DropDown

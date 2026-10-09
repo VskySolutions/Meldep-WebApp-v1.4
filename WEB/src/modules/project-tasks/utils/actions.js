@@ -172,7 +172,8 @@ export const onSubmitLinkProjectTasksToPlan = (
     type: "Project Task",
     ids: multiSelectTaskIds.value,
     numbers: multiSelectTaskNumbers.value,
-    names: multiSelectTaskNames.value
+    names: multiSelectTaskNames.value,
+    shortDescriptions: null
   };
 
   $q.dialog({

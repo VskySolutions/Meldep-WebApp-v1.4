@@ -28,7 +28,7 @@
       </q-timeline-entry>
     </q-timeline>
     <div v-if="allResponseLogDescriptions.length === 0">
-      <h5 class="text-center text-grey">No Descriptions Available</h5>
+      <h5 class="text-center text-grey">No Requirement Log Available</h5>
     </div>
   </div>
 </template>

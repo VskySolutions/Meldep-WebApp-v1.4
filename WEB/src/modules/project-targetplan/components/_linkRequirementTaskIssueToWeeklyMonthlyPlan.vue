@@ -110,6 +110,7 @@ const props = defineProps({
   ids: { type: Array, default: () => [] },
   numbers: { type: Array, default: () => [] },
   names: { type: Array, default: () => [] },
+  shortDescriptions: { type: Array, default: () => [] },
   hasTaskLink: { type: Number, default: 0 }
 });
 
@@ -125,7 +126,7 @@ const model = ref({
   ids: props?.ids ? props.ids : null,
   numbers: props?.numbers ? props.numbers : null,
   names: props?.names ? props.names : null,
-  description: null
+  description: props?.shortDescriptions ?? ''
 });
 
 const onProjectPlanChanged = (selected) => {

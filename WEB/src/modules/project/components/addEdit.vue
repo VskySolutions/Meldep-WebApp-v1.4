@@ -379,7 +379,7 @@
                               style="white-space: normal; word-break: break-word;"
                             >
                               <a :href="props.row.externalFilePath" target="_blank" class="text-blue">
-                                {{ props.row.externalFilePath }}
+                                {{ getFileNameFromPath(props.row.externalFilePath) || props.row.externalFileName}}
                               </a>
                             </span>
                           </q-td>
@@ -1785,6 +1785,20 @@ function handleFiles (files) {
 
 function getFilePreview (file) {
   return file && file instanceof File ? URL.createObjectURL(file) : "";
+}
+
+function getFileNameFromPath(filePath) {
+  if (!filePath) return "";
+
+  try {
+    const url = new URL(filePath);
+
+    const fileName = url.searchParams.get("file");
+
+    return fileName ? decodeURIComponent(fileName) : "";
+  } catch {
+    return "";
+  }
 }
 
 function isImageFile (file) {
