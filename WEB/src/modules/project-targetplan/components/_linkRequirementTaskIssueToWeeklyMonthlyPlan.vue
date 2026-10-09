@@ -92,6 +92,7 @@ import formMonthYearPicker from "src/components/form-inputs/_formMonthYearPicker
 
 // SOP Change :- Shared Dropdowns
 import projectTargetPlanModule from "src/modules/project-targetplan/utils/dropdowns.js";
+const emit = defineEmits(["ok"]);
 
 const $q = useQuasar();
 const { fonts, toolbar } = getEditorConfig($q);
@@ -203,16 +204,26 @@ const OnSave = () => {
     message,
     ok: { label: "Yes", color: "primary" },
     cancel: { label: "No", color: "negative" }
-  }).onOk(() => {
+  }).onOk(async () => {
     $q.loading.show();
-    projectService.linkRequirementTaskIssueToWeeklyPlanDate(model.value).then((resp) => {
-      toggleLinkRequirementTaskIssueModal();
+    try {
+      await projectService.linkRequirementTaskIssueToWeeklyPlanDate(
+        model.value
+      );
+
       notifySuccess({
-        message: `${model.value.type} Linked To ${showWeeklyMonthlyCalendar.value ? "Monthly" : "Weekly"} Plan`
+        message: `${model.value.type} Linked To ${
+          showWeeklyMonthlyCalendar.value ? "Monthly" : "Weekly"
+        } Plan`
       });
-    }).finally(() => {
+
+      emit("ok");
+      toggleLinkRequirementTaskIssueModal();
+    } catch (error) {
+      console.error("Error linking task to plan:", error);
+    } finally {
       $q.loading.hide();
-    });
+    }
   });
 };
 

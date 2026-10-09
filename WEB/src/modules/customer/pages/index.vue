@@ -235,6 +235,7 @@
                   <div class="row no-wrap items-center justify-between">
                     <span style="flex: 1; word-break: break-word; white-space: normal;" @click="onCustomerView(props.row.id)">
                       {{ props.row.name }}
+                      <q-tooltip>View Customer</q-tooltip>
                     </span>
                     <q-icon
                       name="o_radio_button_checked" size="xs"
@@ -263,21 +264,23 @@
                   :class="{ 'hoverable-cell' : activeEdit.rowId === props.row.id }"
                   @click="activeEdit = { rowId: props.row.id, field: 'assignedToName' }"
                 >
-                <div class="row items-center justify-between">
-                  <div class="col">
+                <!-- <div class="row items-center justify-between">
+                  <div class="col"> -->
                     <quickEditSingleSelect
                       field="assignedToName"
                       :row-id="props.row.id"
                       :value="props.row.assignedToId"
                       :display-value="getNameFromId(props.row.assignedToId)"
-                      :editable="activeEdit.rowId === props.row.id"
+                      :editable="true"
                       :options="activeEmployeesDropdown.list.value"
                       :active-edit="activeEdit"
-                      :show-history="false"
+                      :show-history="true"
+                      tooltip="Customer Advocate Change Log"
                       @cancel="activeEdit = { rowId: null, field: null }"
                       @submit="({ rowId, value }) => onSubmitCustomerAdvocate(rowId, value, refreshCustomerList)"
+                      @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Customer Advocate')"
                     />
-                  </div>
+                  <!-- </div>
                   <div v-if="props.row.assignedToId" class="col-auto">
                     <q-icon
                       name="o_history"
@@ -285,38 +288,38 @@
                       size="xs"
                       @click.stop="onSiteModifiedLog(props.row.id, props.row.name, 'Customer Advocate')"
                     >
-                      <q-tooltip>Data Change Log</q-tooltip>
+                      <q-tooltip>Customer Advocate Change Log</q-tooltip>
                     </q-icon>
-                  </div>
-                </div>
+                  </div> -->
+                <!-- </div> -->
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('assignedDate')">
                   {{ props.row.assignedDate }}
                 </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('createdBy')"
-                class="common-q-td"
-              >
-                {{ props.row.createdBy }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('createdOnUtc')"
-                class="common-q-td"
-              >
-                {{ props.row.createdOnUtc }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedBy')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedBy }}
-              </q-td>
-              <q-td
-                v-if="selectedColumnNames.includes('updatedOnUtc')"
-                class="common-q-td"
-              >
-                {{ props.row.updatedOnUtc }}
-              </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('createdBy')"
+                  class="common-q-td"
+                >
+                  {{ props.row.createdBy }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('createdOnUtc')"
+                  class="common-q-td"
+                >
+                  {{ props.row.createdOnUtc }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedBy')"
+                  class="common-q-td"
+                >
+                  {{ props.row.updatedBy }}
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('updatedOnUtc')"
+                  class="common-q-td"
+                >
+                  {{ props.row.updatedOnUtc }}
+                </q-td>
                 <q-td auto-width class="text-center actions">
                   <q-icon
                     name="o_visibility"

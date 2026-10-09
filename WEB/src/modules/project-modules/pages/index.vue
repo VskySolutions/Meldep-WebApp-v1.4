@@ -131,6 +131,7 @@
                 <span style="flex: 1; word-break: break-word; white-space: normal;">
                   <span v-if="preProjectName !== props.row.project.name" :set="preProjectName = props.row.project.name" class="hoverable-cell" @click="onProjectView(props.row.project.id)">
                     {{ props.row.project.name }}
+                    <q-tooltip>View Project</q-tooltip>
                   </span>
                 </span>
                 <div v-if="shouldShowIcons(props.row.project.name, index)" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">

@@ -301,6 +301,7 @@
                 <!-- Project Name -->
                 <span v-if="props.row.project?.name" @click="onProjectView(props.row.project.id)">
                   {{ props.row.project.name }}
+                  <q-tooltip>View Project</q-tooltip>
                 </span>
                 <div class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
                   <q-icon
@@ -456,6 +457,7 @@
                           v-if="activityProps.row.showModuleName"
                         >
                           {{ activityProps.row.projectModule.name }}
+                          <q-tooltip>View Project Module</q-tooltip>
                         </span>
                       </q-td>
                        <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 5%;" class="text-right">
@@ -473,6 +475,7 @@
                               v-if="activityProps.row.showTaskNameAndIcons" @click="onProjectTaskView(activityProps.row.task.id, refreshProjectTaskActivityList)"
                             >
                               {{ activityProps.row.task.name }}</span>
+                              <q-tooltip>View Project Task</q-tooltip>
                           </span>
                         </div>
                       </q-td>
@@ -489,6 +492,7 @@
                             @click="openPlan(d, activityProps.row.id)"
                           >
                             {{ d.text }}
+                            <q-tooltip>View Weekly Project Plan</q-tooltip>
                           </span>
                         </div>
                       </q-td>

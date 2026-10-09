@@ -303,6 +303,7 @@
                         :set="preProjectName = props.row.project.name"
                         @click="onProjectView(props.row.project.id)"
                       >{{ props.row.project.name }}
+                      <q-tooltip>View Project</q-tooltip>
                       </span>
                     </span>
                     <div
@@ -340,6 +341,7 @@
                 >
                   <span v-if="props.row.requirement?.requirementNumber">
                     #{{ props.row.requirement?.requirementNumber }}
+                    <q-tooltip>View Requirement</q-tooltip>
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('testPlan.name')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
@@ -349,6 +351,7 @@
                     @click="onTestPlanView(props.row.testPlan.id)"
                   >
                     {{ props.row.testPlan.name }}
+                    <q-tooltip>View Test Plan</q-tooltip>
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
@@ -369,6 +372,7 @@
                     :options="testCaseStatusDropdownSingleSelect.list.value"
                     :active-edit="activeEdit"
                     :show-history="true"
+                    tooltip="Status Change Log"
                     :loading="updatingRow.status === props.row.id"
                     @cancel="activeEdit = { rowId: null, field: null }"
                     @submit="({ rowId, value }) => onSubmitTestCaseStatus(rowId, value, props.row.projectReleaseTrackingReqPlanTaskIssueMappingId, refreshTestCaseList)"

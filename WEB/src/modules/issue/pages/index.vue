@@ -246,11 +246,28 @@
             </template>
             <template #header="props">
               <q-tr :props="props" class="bg-primary text-white">
+                <!-- <q-th
+                  v-if="!isViewer"
+                  auto-width
+                  class="text-center"
+                /> -->
                 <q-th
                   v-if="!isViewer"
                   auto-width
                   class="text-center"
-                />
+                >
+                  <q-btn
+                    v-if="multiSelectIssueIds.length > 0"
+                    flat
+                    dense
+                    no-caps
+                    color="white"
+                    icon="o_clear_all"
+                    @click.stop="setDefaultsForMultiSelects"
+                  >
+                    <q-tooltip>Unselect all issues</q-tooltip>
+                  </q-btn>
+                </q-th>
                 <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
                 <q-th
                   v-for="col in props.cols"
@@ -310,7 +327,13 @@
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('project.name')" style="white-space: normal;" class="hoverable-cell">
                   <div class="row no-wrap items-center justify-between">
-                    <span style="flex: 1; word-break: break-word; white-space: normal;" @click="onProjectView(props.row.project.id)">{{ props.row.project.name }}</span>
+                    <span
+                      style="flex: 1; word-break: break-word; white-space: normal;"
+                      @click="onProjectView(props.row.project.id)"
+                    >
+                      {{ props.row.project.name }}
+                      <q-tooltip>View Project</q-tooltip>
+                    </span>
                     <div class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
                       <q-icon
                         name="o_radio_button_checked" size="xs"
@@ -390,6 +413,7 @@
                 >
                   <span v-if="props.row.requirement?.requirementNumber">
                     #{{ props.row.requirement?.requirementNumber }}
+                    <q-tooltip>View Requirement</q-tooltip>
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('projectTaskRelatedMappings')">
@@ -399,6 +423,7 @@
                         <span v-if="item.projectTask?.status">
                           ({{ item.projectTask.status.dropDownValue }})
                         </span>
+                        <q-tooltip>View Project Task</q-tooltip>
                       </span>
                       <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">, </span>
                       <br>
@@ -408,6 +433,7 @@
                 <q-td v-if="selectedColumnNames.includes('name')" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   <span class="hoverable-cell" @click="onIssueView(props.row.id)">
                     {{ props.row.name }}
+                    <q-tooltip>View Issue</q-tooltip>
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('priority.dropDownValue')">
@@ -431,6 +457,7 @@
                     :options="issueStatusDropdownSingleSelect.list.value"
                     :active-edit="activeEdit"
                     :show-history="false"
+                    tooltip="Status Change Log"
                     @cancel="activeEdit = { rowId: null, field: null }"
                     @submit="({ rowId, value }) => onSubmitIssueStatus(rowId, value, refreshIssueList)"
                   />
@@ -1256,29 +1283,51 @@ function onBulkIssuesConvertToTask (issueIds) {
   });
 }
 
-function setDefaultsForMultiSelects () {
+// function setDefaultsForMultiSelects () {
+//   multiSelectProjectIds.value = [];
+//   multiSelectProjectName.value = [];
+
+//   multiSelectRequirementProjectMap.value = {};
+
+//   multiSelectIssueIds.value = [];
+//   multiSelectIssueNames.value = [];
+
+//   multiSelectIssueEditableMap.value = {};
+
+//   selectedField.value = null;
+//   showMultiSelectOptions.value = false;
+
+//   localStorage.removeItem(SELECTED_ISSUE_IDS_KEY);
+//   localStorage.removeItem(SELECTED_ISSUE_EDITABLE_MAP_KEY);
+
+//   // Reset checkbox state in the displayed rows
+//   rows.value.forEach(row => {
+//     row.checkboxStatus = false;
+//   });
+// }
+function setDefaultsForMultiSelects() {
+  // Clear all selected issue details
   multiSelectProjectIds.value = [];
   multiSelectProjectName.value = [];
-
   multiSelectRequirementProjectMap.value = {};
-
   multiSelectIssueIds.value = [];
   multiSelectIssueNames.value = [];
-
+  multiSelectIssueNumbers.value = [];
   multiSelectIssueEditableMap.value = {};
 
+  // Reset multi-action selection
   selectedField.value = null;
   showMultiSelectOptions.value = false;
 
+  // Clear persisted selections across pages
   localStorage.removeItem(SELECTED_ISSUE_IDS_KEY);
   localStorage.removeItem(SELECTED_ISSUE_EDITABLE_MAP_KEY);
 
-  // Reset checkbox state in the displayed rows
+  // Uncheck all issues currently displayed
   rows.value.forEach(row => {
     row.checkboxStatus = false;
   });
 }
-
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions (SOP Change)
 // ------------------------------------------------------------------------------------

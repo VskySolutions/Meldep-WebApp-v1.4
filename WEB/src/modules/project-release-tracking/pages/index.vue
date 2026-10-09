@@ -186,6 +186,7 @@
                       "
                     >
                       {{ props.row.project.name }}
+                      <q-tooltip>View Project</q-tooltip>
                     </span>
 
                     <div
@@ -248,6 +249,7 @@
                     :options="filteredStatusList"
                     :active-edit="activeEdit"
                     :show-history="true"
+                    tooltip="Status Change Log"
                     :loading="updatingRow.status === props.row.id"
                     @popup-show="handlePopupShow"
                     @cancel="activeEdit = { rowId: null, field: null }"

@@ -280,7 +280,20 @@
                   v-if="!isViewer"
                   auto-width
                   class="text-center"
-                />
+                >
+                  <q-btn
+                    v-if="multiSelectTaskIds.length > 0"
+                    flat
+                    dense
+                    no-caps
+                    color="white"
+                    icon="o_clear_all"
+                    size="sm"
+                    @click.stop="clearAllSelectedTasks"
+                  >
+                    <q-tooltip>Unselect all tasks</q-tooltip>
+                  </q-btn>
+                </q-th>
                 <q-th
                   v-for="col in props.cols"
                   :key="col.name"
@@ -1162,6 +1175,31 @@ function transformTaskRow (task, storedTaskIds, isAdmin) {
   };
 }
 
+const clearAllSelectedTasks = () => {
+  // Uncheck every task currently loaded in the table
+  rows.value.forEach(task => {
+    task.checkboxStatus = false;
+  });
+
+  // Clear selection state
+  multiSelectProjectIds.value = [];
+  multiSelectProjectName.value = [];
+  multiSelectTaskProjectMap.value = {};
+  multiSelectTaskIds.value = [];
+  multiSelectTaskNumbers.value = [];
+  multiSelectTaskNames.value = [];
+  multiSelectTaskStatusMap.value = {};
+  multiSelectTaskEditableMap.value = {};
+
+  // Clear persisted selection
+  localStorage.removeItem(SELECTED_TASK_IDS_KEY);
+  localStorage.removeItem(SELECTED_TASK_EDITABLE_MAP_KEY);
+
+  // Hide multi-select actions
+  showMultiSelectOptions.value = false;
+  selectedField.value = null;
+  activeRowId.value = null;
+};
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals
 // ----------------------------------------------------------------------------------------------------------------
@@ -1608,14 +1646,34 @@ const onDeleteProjectTaskTag = (row, tagToRemove) => {
   );
 };
 
+// function setDefaultsForMultiSelects () {
+//   multiSelectProjectIds.value = [];
+//   multiSelectProjectName.value = [];
+//   multiSelectTaskProjectMap.value = [];
+//   multiSelectTaskIds.value = [];
+//   multiSelectTaskNames.value = [];
+//   multiSelectTaskStatusMap.value = {};
+//   localStorage.removeItem("selectedTaskIds");
+// }
 function setDefaultsForMultiSelects () {
   multiSelectProjectIds.value = [];
   multiSelectProjectName.value = [];
-  multiSelectTaskProjectMap.value = [];
+  multiSelectTaskProjectMap.value = {};
   multiSelectTaskIds.value = [];
   multiSelectTaskNames.value = [];
+  multiSelectTaskNumbers.value = [];
   multiSelectTaskStatusMap.value = {};
-  localStorage.removeItem("selectedTaskIds");
+  multiSelectTaskEditableMap.value = {};
+
+  localStorage.removeItem(SELECTED_TASK_IDS_KEY);
+  localStorage.removeItem(SELECTED_TASK_EDITABLE_MAP_KEY);
+
+  rows.value.forEach(task => {
+  task.checkboxStatus = false;
+  });
+
+  showMultiSelectOptions.value = false;
+  selectedField.value = null;
 }
 
 // ----------------------------------------------------------------------------------------------------------------

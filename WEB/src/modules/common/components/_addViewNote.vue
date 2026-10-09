@@ -72,13 +72,21 @@
         </fieldset>
         <fieldset class="q-mt-lg">
           <legend v-if="isShow">View Notes</legend>
+          <div class="q-mb-sm q-gutter-sm flex justify-end hidden">
+            <q-input v-model="filter" outlined class="bg-white q-mr-sm search-box" debounce="300" placeholder="Search" dense clearable>
+              <template #prepend>
+                <q-icon name="o_search" />
+              </template>
+            </q-input>
+          </div>
           <q-table
             ref="tableRef"
             v-model:pagination="pagination"
             class="note_table q-table__container"
             :loading="loading"
-            :rows="rows"
+            :rows="filteredNotes"
             :columns="columns"
+            :filter="filter"
             row-key="id"
             separator="cell"
             no-data-label="No data available"
@@ -182,6 +190,7 @@ const currentComment = ref("");
 const filteredUsers = ref([]);
 const showSuggestions = ref(false);
 const { fonts, toolbar } = getEditorConfig($q);
+const filter = ref("");
 
 const props = defineProps({
   id: { type: String, default: "" },
@@ -257,6 +266,43 @@ const getAllNoteByTypeAndRecord = () => {
     loading.value = false;
   });
 };
+
+const filterRows = (data, searchTerm) => {
+  if (!searchTerm) return data;
+
+  const lowerCaseTerm = searchTerm.toLowerCase().trim();
+
+  return data.filter((row) => {
+    const createdBy = `${row.user?.person?.firstName || ""} ${
+      row.user?.person?.lastName || ""
+    }`;
+
+    const createdDate = row.createdOnUtc || "";
+
+    const noteType = row.noteType?.dropDownValue || "";
+
+    // Convert note HTML into plain text for searching.
+    const noteText = (row.note || "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;|&apos;/gi, "'");
+
+    return (
+      createdBy.toLowerCase().includes(lowerCaseTerm) ||
+      createdDate.toLowerCase().includes(lowerCaseTerm) ||
+      noteType.toLowerCase().includes(lowerCaseTerm) ||
+      noteText.toLowerCase().includes(lowerCaseTerm)
+    );
+  });
+};
+
+const filteredNotes = computed(() =>
+  filterRows(rows.value, filter.value)
+);
 
 function removeLeadingSpaces (html) {
   if (!html) return "";
