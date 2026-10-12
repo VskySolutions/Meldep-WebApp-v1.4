@@ -13,31 +13,101 @@
               <fieldset>
                 <legend>Data Mapping Info</legend>
                 <div>
-                  <div class="row items-end q-mb-sm q-col-gutter-x-md">                    
-                    <div class="col-4 col-sm-4 col-md-4">
+                  <div class="row q-col-gutter-x-md q-mb-md">
+                    <div class="col-12 col-sm-4 col-md-4">
                       <formSingleSelectDropdown
                         v-if="!isRequirementReadonly"
-                        v-model="model.requirementId"
-                        label="Requirement"
+                        v-model="model.projectId"
+                        label="Project Name"
                         :readonly="isRequirementReadonly"
                         :required="true"
-                        :options="requirementsByProjectModuleIdForDropdown.list.value"
-                        :filter="requirementsByProjectModuleIdForDropdown.filter"
-                        :error="modelV$.requirementId.$error"
-                        :error-message="modelV$.requirementId.$errors?.[0]?.$message"
-                        @blur="modelV$.requirementId.$touch()"
+                        :options="projectNameDropdownSingleSelect.list.value"
+                        :filter="projectNameDropdownSingleSelect.filter"
+                        :error="modelV$.projectId.$error"
+                        :error-message="modelV$.projectId.$errors?.[0]?.$message"
+                        @blur="modelV$.projectId.$touch()"
                       />
-                      <formSingleSelectDropdown
-                        v-else
-                        v-model="model.requirementId"
-                        label="Requirement"
-                        :readonly="isRequirementReadonly"
-                        :required="false"
-                        :options="requirementsByProjectModuleIdForDropdown.list.value"
-                        :filter="requirementsByProjectModuleIdForDropdown.filter"
-                      />
+                      <div v-else>
+                        <div class="q-mb-xs text-black"><label>Project Name</label></div>
+                          <q-input
+                            v-model="model.projectName"
+                            outlined
+                            autogrow
+                            readonly
+                          />
+                      </div>
                     </div>
-                    <div class="col-8 col-sm-8 col-md-8 flex justify-end">
+                    <div class="col-12 col-sm-4 col-md-4">
+                      <formSingleSelectDropdown
+                        v-if="!isRequirementReadonly"
+                        v-model="model.projectModuleId"
+                        label="Project Module"
+                        :disable="(model.projectId?.length || 0) === 0"
+                        :readonly="isRequirementReadonly"
+                        :required="true"
+                        :options="projectModulesByProjectIdForDropdownSingleSelect.list.value"
+                        :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
+                        :error="modelV$.projectModuleId.$error"
+                        :error-message="modelV$.projectModuleId.$errors?.[0]?.$message"
+                        @blur="modelV$.projectModuleId.$touch()"
+                      />
+                      <div v-else>
+                        <div class="q-mb-xs text-black"><label>Project Module</label></div>
+                          <q-input
+                            v-model="model.projectModuleName"
+                            outlined
+                            autogrow
+                            readonly
+                          />
+                      </div>
+                    </div>
+                    <div class="col-12 col-sm-4 col-md-4">
+                      <div class="row items-center no-wrap">
+                        <div class="col">
+                          <formSingleSelectDropdown
+                            v-if="!isRequirementReadonly"
+                            v-model="model.requirementId"
+                            label="Requirement"
+                            :disable="(model.projectModuleId?.length || 0) === 0"
+                            :readonly="isRequirementReadonly"
+                            :required="true"
+                            :options="requirementsByProjectModuleIdForDropdown.list.value"
+                            :filter="requirementsByProjectModuleIdForDropdown.filter"
+                            :error="modelV$.requirementId.$error"
+                            :error-message="modelV$.requirementId.$errors?.[0]?.$message"
+                            @blur="modelV$.requirementId.$touch()"
+                          />
+                          <div v-else>
+                            <div class="q-mb-xs text-black"><label>Requirement</label></div>
+                              <q-input
+                                v-model="model.requirementName"
+                                outlined
+                                autogrow
+                                readonly
+                              />
+                          </div>
+                        </div>
+                        <div class="col-auto q-ml-sm q-mt-md">
+                          <q-btn
+                            v-if="model.requirementId"
+                            flat
+                            round
+                            dense
+                            color="primary"
+                            icon="o_visibility"
+                            size="sm"
+                            @click="onRequirementView(model.requirementId)"
+                          >
+                            <q-tooltip>View Requirement</q-tooltip>
+                          </q-btn>
+                        </div>
+                      </div>
+                      <div class="col-auto q-ml-sm q-mt-md">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row items-end q-mb-sm q-mt-md q-col-gutter-x-md">
+                    <div class="col-12 col-sm-12 col-md-12 flex justify-end">
                       <q-btn color="primary" icon="o_add" label="Add" no-caps @click="onAdd" />
                     </div>
                   </div>
@@ -139,7 +209,32 @@
                 </div>
                 <div align="center" class="q-gutter-sm justify-center q-mt-sm">
                   <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="onDialogCancel" />
-                  <q-btn color="primary" push outline label="Save" type="submit" class="actionBtn" :loading="processing" no-caps />
+                  <!-- <q-btn color="primary" push outline label="Save" type="submit" class="actionBtn" :loading="processing" no-caps /> -->
+                  <q-btn
+                    color="primary"
+                    push
+                    outline
+                    label="Save and Continue"
+                    type="button"
+                    class="actionBtn"
+                    :loading="processing && activeButton === 'continue'"
+                    :disable="processing"
+                    no-caps
+                    style="width: 160px !important;" @click="onSubmit(false, 'continue')"
+                  />
+                  <!-- Save and Close -->
+                  <q-btn
+                    color="primary"
+                    push
+                    outline
+                    label="Save and Close"
+                    type="button"
+                    class="actionBtn"
+                    :loading="processing && activeButton === 'close'"
+                    :disable="processing"
+                    no-caps
+                    @click="onSubmit(true, 'close')"
+                  />
                 </div>
               </fieldset>
             </q-card>
@@ -166,6 +261,9 @@ import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSele
 
 // SOP Change :- Shared Dropdowns
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
+import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
+import projectModule from "src/modules/project/utils/dropdowns.js";
+
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
 import {
@@ -173,13 +271,21 @@ import {
   onRequirementDataMappingNoteEdit
 } from "src/modules/requirement-data-mapping/utils/dialogs.js";
 
+import {
+  initRequirementDialogs,
+  onRequirementView
+} from "src/modules/requirement/utils/dialogs.js";
+
 // Define emits
-defineEmits([...useDialogPluginComponent.emits]);
+// defineEmits([...useDialogPluginComponent.emits]);
+const $emit = defineEmits(["hide", "ok"]);
 const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
 
 // define props
 const props = defineProps({
   id: { type: String, default: "" },
+  projectId: { type: String, default: "" },
+  projectModuleId: { type: String, default: "" },
   isRequirementReadonly: { type: String, default: "" }
 });
 
@@ -189,13 +295,20 @@ const { fonts, toolbar, rowToolbar } = getEditorConfig($q);
 const loading = ref(false);
 const processing = ref(false);
 const processingClose = ref(false);
+const activeButton = ref(""); // 'continue' or 'close'=
 const DataMappingRows = ref([]);
 const rowValidations = ref([]);
+const activeRowId = ref(null);
 let requirementId = props.id;
 const isRequirementReadonly = props.isRequirementReadonly;
 
 const model = ref({
-  requirementId: props.id ? requirementId : ""
+  requirementId: props.id || "",
+  projectId: props.projectId || "",
+  projectModuleId: props.projectModuleId || "",
+  projectName: "",
+  projectModuleName: "",
+  requirementName: ""
 });
 
 // Data Mapping
@@ -209,7 +322,26 @@ const DataMappingColumns = ref([
 const getRequirementDataMapping = (requirementId) => {
   loading.value = true;
   requirementDataMappingService.getRequirementDataMapping(requirementId).then((resp) => {
-    DataMappingRows.value = resp.requirementDataMappingsList.map(item => ({
+    const mappings = resp.requirementDataMappingsList || [];
+
+    if (mappings.length > 0) {
+      const firstMapping = mappings[0];
+
+      model.value.projectId = firstMapping.requirement?.project?.id || "";
+      model.value.projectModuleId = firstMapping.requirement?.projectModule?.id || "";
+      model.value.requirementId = firstMapping.requirement?.id || "";
+
+      // Display names
+      model.value.projectName =
+        firstMapping.requirement?.project?.name || "";
+
+      model.value.projectModuleName =
+        firstMapping.requirement?.projectModule?.name || "";
+
+      model.value.requirementName =
+        firstMapping.requirement?.title || "";
+    }
+    DataMappingRows.value = mappings.map(item => ({
       ...item,
       id: item.id,
       editing: false,
@@ -259,12 +391,15 @@ const deleteRow = (index) => {
 // DataTable:- Initialization Of Dialogs, Actions (SOP Change)
 // ------------------------------------------------------------------------------------
 initRequirementDataMappingDialogs();
+initRequirementDialogs(activeRowId);
 
 // ------------------------------------------------------------------------------------
 // Advance Filter :- All Dropdowns (SOP Change)
 // ------------------------------------------------------------------------------------
 
 const { requirementsByProjectModuleIdForDropdown } = requirementModule();
+const { projectNameDropdownSingleSelect } = projectModule();
+const { projectModulesByProjectIdForDropdownSingleSelect } = projectModuleOfProjectModule();
 
 // ==================================================================================
 // Validation rules
@@ -284,7 +419,9 @@ const getRowValidation = (row) => {
 };
 
 const modelRules = {
-  requirementId: { required: helpers.withMessage("Requirement is required", required) }
+  requirementId: { required: helpers.withMessage("Requirement is required", required) },
+  projectId: { required: helpers.withMessage("Project is required", required) },
+  projectModuleId: { required: helpers.withMessage("Project module is required", required) }
 };
 
 const modelV$ = useVuelidate(modelRules, model, { $lazy: true, $autoDirty: true });
@@ -292,8 +429,9 @@ const modelV$ = useVuelidate(modelRules, model, { $lazy: true, $autoDirty: true 
 // On Save & Next or Save & Close
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
-const onSubmit = async () => {
-  processing.value = true;
+const onSubmit = async (shouldClose, buttonType) => {
+  activeButton.value = buttonType;
+  // processing.value = true;
   try {
     let isValid = true;
 
@@ -342,9 +480,21 @@ const onSubmit = async () => {
     if (!isValid) {
       return;
     }
+
+    processing.value = true;
+
     const payload = {
       requirementId: model.value.requirementId,
-      dataMappings: DataMappingRows.value.map((row) => {
+      projectId: model.value.projectId,
+      projectModuleId: model.value.projectModuleId,
+      // dataMappings: DataMappingRows.value.map((row) => {
+      dataMappings: DataMappingRows.value.filter((row) => {
+        // Don't send a new blank/deleted row to backend
+        if (!row.id && row.deleted) {
+          return false;
+        }
+        return true;
+      }).map((row) => {
         const existingNote =
           row.notes && row.notes.length > 0
             ? row.notes[0]
@@ -364,7 +514,7 @@ const onSubmit = async () => {
                 }
               ]
             : []
-        };
+        };        
       })
     };
 
@@ -374,18 +524,70 @@ const onSubmit = async () => {
     notifySuccess({
       message: "Data mapping is saved successfully."
     });
-    await getRequirementDataMapping(model.value.requirementId);
+    if (model.value.requirementName) {
+      await getRequirementDataMapping(model.value.requirementId);
+    }
+    $emit("ok");
+    if (shouldClose) {
+      $emit("hide");
+    }
 
   } catch (error) {
     console.error("Error in submitting the data mapping:", error);
     notifyError({ message: "An error occurred while saving the data mapping." });
   } finally {
+    processing.value = true;
     setTimeout(() => {
       processing.value = false;
       processingClose.value = false;
+      activeButton.value = "";
     }, 1500);
   }
 };
+
+watch(
+  () => model.value.requirementId,
+  (newId) => {
+    activeRowId.value = newId || null;
+  },
+  { immediate: true }
+);
+
+watch(
+  () => model.value.projectId,
+  (projectId) => {
+    if ((projectId?.length || 0) > 0) {
+      projectModulesByProjectIdForDropdownSingleSelect.load(
+        false,
+        false,
+        projectId
+      );
+    } else {
+      model.value.projectModuleId = null;
+      projectModulesByProjectIdForDropdownSingleSelect.list.value = [];
+      requirementsByProjectModuleIdForDropdown.list.value = [];
+      modelV$.value.projectModuleId.$reset();
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => model.value.projectModuleId,
+  (projectModuleId) => {
+    if ((projectModuleId?.length || 0) > 0 && (model.value.projectId?.length || 0) > 0) {
+      requirementsByProjectModuleIdForDropdown.load(
+        projectModuleId,
+        model.value.projectId,
+        "Data Integration"
+      );
+    } else {
+      model.value.requirementId = "";
+      requirementsByProjectModuleIdForDropdown.list.value = [];
+    }
+  },
+  { immediate: true }
+);
 
 // watches a data property with the same name i.e. immediate effect
 watch(() => requirementId, (newValue, oldValue) => {
@@ -395,7 +597,8 @@ watch(() => requirementId, (newValue, oldValue) => {
 }, { immediate: true });
 
 onMounted(() => {
-  requirementsByProjectModuleIdForDropdown.load('', '', 'Data Integration');
+  // requirementsByProjectModuleIdForDropdown.load(model.value.projectModuleId, model.value.projectId, 'Data Integration');
+  projectNameDropdownSingleSelect.load();
 });
 </script>
 <style>

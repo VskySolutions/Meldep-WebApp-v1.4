@@ -2131,6 +2131,10 @@ namespace Vsky.Data
                 entity.ToTable("Requirement_DataMapping");
 
                 entity.HasOne(r => r.Requirement).WithMany(r => r.RequirementDataMapping).HasForeignKey(r => r.RequirementId);
+                entity.HasOne(r => r.Project).WithMany().HasForeignKey(r => r.ProjectId);
+                entity.HasOne(r => r.ProjectModule).WithMany().HasForeignKey(r => r.ProjectModuleId);
+                entity.HasOne(d => d.CreatedBy).WithMany().HasForeignKey(d => d.CreatedById);
+                entity.HasOne(d => d.UpdatedBy).WithMany().HasForeignKey(d => d.UpdatedById);
             });
 
             builder.Entity<RequirementDataMappingNotes>(entity =>

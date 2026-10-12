@@ -303,6 +303,8 @@ namespace Vsky.Services.RequirementDataMappings
                 .Select(x => new RequirementDataMapping
                 {
                     Id = x.Id,
+                    ProjectId = x.ProjectId,
+                    ProjectModuleId = x.ProjectModuleId,
                     RequirementId = x.RequirementId,
                     Source = x.Source,
                     Target = x.Target,
@@ -409,6 +411,13 @@ namespace Vsky.Services.RequirementDataMappings
         #endregion
 
         #region GetRequirementDataMappingsByRequirementId
+        public async Task<RequirementDataMapping> GetRequirementDataMappingReqById(string requirementId)
+        {
+            var query = _requirementDataMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.RequirementId == requirementId);
+            var item = await query.FirstOrDefaultAsync();
+            return item;
+        }
+
         public async Task<List<RequirementDataMapping>> GetRequirementDataMappingsByRequirementId(string requirementId)
         {
             var query = _requirementDataMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.RequirementId == requirementId);
@@ -416,13 +425,18 @@ namespace Vsky.Services.RequirementDataMappings
             query = query.Select(x => new RequirementDataMapping
             {
                 Id = x.Id,
+                ProjectId = x.ProjectId,
+                ProjectModuleId = x.ProjectModuleId,
                 RequirementId = x.RequirementId,
                 Source = x.Source,
                 Target = x.Target,
+                CreatedById = x.CreatedById,
+                UpdatedById = x.UpdatedById,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 CreatedOnUtc = x.CreatedOnUtc,
                 CreatedBy = new ApplicationUser
                 {
-                    Id = x.CreatedBy.Id,
+                    //Id = x.CreatedBy.Id,
                     Person = new Person
                     {
                         Id = x.CreatedBy.PersonId,
@@ -432,7 +446,17 @@ namespace Vsky.Services.RequirementDataMappings
                 Requirement = new Requirement
                 {
                     Id = x.Requirement.Id,
-                    Title = x.Requirement.Title
+                    Title = x.Requirement.Title,
+                    Project = new Project
+                    {
+                        Id = x.Requirement.Project.Id,
+                        Name = x.Requirement.Project.Name
+                    },
+                    ProjectModule = new ProjectModule
+                    {
+                        Id = x.Requirement.ProjectModule.Id,
+                        Name = x.Requirement.ProjectModule.Name
+                    }
                 },
                 RequirementDataMappingNotes = x.RequirementDataMappingNotes.Where(t => !t.Deleted).OrderBy(t => t.CreatedOnUtc).Select(t => new RequirementDataMappingNotes
                 {
@@ -474,9 +498,17 @@ namespace Vsky.Services.RequirementDataMappings
         #region DeleteRequirementDataMapping
         public void DeleteRequirementDataMapping(RequirementDataMapping entity)
         {
-            entity.Deleted = true;
+            //entity.Deleted = true;
 
-            _requirementDataMappingRepository.Update(entity);
+            //_requirementDataMappingRepository.Update(entity);
+
+            var mapping = _requirementDataMappingRepository.TableNoTracking.FirstOrDefaultAsync(x => x.Id == entity.Id).Result;
+
+            if (mapping != null)
+            {
+                mapping.Deleted = true;
+                _requirementDataMappingRepository.Update(entity);
+            }
         }
         #endregion
     }

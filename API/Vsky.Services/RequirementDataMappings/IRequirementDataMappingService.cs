@@ -48,11 +48,12 @@ namespace Vsky.Services.RequirementDataMappings
         #endregion
 
         #region GetAllDataMappingByRequirementId
-        IPagedList<RequirementDataMapping> GetAllDataMappingByRequirementId(string SiteId, string requirementId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);        
+        IPagedList<RequirementDataMapping> GetAllDataMappingByRequirementId(string SiteId, string requirementId, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false);
         #endregion
 
         #region GetById
         Task<RequirementDataMapping> GetRequirementDataMappingById(string id);
+        Task<RequirementDataMapping> GetRequirementDataMappingReqById(string requirementId);
         #endregion
 
         #region GetRequirementDataMappingsByRequirementId

@@ -1537,7 +1537,7 @@ const onSelectCheckbox = (projectId, projectName, requirementId, requirementNumb
 };
 
 const selectedFieldOptions = [
-  { label: "Link Requirement To Plan", value: "linkToPlan", icon: "o_calendar_view_week" },
+  // { label: "Link Requirement To Plan", value: "linkToPlan", icon: "o_calendar_view_week" },
   { label: "Change Status", value: "Status", icon: "o_flag" },
   { label: "Change Priority", value: "Priority", icon: "o_priority_high" },
   { label: "Convert into Task", value: "convertIntoTask", icon: "o_swap_horiz" }

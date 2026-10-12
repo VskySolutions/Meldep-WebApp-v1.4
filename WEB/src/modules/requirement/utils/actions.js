@@ -162,31 +162,6 @@ export const onSubmitRequirementDelete = async (
   );
 };
 
-// Delete Requirement Data Mapping
-export const onSubmitDataMappingDelete = async (
-  id,
-  source
-) => {
-  activeRowId.value = id;
-
-  zwConfirmDelete(
-    { data: `${source}` },
-    async () => {
-      try {
-        await requirementService.deleteDataMapping(id);
-        notifySuccess({ message: "Data mapping is deleted successfully." });
-      } catch (error) {
-        sendError("Error deleting data mapping", error);
-      } finally {
-        activeRowId.value = null;
-      }
-    },
-    () => {
-      activeRowId.value = null;
-    }
-  );
-};
-
 // -------------------------------------------------------------
 // Error Handler
 // -------------------------------------------------------------

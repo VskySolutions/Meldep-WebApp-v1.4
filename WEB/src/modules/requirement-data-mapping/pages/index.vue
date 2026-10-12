@@ -98,7 +98,7 @@
                   label="Add Data Mapping"
                   no-caps
                   class="text-primary btnRounded q-ml-xs"
-                  @click="onAddRequirementDataMapping(search.requirementIds?.[0], false, refreshDataMappingList)"
+                  @click="onAddRequirementDataMapping(search.projectIds?.[0], search.projectModuleIds?.[0], search.requirementIds?.[0], false, refreshDataMappingList)"
                 />
                  <!-- Reset Column Width -->
                 <q-btn
@@ -213,6 +213,14 @@
                     @click="onEditRequirementDataMapping(props.row.requirementId, true, refreshDataMappingList)"
                   >
                     <q-tooltip>Edit</q-tooltip>
+                  </q-icon>
+                  <q-icon
+                    name="o_delete_outline"
+                    class="cursor-pointer hidden"
+                    color="negative"
+                    @click="onSubmitBulkDataMappingDelete(props.row.id, props.row.requirementId, props.row.requirementTitle, refreshDataMappingList)"
+                  >
+                    <q-tooltip>Delete</q-tooltip>
                   </q-icon>
                 </q-td>
               </q-tr>
@@ -381,6 +389,12 @@ import {
   initProjectModuleDialogs,
   onProjectModuleView
 } from "src/modules/project-modules/utils/dialogs.js";
+
+// Shared Requirement Data Mapping Actions
+import {
+  initRequirementDataMappingActions,
+  onSubmitBulkDataMappingDelete
+} from "src/modules/requirement-data-mapping/utils/actions.js";
 
 // ----------------------------------------------------------------------------------------------------------------
 // Common variables
@@ -641,6 +655,7 @@ const onAdvanceClear = () => {
 initRequirementDataMappingDialogs();
 initProjectDialogs(activeRowId);
 initProjectModuleDialogs(activeRowId);
+initRequirementDataMappingActions(activeRowId);
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Applied Filter Labels.
 // ----------------------------------------------------------------------------------------------------------------

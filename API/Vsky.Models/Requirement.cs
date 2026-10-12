@@ -129,6 +129,8 @@ namespace Vsky.Models
     public class RequirementDataMapping : BaseEntity
     {
         public string RequirementId { get; set; }
+        public string ProjectId { get; set; }
+        public string ProjectModuleId { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
 
@@ -139,6 +141,8 @@ namespace Vsky.Models
         public bool Deleted { get; set; }
 
         public virtual Requirement Requirement { get; set; }
+        public virtual Project Project { get; set; }
+        public virtual ProjectModule ProjectModule { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }
         public virtual ICollection<RequirementDataMappingNotes> RequirementDataMappingNotes { get; set; } = new List<RequirementDataMappingNotes>();
@@ -146,6 +150,8 @@ namespace Vsky.Models
     public class SaveRequirementDataMappings
     {
         public string RequirementId { get; set; }
+        public string ProjectId { get; set; }
+        public string ProjectModuleId { get; set; }
         public List<SaveRequirementDataMapping> DataMappings { get; set; } = new();
     }
 
@@ -165,7 +171,7 @@ namespace Vsky.Models
         public DateTime? UpdatedOnUtc { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
-
+        //public List<string> DataMappingIds { get; set; } = new List<string>();
         public List<RequirementDataMapping> DataMappings { get; set; } = new List<RequirementDataMapping>();
     }
 

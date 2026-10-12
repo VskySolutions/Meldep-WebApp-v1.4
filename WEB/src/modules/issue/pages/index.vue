@@ -1123,7 +1123,7 @@ const onSelectCheckbox = (projectId, projectName, issueId, issueNumber, issueNam
 };
 
 const selectedFieldOptions = [
-  { label: "Link Issue To Plan", value: "linkToPlan", icon: "o_calendar_view_week" },
+  // { label: "Link Issue To Plan", value: "linkToPlan", icon: "o_calendar_view_week" },
   { label: "Change Status", value: "Status", icon: "o_flag" },
   { label: "Change Priority", value: "Priority", icon: "o_priority_high" },
   { label: "Convert into Task", value: "convertIntoTask", icon: "o_swap_horiz" }

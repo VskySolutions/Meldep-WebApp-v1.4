@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using Microsoft.AspNetCore.Mvc;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
@@ -94,28 +95,6 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region GetAllGroupRequirementDataMappings
-        //[HttpGet("get-all-data-mappings-group")]
-        //public async Task<IActionResult> GetAllRequirementDataMappingGroups()
-        //{
-        //    try
-        //    {
-        //        var SiteId = _globalVariable.SiteId;
-        //        var data = await _requirementDataMappingService.GetAllRequirementDataMappingGroups(SiteId);
-
-        //        var model = new RequirementDataMappingGroupList
-        //        {
-        //            DataMappingGroupList = data,
-        //            Total = data.Count
-        //        };
-
-        //        return Ok(model);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //}
-        
         [HttpPost("get-all-data-mappings-group")]
         public async Task<IActionResult> GetAllRequirementDataMappingGroups(RequirementDataMappingsSearchModel searchModel)
         {
@@ -239,6 +218,8 @@ namespace Vsky.Api.Controllers
                                 if (mapping == null)
                                     continue;
 
+                                //mapping.ProjectId = model.ProjectId;
+                                //mapping.ProjectModuleId = model.ProjectModuleId;
                                 mapping.Source = data.Source;
                                 mapping.Target = data.Target;
                                 mapping.UpdatedById = LoggedUserId;
@@ -257,6 +238,8 @@ namespace Vsky.Api.Controllers
                                 {
                                     Id = Guid.NewGuid().ToString(),
                                     RequirementId = model.RequirementId,
+                                    ProjectId = model.ProjectId,
+                                    ProjectModuleId = model.ProjectModuleId,
                                     Source = data.Source,
                                     Target = data.Target,
                                     CreatedById = LoggedUserId,
@@ -347,17 +330,43 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
-        #region Delete Data Mapping
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDataMapping(string id)
+        #region Delete Bulk Data Mapping
+        [HttpDelete("bulk-delete/{requirementId}")]
+        public async Task<IActionResult> DeleteBulkDataMapping(string requirementId)
         {
             try
             {
-                var entity = await _requirementDataMappingService.GetRequirementDataMappingById(id);
-                if (entity == null)
+                if (string.IsNullOrWhiteSpace(requirementId))
+                    return BadRequest(new BadRequestError("Requirement id is not found."));
+
+                var mappings = await _requirementDataMappingService.GetRequirementDataMappingsByRequirementId(requirementId);
+                if (mappings == null)
                     return BadRequest(new BadRequestError("No data mapping found with the specified id."));
 
-                _requirementDataMappingService.DeleteRequirementDataMapping(entity);
+                foreach (var mapping in mappings)
+                {
+                    _requirementDataMappingService.DeleteRequirementDataMapping(mapping);
+                }
+
+                //if (model.DataMappingIds == null || !model.DataMappingIds.Any())
+                //    return BadRequest(new BadRequestError("No data mapping ids found."));
+
+                //foreach (var id in model.DataMappingIds)
+                //{
+                //    var entity = await _requirementDataMappingService.GetRequirementDataMappingById(id);
+
+                //    if (entity != null)
+                //    {
+                //        _requirementDataMappingService.DeleteRequirementDataMapping(entity);
+                //    }
+                //}
+
+                // ----------------------
+                //var entity = await _requirementDataMappingService.GetRequirementDataMappingById(id);
+                //if (entity == null)
+                //    return BadRequest(new BadRequestError("No data mapping found with the specified id."));
+
+                //_requirementDataMappingService.DeleteRequirementDataMapping(entity);
 
                 return NoContent();
             }
