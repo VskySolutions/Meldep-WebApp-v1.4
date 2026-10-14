@@ -11,7 +11,7 @@
         <div class="q-gutter-y-md">
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator inline-label mobile-arrows>
             <q-tab name="1_tab" label="Team Task Updates" class="q-px-lg q-mr-md" />
-            <q-tab name="2_tab" label="Questions for Client" class="q-px-lg q-mr-md" />
+            <q-tab name="2_tab" label="Questions for Client" class="q-px-lg q-mr-md hidden" />
             <q-tab name="3_tab" label="Updates to Share with Client" class="q-px-lg q-mr-md" />
           </q-tabs>
           <q-separator />
@@ -21,7 +21,7 @@
                 :id="selectedRequirementId"
               />
             </q-tab-panel>
-            <q-tab-panel name="2_tab">
+            <q-tab-panel name="2_tab" class="hidden">
               <viewQuestionsForClient
                 :id="selectedRequirementId"
               />
