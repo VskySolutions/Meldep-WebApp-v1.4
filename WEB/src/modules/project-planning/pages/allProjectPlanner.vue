@@ -1258,6 +1258,51 @@
                                               <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
                                               <q-item-section>Convert into Task</q-item-section>
                                             </q-item>
+                                            <q-item v-if="props.row.isEditable" v-ripple clickable>
+                                              <q-item-section avatar>
+                                                <q-icon name="o_flag" color="secondary" size="xs" />
+                                              </q-item-section>
+                                              <q-item-section class="">Requirement Status</q-item-section>
+
+                                              <q-menu
+                                                anchor="top end"
+                                                self="top start"
+                                                @before-show="() => handleRequirementPopupShow(props.row.id, props.row.requirementStatus, props.row.projectStatus)"
+                                              >
+                                                <q-item
+                                                  v-for="requirementStatus in requirementStatusMap[props.row.id] || []"
+                                                  :key="requirementStatus.value"
+                                                  v-ripple
+                                                  clickable
+                                                  :disable="requirementStatus.disable"
+                                                  :style="{
+                                                    cursor: shouldDisableSelect(props.row) ? 'not-allowed' : 'auto',
+                                                    pointerEvents: shouldDisableSelect(props.row) ? 'none' : 'auto',
+                                                    opacity: shouldDisableSelect(props.row) ? 0.6 : 1
+                                                  }"
+                                                  @click="onSubmitRequirementStatus(props.row.id, requirementStatus.value, refreshRequirementList)"
+                                                >
+                                                  <q-item-section avatar>
+                                                    <q-icon
+                                                      v-if="requirementStatus.value === props.row.requirementStatusId"
+                                                      name="o_task_alt"
+                                                      color="primary"
+                                                      size="xs"
+                                                    />
+                                                    <q-icon
+                                                      v-else
+                                                      name="o_radio_button_unchecked"
+                                                      color="secondary"
+                                                      size="xs"
+                                                    />
+                                                  </q-item-section>
+                                                  <q-item-section style="white-space: nowrap !important;">
+                                                    {{ requirementStatus.text }}
+                                                  </q-item-section>
+                                                </q-item>
+                                              </q-menu>
+
+                                            </q-item>
                                             <q-item v-if="props.row.isEditable" v-ripple clickable @click="onDeleteRequirement(props.row)">
                                               <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
                                               <q-item-section class="text-negative">Delete</q-item-section>
@@ -1276,524 +1321,1158 @@
                           Select a module to view requirements
                         </div>
                       </template>
-                     <template #after>
-                    <q-splitter v-model="ActivitySplit" class="">
-                      <template #before>
-                        <div v-if="selectedRequirement">
-                          <q-toolbar class="bg-green-2 column q-pa-sm" style="align-items:start !important">
-                            <!-- First line: title + actions -->
-                            <div class="row items-center justify-between q-gutter-sm full-width q-mb-sm">
-                              <!-- <q-toolbar-title class="q-pa-none"> -->
-                              <div>
-                                <h3 class="text-black q-mb-none">
-                                  Task for
-                                  <span v-if="storedRequirementName && isRequirement" class="text-primary" style="font-size: 14px;">
-                                    {{ storedRequirementName }}
-                                  </span>
-                                </h3>
-                              </div>
-                              <div class="q-mb-sm">
-                                <!-- </q-toolbar-title> -->
-                                <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddProjectTask(selectedProjectId)" />
-                                <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTask">
-                                  <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
-                                  <q-tooltip>Add Bulk Tasks</q-tooltip>
-                                </q-btn>
-                                <q-btn v-if="selectedTaskId!=null && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_edit" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onEditBulkTasks">
-                                  <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
-                                  <q-tooltip>Edit Bulk Tasks</q-tooltip>
-                                </q-btn>
-                                <q-btn v-if="!isViewer" icon="o_open_in_new" size="sm" outline class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="$router.push('/project-tasks')">
-                                  <q-tooltip>Manage Tasks</q-tooltip>
-                                </q-btn>
-                              </div>
-                            </div>
-                            <div class="row items-center q-mr-xs">
-                              <div class="search-container position-relative">
-                                <searchFilterBar
-                                  v-model="searchProjectTask.filterTask"
-                                  :loading="searchProjectTaskLoader"
-                                  :applied-filters="appliedTaskFiltersCount"
-                                  class="search-bar"
-                                  @toggle-filter="showTasksFilter = !showTasksFilter"
-                                />
-                                <!-- Dropdown Content -->
-                                <q-menu v-model="showTasksFilter" anchor="bottom left" self="top left" persistent no-parent-event style="width: 500px;" @click-outside="showTasksFilter = false">
-                                  <q-card class="q-pa-sm">
-                                    <div class="row items-center q-mb-sm">
-                                      <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                                        <label class="Cutomlabel q-mt-sm fs-13">Task Name</label>
+                      <template #after>
+                        <q-splitter v-model="ActivitySplit" class="">
+                          <template #before>
+                            <div v-if="selectedRequirement">
+                              <q-toolbar class="bg-green-2 column q-pa-sm" style="align-items:start !important">
+                                <!-- First line: title + actions -->
+                                <div class="row items-center justify-between q-gutter-sm full-width q-mb-sm">
+                                  <!-- <q-toolbar-title class="q-pa-none"> -->
+                                  <div>
+                                    <h3 class="text-black q-mb-none">
+                                      Task for
+                                      <span v-if="storedRequirementName && isRequirement" class="text-primary" style="font-size: 14px;">
+                                        {{ storedRequirementName }}
+                                      </span>
+                                    </h3>
+                                  </div>
+                                  <div class="q-mb-sm">
+                                    <!-- </q-toolbar-title> -->
+                                    <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddProjectTask(selectedProjectId)" />
+                                    <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTask">
+                                      <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
+                                      <q-tooltip>Add Bulk Tasks</q-tooltip>
+                                    </q-btn>
+                                    <q-btn v-if="selectedTaskId!=null && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_edit" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onEditBulkTasks">
+                                      <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
+                                      <q-tooltip>Edit Bulk Tasks</q-tooltip>
+                                    </q-btn>
+                                    <q-btn v-if="!isViewer" icon="o_open_in_new" size="sm" outline class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="$router.push('/project-tasks')">
+                                      <q-tooltip>Manage Tasks</q-tooltip>
+                                    </q-btn>
+                                  </div>
+                                </div>
+                                <div class="row items-center q-mr-xs">
+                                  <div class="search-container position-relative">
+                                    <searchFilterBar
+                                      v-model="searchProjectTask.filterTask"
+                                      :loading="searchProjectTaskLoader"
+                                      :applied-filters="appliedTaskFiltersCount"
+                                      class="search-bar"
+                                      @toggle-filter="showTasksFilter = !showTasksFilter"
+                                    />
+                                    <!-- Dropdown Content -->
+                                    <q-menu v-model="showTasksFilter" anchor="bottom left" self="top left" persistent no-parent-event style="width: 500px;" @click-outside="showTasksFilter = false">
+                                      <q-card class="q-pa-sm">
+                                        <div class="row items-center q-mb-sm">
+                                          <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                                            <label class="Cutomlabel q-mt-sm fs-13">Task Name</label>
+                                          </div>
+                                          <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                                            <div>
+                                              <q-input v-model="searchProjectTask.name" fill-input :dense="true" class="q-mx-sm" />
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <multiSelectDropdown
+                                          v-model="searchProjectTask.statusIds"
+                                          label="Status"
+                                          :options="projectTaskStatusForDropdown.list.value"
+                                          :filter="projectTaskStatusForDropdown.filter"
+                                          :isShowAll="true"
+                                        />
+                                        <multiSelectDropdown
+                                          v-model="searchProjectTask.priorityIds"
+                                          label="Task Priority"
+                                          :options="projectTaskPrioritiesForDropdown.list.value"
+                                          :filter="projectTaskPrioritiesForDropdown.filter"
+                                          :isShowAll="true"
+                                        />
+                                        <multiSelectDropdown
+                                          v-model="searchProjectTask.assignedToIds"
+                                          label="Task Owner"
+                                          :options="projectEmployeesForDropdown.list.value"
+                                          :filter="projectEmployeesForDropdown.filter"
+                                        />
+                                        <multiSelectDropdown
+                                          v-model="searchProjectTask.taskTagsIds"
+                                          label="Task Tags"
+                                          :options="projectTaskTagsDropdown.list.value"
+                                          :filter="projectTaskTagsDropdown.filter"
+                                          :show-bg-color="true"
+                                        />
+                                        <div class="row items-center q-mb-sm">
+                                          <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+                                            <label class="Cutomlabel q-mt-sm fs-13">Show Closed</label>
+                                          </div>
+                                          <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                                            <q-checkbox v-model="isTaskChecked" label="" color="indigo-12" class="q-mr-md" @click="ShowClosedTask()" />
+                                          </div>
+                                        </div>
+                                        <!-- Search and Clear Buttons -->
+                                        <div class="row justify-end q-gutter-sm q-mb-sm">
+                                          <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showTasksFilter = false; onTaskSearch(); }" />
+                                          <q-btn style="width: 20%;" outline color="grey-4" label="Clear" class="text-grey-9 btnRounded" no-caps @click="onClearTask" />
+                                          <q-btn style="width: 20%;" outline color="negative" label="Close" class="btnRounded" no-caps @click="() => { showTasksFilter = false; }" />
+                                        </div>
+                                      </q-card>
+                                    </q-menu>
+                                  </div>
+                                  <div class="q-ml-sm">
+                                    <!-- Replace your current sort menu with this -->
+                                    <q-btn icon="o_swap_vert" dense outline round no-caps class="text-primary btnRounded" size="sm">
+                                      <q-tooltip>
+                                        Sorted: By
+                                        {{ selectedSortByTask === 'startDate'
+                                          ? ' Start Date'
+                                          : selectedSortByTask === 'endDate'
+                                            ? ' End Date'
+                                            : selectedSortByTask === 'taskName'
+                                              ? ' Name'
+                                              : selectedSortByTask === 'status'
+                                                ? ' Status'
+                                                : selectedSortByTask === 'priority'
+                                                  ? ' Priority'
+                                                  : selectedSortByTask === 'assignTo'
+                                                    ? ' Owner'
+                                                    : selectedSortByTask === 'createdOnUtc'
+                                                      ? ' Created Date'
+                                                      : selectedSortByTask
+                                        }} ({{ selectedSortOrderByTask ? 'Descending' : 'Ascending' }})</q-tooltip>
+                                      <q-menu>
+                                        <q-list style="min-width: 200px">
+                                          <q-separator />
+                                          <q-item-label header class="q-py-xs" style="font-size: 0.75rem;font-weight:500;">Sort By</q-item-label>
+                                          <q-item>
+                                            <q-item-section>
+                                              <q-radio
+                                                v-model="selectedSortByTask"
+                                                size="xs"
+                                                val="taskName"
+                                                label="Name"
+                                                checked-icon="o_task_alt"
+                                                dense
+                                                @update:model-value="val => onSortByTask(val, false)"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                          <q-item>
+                                            <q-item-section>
+                                              <q-radio
+                                                v-model="selectedSortByTask"
+                                                style="font-size:13px"
+                                                size="xs"
+                                                val="startDate"
+                                                label="Start Date"
+                                                checked-icon="o_task_alt"
+                                                dense
+                                                @update:model-value="val => onSortByTask(val, false)"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                          <q-item>
+                                            <q-item-section>
+                                              <q-radio
+                                                v-model="selectedSortByTask"
+                                                style="font-size:13px"
+                                                size="xs"
+                                                val="endDate"
+                                                label="End Date"
+                                                checked-icon="o_task_alt"
+                                                dense
+                                                @update:model-value="val => onSortByTask(val, false)"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                          <q-item>
+                                            <q-item-section>
+                                              <q-radio
+                                                v-model="selectedSortByTask"
+                                                style="font-size:13px"
+                                                size="xs"
+                                                val="status"
+                                                label="Status"
+                                                checked-icon="o_task_alt"
+                                                dense
+                                                @update:model-value="val => onSortByTask(val, false)"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                          <q-item>
+                                            <q-item-section>
+                                              <q-radio
+                                                v-model="selectedSortByTask"
+                                                style="font-size:13px"
+                                                size="xs"
+                                                val="priority"
+                                                label="Priority"
+                                                checked-icon="o_task_alt"
+                                                dense
+                                                @update:model-value="val => onSortByTask(val, false)"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                          <q-item>
+                                            <q-item-section>
+                                              <q-radio
+                                                v-model="selectedSortByTask"
+                                                style="font-size:13px"
+                                                size="xs"
+                                                val="assignTo"
+                                                label="Owner"
+                                                checked-icon="o_task_alt"
+                                                dense
+                                                @update:model-value="val => onSortByTask(val, false)"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                          <q-item>
+                                            <q-item-section>
+                                              <q-radio
+                                                v-model="selectedSortByTask"
+                                                style="font-size:13px"
+                                                size="xs"
+                                                val="createdOnUtc"
+                                                label="Created Date"
+                                                checked-icon="o_task_alt"
+                                                dense
+                                                @update:model-value="val => onSortByTask(val, false)"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                          <q-separator />
+                                          <q-item-label header class="q-py-xs " style="font-size: 0.75rem;font-weight:500;">Sort Order</q-item-label>
+                                          <q-item>
+                                            <q-item-section>
+                                              <q-radio
+                                                v-model="selectedSortOrderByTask"
+                                                style="font-size:13px"
+                                                size="xs"
+                                                :val="false"
+                                                label="Ascending"
+                                                checked-icon="o_task_alt"
+                                                dense
+                                                @update:model-value="val => onSortByTask(val, true)"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                          <q-item>
+                                            <q-item-section>
+                                              <q-radio
+                                                v-model="selectedSortOrderByTask"
+                                                style="font-size:13px"
+                                                size="xs"
+                                                :val="true"
+                                                label="Descending"
+                                                checked-icon="o_task_alt"
+                                                dense
+                                                @update:model-value="val => onSortByTask(val, true)"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                        </q-list>
+                                      </q-menu>
+                                    </q-btn>
+                                  </div>
+                                </div>
+                              </q-toolbar>
+                              <q-table
+                                v-model:pagination="projectTasksPagination"
+                                :loading="loading"
+                                :rows="filteredTaskRows"
+                                :columns="projectTaskColumns"
+                                row-key="id"
+                                separator="cell"
+                                binary-state-sort
+                                class="Custom-DataTable"
+                                no-data-label="No task available"
+                                :rows-per-page-options="[20, 50, 100, 200, 500]"
+                                table-style="max-height: 65vh"
+                                virtual-scroll
+                                @request="getTaskListByModuleId"
+                              >
+                                <template #header="props">
+                                  <q-tr :props="props" class="bg-primary text-white">
+                                    <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
+                                    <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                                      <template v-if="col.name === 'estimateTime'">
+                                        <div class="" style="text-align:right !important">
+                                          <span>{{ col.label }}</span>
+                                          <q-icon name="o_info" size="xs" class="text-black q-ml-xs">
+                                            <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-white shadow-2">
+                                              <div class="text-caption">
+                                                <span>{{ "(Task Est. Hrs / Sum Of Activity hours)" }}</span>
+                                              </div>
+                                            </q-tooltip>
+                                          </q-icon>
+                                        </div>
+                                      </template>
+                                      <template v-else>
+                                        {{ col.label }}
+                                      </template>
+                                    </q-th>
+
+                                    <q-th auto-width class="text-center" />
+                                  </q-tr>
+                                </template>
+                                <template #body="props">
+                                  <q-tr :props="props" :class="['cursor-pointer', activeTaskRowId == props.row.id ? 'bg-green-2' : '']">
+                                    <q-td class="highlight-text" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 40% !important;" @click="LoadTaskActivities(props.row.id)">
+                                      <div :style="'border-left: 5px solid ' + (props.row.color ? props.row.color : 'transparent') + '; width: 5px;height: 97%;position: absolute; left: -1px;top: 0px;'">
+                                        <q-tooltip>Project Color</q-tooltip>
                                       </div>
-                                      <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
-                                        <div>
-                                          <q-input v-model="searchProjectTask.name" fill-input :dense="true" class="q-mx-sm" />
+                                      <div class="row items-center justify-between">
+                                        <div class="col-md-12">
+                                          <div class="" v-html="props.row.name" />
+                                        </div>
+                                        <div class="col-md-12">
+                                          <q-badge v-if="props.row.status" rounded color="grey" :label="props.row.status">
+                                            <q-tooltip>Task Status</q-tooltip>
+                                          </q-badge>
+                                          <!-- <q-badge class="q-ml-xs" color="grey" rounded>
+                                            {{
+                                              isPAChecked
+                                                ? (props.row.activityCloseCount || 0)
+                                                : (props.row.totalActivitiesCount || 0)
+                                            }}
+                                            <q-tooltip>
+                                              {{ isPAChecked ? 'Closed Activities Count' : 'Total Activities Count' }}
+                                            </q-tooltip>
+                                          </q-badge> -->
+                                          <q-badge class="q-ml-xs" color="grey" rounded>
+                                            {{
+                                              (() => {
+                                                const total = props.row.totalActivitiesCount || 0
+                                                const close = props.row.activityCloseCount || 0
+                                                const completed = props.row.activityCompletedCount || 0
+                                                const open = Math.max(0, total - close - completed)
+
+                                                if (isPAChecked && isPAComChecked) {
+                                                  return open + close + completed
+                                                }
+
+                                                if (isPAChecked) {
+                                                  return open + close
+                                                }
+
+                                                if (isPAComChecked) {
+                                                  return open + completed
+                                                }
+
+                                                return open
+                                              })()
+                                            }}
+
+                                            <q-tooltip>
+                                              {{
+                                                isPAChecked && isPAComChecked
+                                                  ? 'Total Activities Count'
+                                                  : isPAChecked
+                                                    ? 'Open + Closed Activities Count'
+                                                    : isPAComChecked
+                                                      ? 'Open + Completed Activities Count'
+                                                      : 'Open Activities Count'
+                                              }}
+                                            </q-tooltip>
+                                          </q-badge>
                                         </div>
                                       </div>
-                                    </div>
-                                    <multiSelectDropdown
-                                      v-model="searchProjectTask.statusIds"
-                                      label="Status"
-                                      :options="projectTaskStatusForDropdown.list.value"
-                                      :filter="projectTaskStatusForDropdown.filter"
-                                      :isShowAll="true"
-                                    />
-                                    <multiSelectDropdown
-                                      v-model="searchProjectTask.priorityIds"
-                                      label="Task Priority"
-                                      :options="projectTaskPrioritiesForDropdown.list.value"
-                                      :filter="projectTaskPrioritiesForDropdown.filter"
-                                      :isShowAll="true"
-                                    />
-                                    <multiSelectDropdown
-                                      v-model="searchProjectTask.assignedToIds"
-                                      label="Task Owner"
-                                      :options="projectEmployeesForDropdown.list.value"
-                                      :filter="projectEmployeesForDropdown.filter"
-                                    />
-                                    <multiSelectDropdown
-                                      v-model="searchProjectTask.taskTagsIds"
-                                      label="Task Tags"
-                                      :options="projectTaskTagsDropdown.list.value"
-                                      :filter="projectTaskTagsDropdown.filter"
-                                      :show-bg-color="true"
-                                    />
-                                    <div class="row items-center q-mb-sm">
-                                      <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                                        <label class="Cutomlabel q-mt-sm fs-13">Show Closed</label>
-                                      </div>
-                                      <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
-                                        <q-checkbox v-model="isTaskChecked" label="" color="indigo-12" class="q-mr-md" @click="ShowClosedTask()" />
-                                      </div>
-                                    </div>
-                                    <!-- Search and Clear Buttons -->
-                                    <div class="row justify-end q-gutter-sm q-mb-sm">
-                                      <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showTasksFilter = false; onTaskSearch(); }" />
-                                      <q-btn style="width: 20%;" outline color="grey-4" label="Clear" class="text-grey-9 btnRounded" no-caps @click="onClearTask" />
-                                      <q-btn style="width: 20%;" outline color="negative" label="Close" class="btnRounded" no-caps @click="() => { showTasksFilter = false; }" />
-                                    </div>
-                                  </q-card>
-                                </q-menu>
-                              </div>
-                              <div class="q-ml-sm">
-                                <!-- Replace your current sort menu with this -->
-                                <q-btn icon="o_swap_vert" dense outline round no-caps class="text-primary btnRounded" size="sm">
-                                  <q-tooltip>
-                                    Sorted: By
-                                    {{ selectedSortByTask === 'startDate'
-                                      ? ' Start Date'
-                                      : selectedSortByTask === 'endDate'
-                                        ? ' End Date'
-                                        : selectedSortByTask === 'taskName'
-                                          ? ' Name'
-                                          : selectedSortByTask === 'status'
-                                            ? ' Status'
-                                            : selectedSortByTask === 'priority'
-                                              ? ' Priority'
-                                              : selectedSortByTask === 'assignTo'
-                                                ? ' Owner'
-                                                : selectedSortByTask === 'createdOnUtc'
-                                                  ? ' Created Date'
-                                                  : selectedSortByTask
-                                    }} ({{ selectedSortOrderByTask ? 'Descending' : 'Ascending' }})</q-tooltip>
-                                  <q-menu>
-                                    <q-list style="min-width: 200px">
-                                      <q-separator />
-                                      <q-item-label header class="q-py-xs" style="font-size: 0.75rem;font-weight:500;">Sort By</q-item-label>
-                                      <q-item>
-                                        <q-item-section>
-                                          <q-radio
-                                            v-model="selectedSortByTask"
-                                            size="xs"
-                                            val="taskName"
-                                            label="Name"
-                                            checked-icon="o_task_alt"
-                                            dense
-                                            @update:model-value="val => onSortByTask(val, false)"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                      <q-item>
-                                        <q-item-section>
-                                          <q-radio
-                                            v-model="selectedSortByTask"
-                                            style="font-size:13px"
-                                            size="xs"
-                                            val="startDate"
-                                            label="Start Date"
-                                            checked-icon="o_task_alt"
-                                            dense
-                                            @update:model-value="val => onSortByTask(val, false)"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                      <q-item>
-                                        <q-item-section>
-                                          <q-radio
-                                            v-model="selectedSortByTask"
-                                            style="font-size:13px"
-                                            size="xs"
-                                            val="endDate"
-                                            label="End Date"
-                                            checked-icon="o_task_alt"
-                                            dense
-                                            @update:model-value="val => onSortByTask(val, false)"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                      <q-item>
-                                        <q-item-section>
-                                          <q-radio
-                                            v-model="selectedSortByTask"
-                                            style="font-size:13px"
-                                            size="xs"
-                                            val="status"
-                                            label="Status"
-                                            checked-icon="o_task_alt"
-                                            dense
-                                            @update:model-value="val => onSortByTask(val, false)"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                      <q-item>
-                                        <q-item-section>
-                                          <q-radio
-                                            v-model="selectedSortByTask"
-                                            style="font-size:13px"
-                                            size="xs"
-                                            val="priority"
-                                            label="Priority"
-                                            checked-icon="o_task_alt"
-                                            dense
-                                            @update:model-value="val => onSortByTask(val, false)"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                      <q-item>
-                                        <q-item-section>
-                                          <q-radio
-                                            v-model="selectedSortByTask"
-                                            style="font-size:13px"
-                                            size="xs"
-                                            val="assignTo"
-                                            label="Owner"
-                                            checked-icon="o_task_alt"
-                                            dense
-                                            @update:model-value="val => onSortByTask(val, false)"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                      <q-item>
-                                        <q-item-section>
-                                          <q-radio
-                                            v-model="selectedSortByTask"
-                                            style="font-size:13px"
-                                            size="xs"
-                                            val="createdOnUtc"
-                                            label="Created Date"
-                                            checked-icon="o_task_alt"
-                                            dense
-                                            @update:model-value="val => onSortByTask(val, false)"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                      <q-separator />
-                                      <q-item-label header class="q-py-xs " style="font-size: 0.75rem;font-weight:500;">Sort Order</q-item-label>
-                                      <q-item>
-                                        <q-item-section>
-                                          <q-radio
-                                            v-model="selectedSortOrderByTask"
-                                            style="font-size:13px"
-                                            size="xs"
-                                            :val="false"
-                                            label="Ascending"
-                                            checked-icon="o_task_alt"
-                                            dense
-                                            @update:model-value="val => onSortByTask(val, true)"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                      <q-item>
-                                        <q-item-section>
-                                          <q-radio
-                                            v-model="selectedSortOrderByTask"
-                                            style="font-size:13px"
-                                            size="xs"
-                                            :val="true"
-                                            label="Descending"
-                                            checked-icon="o_task_alt"
-                                            dense
-                                            @update:model-value="val => onSortByTask(val, true)"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                    </q-list>
-                                  </q-menu>
-                                </q-btn>
-                              </div>
-                            </div>
-                          </q-toolbar>
-                          <q-table
-                            v-model:pagination="projectTasksPagination"
-                            :loading="loading"
-                            :rows="filteredTaskRows"
-                            :columns="projectTaskColumns"
-                            row-key="id"
-                            separator="cell"
-                            binary-state-sort
-                            class="Custom-DataTable"
-                            no-data-label="No task available"
-                            :rows-per-page-options="[20, 50, 100, 200, 500]"
-                            table-style="max-height: 65vh"
-                            virtual-scroll
-                            @request="getTaskListByModuleId"
-                          >
-                            <template #header="props">
-                              <q-tr :props="props" class="bg-primary text-white">
-                                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th> -->
-                                <q-th v-for="col in props.cols" :key="col.name" :props="props">
-                                  <template v-if="col.name === 'estimateTime'">
-                                    <div class="" style="text-align:right !important">
-                                      <span>{{ col.label }}</span>
-                                      <q-icon name="o_info" size="xs" class="text-black q-ml-xs">
-                                        <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-white shadow-2">
-                                          <div class="text-caption">
-                                            <span>{{ "(Task Est. Hrs / Sum Of Activity hours)" }}</span>
+                                    </q-td>
+                                    <q-td class="text-center" style="width: 5% !important" @click="LoadTaskActivities(props.row.id)">{{ props.row.startDate ? toDate(props.row.startDate) : '--' }} <span v-if="props.row.endDate" class=""> <p class="q-mb-none">To</p> </span> {{ props.row?.endDate || toDate(props.row?.endDate) }}</q-td>
+                                    <q-td class="" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 10px !important;" @click="LoadTaskActivities(props.row.id)">
+                                      <div class="row items-center">
+                                        <!-- Task Owner - Label -->
+                                        <div class="col-3">
+                                          <div v-if="props.row.assignTo">
+                                            <q-badge rounded color="primary">
+                                              <q-icon name="o_person" size="xs" color="white" class="q-mr-xs">
+                                                <q-tooltip>Task Owner?</q-tooltip>
+                                              </q-icon>
+                                              <span v-if="props.row.firstName && props.row.lastName">{{ props.row.firstName[0] + props.row.lastName[0] }}</span>
+                                              <q-tooltip>
+                                                <div>
+                                                  <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
+                                                  <span>{{ props.row.firstName + ' ' + props.row.lastName }}</span>
+                                                </div>
+                                                <div>
+                                                  <q-icon name="o_mail" color="white" size="xs" class="q-mr-xs" />
+                                                  <span>{{ props.row.primaryEmailAddress }}</span>
+                                                </div>
+                                              </q-tooltip>
+                                            </q-badge>
                                           </div>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </div>
-                                  </template>
-                                  <template v-else>
-                                    {{ col.label }}
-                                  </template>
-                                </q-th>
+                                        </div>
+                                        <div class="col-9 flex justify-end q-pa-xs TaskActivity hidden">
+                                          <div
+                                            v-for="activity in getUniqueActivities(props.row.projectActivities)"
+                                            :key="activity.id"
+                                            class="Person"
+                                          >
+                                            <span>{{ getInitials(activity) }}</span>
+                                            <q-tooltip>
+                                              <div>
+                                                <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
+                                                <span>{{ activity.firstName + ' ' + activity.lastName }}</span>
+                                              </div>
+                                              <div>
+                                                <q-icon name="o_mail" color="white" size="xs" class="q-mr-xs" />
+                                                <span>{{ activity.primaryEmailAddress }}</span>
+                                              </div>
+                                            </q-tooltip>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </q-td>
+                                    <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 25% !important;" @click="LoadTaskActivities(props.row.id)">
+                                      <div v-if="props.row.taskTags?.length">
+                                        <q-chip
+                                          v-for="(tag, i) in props.row.taskTags"
+                                          :key="i"
+                                          dense
+                                          removable
+                                          :style="{
+                                            backgroundColor: tag.bgColor,
+                                            color: tag.color,
+                                            padding: '4px 8px',
+                                            maxWidth: '100%',
+                                            wordBreak: 'break-word'
+                                          }"
+                                          @remove="onDeleteProjectTaskTag(props.row, tag)"
+                                        >
+                                          {{ tag.text }}
+                                        </q-chip>
+                                      </div>
+                                      <q-popup-edit
+                                        v-if="props.row.isEditable"
+                                        v-slot="scope"
+                                        v-model="props.row.taskTags"
+                                        class="common-q-td small-popup-title"
+                                        style="width: 300px;"
+                                        @save="val => onSubmitProjectTaskTags(val, props.row.id)"
+                                      >
+                                        <div class="row justify-between items-center q-mb-sm">
+                                          <div class="text-subtitle2">Update Tags</div>
+                                          <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                                        </div>
+                                        <TagEditor
+                                          v-model="scope.value"
+                                          :row-id="props.row.id"
+                                          :available-tags="tagsDropdown.list.value"
+                                          :clearable="false"
+                                          @filter="tagsDropdown.filter"
+                                        />
+                                        <div class="row justify-end q-gutter-sm q-mt-sm">
+                                          <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                                          <q-btn label="Set" color="primary" dense @click="scope.set()" />
+                                        </div>
+                                    </q-popup-edit>
+                                    </q-td>
+                                    <q-td class="text-right" style="overflow-wrap: break-word; word-wrap: break-word; width: 10px !important;" @click="LoadTaskActivities(props.row.id)">
+                                      <span v-if="!isPAChecked">{{ props.row.estimateTime }} / {{ props.row.totalActivityHours }}</span>
+                                      <span v-else>{{ props.row.estimateTime }} / {{ props.row.totalCloseActivityHours }} / </span>
+                                    </q-td>
+                                    <q-td auto-width class="text-center actions" style="width: 3% !important;">
+                                      <div class="flex items-center justify-center" style="flex-wrap: nowrap;">
+                                        <div class="">
+                                          <q-btn icon="o_more_vert" dense flat round no-caps class="text-primary btnRounded" size="sm">
+                                            <q-menu>
+                                              <q-list style="min-width: 200px">
+                                                <q-separator />
+                                                <q-item v-ripple clickable class="" @click.stop="onProjectTaskView(props.row.id)">
+                                                  <q-item-section avatar><q-icon name="o_visibility" color="" size="xs" /></q-item-section>
+                                                  <q-item-section class="">View Task</q-item-section>
+                                                </q-item>
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable class="" @click.stop="onProjectTaskEdit(props.row.id, refreshProjectTaskList)">
+                                                  <q-item-section avatar><q-icon name="o_edit" color="" size="xs" /></q-item-section>
+                                                  <q-item-section class="">Edit</q-item-section>
+                                                </q-item>
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable @click="onProjectTaskFiles(props.row.id, props.row.name, props.row.projectName, props.row.projectListName)">
+                                                  <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
+                                                  <q-item-section>Files</q-item-section>
+                                                </q-item>
+                                                <!-- <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable>
+                                                  <q-item-section avatar><q-icon name="o_flag" color="secondary" size="xs" /></q-item-section>
+                                                  <q-item-section class="">Task Status</q-item-section>
+                                                  <q-menu anchor="top end" self="top start">
+                                                    <q-item
+                                                      v-for="taskStatus in projectTaskStatusList" :key="taskStatus.value" v-ripple clickable :style="{
+                                                        cursor: shouldDisableSelect(props.row) ? 'not-allowed' : 'auto',
+                                                        pointerEvents: shouldDisableSelect(props.row) ? 'none' : 'auto',
+                                                        opacity: shouldDisableSelect(props.row) ? 0.6 : 1
+                                                      }" @click="onSubmitTaskStatus(props.row.id, taskStatus.value)"
+                                                    >
+                                                      <q-item-section
+                                                        avatar
+                                                      >
+                                                        <q-icon v-if="taskStatus.value === props.row.statusId" name="o_task_alt" color="primary" size="xs" />
+                                                        <q-icon v-else name="o_radio_button_unchecked" color="secondary" size="xs" />
+                                                      </q-item-section>
+                                                      <q-item-section class="" style="white-space: nowrap !important;">{{ taskStatus.text }}</q-item-section>
+                                                    </q-item>
+                                                  </q-menu>
+                                                </q-item> -->
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable>
+                                                  <q-item-section avatar>
+                                                    <q-icon name="o_flag" color="secondary" size="xs" />
+                                                  </q-item-section>
+                                                  <q-item-section class="">Task Status</q-item-section>
 
-                                <q-th auto-width class="text-center" />
-                              </q-tr>
-                            </template>
-                            <template #body="props">
-                              <q-tr :props="props" :class="['cursor-pointer', activeTaskRowId == props.row.id ? 'bg-green-2' : '']">
-                                <q-td class="highlight-text" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 40% !important;" @click="LoadTaskActivities(props.row.id)">
-                                  <div :style="'border-left: 5px solid ' + (props.row.color ? props.row.color : 'transparent') + '; width: 5px;height: 97%;position: absolute; left: -1px;top: 0px;'">
-                                    <q-tooltip>Project Color</q-tooltip>
+                                                  <q-menu
+                                                    anchor="top end"
+                                                    self="top start"
+                                                    @before-show="() => handleTaskPopupShow(props.row.id, props.row.status, props.row.project.status)"
+                                                  >
+                                                    <q-item
+                                                      v-for="taskStatus in projectTaskStatusMap[props.row.id] || []"
+                                                      :key="taskStatus.value"
+                                                      v-ripple
+                                                      clickable
+                                                      :disable="taskStatus.disable"
+                                                      :style="{
+                                                        cursor: shouldDisableSelect(props.row) ? 'not-allowed' : 'auto',
+                                                        pointerEvents: shouldDisableSelect(props.row) ? 'none' : 'auto',
+                                                        opacity: shouldDisableSelect(props.row) ? 0.6 : 1
+                                                      }"
+                                                      @click="onSubmitTaskStatus(props.row.id, taskStatus.value)"
+                                                    >
+                                                      <q-item-section avatar>
+                                                        <q-icon
+                                                          v-if="taskStatus.value === props.row.statusId"
+                                                          name="o_task_alt"
+                                                          color="primary"
+                                                          size="xs"
+                                                        />
+                                                        <q-icon
+                                                          v-else
+                                                          name="o_radio_button_unchecked"
+                                                          color="secondary"
+                                                          size="xs"
+                                                        />
+                                                      </q-item-section>
+                                                      <q-item-section style="white-space: nowrap !important;">
+                                                        {{ taskStatus.text }}
+                                                      </q-item-section>
+                                                    </q-item>
+                                                  </q-menu>
+
+                                                </q-item>
+
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable>
+                                                  <q-item-section avatar><q-icon name="o_priority_high" color="secondary" size="xs" /></q-item-section>
+                                                  <q-item-section class="">Task Priority</q-item-section>
+                                                  <q-menu anchor="top end" self="top start">
+                                                    <q-item v-for="priority in projectTaskPrioritiesForDropdown.list.value" :key="priority.value" v-ripple clickable @click="onTaskPrioritySubmit(props.row.id, priority.value)">
+                                                      <q-item-section avatar>
+                                                        <q-icon v-if="priority.value === props.row.priorityId" name="o_task_alt" color="primary" size="xs" />
+                                                        <q-icon v-else name="o_radio_button_unchecked" color="secondary" size="xs" />
+                                                      </q-item-section>
+                                                      <q-item-section class="">{{ priority.text }}</q-item-section>
+                                                    </q-item>
+                                                  </q-menu>
+                                                </q-item>
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable class="">
+                                                  <q-item-section avatar><q-icon name="o_person_add" color="secondary" size="xs" /></q-item-section>
+                                                  <q-item-section class="">Task Owner?</q-item-section>
+                                                  <q-menu anchor="top end" self="top start">
+                                                    <q-item v-ripple clickable class="flex column">
+                                                      <div class="q-pa-xs">
+                                                        <q-select
+                                                          v-model="props.row.assignedToId"
+                                                          class="" use-input outlined stack-label hide-bottom-space :dense="true"
+                                                          :options="taskOwnerList" option-value="value" option-label="text" emit-value map-options @filter="getTaskOwnerFilterForDropdown"
+                                                          @update:model-value="onSubmitOwnerData(props.row.id, props.row.assignedToId)"
+                                                        >
+                                                          <template #prepend>
+                                                            <q-icon name="o_person" size="xs" style="" />
+                                                          </template>
+                                                          <template #option="{ itemProps, opt }">
+                                                            <q-item v-bind="itemProps">
+                                                              <q-item-section>
+                                                                <div class="row q-col-gutter-x-md items-center">
+                                                                  <span>{{ opt.text }}</span>
+                                                                </div>
+                                                              </q-item-section>
+                                                            </q-item>
+                                                          </template>
+                                                        </q-select>
+                                                      </div>
+                                                    </q-item>
+                                                  </q-menu>
+                                                </q-item>
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable>
+                                                  <q-item-section avatar><q-icon name="o_local_offer" size="xs" /></q-item-section>
+                                                  <q-item-section>Add Tags
+                                                    <q-popup-edit
+                                                      v-if="props.row.isEditable"
+                                                      v-slot="scope"
+                                                      v-model="props.row.taskTags"
+                                                      class="common-q-td small-popup-title"
+                                                      style="width: 300px;"
+                                                      @save="val => onSubmitProjectTaskTags(val, props.row.id)"
+                                                    >
+                                                      <div class="row justify-between items-center q-mb-sm">
+                                                        <div class="text-subtitle2">Add Tags</div>
+                                                        <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                                                      </div>
+                                                      <TagEditor
+                                                        v-model="scope.value"
+                                                        :row-id="props.row.id"
+                                                        :available-tags="tagsDropdown.list.value"
+                                                        :clearable="false"
+                                                        @filter="tagsDropdown.filter"
+                                                      />
+                                                      <div class="row justify-end q-gutter-sm q-mt-sm">
+                                                        <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                                                        <q-btn label="Set" color="primary" dense @click="scope.set()" />
+                                                      </div>
+                                                  </q-popup-edit>
+                                                  </q-item-section>
+                                                </q-item>
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable @click="onProjectTaskStatusChangeLog(props.row.id)">
+                                                  <q-item-section avatar><q-icon name="o_flag" size="xs" /></q-item-section>
+                                                  <q-item-section>Task Status Change Log</q-item-section>
+                                                </q-item>
+                                                <q-item v-ripple clickable @click="onProjectTaskLevelTimeSheetView(props.row.id)">
+                                                  <q-item-section avatar><q-icon name="o_notes" size="xs" /></q-item-section>
+                                                  <q-item-section>Task Level Timesheet</q-item-section>
+                                                </q-item>
+                                                <q-item v-if="(props.row.isEditable || props.row.isNotes) && props.row.status != 'Close'" v-ripple clickable @click="onNoteAdd(props.row.id, 'Project Task', props.row.projectId, props.row.projectName, props.row.name, '', refreshProjectList)">
+                                                  <q-item-section avatar><q-icon name="o_assignment" size="xs" /></q-item-section>
+                                                  <q-item-section>Note</q-item-section>
+                                                </q-item><q-separator />
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple class="" clickable @click="onProjectTaskCopy(props.row.id, props.row.name, props.row.projectModuleId, 'isCopy', refreshProjectTaskList)">
+                                                  <q-item-section avatar><q-icon name="o_copy" size="xs" /></q-item-section>
+                                                  <q-item-section>Copy</q-item-section>
+                                                </q-item>
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple class="" clickable @click="onProjectTaskMove(props.row.id, props.row.name, props.row.projectModuleId, 'isMove', refreshProjectTaskList)">
+                                                  <q-item-section avatar><q-icon name="o_arrow_forward" size="xs" /></q-item-section>
+                                                  <q-item-section>Move</q-item-section>
+                                                </q-item>
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'">
+                                                  <q-item-section avatar>
+                                                    <q-icon v-if="props.row.color" name="o_circle" :style="`border-radius:50%;color:${props.row.color}; background-color:${props.row.color};`" size="xs" />
+                                                    <q-icon v-else name="o_question_mark" size="xs" />
+                                                  </q-item-section>
+                                                  <q-item-section style="display: flex; align-items: center; justify-content: start; flex-direction: row;">
+                                                    Task Color
+                                                    <q-icon name="o_colorize" class="cursor-pointer q-ml-xs" size="xs" @click.stop="storePreviousColor(props.row)">
+                                                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                                        <q-color
+                                                          v-model="props.row.color" v-ripple clickable no-header no-footer class="my-picker" @update:model-value="startColorSelection"
+                                                          @change="finalizeColorSelection(props.row, 'Task')"
+                                                        />
+                                                      </q-popup-proxy>
+                                                    </q-icon>
+                                                  </q-item-section>
+                                                </q-item>
+                                                <q-separator />
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple v-close-popup clickable @click.stop="onDeleteTask(props.row)">
+                                                  <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
+                                                  <q-item-section class="text-negative">Delete</q-item-section>
+                                                </q-item>
+                                              </q-list>
+                                            </q-menu>
+                                          </q-btn>
+                                        </div>
+                                      </div>
+                                    </q-td>
+                                  </q-tr>
+                                </template>
+                              </q-table>
+                            </div>
+                            <div v-else class="text-grey text-caption q-pa-sm">Select a requirement to view tasks</div>
+                          </template>
+                          <template #after>
+                            <div v-if="selectedTask">
+                              <q-toolbar class="bg-green-2 column q-pa-sm">
+                                <div class="row items-center justify-between q-gutter-sm full-width">
+                                  <div>
+                                    <h3 class="text-black q-mb-none"><span>Activity for </span><span v-if="storedTaskName" class="text-primary"> {{ storedTaskName }}</span></h3>
                                   </div>
-                                  <div class="row items-center justify-between">
-                                    <div class="col-md-12">
-                                      <div class="" v-html="props.row.name" />
-                                    </div>
-                                    <div class="col-md-12">
-                                      <q-badge v-if="props.row.status" rounded color="grey" :label="props.row.status">
-                                        <q-tooltip>Task Status</q-tooltip>
-                                      </q-badge>
-                                      <!-- <q-badge class="q-ml-xs" color="grey" rounded>
-                                        {{
-                                          isPAChecked
-                                            ? (props.row.activityCloseCount || 0)
-                                            : (props.row.totalActivitiesCount || 0)
-                                        }}
-                                        <q-tooltip>
-                                          {{ isPAChecked ? 'Closed Activities Count' : 'Total Activities Count' }}
-                                        </q-tooltip>
-                                      </q-badge> -->
-                                      <q-badge class="q-ml-xs" color="grey" rounded>
-                                        {{
-                                          (() => {
-                                            const total = props.row.totalActivitiesCount || 0
-                                            const close = props.row.activityCloseCount || 0
-                                            const completed = props.row.activityCompletedCount || 0
-                                            const open = Math.max(0, total - close - completed)
-
-                                            if (isPAChecked && isPAComChecked) {
-                                              return open + close + completed
-                                            }
-
-                                            if (isPAChecked) {
-                                              return open + close
-                                            }
-
-                                            if (isPAComChecked) {
-                                              return open + completed
-                                            }
-
-                                            return open
-                                          })()
-                                        }}
-
-                                        <q-tooltip>
-                                          {{
-                                            isPAChecked && isPAComChecked
-                                              ? 'Total Activities Count'
-                                              : isPAChecked
-                                                ? 'Open + Closed Activities Count'
-                                                : isPAComChecked
-                                                  ? 'Open + Completed Activities Count'
-                                                  : 'Open Activities Count'
-                                          }}
-                                        </q-tooltip>
-                                      </q-badge>
-                                    </div>
+                                  <div class="q-mb-sm">
+                                    <q-btn v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddInlineTaskActivity(selectedTaskId)">
+                                      <q-tooltip>Add Task Activity</q-tooltip>
+                                    </q-btn>
+                                    <q-btn v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTaskActivity">
+                                      <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
+                                      <q-tooltip>Add/Edit Bulk Activities</q-tooltip>
+                                    </q-btn>
+                                    <q-btn
+                                      v-if="hasUnsavedActivityEmployees"
+                                      size="sm"
+                                      icon="o_save"
+                                      color="primary"
+                                      label="Save"
+                                      no-caps
+                                      :loading="savingActivityEmployees"
+                                      style="padding: 3px 7px; min-height: 30px;"
+                                      @click="saveActivityEmployeeAssignments"
+                                    >
+                                      <q-tooltip>Save Selected Activities</q-tooltip>
+                                    </q-btn>
                                   </div>
-                                </q-td>
-                                <q-td class="text-center" style="width: 5% !important" @click="LoadTaskActivities(props.row.id)">{{ props.row.startDate ? toDate(props.row.startDate) : '--' }} <span v-if="props.row.endDate" class=""> <p class="q-mb-none">To</p> </span> {{ props.row?.endDate || toDate(props.row?.endDate) }}</q-td>
-                                <q-td class="" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 10px !important;" @click="LoadTaskActivities(props.row.id)">
-                                  <div class="row items-center">
-                                    <!-- Task Owner - Label -->
-                                    <div class="col-3">
-                                      <div v-if="props.row.assignTo">
-                                        <q-badge rounded color="primary">
-                                          <q-icon name="o_person" size="xs" color="white" class="q-mr-xs">
-                                            <q-tooltip>Task Owner?</q-tooltip>
+                                </div>
+                                <div class="row full-width justify-between items-center">
+                                  <div class="col-5">
+                                    <q-input
+                                      v-model="searchProjectActivity.filterActivity"
+                                      :loading="searchProjectActivityLoader"
+                                      outlined
+                                      class="bg-white "
+                                      debounce="300"
+                                      placeholder="Search Activities"
+                                      dense
+                                      clearable
+                                    >
+                                      <template #prepend>
+                                        <q-icon name="o_search" />
+                                      </template>
+                                    </q-input>
+                                  </div>
+                                  <!-- <div class="col-5">
+                                    <div class="input-group">
+                                      <q-input v-model="searchProjectActivity.activityTargetMonthStr" clearable outlined fill-input dense class="q-ml-sm">
+                                        <template #append>
+                                          <q-icon name="o_calendar_month" class="cursor-pointer">
+                                            <q-popup-proxy ref="qDateProxy" v-model="isPopupActivityTargetMonthVisible" transition-show="scale" transition-hide="scale">
+                                              <q-date ref="date4ref" v-model="searchProjectActivity.activityTargetMonthStr" default-view="Years" emit-immediately minimal mask="MMMM-YYYY" class="myDate" @update:model-value="onUpdateMv4" />
+                                            </q-popup-proxy>
                                           </q-icon>
-                                          <span v-if="props.row.firstName && props.row.lastName">{{ props.row.firstName[0] + props.row.lastName[0] }}</span>
-                                          <q-tooltip>
-                                            <div>
-                                              <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
-                                              <span>{{ props.row.firstName + ' ' + props.row.lastName }}</span>
-                                            </div>
-                                            <div>
-                                              <q-icon name="o_mail" color="white" size="xs" class="q-mr-xs" />
-                                              <span>{{ props.row.primaryEmailAddress }}</span>
-                                            </div>
-                                          </q-tooltip>
+                                        </template>
+                                      </q-input>
+                                    </div>
+                                  </div> -->
+                                  <div class="col-7">
+                                    <q-checkbox v-model="isPAChecked" label="Show Closed" color="indigo-12" class="q-mr-sm" @click="ShowClosedPA()" />
+                                    <q-checkbox v-model="isPAComChecked" label="Show Completed" color="indigo-12" class="q-mr-sm" @click="ShowCompletedPA()" />
+                                  </div>
+                                </div>
+                              </q-toolbar>
+                              <q-table
+                                v-model:pagination="projectActivitiesPagination"
+                                :loading="loading"
+                                :rows="filteredActivities"
+                                :columns="projectActivityColumns"
+                                row-key="id"
+                                separator="cell"
+                                binary-state-sort
+                                class="Custom-DataTable"
+                                no-data-label="No task assignment available"
+                                :rows-per-page-options="[20, 50, 100, 200, 500]"
+                                table-style="max-height: 65vh"
+                                virtual-scroll
+                                @request="getActivitiesByTask"
+                              >
+                                <template #header="props">
+                                  <q-tr :props="props" class="bg-primary text-white">
+                                    <!-- <q-th auto-width class="text-center" /> -->
+                                    <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}<span v-if="['activityOwner'].includes(col.name) || ['activityName'].includes(col.name)" class="required">*</span></q-th> -->
+                                    <q-th
+                                      v-for="col in props.cols"
+                                      :key="col.name"
+                                      :props="props"
+                                      class="text-no-wrap"
+                                    >
+                                      <!-- <div
+                                        v-if="col.name === 'activityOwner'"
+                                        class="row items-center no-wrap"
+                                      > -->
+                                      <template v-if="col.name === 'activityOwner'">
+                                        <q-checkbox
+                                          v-if="
+                                            !savingActivityEmployees &&
+                                            getNewModuleEmployees().length > 0 && !isViewer
+                                          "
+                                          v-model="selectAllActivities"
+                                          size="sm"
+                                          @update:model-value="toggleSelectAllActivities"
+                                        />
+
+                                        <span class="q-ml-sm">{{ col.label }}</span>
+                                      <!-- </div> -->
+                                      </template>
+
+                                      <span v-else>{{ col.label }}</span>
+                                    </q-th>
+                                    <q-th auto-width class="text-center" />
+                                  </q-tr>
+                                </template>
+                                <template #top-row>
+                                  <q-tr
+                                    v-if="!isViewer"
+                                    v-for="employee in getNewModuleEmployees()"
+                                    :key="`new-employee-${employee.value}`"
+                                    class="bg-grey-1"
+                                  >
+                                    <q-td class="q-pa-xs">
+                                      <div class="row items-center">
+                                        <q-checkbox
+                                          :model-value="
+                                            activityEmployeeSelections[employee.value] ?? false
+                                          "
+                                          size="sm"
+                                          :disable="savingActivityEmployees"
+                                          @update:model-value="
+                                            value => {
+                                              activityEmployeeSelections[employee.value] = value;
+
+                                              selectAllActivities =
+                                                getNewModuleEmployees().length > 0 &&
+                                                getNewModuleEmployees().every(
+                                                  emp => activityEmployeeSelections[emp.value] === true
+                                                );
+                                            }
+                                          "
+                                        />
+
+                                        <span class="q-ml-sm" style="font-size: 12px;">
+                                          {{ employee.text }}
+                                        </span>
+
+                                        <q-badge color="orange" outline class="q-ml-sm">
+                                          New
                                         </q-badge>
                                       </div>
-                                    </div>
-                                    <div class="col-9 flex justify-end q-pa-xs TaskActivity hidden">
-                                      <div
-                                        v-for="activity in getUniqueActivities(props.row.projectActivities)"
-                                        :key="activity.id"
-                                        class="Person"
+                                    </q-td>
+                                    <q-td auto-width class="text-center actions" />
+                                  </q-tr>
+                                </template>
+                                <template #body="props">
+                                  <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight-row' : ''">
+                                    <!-- <q-td class="text-center" style="width: 0%; padding:0px">
+                                      <q-checkbox
+                                        v-model="props.row.checkboxStatus"
+                                        :disable="props.row.status == 'Close'"
+                                        size="sm"
+                                        @update:model-value="onSelectCheckbox(props.row.id, $event)"
+                                      />
+                                    </q-td> -->
+                                    <q-td style="width: 50% !important;">
+                                      <!-- <q-tooltip v-if="props.row.activityOwner">
+                                        <div>
+                                          <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
+                                          <span>{{ projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.find(e => e.value === props.row.activityOwner)?.text || props.row.activityOwner }}</span>
+                                        </div>
+                                      </q-tooltip>
+                                      <span v-if="props.row.activityOwner" class="q-mr-md" style="font-size: 12px;">
+                                        <span class="Person">{{ getInitialsOwner(projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.find(e => e.value === props.row.activityOwner)?.data || props.row.activityOwner) }}
+                                        </span>
+                                      </span>
+                                      <q-btn v-else size="xs" round icon="o_add" color="white" style="padding: 5px 5px;min-height: 15px;background-color: gray !important">
+                                        <q-tooltip>Click to Add</q-tooltip>
+                                      </q-btn> -->
+                                      <span
+                                        v-if="props.row.activityOwner"
+                                        class="q-mr-md"
+                                        style="font-size: 12px;"
                                       >
-                                        <span>{{ getInitials(activity) }}</span>
+                                        <span class="Person">
+                                          {{
+                                            getInitialsOwner(
+                                              projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value
+                                                .find(e => e.value === props.row.activityOwner)?.data
+                                              || props.row.activityOwner
+                                            )
+                                          }}
+                                        </span>
+
                                         <q-tooltip>
                                           <div>
-                                            <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
-                                            <span>{{ activity.firstName + ' ' + activity.lastName }}</span>
-                                          </div>
-                                          <div>
-                                            <q-icon name="o_mail" color="white" size="xs" class="q-mr-xs" />
-                                            <span>{{ activity.primaryEmailAddress }}</span>
+                                            <q-icon
+                                              name="o_person"
+                                              color="white"
+                                              size="xs"
+                                              class="q-mr-xs"
+                                            />
+                                            <span>
+                                              {{
+                                                projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value
+                                                  .find(e => e.value === props.row.activityOwner)?.text
+                                                || props.row.activityOwner
+                                              }}
+                                            </span>
                                           </div>
                                         </q-tooltip>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </q-td>
-                                <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 25% !important;" @click="LoadTaskActivities(props.row.id)">
-                                  <div v-if="props.row.taskTags?.length">
-                                    <q-chip
-                                      v-for="(tag, i) in props.row.taskTags"
-                                      :key="i"
-                                      dense
-                                      removable
-                                      :style="{
-                                        backgroundColor: tag.bgColor,
-                                        color: tag.color,
-                                        padding: '4px 8px',
-                                        maxWidth: '100%',
-                                        wordBreak: 'break-word'
-                                      }"
-                                      @remove="onDeleteProjectTaskTag(props.row, tag)"
-                                    >
-                                      {{ tag.text }}
-                                    </q-chip>
-                                  </div>
-                                  <q-popup-edit
-                                    v-if="props.row.isEditable"
-                                    v-slot="scope"
-                                    v-model="props.row.taskTags"
-                                    class="common-q-td small-popup-title"
-                                    style="width: 300px;"
-                                    @save="val => onSubmitProjectTaskTags(val, props.row.id)"
-                                  >
-                                    <div class="row justify-between items-center q-mb-sm">
-                                      <div class="text-subtitle2">Update Tags</div>
-                                      <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
-                                    </div>
-                                    <TagEditor
-                                      v-model="scope.value"
-                                      :row-id="props.row.id"
-                                      :available-tags="tagsDropdown.list.value"
-                                      :clearable="false"
-                                      @filter="tagsDropdown.filter"
-                                    />
-                                    <div class="row justify-end q-gutter-sm q-mt-sm">
-                                      <q-btn v-close-popup label="Cancel" color="grey" flat dense />
-                                      <q-btn label="Set" color="primary" dense @click="scope.set()" />
-                                    </div>
-                                </q-popup-edit>
-                                </q-td>
-                                <q-td class="text-right" style="overflow-wrap: break-word; word-wrap: break-word; width: 10px !important;" @click="LoadTaskActivities(props.row.id)">
-                                  <span v-if="!isPAChecked">{{ props.row.estimateTime }} / {{ props.row.totalActivityHours }}</span>
-                                  <span v-else>{{ props.row.estimateTime }} / {{ props.row.totalCloseActivityHours }} / </span>
-                                </q-td>
-                                <q-td auto-width class="text-center actions" style="width: 3% !important;">
-                                  <div class="flex items-center justify-center" style="flex-wrap: nowrap;">
-                                    <div class="">
-                                      <q-btn icon="o_more_vert" dense flat round no-caps class="text-primary btnRounded" size="sm">
-                                        <q-menu>
-                                          <q-list style="min-width: 200px">
-                                            <q-separator />
-                                            <q-item v-ripple clickable class="" @click.stop="onProjectTaskView(props.row.id)">
-                                              <q-item-section avatar><q-icon name="o_visibility" color="" size="xs" /></q-item-section>
-                                              <q-item-section class="">View Task</q-item-section>
+                                      </span>
+
+                                      <!-- No owner -->
+                                      <q-btn
+                                        v-else
+                                        size="xs"
+                                        round
+                                        icon="o_add"
+                                        color="white"
+                                        style="padding: 5px 5px; min-height: 15px; background-color: gray !important"
+                                        :disable="!canEditActivity(props.row)"
+                                      >
+                                        <q-tooltip>
+                                          {{ isViewer ? 'Viewer does not have permission to edit' : 'Click to Add' }}
+                                        </q-tooltip>
+                                      </q-btn>
+                                      <q-popup-edit
+                                        v-if="canEditActivity(props.row)"
+                                        v-slot="scope"
+                                        v-model="props.row.activityOwner"
+                                        class="small-popup-title"
+                                        style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 320px;"
+                                        @save="newVal => onSaveInlineActivity('owner', newVal, props.row)"
+                                      >
+                                        <div class="row justify-between items-center">
+                                          <div class="text-subtitle2 q-mb-sm">Activity Owner</div>
+                                          <q-btn v-close-popup icon="o_close" size="sm" flat round dense />
+                                        </div>
+
+                                        <q-select
+                                          v-model="scope.value"
+                                          class="w-100 h-auto"
+                                          use-input
+                                          clearable
+                                          outlined
+                                          dense
+                                          push
+                                          emit-value
+                                          map-options
+                                          option-value="value"
+                                          option-label="text"
+                                          dropdown-icon="o_arrow_drop_down"
+                                          :options="getActivityOwnerOptions(props.row)"
+                                          @filter="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.filter"
+                                        >
+                                          <template #option="{ itemProps, opt }">
+                                            <q-item v-bind="itemProps">
+                                              <q-item-section>
+                                                <div class="row q-col-gutter-x-md items-center">
+                                                  <span>{{ opt.text }}</span>
+                                                  <q-icon
+                                                    v-if="opt.description"
+                                                    name="o_info"
+                                                    size="17px"
+                                                    class="q-ml-xs"
+                                                  >
+                                                    <q-tooltip v-if="opt.description" class="text-wrap break-words q-pa-sm" max-width="300px">
+                                                      <div v-html="opt.description" />
+                                                    </q-tooltip>
+                                                  </q-icon>
+                                                </div>
+                                              </q-item-section>
                                             </q-item>
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable class="" @click.stop="onProjectTaskEdit(props.row.id, refreshProjectTaskList)">
+                                          </template>
+                                        </q-select>
+
+                                        <div class="row justify-end q-gutter-sm q-mt-sm">
+                                          <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                                          <q-btn
+                                            label="Set"
+                                            color="primary"
+                                            dense
+                                            @click="scope.set()"
+                                          />
+                                        </div>
+                                      </q-popup-edit>
+                                      <!-- <div
+                                        v-else
+                                        class="cursor-default"
+                                      >
+                                        {{ props.row.activityOwner?.person?.fullName || '' }}
+
+                                        <q-tooltip>
+                                          Viewer does not have permission to edit Activity Owner.
+                                        </q-tooltip>
+                                      </div> -->
+                                    </q-td>
+                                    <q-td class="hidden" style="width: 5% !important;">
+                                      <span v-if="props.row.activityName" class="q-mr-md row inline items-center no-wrap" style="font-size: 12px;">
+                                        <span>
+                                        {{ projectActivityList.find(e => e.value === props.row.activityName)?.text || props.row.activityName }}
+                                        </span>
+                                        <q-icon
+                                          v-if="props.row.activityNameDescription"
+                                          name="o_info"
+                                          size="17px"
+                                          class="q-ml-xs"
+                                        >
+                                          <q-tooltip v-if="props.row.activityNameDescription" class="text-wrap break-words q-pa-sm" max-width="300px">
+                                            <div v-html="props.row.activityNameDescription" />
+                                          </q-tooltip>
+                                        </q-icon>
+                                        <q-badge
+                                          v-if="props.row.status"
+                                          rounded
+                                          color="grey"
+                                          :label="props.row.status"
+                                          class="q-ml-sm"
+                                        >
+                                          <q-tooltip>Activity Status</q-tooltip>
+                                        </q-badge>
+                                      </span>
+                                      <q-btn v-else size="xs" round icon="o_add" color="white" style="padding: 5px 5px;min-height: 15px;background-color: gray !important">
+                                        <q-tooltip>Click to Add</q-tooltip>
+                                      </q-btn>
+                                      <q-popup-edit
+                                        v-slot="scope" v-model="props.row.activityName" class="small-popup-title" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 320px;"
+                                        @save="newVal => onSaveInlineActivity('activityName', newVal, props.row)"
+                                      >
+                                        <div class="row justify-between items-center">
+                                          <div class="text-subtitle2 q-mb-sm">Activity Type</div>
+                                          <q-btn
+                                            v-close-popup
+                                            icon="o_close" size="sm"
+                                            color="black"
+                                            flat
+                                            round
+                                            dense
+                                          />
+                                        </div>
+                                        <q-select
+                                          v-model="scope.value"
+                                          :options="projectActivityList"
+                                          class="w-100 h-auto"
+                                          use-input
+                                          clearable
+                                          outlined
+                                          dense
+                                          push
+                                          emit-value
+                                          map-options
+                                          option-value="value"
+                                          option-label="text"
+                                          dropdown-icon="o_arrow_drop_down"
+                                          @filter="getActivitiesDropDownFilter"
+                                        >
+                                          <template #option="{ itemProps, opt }">
+                                            <q-item v-bind="itemProps">
+                                              <q-item-section>
+                                                <div class="row q-col-gutter-x-md items-center">
+                                                  <span>{{ opt.text }}</span>
+                                                  <q-icon
+                                                    v-if="opt.description"
+                                                    name="o_info"
+                                                    size="17px"
+                                                    class="q-ml-xs"
+                                                  >
+                                                    <q-tooltip v-if="opt.description" class="text-wrap break-words q-pa-sm" max-width="300px">
+                                                      <div v-html="opt.description" />
+                                                    </q-tooltip>
+                                                  </q-icon>
+                                                </div>
+                                              </q-item-section>
+                                            </q-item>
+                                          </template>
+                                        </q-select>
+                                        <!-- Custom buttons -->
+                                        <div class="row justify-end q-gutter-sm q-mt-sm">
+                                          <q-btn
+                                            v-close-popup
+                                            label="Cancel"
+                                            color="grey"
+                                            flat
+                                            dense
+                                          />
+                                          <q-btn
+                                            label="Set"
+                                            color="primary"
+                                            dense
+                                            @click="scope.set()"
+                                          />
+                                        </div>
+                                      </q-popup-edit>
+                                    </q-td>
+                                    <q-td style="width: 0% !important;" class="text-right hidden">
+                                      <span class="" style="font-size: 12px;">{{ props.row.estimateHours }}</span>
+                                      <q-popup-edit
+                                        v-slot="scope" v-model="props.row.estimateHours" class="small-popup-title" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 270px;"
+                                        @save="newVal => onSaveInlineActivity('estimateHours', newVal, props.row)"
+                                      >
+                                        <div class="row justify-between items-center">
+                                          <div class="text-subtitle2 q-mb-sm">Estimate Hrs.</div>
+                                          <q-btn
+                                            v-close-popup
+                                            icon="o_close" size="sm"
+                                            color="black"
+                                            flat
+                                            round
+                                            dense
+                                          />
+                                        </div>
+                                        <q-input v-model="scope.value" outlined=""  mask="##:##" maxlength="5" stack-label hide-bottom-space :dense="true" class="w-100 h-auto estimateHours assignto" :rules="[validateHours]"  @blur="scope.value = formatHoursValue(scope.value);">
+                                          <template #prepend>
+                                            <q-icon name="o_schedule" size="xs" />
+                                          </template>
+                                          <template #hint>
+                                            <span
+                                              v-if="scope.value && validateHours(scope.value) === true && scope.value !== '00:00'""
+                                              class="text-caption text-primary"
+                                            >
+                                              {{ getHoursMinutesText(scope.value) }}
+                                            </span>
+                                            <span v-else>
+                                              hh:mm
+                                            </span>
+                                          </template>
+                                        </q-input>
+                                        <div class="row justify-end q-gutter-sm q-mt-sm">
+                                          <q-btn
+                                            v-close-popup
+                                            label="Cancel"
+                                            color="grey"
+                                            flat
+                                            dense
+                                          />
+                                          <!-- <q-btn
+                                            label="Set"
+                                            color="primary"
+                                            dense
+                                            @click="async () => {
+                                              const valid = await scope.validate();
+                                              if (valid) scope.set();
+                                            }"
+                                          /> -->
+                                          <q-btn
+                                            label="Set"
+                                            color="primary"
+                                            dense
+                                            :disable="validateHours(scope.value) !== true"
+                                            @click="scope.set()"
+                                          />
+                                        </div>
+                                      </q-popup-edit>
+                                      <q-tooltip>Click to edit</q-tooltip>
+                                    </q-td>
+                                    <q-td auto-width class="text-center actions" style="width: 0% !important;">
+                                      <q-btn v-if="!props.row.newProjectActivity" icon="o_more_vert" dense flat round no-caps class="text-primary btnRounded" size="sm">
+                                        <q-menu>
+                                          <q-list style="min-width: 130px">
+                                            <q-separator />
+                                            <q-item v-if="!props.row.newProjectActivity" v-ripple clickable class="" @click="onProjectTaskActivityView(props.row.id)">
+                                              <q-item-section avatar><q-icon name="o_visibility" color="" size="xs" /></q-item-section>
+                                              <q-item-section class="">View</q-item-section>
+                                            </q-item>
+                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable class="" @click.stop="onEditTaskActivity(props.row.id)">
                                               <q-item-section avatar><q-icon name="o_edit" color="" size="xs" /></q-item-section>
                                               <q-item-section class="">Edit</q-item-section>
                                             </q-item>
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable @click="onProjectTaskFiles(props.row.id, props.row.name, props.row.projectName, props.row.projectListName)">
-                                              <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
-                                              <q-item-section>Files</q-item-section>
-                                            </q-item>
-                                            <!-- <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable>
-                                              <q-item-section avatar><q-icon name="o_flag" color="secondary" size="xs" /></q-item-section>
-                                              <q-item-section class="">Task Status</q-item-section>
-                                              <q-menu anchor="top end" self="top start">
-                                                <q-item
-                                                  v-for="taskStatus in projectTaskStatusList" :key="taskStatus.value" v-ripple clickable :style="{
-                                                    cursor: shouldDisableSelect(props.row) ? 'not-allowed' : 'auto',
-                                                    pointerEvents: shouldDisableSelect(props.row) ? 'none' : 'auto',
-                                                    opacity: shouldDisableSelect(props.row) ? 0.6 : 1
-                                                  }" @click="onSubmitTaskStatus(props.row.id, taskStatus.value)"
-                                                >
-                                                  <q-item-section
-                                                    avatar
-                                                  >
-                                                    <q-icon v-if="taskStatus.value === props.row.statusId" name="o_task_alt" color="primary" size="xs" />
-                                                    <q-icon v-else name="o_radio_button_unchecked" color="secondary" size="xs" />
-                                                  </q-item-section>
-                                                  <q-item-section class="" style="white-space: nowrap !important;">{{ taskStatus.text }}</q-item-section>
-                                                </q-item>
-                                              </q-menu>
-                                            </q-item> -->
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable>
+                                            <q-item v-if="props.row.isEditable && props.row.taskStatus != 'Close'" v-ripple clickable>
                                               <q-item-section avatar>
                                                 <q-icon name="o_flag" color="secondary" size="xs" />
                                               </q-item-section>
-                                              <q-item-section class="">Task Status</q-item-section>
-
+                                              <q-item-section class="">Activity Status</q-item-section>
                                               <q-menu
                                                 anchor="top end"
                                                 self="top start"
-                                                @before-show="() => handleTaskPopupShow(props.row.id, props.row.status, props.row.project.status)"
+                                                @before-show="() => handleActivityPopupShow(props.row.id, props.row.status, props.row.project.status)"
                                               >
                                                 <q-item
-                                                  v-for="taskStatus in projectTaskStatusMap[props.row.id] || []"
-                                                  :key="taskStatus.value"
+                                                  v-for="activityStatus in projectActivityStatusMap[props.row.id] || []"
+                                                  :key="activityStatus.value"
                                                   v-ripple
                                                   clickable
-                                                  :disable="taskStatus.disable"
-                                                  :style="{
-                                                    cursor: shouldDisableSelect(props.row) ? 'not-allowed' : 'auto',
-                                                    pointerEvents: shouldDisableSelect(props.row) ? 'none' : 'auto',
-                                                    opacity: shouldDisableSelect(props.row) ? 0.6 : 1
-                                                  }"
-                                                  @click="onSubmitTaskStatus(props.row.id, taskStatus.value)"
+                                                  :disable="activityStatus.text === 'Open' && isDescriptionEmpty(props.row.activityDescription)"
+                                                  @click="onSubmitActivityStatus(props.row.id, activityStatus.value)"
                                                 >
                                                   <q-item-section avatar>
                                                     <q-icon
-                                                      v-if="taskStatus.value === props.row.statusId"
+                                                      v-if="activityStatus.value === props.row.activityStatusId"
                                                       name="o_task_alt"
                                                       color="primary"
                                                       size="xs"
@@ -1806,670 +2485,36 @@
                                                     />
                                                   </q-item-section>
                                                   <q-item-section style="white-space: nowrap !important;">
-                                                    {{ taskStatus.text }}
+                                                    {{ activityStatus.text }}
                                                   </q-item-section>
                                                 </q-item>
                                               </q-menu>
-
-                                            </q-item>
-
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable>
-                                              <q-item-section avatar><q-icon name="o_priority_high" color="secondary" size="xs" /></q-item-section>
-                                              <q-item-section class="">Task Priority</q-item-section>
-                                              <q-menu anchor="top end" self="top start">
-                                                <q-item v-for="priority in projectTaskPrioritiesForDropdown.list.value" :key="priority.value" v-ripple clickable @click="onTaskPrioritySubmit(props.row.id, priority.value)">
-                                                  <q-item-section avatar>
-                                                    <q-icon v-if="priority.value === props.row.priorityId" name="o_task_alt" color="primary" size="xs" />
-                                                    <q-icon v-else name="o_radio_button_unchecked" color="secondary" size="xs" />
-                                                  </q-item-section>
-                                                  <q-item-section class="">{{ priority.text }}</q-item-section>
-                                                </q-item>
-                                              </q-menu>
-                                            </q-item>
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable class="">
-                                              <q-item-section avatar><q-icon name="o_person_add" color="secondary" size="xs" /></q-item-section>
-                                              <q-item-section class="">Task Owner?</q-item-section>
-                                              <q-menu anchor="top end" self="top start">
-                                                <q-item v-ripple clickable class="flex column">
-                                                  <div class="q-pa-xs">
-                                                    <q-select
-                                                      v-model="props.row.assignedToId"
-                                                      class="" use-input outlined stack-label hide-bottom-space :dense="true"
-                                                      :options="taskOwnerList" option-value="value" option-label="text" emit-value map-options @filter="getTaskOwnerFilterForDropdown"
-                                                      @update:model-value="onSubmitOwnerData(props.row.id, props.row.assignedToId)"
-                                                    >
-                                                      <template #prepend>
-                                                        <q-icon name="o_person" size="xs" style="" />
-                                                      </template>
-                                                      <template #option="{ itemProps, opt }">
-                                                        <q-item v-bind="itemProps">
-                                                          <q-item-section>
-                                                            <div class="row q-col-gutter-x-md items-center">
-                                                              <span>{{ opt.text }}</span>
-                                                            </div>
-                                                          </q-item-section>
-                                                        </q-item>
-                                                      </template>
-                                                    </q-select>
-                                                  </div>
-                                                </q-item>
-                                              </q-menu>
-                                            </q-item>
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable>
-                                              <q-item-section avatar><q-icon name="o_local_offer" size="xs" /></q-item-section>
-                                              <q-item-section>Add Tags
-                                                 <q-popup-edit
-                                                  v-if="props.row.isEditable"
-                                                  v-slot="scope"
-                                                  v-model="props.row.taskTags"
-                                                  class="common-q-td small-popup-title"
-                                                  style="width: 300px;"
-                                                  @save="val => onSubmitProjectTaskTags(val, props.row.id)"
-                                                >
-                                                  <div class="row justify-between items-center q-mb-sm">
-                                                    <div class="text-subtitle2">Add Tags</div>
-                                                    <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
-                                                  </div>
-                                                  <TagEditor
-                                                    v-model="scope.value"
-                                                    :row-id="props.row.id"
-                                                    :available-tags="tagsDropdown.list.value"
-                                                    :clearable="false"
-                                                    @filter="tagsDropdown.filter"
-                                                  />
-                                                  <div class="row justify-end q-gutter-sm q-mt-sm">
-                                                    <q-btn v-close-popup label="Cancel" color="grey" flat dense />
-                                                    <q-btn label="Set" color="primary" dense @click="scope.set()" />
-                                                  </div>
-                                              </q-popup-edit>
-                                              </q-item-section>
-                                            </q-item>
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable @click="onProjectTaskStatusChangeLog(props.row.id)">
-                                              <q-item-section avatar><q-icon name="o_flag" size="xs" /></q-item-section>
-                                              <q-item-section>Task Status Change Log</q-item-section>
-                                            </q-item>
-                                            <q-item v-ripple clickable @click="onProjectTaskLevelTimeSheetView(props.row.id)">
-                                              <q-item-section avatar><q-icon name="o_notes" size="xs" /></q-item-section>
-                                              <q-item-section>Task Level Timesheet</q-item-section>
-                                            </q-item>
-                                            <q-item v-if="(props.row.isEditable || props.row.isNotes) && props.row.status != 'Close'" v-ripple clickable @click="onNoteAdd(props.row.id, 'Project Task', props.row.projectId, props.row.projectName, props.row.name, '', refreshProjectList)">
-                                              <q-item-section avatar><q-icon name="o_assignment" size="xs" /></q-item-section>
-                                              <q-item-section>Note</q-item-section>
-                                            </q-item><q-separator />
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple class="" clickable @click="onProjectTaskCopy(props.row.id, props.row.name, props.row.projectModuleId, 'isCopy', refreshProjectTaskList)">
-                                              <q-item-section avatar><q-icon name="o_copy" size="xs" /></q-item-section>
-                                              <q-item-section>Copy</q-item-section>
-                                            </q-item>
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple class="" clickable @click="onProjectTaskMove(props.row.id, props.row.name, props.row.projectModuleId, 'isMove', refreshProjectTaskList)">
-                                              <q-item-section avatar><q-icon name="o_arrow_forward" size="xs" /></q-item-section>
-                                              <q-item-section>Move</q-item-section>
-                                            </q-item>
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'">
-                                              <q-item-section avatar>
-                                                <q-icon v-if="props.row.color" name="o_circle" :style="`border-radius:50%;color:${props.row.color}; background-color:${props.row.color};`" size="xs" />
-                                                <q-icon v-else name="o_question_mark" size="xs" />
-                                              </q-item-section>
-                                              <q-item-section style="display: flex; align-items: center; justify-content: start; flex-direction: row;">
-                                                Task Color
-                                                <q-icon name="o_colorize" class="cursor-pointer q-ml-xs" size="xs" @click.stop="storePreviousColor(props.row)">
-                                                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                                    <q-color
-                                                      v-model="props.row.color" v-ripple clickable no-header no-footer class="my-picker" @update:model-value="startColorSelection"
-                                                      @change="finalizeColorSelection(props.row, 'Task')"
-                                                    />
-                                                  </q-popup-proxy>
-                                                </q-icon>
-                                              </q-item-section>
                                             </q-item>
                                             <q-separator />
-                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple v-close-popup clickable @click.stop="onDeleteTask(props.row)">
+                                            <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple v-close-popup clickable @click="onDeleteTaskActivity(props.row)">
                                               <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
                                               <q-item-section class="text-negative">Delete</q-item-section>
                                             </q-item>
                                           </q-list>
                                         </q-menu>
                                       </q-btn>
-                                    </div>
-                                  </div>
-                                </q-td>
-                              </q-tr>
-                            </template>
-                          </q-table>
-                        </div>
-                        <div v-else class="text-grey text-caption q-pa-sm">Select a requirement to view tasks</div>
-                      </template>
-                      <template #after>
-                        <div v-if="selectedTask">
-                          <q-toolbar class="bg-green-2 column q-pa-sm">
-                            <div class="row items-center justify-between q-gutter-sm full-width">
-                              <div>
-                                <h3 class="text-black q-mb-none"><span>Activity for </span><span v-if="storedTaskName" class="text-primary"> {{ storedTaskName }}</span></h3>
-                              </div>
-                              <div class="q-mb-sm">
-                                <q-btn v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddInlineTaskActivity(selectedTaskId)">
-                                  <q-tooltip>Add Task Activity</q-tooltip>
-                                </q-btn>
-                                <q-btn v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTaskActivity">
-                                  <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
-                                  <q-tooltip>Add/Edit Bulk Activities</q-tooltip>
-                                </q-btn>
-                                <q-btn
-                                  v-if="hasUnsavedActivityEmployees"
-                                  size="sm"
-                                  icon="o_save"
-                                  color="primary"
-                                  label="Save"
-                                  no-caps
-                                  :loading="savingActivityEmployees"
-                                  style="padding: 3px 7px; min-height: 30px;"
-                                  @click="saveActivityEmployeeAssignments"
-                                >
-                                  <q-tooltip>Save Selected Activities</q-tooltip>
-                                </q-btn>
-                              </div>
+                                      <q-btn v-else size="xs" flat round icon="o_delete_outline" color="negative" class="text-primary btnRounded" @click="onRemoveTaskActivity(props.row)">
+                                        <q-tooltip>Delete Row</q-tooltip>
+                                      </q-btn>
+                                    </q-td>
+                                  </q-tr>
+                                  <q-tr class="hidden" v-if="props.pageIndex === projectActivities.length - 1">
+                                    <q-td colspan="2" class="text-right font-bold"><b>Total Hours:</b></q-td>
+                                    <q-td class="text-right">{{ totalEstimateHours }}</q-td>
+                                    <q-td />
+                                  </q-tr>
+                                </template>
+                              </q-table>
                             </div>
-                            <div class="row full-width justify-between items-center">
-                              <div class="col-5">
-                                <q-input
-                                  v-model="searchProjectActivity.filterActivity"
-                                  :loading="searchProjectActivityLoader"
-                                  outlined
-                                  class="bg-white "
-                                  debounce="300"
-                                  placeholder="Search Activities"
-                                  dense
-                                  clearable
-                                >
-                                  <template #prepend>
-                                    <q-icon name="o_search" />
-                                  </template>
-                                </q-input>
-                              </div>
-                              <!-- <div class="col-5">
-                                <div class="input-group">
-                                  <q-input v-model="searchProjectActivity.activityTargetMonthStr" clearable outlined fill-input dense class="q-ml-sm">
-                                    <template #append>
-                                      <q-icon name="o_calendar_month" class="cursor-pointer">
-                                        <q-popup-proxy ref="qDateProxy" v-model="isPopupActivityTargetMonthVisible" transition-show="scale" transition-hide="scale">
-                                          <q-date ref="date4ref" v-model="searchProjectActivity.activityTargetMonthStr" default-view="Years" emit-immediately minimal mask="MMMM-YYYY" class="myDate" @update:model-value="onUpdateMv4" />
-                                        </q-popup-proxy>
-                                      </q-icon>
-                                    </template>
-                                  </q-input>
-                                </div>
-                              </div> -->
-                              <div class="col-7">
-                                <q-checkbox v-model="isPAChecked" label="Show Closed" color="indigo-12" class="q-mr-sm" @click="ShowClosedPA()" />
-                                <q-checkbox v-model="isPAComChecked" label="Show Completed" color="indigo-12" class="q-mr-sm" @click="ShowCompletedPA()" />
-                              </div>
-                            </div>
-                          </q-toolbar>
-                          <q-table
-                            v-model:pagination="projectActivitiesPagination"
-                            :loading="loading"
-                            :rows="filteredActivities"
-                            :columns="projectActivityColumns"
-                            row-key="id"
-                            separator="cell"
-                            binary-state-sort
-                            class="Custom-DataTable"
-                            no-data-label="No task assignment available"
-                            :rows-per-page-options="[20, 50, 100, 200, 500]"
-                            table-style="max-height: 65vh"
-                            virtual-scroll
-                            @request="getActivitiesByTask"
-                          >
-                            <template #header="props">
-                              <q-tr :props="props" class="bg-primary text-white">
-                                <!-- <q-th auto-width class="text-center" /> -->
-                                <!-- <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}<span v-if="['activityOwner'].includes(col.name) || ['activityName'].includes(col.name)" class="required">*</span></q-th> -->
-                                <q-th
-                                  v-for="col in props.cols"
-                                  :key="col.name"
-                                  :props="props"
-                                  class="text-no-wrap"
-                                >
-                                  <!-- <div
-                                    v-if="col.name === 'activityOwner'"
-                                    class="row items-center no-wrap"
-                                  > -->
-                                  <template v-if="col.name === 'activityOwner'">
-                                    <q-checkbox
-                                      v-if="
-                                        !savingActivityEmployees &&
-                                        getNewModuleEmployees().length > 0 && !isViewer
-                                      "
-                                      v-model="selectAllActivities"
-                                      size="sm"
-                                      @update:model-value="toggleSelectAllActivities"
-                                    />
-
-                                    <span class="q-ml-sm">{{ col.label }}</span>
-                                  <!-- </div> -->
-                                   </template>
-
-                                  <span v-else>{{ col.label }}</span>
-                                </q-th>
-                                <q-th auto-width class="text-center" />
-                              </q-tr>
-                            </template>
-                            <template #top-row>
-                              <q-tr
-                                v-if="!isViewer"
-                                v-for="employee in getNewModuleEmployees()"
-                                :key="`new-employee-${employee.value}`"
-                                class="bg-grey-1"
-                              >
-                                <q-td class="q-pa-xs">
-                                  <div class="row items-center">
-                                    <q-checkbox
-                                      :model-value="
-                                        activityEmployeeSelections[employee.value] ?? false
-                                      "
-                                      size="sm"
-                                      :disable="savingActivityEmployees"
-                                      @update:model-value="
-                                        value => {
-                                          activityEmployeeSelections[employee.value] = value;
-
-                                          selectAllActivities =
-                                            getNewModuleEmployees().length > 0 &&
-                                            getNewModuleEmployees().every(
-                                              emp => activityEmployeeSelections[emp.value] === true
-                                            );
-                                        }
-                                      "
-                                    />
-
-                                    <span class="q-ml-sm" style="font-size: 12px;">
-                                      {{ employee.text }}
-                                    </span>
-
-                                    <q-badge color="orange" outline class="q-ml-sm">
-                                      New
-                                    </q-badge>
-                                  </div>
-                                </q-td>
-                                <q-td auto-width class="text-center actions" />
-                              </q-tr>
-                            </template>
-                            <template #body="props">
-                              <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight-row' : ''">
-                                <!-- <q-td class="text-center" style="width: 0%; padding:0px">
-                                  <q-checkbox
-                                    v-model="props.row.checkboxStatus"
-                                    :disable="props.row.status == 'Close'"
-                                    size="sm"
-                                    @update:model-value="onSelectCheckbox(props.row.id, $event)"
-                                  />
-                                </q-td> -->
-                                <q-td style="width: 50% !important;">
-                                  <!-- <q-tooltip v-if="props.row.activityOwner">
-                                    <div>
-                                      <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
-                                      <span>{{ projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.find(e => e.value === props.row.activityOwner)?.text || props.row.activityOwner }}</span>
-                                    </div>
-                                  </q-tooltip>
-                                  <span v-if="props.row.activityOwner" class="q-mr-md" style="font-size: 12px;">
-                                    <span class="Person">{{ getInitialsOwner(projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value.find(e => e.value === props.row.activityOwner)?.data || props.row.activityOwner) }}
-                                    </span>
-                                  </span>
-                                  <q-btn v-else size="xs" round icon="o_add" color="white" style="padding: 5px 5px;min-height: 15px;background-color: gray !important">
-                                    <q-tooltip>Click to Add</q-tooltip>
-                                  </q-btn> -->
-                                  <span
-                                    v-if="props.row.activityOwner"
-                                    class="q-mr-md"
-                                    style="font-size: 12px;"
-                                  >
-                                    <span class="Person">
-                                      {{
-                                        getInitialsOwner(
-                                          projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value
-                                            .find(e => e.value === props.row.activityOwner)?.data
-                                          || props.row.activityOwner
-                                        )
-                                      }}
-                                    </span>
-
-                                    <q-tooltip>
-                                      <div>
-                                        <q-icon
-                                          name="o_person"
-                                          color="white"
-                                          size="xs"
-                                          class="q-mr-xs"
-                                        />
-                                        <span>
-                                          {{
-                                            projectCharterEmployeesWithWeeklyPlanHoursForDropdown.list.value
-                                              .find(e => e.value === props.row.activityOwner)?.text
-                                            || props.row.activityOwner
-                                          }}
-                                        </span>
-                                      </div>
-                                    </q-tooltip>
-                                  </span>
-
-                                  <!-- No owner -->
-                                  <q-btn
-                                    v-else
-                                    size="xs"
-                                    round
-                                    icon="o_add"
-                                    color="white"
-                                    style="padding: 5px 5px; min-height: 15px; background-color: gray !important"
-                                    :disable="!canEditActivity(props.row)"
-                                  >
-                                    <q-tooltip>
-                                      {{ isViewer ? 'Viewer does not have permission to edit' : 'Click to Add' }}
-                                    </q-tooltip>
-                                  </q-btn>
-                                  <q-popup-edit
-                                    v-if="canEditActivity(props.row)"
-                                    v-slot="scope"
-                                    v-model="props.row.activityOwner"
-                                    class="small-popup-title"
-                                    style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 320px;"
-                                    @save="newVal => onSaveInlineActivity('owner', newVal, props.row)"
-                                  >
-                                    <div class="row justify-between items-center">
-                                      <div class="text-subtitle2 q-mb-sm">Activity Owner</div>
-                                      <q-btn v-close-popup icon="o_close" size="sm" flat round dense />
-                                    </div>
-
-                                    <q-select
-                                      v-model="scope.value"
-                                      class="w-100 h-auto"
-                                      use-input
-                                      clearable
-                                      outlined
-                                      dense
-                                      push
-                                      emit-value
-                                      map-options
-                                      option-value="value"
-                                      option-label="text"
-                                      dropdown-icon="o_arrow_drop_down"
-                                      :options="getActivityOwnerOptions(props.row)"
-                                      @filter="projectCharterEmployeesWithWeeklyPlanHoursForDropdown.filter"
-                                    >
-                                      <template #option="{ itemProps, opt }">
-                                        <q-item v-bind="itemProps">
-                                          <q-item-section>
-                                            <div class="row q-col-gutter-x-md items-center">
-                                              <span>{{ opt.text }}</span>
-                                              <q-icon
-                                                v-if="opt.description"
-                                                name="o_info"
-                                                size="17px"
-                                                class="q-ml-xs"
-                                              >
-                                                <q-tooltip v-if="opt.description" class="text-wrap break-words q-pa-sm" max-width="300px">
-                                                  <div v-html="opt.description" />
-                                                </q-tooltip>
-                                              </q-icon>
-                                            </div>
-                                          </q-item-section>
-                                        </q-item>
-                                      </template>
-                                    </q-select>
-
-                                    <div class="row justify-end q-gutter-sm q-mt-sm">
-                                      <q-btn v-close-popup label="Cancel" color="grey" flat dense />
-                                      <q-btn
-                                        label="Set"
-                                        color="primary"
-                                        dense
-                                        @click="scope.set()"
-                                      />
-                                    </div>
-                                  </q-popup-edit>
-                                  <!-- <div
-                                    v-else
-                                    class="cursor-default"
-                                  >
-                                    {{ props.row.activityOwner?.person?.fullName || '' }}
-
-                                    <q-tooltip>
-                                      Viewer does not have permission to edit Activity Owner.
-                                    </q-tooltip>
-                                  </div> -->
-                                </q-td>
-                                <q-td class="hidden" style="width: 5% !important;">
-                                  <span v-if="props.row.activityName" class="q-mr-md row inline items-center no-wrap" style="font-size: 12px;">
-                                    <span>
-                                    {{ projectActivityList.find(e => e.value === props.row.activityName)?.text || props.row.activityName }}
-                                    </span>
-                                    <q-icon
-                                      v-if="props.row.activityNameDescription"
-                                      name="o_info"
-                                      size="17px"
-                                      class="q-ml-xs"
-                                    >
-                                      <q-tooltip v-if="props.row.activityNameDescription" class="text-wrap break-words q-pa-sm" max-width="300px">
-                                        <div v-html="props.row.activityNameDescription" />
-                                      </q-tooltip>
-                                    </q-icon>
-                                    <q-badge
-                                      v-if="props.row.status"
-                                      rounded
-                                      color="grey"
-                                      :label="props.row.status"
-                                      class="q-ml-sm"
-                                    >
-                                      <q-tooltip>Activity Status</q-tooltip>
-                                    </q-badge>
-                                  </span>
-                                  <q-btn v-else size="xs" round icon="o_add" color="white" style="padding: 5px 5px;min-height: 15px;background-color: gray !important">
-                                    <q-tooltip>Click to Add</q-tooltip>
-                                  </q-btn>
-                                  <q-popup-edit
-                                    v-slot="scope" v-model="props.row.activityName" class="small-popup-title" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 320px;"
-                                    @save="newVal => onSaveInlineActivity('activityName', newVal, props.row)"
-                                  >
-                                    <div class="row justify-between items-center">
-                                      <div class="text-subtitle2 q-mb-sm">Activity Type</div>
-                                      <q-btn
-                                        v-close-popup
-                                        icon="o_close" size="sm"
-                                        color="black"
-                                        flat
-                                        round
-                                        dense
-                                      />
-                                    </div>
-                                    <q-select
-                                      v-model="scope.value"
-                                      :options="projectActivityList"
-                                      class="w-100 h-auto"
-                                      use-input
-                                      clearable
-                                      outlined
-                                      dense
-                                      push
-                                      emit-value
-                                      map-options
-                                      option-value="value"
-                                      option-label="text"
-                                      dropdown-icon="o_arrow_drop_down"
-                                      @filter="getActivitiesDropDownFilter"
-                                    >
-                                      <template #option="{ itemProps, opt }">
-                                        <q-item v-bind="itemProps">
-                                          <q-item-section>
-                                            <div class="row q-col-gutter-x-md items-center">
-                                              <span>{{ opt.text }}</span>
-                                              <q-icon
-                                                v-if="opt.description"
-                                                name="o_info"
-                                                size="17px"
-                                                class="q-ml-xs"
-                                              >
-                                                <q-tooltip v-if="opt.description" class="text-wrap break-words q-pa-sm" max-width="300px">
-                                                  <div v-html="opt.description" />
-                                                </q-tooltip>
-                                              </q-icon>
-                                            </div>
-                                          </q-item-section>
-                                        </q-item>
-                                      </template>
-                                    </q-select>
-                                    <!-- Custom buttons -->
-                                    <div class="row justify-end q-gutter-sm q-mt-sm">
-                                      <q-btn
-                                        v-close-popup
-                                        label="Cancel"
-                                        color="grey"
-                                        flat
-                                        dense
-                                      />
-                                      <q-btn
-                                        label="Set"
-                                        color="primary"
-                                        dense
-                                        @click="scope.set()"
-                                      />
-                                    </div>
-                                  </q-popup-edit>
-                                </q-td>
-                                <q-td style="width: 0% !important;" class="text-right hidden">
-                                  <span class="" style="font-size: 12px;">{{ props.row.estimateHours }}</span>
-                                  <q-popup-edit
-                                    v-slot="scope" v-model="props.row.estimateHours" class="small-popup-title" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 270px;"
-                                    @save="newVal => onSaveInlineActivity('estimateHours', newVal, props.row)"
-                                  >
-                                    <div class="row justify-between items-center">
-                                      <div class="text-subtitle2 q-mb-sm">Estimate Hrs.</div>
-                                      <q-btn
-                                        v-close-popup
-                                        icon="o_close" size="sm"
-                                        color="black"
-                                        flat
-                                        round
-                                        dense
-                                      />
-                                    </div>
-                                    <q-input v-model="scope.value" outlined=""  mask="##:##" maxlength="5" stack-label hide-bottom-space :dense="true" class="w-100 h-auto estimateHours assignto" :rules="[validateHours]"  @blur="scope.value = formatHoursValue(scope.value);">
-                                      <template #prepend>
-                                        <q-icon name="o_schedule" size="xs" />
-                                      </template>
-                                      <template #hint>
-                                        <span
-                                          v-if="scope.value && validateHours(scope.value) === true && scope.value !== '00:00'""
-                                          class="text-caption text-primary"
-                                        >
-                                          {{ getHoursMinutesText(scope.value) }}
-                                        </span>
-                                        <span v-else>
-                                          hh:mm
-                                        </span>
-                                      </template>
-                                    </q-input>
-                                    <div class="row justify-end q-gutter-sm q-mt-sm">
-                                      <q-btn
-                                        v-close-popup
-                                        label="Cancel"
-                                        color="grey"
-                                        flat
-                                        dense
-                                      />
-                                      <!-- <q-btn
-                                        label="Set"
-                                        color="primary"
-                                        dense
-                                        @click="async () => {
-                                          const valid = await scope.validate();
-                                          if (valid) scope.set();
-                                        }"
-                                      /> -->
-                                      <q-btn
-                                        label="Set"
-                                        color="primary"
-                                        dense
-                                        :disable="validateHours(scope.value) !== true"
-                                        @click="scope.set()"
-                                      />
-                                    </div>
-                                  </q-popup-edit>
-                                  <q-tooltip>Click to edit</q-tooltip>
-                                </q-td>
-                                <q-td auto-width class="text-center actions" style="width: 0% !important;">
-                                  <q-btn v-if="!props.row.newProjectActivity" icon="o_more_vert" dense flat round no-caps class="text-primary btnRounded" size="sm">
-                                    <q-menu>
-                                      <q-list style="min-width: 130px">
-                                        <q-separator />
-                                        <q-item v-if="!props.row.newProjectActivity" v-ripple clickable class="" @click="onProjectTaskActivityView(props.row.id)">
-                                          <q-item-section avatar><q-icon name="o_visibility" color="" size="xs" /></q-item-section>
-                                          <q-item-section class="">View</q-item-section>
-                                        </q-item>
-                                        <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable class="" @click.stop="onEditTaskActivity(props.row.id)">
-                                          <q-item-section avatar><q-icon name="o_edit" color="" size="xs" /></q-item-section>
-                                          <q-item-section class="">Edit</q-item-section>
-                                        </q-item>
-                                        <q-item v-if="props.row.isEditable && props.row.taskStatus != 'Close'" v-ripple clickable>
-                                          <q-item-section avatar>
-                                            <q-icon name="o_flag" color="secondary" size="xs" />
-                                          </q-item-section>
-                                          <q-item-section class="">Activity Status</q-item-section>
-                                          <q-menu
-                                            anchor="top end"
-                                            self="top start"
-                                            @before-show="() => handleActivityPopupShow(props.row.id, props.row.status, props.row.project.status)"
-                                          >
-                                            <q-item
-                                              v-for="activityStatus in projectActivityStatusMap[props.row.id] || []"
-                                              :key="activityStatus.value"
-                                              v-ripple
-                                              clickable
-                                              :disable="activityStatus.text === 'Open' && isDescriptionEmpty(props.row.activityDescription)"
-                                              @click="onSubmitActivityStatus(props.row.id, activityStatus.value)"
-                                            >
-                                              <q-item-section avatar>
-                                                <q-icon
-                                                  v-if="activityStatus.value === props.row.activityStatusId"
-                                                  name="o_task_alt"
-                                                  color="primary"
-                                                  size="xs"
-                                                />
-                                                <q-icon
-                                                  v-else
-                                                  name="o_radio_button_unchecked"
-                                                  color="secondary"
-                                                  size="xs"
-                                                />
-                                              </q-item-section>
-                                              <q-item-section style="white-space: nowrap !important;">
-                                                {{ activityStatus.text }}
-                                              </q-item-section>
-                                            </q-item>
-                                          </q-menu>
-                                        </q-item>
-                                        <q-separator />
-                                        <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple v-close-popup clickable @click="onDeleteTaskActivity(props.row)">
-                                          <q-item-section avatar><q-icon name="o_delete_outline" color="negative" size="xs" /></q-item-section>
-                                          <q-item-section class="text-negative">Delete</q-item-section>
-                                        </q-item>
-                                      </q-list>
-                                    </q-menu>
-                                  </q-btn>
-                                  <q-btn v-else size="xs" flat round icon="o_delete_outline" color="negative" class="text-primary btnRounded" @click="onRemoveTaskActivity(props.row)">
-                                    <q-tooltip>Delete Row</q-tooltip>
-                                  </q-btn>
-                                </q-td>
-                              </q-tr>
-                              <q-tr class="hidden" v-if="props.pageIndex === projectActivities.length - 1">
-                                <q-td colspan="2" class="text-right font-bold"><b>Total Hours:</b></q-td>
-                                <q-td class="text-right">{{ totalEstimateHours }}</q-td>
-                                <q-td />
-                              </q-tr>
-                            </template>
-                          </q-table>
-                        </div>
-                        <div v-else class="text-grey text-caption q-pa-sm">Select a task to view activities</div>
+                            <div v-else class="text-grey text-caption q-pa-sm">Select a task to view activities</div>
+                          </template>
+                        </q-splitter>
                       </template>
-                    </q-splitter>
-                    </template>
                     </q-splitter>
                   </template>
                 </q-splitter>
@@ -2580,6 +2625,12 @@ import {
   onProjectTaskActivityEdit,
   onProjectTaskAssignment
 } from "src/modules/project-tasks-activities/utils/dialogs.js";
+
+// Shared Requirement Actions
+import {
+  initRequirementActions,
+  onSubmitRequirementStatus
+} from "src/modules/requirement/utils/actions.js";
 
 const authStore = useAuthStore();
 const { toDate } = useFilters();
@@ -3242,6 +3293,8 @@ const getAllRequirementsByProjectModuleId = async (props) => {
       descending,
       rowsNumber: resp.total
     };
+
+    console.log("filteredRequirementRows.value", filteredRequirementRows.value);
     searchRequirementLoader.value = false;
   } catch (error) {
     console.error("Error fetching modules:", error);
@@ -3343,6 +3396,19 @@ const onClearRequirement = () => {
   searchRequirement.value.statusIds = [];
   onRequirementSearch();
 };
+
+const requirementStatusMap = ref({});
+async function handleRequirementPopupShow (rowId, requirementStatusLabel, projectStatusLabel) {
+  debugger;
+  if (requirementStatusMap.value[rowId]) return;
+
+  if (!dropdownMasterCache.value["Requirement Status"]) {
+    await getDropDownTaskStatus("Requirement Status");
+  }
+
+  requirementStatusMap.value[rowId] =
+    buildStatusList("Requirement Status", requirementStatusLabel, projectStatusLabel);
+}
 
 //  --------------------------------------------------------------------------------------------------------------------------------------------------
 // Project Module Task List
@@ -4997,6 +5063,7 @@ initRequirementDialogs(activeRowId);
 initCommonDialogs(activeRowId);
 initProjectTaskDialogs(activeRowId);
 initProjectTaskActivityDialogs(activeRowId);
+initRequirementActions(activeRowId);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Run functions sequentially

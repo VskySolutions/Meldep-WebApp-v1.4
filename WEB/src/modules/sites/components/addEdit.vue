@@ -630,6 +630,7 @@ watch(() => model.value.countryId, (newValue, oldValue) => {
     rules = {
       name: { required: helpers.withMessage("Site Name is required", required) },
       personId: { required: helpers.withMessage("Person Name is required", required) },
+      timeZone: { required: helpers.withMessage("Time Zone is required", required) },
       zipCode: { minLength: minLength(maxLengthZip), maxLength: maxLength(maxLengthZip), required: helpers.withMessage(maxLengthZip === "5" ? "Zip code is required" : "Pin code is required", required) },
       roleIds: { required: helpers.withMessage("Role is required", required) },
       userName: {

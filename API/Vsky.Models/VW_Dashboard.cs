@@ -144,6 +144,7 @@ namespace Vsky.Models
         public string ProjectModuleName { get; set; }
         public string Title { get; set; }
         public string RequirementStatus { get; set; }
+        public string ProjectStatus { get; set; }
         public string EditingStatus { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public int TotalTaskCount { get; set; }
