@@ -498,7 +498,7 @@ const onEdit = (item) => {
   model.value.notes = item.note;
   model.value.noteTypeId = item.noteTypeId;
   const generalNoteValue =
-    noteTypeListSingleSelect.getValueByLabel("General Note");
+    noteTypeListSingleSelect.getValueByLabel("Client Meeting Updates");
 
   if (
     model.value.noteTypeId === null ||
@@ -576,7 +576,7 @@ const onSubmit = async () => {
     activeRowId.value = null;
     model.value.notes = "";
     const generalNoteValue =
-      await noteTypeListSingleSelect.getValueByLabel("General Note");
+      await noteTypeListSingleSelect.getValueByLabel("Client Meeting Updates");
 
     model.value.noteTypeId = generalNoteValue;
 
@@ -612,7 +612,7 @@ onMounted(async () => {
   );
 
   const generalNoteValue =
-    await noteTypeListSingleSelect.getValueByLabel("General Note");
+    await noteTypeListSingleSelect.getValueByLabel("Client Meeting Updates");
 
   if (
     model.value.noteTypeId === null ||
