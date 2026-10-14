@@ -54,9 +54,9 @@ export default {
   //   const ActiveStatus = IsActive === null ? 'all' : IsActive;
   //   return http.get(`/projects/allDropdown/list/${isTemplate}/${ActiveStatus}/${isAllProject}`).then(response => response.data);
   // },
-  getProjectsListForDropdown(isTemplate = false, IsActive = true, isAllProject = false) {
-    const ActiveStatus = IsActive === null ? 'all' : IsActive;
-    return http.get(`/projects/allDropdown/list?isTemplate=${isTemplate}&ActiveStatus=${ActiveStatus}&isAllProject=${isAllProject}`
+  getProjectsListForDropdown(isTemplate = false, isArchived = false, isAllProject = false) {
+    const archiveStatus = isArchived === null ? 'all' : isArchived;
+    return http.get(`/projects/allDropdown/list?isTemplate=${isTemplate}&archiveStatus=${archiveStatus}&isAllProject=${isAllProject}`
     ).then(response => response.data);
   },
   getAllProjectsForDropdown(isTemplate = false, isAllProject = false) {

@@ -11,7 +11,7 @@
                   <q-icon size="1.5em" name="o_chevron_right" color="primary" />
                 </template>
                 <q-breadcrumbs-el label="Dashboard" icon="o_home" clickable to="/dashboard" />
-                <q-breadcrumbs-el label="All Project Planner" />
+                <q-breadcrumbs-el label="Project Task Planner" />
               </q-breadcrumbs>
             </div>
             <div>

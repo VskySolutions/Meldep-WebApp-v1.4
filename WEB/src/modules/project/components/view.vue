@@ -117,6 +117,14 @@
                       {{ model.projectType.dropDownValue ? model.projectType.dropDownValue : "-" }}
                     </div>
                   </div>
+                  <div class="row q-col-gutter-x-md q-mb-md">
+                    <div class="col-12 col-sm-6 col-md-6">
+                      <div class="q-mb-xs">Archive/Unarchive</div>
+                      <div class="text-black">
+                        {{ model.isArchived ? "Archive" : "Unarchive" }}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">

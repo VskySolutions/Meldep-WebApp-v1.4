@@ -50,8 +50,24 @@
         </div>
         <div class="row full-width q-mb-md">
           <div class="col-12">Selected {{ model.type }}</div>
-          <div v-for="(name, index) in model.names" :key="name" class="col-12 q-px-sm q-mb-xs">
+          <!-- <div v-for="(name, index) in model.names" :key="name" class="col-12 q-px-sm q-mb-xs">
             {{ (index+1) + ") " + name }}
+          </div> -->
+           <div
+            v-for="(name, index) in model.names"
+            :key="name"
+            class="col-12 q-px-sm q-mb-xs"
+          >
+            <span
+              class="cursor-pointer hoverable-cell"
+              @click="handleViewClick(model.ids[index])"
+            >
+              {{ (index + 1) + ') ' + name }}
+
+              <q-tooltip>
+                {{ 'View ' + model.type }}
+              </q-tooltip>
+            </span>
           </div>
         </div>
         <div v-if="model.names.length === 1" class="row full-width q-mb-md">
@@ -93,6 +109,20 @@ import formMonthYearPicker from "src/components/form-inputs/_formMonthYearPicker
 // SOP Change :- Shared Dropdowns
 import projectTargetPlanModule from "src/modules/project-targetplan/utils/dropdowns.js";
 const emit = defineEmits(["ok"]);
+
+import {
+  onRequirementView
+} from "src/modules/requirement/utils/dialogs.js";
+
+// Shared Issue Dialogs
+import {
+  onIssueView
+} from "src/modules/issue/utils/dialogs.js";
+
+// Shared Project Task Dialogs
+import {
+  onProjectTaskView
+} from "src/modules/project-tasks/utils/dialogs.js";
 
 const $q = useQuasar();
 const { fonts, toolbar } = getEditorConfig($q);
@@ -178,6 +208,17 @@ const onUpdateMonth = (val) => {
     model.value.date = formatted; // Save Date object
     currentView.value = "Years";
     qDateProxy.value?.hide(); // Close popup
+  }
+};
+console.log(model.value.type);
+const handleViewClick = (id) => {
+  debugger;
+  if (model.value.type === 'Project Task') {
+    onProjectTaskView(id);
+  } else if (model.value.type === 'Requirement') {
+    onRequirementView(id);
+  } else if (model.value.type === 'Issue') {
+    onIssueView(id);
   }
 };
 

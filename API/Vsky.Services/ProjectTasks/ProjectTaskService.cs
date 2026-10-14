@@ -113,7 +113,7 @@ namespace Vsky.Services.ProjectTasks
             int pageSize = int.MaxValue
         )
         {
-            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && x.Project.IsTemplate == isTemplate && x.Project.Active && !x.IsMoved);
+            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && x.Project.IsTemplate == isTemplate && !x.Project.IsArchived && !x.IsMoved);
 
             bool isAdmin = await IsCurrentUserAdmin(userId, siteId);
             if (!isAdmin)
@@ -461,7 +461,7 @@ namespace Vsky.Services.ProjectTasks
             int pageSize = int.MaxValue
         )
         {
-            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active && !x.IsMoved && x.ProjectId == projectId);
+            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && !x.IsMoved && x.ProjectId == projectId);
 
             bool isAdmin = await IsCurrentUserAdmin(loggedUserId, SiteId);
 
@@ -571,7 +571,7 @@ namespace Vsky.Services.ProjectTasks
             int pageSize = int.MaxValue
         )
         {
-            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active && !x.IsMoved);
+            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && !x.IsMoved);
 
             // project filter
             if (projectIds != null && projectIds.Any())
@@ -663,7 +663,7 @@ namespace Vsky.Services.ProjectTasks
             int pageSize = int.MaxValue
         )
         {
-            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active && !x.IsMoved && x.PriorityId == highPriorityId);
+            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && !x.IsMoved && x.PriorityId == highPriorityId);
             if (!string.IsNullOrWhiteSpace(sortBy))
             {
                 var orderBy = $"{GetOrderBy(sortBy)} {(descending ? "desc" : "asc")}";
@@ -723,7 +723,7 @@ namespace Vsky.Services.ProjectTasks
         {
             var query = _projectTaskRepository.TableNoTracking;
             //global filter
-            query = query.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active && !x.IsMoved && x.Id == projectTaskId);
+            query = query.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && !x.IsMoved && x.Id == projectTaskId);
 
             //sorting
             if (!string.IsNullOrWhiteSpace(sortBy))
@@ -786,7 +786,7 @@ namespace Vsky.Services.ProjectTasks
         {
             //var includedTaskStatuses = new[] { "Open", "In Development" };
 
-            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active && !x.IsMoved);
+            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && !x.IsMoved);
 
             if (projectTaskNumber != 0) query = query.Where(x => x.ProjectTaskNumber == projectTaskNumber);
             if (projectIds?.Any() == true) query = query.Where(x => projectIds.Contains(x.ProjectId));
@@ -871,7 +871,7 @@ namespace Vsky.Services.ProjectTasks
         {
             var query = _projectTaskRepository.Table
                 .Include(x => x.Status)
-                .Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active && !x.IsMoved);
+                .Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && !x.IsMoved);
 
             if (!string.IsNullOrWhiteSpace(projectId))
             {
@@ -902,7 +902,7 @@ namespace Vsky.Services.ProjectTasks
                     !m.ProjectModule.IsMoved &&
                     !m.Task.IsMoved &&
                     m.Active &&
-                    m.Project.Active &&
+                    !m.Project.IsArchived &&
                     m.AssignedToId == employeeId &&
                     m.ActivityStatus.DropDownValue.ToLower() == "open"
                 ) + ")"
@@ -914,7 +914,7 @@ namespace Vsky.Services.ProjectTasks
 
         public async Task<List<CommonDropDown>> GetAllProjectMultiTaskListForDropdown(string siteId, bool isTemplate, string projectId = null, string projectModuleId = null)
         {
-            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && x.Project.IsTemplate == isTemplate && x.Project.Active && !x.IsMoved);
+            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && x.Project.IsTemplate == isTemplate && !x.Project.IsArchived && !x.IsMoved);
 
             if (!string.IsNullOrWhiteSpace(projectId))
             {
@@ -941,7 +941,7 @@ namespace Vsky.Services.ProjectTasks
 
         public async Task<List<CommonDropDown>> GetAllProjectTaskWithProjectListForDropdown(string siteId, string LoggedUserId, string employeeId)
         {
-            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active && !x.IsMoved);
+            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && !x.IsMoved);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, siteId);
 

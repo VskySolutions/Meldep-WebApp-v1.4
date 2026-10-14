@@ -55,7 +55,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
             int pageSize = int.MaxValue
         )
         {
-            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == siteId);
+            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsArchived && x.SiteId == siteId);
 
             bool isAdmin = await IsCurrentUserAdmin(loggedUserId, siteId);
             if (!isAdmin)
@@ -252,7 +252,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
           int pageSize = int.MaxValue
       )
         {
-            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsTemplate && x.Project.Active && x.SiteId == SiteId && x.ProjectId == projectId);
+            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && x.SiteId == SiteId && x.ProjectId == projectId);
 
             //sorting
             if (!string.IsNullOrWhiteSpace(sortBy))

@@ -78,7 +78,7 @@
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
                           <q-select
                             v-model="search.employeeId"
-                            class="q-ml-sm"
+                            class="q-mx-sm w-100 h-auto"
                             use-input
                             stack-label
                             hide-bottom-space
@@ -111,7 +111,7 @@
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
                           <q-select
                             v-model="search.typeId"
-                            class="q-ml-sm"
+                            class="q-mx-sm w-100 h-auto"
                             use-input
                             stack-label
                             hide-bottom-space
@@ -482,6 +482,12 @@ function getFilterCount (key) {
 watch(() => searchText.value, () => {
   if (searchText.value) searchLoader.value = true;
   getAllMovementRegisters({ pagination: pagination.value });
+});
+
+watch(() => search.value.createdBy, (newValue) => {
+  if (newValue === "Created By Me") {
+    search.value.employeeId = ""; // Clear the employee selection
+  }
 });
 
 // On page rendering

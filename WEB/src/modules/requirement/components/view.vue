@@ -169,39 +169,35 @@
                   </div>
                   <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
-                      <div class="q-mb-xs">Draft/Confirmed :</div>
-                      <div class="text-black">{{ model.editingStatus === 1  ? 'Draft' : 'Confirmed' }} </div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Identified User Type :</div>
                       <div class="text-black">{{ model.userType.dropDownValue }}</div>
                     </div>
-                  </div>
-                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Identified By :</div>
                       <div class="text-black">{{ model.userType.dropDownValue === 'Customer' ? (model.customer && model.customer.fullName ? model.customer.fullName : 'N/A') : (model.employee && model.employee.person && model.employee.person.fullName ? model.employee.person.fullName : 'N/A') }}</div>
                     </div>
+                  </div>
+                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Owner :</div>
                       <div class="text-black">{{ model.requirementOwner.person.fullName }}</div>
                     </div>
-                  </div>
-                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Customer Owner :</div>
                       <div class="text-black">{{ model.customerOwner.fullName }}</div>
                     </div>
+                  </div>
+                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Entered By :</div>
                       <div class="text-black">{{ model.requirementEntered.person.fullName }}</div>
                     </div>
-                  </div>
-                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Requirement Status :</div>
                       <div class="text-black">{{ model.status.dropDownValue }}</div>
                     </div>
+                  </div>
+                  <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-6 col-md-6">
                       <div class="q-mb-xs">Approval Status :</div>
                       <div class="text-black">{{ model.approvalStatusDropDown.dropDownValue }}</div>

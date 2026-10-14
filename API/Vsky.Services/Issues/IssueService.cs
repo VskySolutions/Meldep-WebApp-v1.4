@@ -79,7 +79,7 @@ namespace Vsky.Services.Issues
             bool lookup = false
             )
         {
-            var query = _issueRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
+            var query = _issueRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && !x.Project.Deleted && !x.Project.IsArchived);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
@@ -342,7 +342,7 @@ namespace Vsky.Services.Issues
             bool lookup = false
         )
         {
-            var query = _issueRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.ProjectId == projectId);
+            var query = _issueRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && !x.Project.IsArchived && x.ProjectId == projectId);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 

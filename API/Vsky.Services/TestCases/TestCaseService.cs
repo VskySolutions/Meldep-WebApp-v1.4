@@ -80,7 +80,7 @@ namespace Vsky.Services.TestCases
             int pageSize = int.MaxValue,
             bool lookup = false)
         {
-            var query = _testCaseRepository.TableNoTracking.Where(x => !x.Deleted && !x.TestPlan.Deleted && x.SiteId == SiteId);
+            var query = _testCaseRepository.TableNoTracking.Where(x => !x.Deleted && !x.TestPlan.Deleted && x.SiteId == SiteId && !x.Project.Deleted && !x.Project.IsArchived);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 

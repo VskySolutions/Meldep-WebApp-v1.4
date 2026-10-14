@@ -411,7 +411,7 @@ namespace Vsky.Services.ProjectActivities
             }
 
             // Project only necessary fields
-            query = query.Select(x => new ProjectActivity
+            query = query.Where(x => !x.Project.IsArchived).Select(x => new ProjectActivity
             {
                 Id = x.Id,
                 Name = x.Name,

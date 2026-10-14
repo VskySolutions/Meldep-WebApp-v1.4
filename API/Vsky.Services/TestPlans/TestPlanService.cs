@@ -54,7 +54,7 @@ namespace Vsky.Services.TestPlans
         // It also supports sorting and includes related data .The method allows for both full and lookup (limited) data retrieval modes.
         public async Task<IPagedList<TestPlan>> GetAllTestPlans(string SiteId, string LoggedUserId, string employeeId, string SearchText, int testPlanNumber, List<string> projectIds, string name, List<string> planMakerIds, List<string> planReviewerIds, string sortBy, Dictionary<string, string> sorts, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
         {
-            var query = _testPlanRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
+            var query = _testPlanRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && !x.Project.Deleted && !x.Project.IsArchived);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 

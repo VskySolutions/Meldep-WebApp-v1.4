@@ -198,6 +198,16 @@
                     }}
                   </q-tooltip>
                 </q-btn>
+                <q-btn
+                  v-if="multiSelectTaskIds.length > 0"
+                  icon="o_restart_alt"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click.stop="clearAllSelectedTasks"
+                >
+                  <q-tooltip>Unselect All Tasks</q-tooltip>
+                </q-btn>
                 <!-- Admin:- Manage All Dropdowns -->
                 <q-btn
                   v-if="role === 'admin' && !isViewer"
@@ -283,15 +293,15 @@
                 >
                   <q-btn
                     v-if="multiSelectTaskIds.length > 0"
+                    icon="o_restart_alt"
                     flat
                     dense
                     no-caps
                     color="white"
-                    icon="o_clear_all"
                     size="sm"
                     @click.stop="clearAllSelectedTasks"
                   >
-                    <q-tooltip>Unselect all tasks</q-tooltip>
+                    <q-tooltip>Unselect All Tasks</q-tooltip>
                   </q-btn>
                 </q-th>
                 <q-th

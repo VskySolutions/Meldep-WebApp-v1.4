@@ -272,6 +272,16 @@
                     }}</q-tooltip>
                 </q-btn>
                 <q-btn
+                  v-if="multiSelectRequirementIds.length > 0"
+                  icon="o_restart_alt"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click.stop="clearAllSelectedRequirements"
+                >
+                  <q-tooltip>Unselect All Requirements</q-tooltip>
+                </q-btn>
+                <q-btn
                   v-if="role === 'admin'"
                   icon="o_playlist_add"
                   outline
@@ -350,15 +360,29 @@
           <template #header="props">
             <q-tr :props="props" class="bg-primary text-white">
               <q-th
-                  v-if="!isViewer" auto-width class="text-center" />
-                <q-th
-                  v-for="col in props.cols"
-                  :key="col.name"
-                  :style="{
-                    width: (resizeWidths?.[col.name] || 120) + 'px',
-                    minWidth: '80px',
-                    position: 'relative'
-                  }"
+                v-if="!isViewer" auto-width class="text-center"
+              >
+                <q-btn
+                  v-if="multiSelectRequirementIds.length > 0"
+                  icon="o_restart_alt"
+                  flat
+                  dense
+                  no-caps
+                  color="white"
+                  size="sm"
+                  @click.stop="clearAllSelectedRequirements"
+                >
+                  <q-tooltip>Unselect All Requirements</q-tooltip>
+                </q-btn>
+              </q-th>
+              <q-th
+                v-for="col in props.cols"
+                :key="col.name"
+                :style="{
+                  width: (resizeWidths?.[col.name] || 120) + 'px',
+                  minWidth: '80px',
+                  position: 'relative'
+                }"
                 >
                   {{ col.label }}
                   <!-- Sort icon only -->
@@ -1534,6 +1558,32 @@ const onSelectCheckbox = (projectId, projectName, requirementId, requirementNumb
     SELECTED_REQUIREMENT_EDITABLE_MAP_KEY,
     JSON.stringify(multiSelectRequirementEditableMap.value)
   );
+};
+
+const clearAllSelectedRequirements = () => {
+  // Uncheck every requirement currently loaded in the table
+  rows.value.forEach(requirement => {
+    requirement.checkboxStatus = false;
+  });
+
+  // Clear selection state
+  multiSelectProjectIds.value = [];
+  multiSelectProjectName.value = [];
+  multiSelectRequirementProjectMap.value = {};
+  multiSelectRequirementIds.value = [];
+  multiSelectRequirementNumbers.value = [];
+  multiSelectRequirementTitles.value = [];
+  multiSelectRequirementShortDescriptions.value = [];
+  multiSelectRequirementEditableMap.value = {};
+
+  // Clear persisted selection
+  localStorage.removeItem(SELECTED_REQUIREMENT_IDS_KEY);
+  localStorage.removeItem(SELECTED_REQUIREMENT_EDITABLE_MAP_KEY);
+
+  // Hide multi-select actions
+  showMultiSelectOptions.value = false;
+  selectedField.value = null;
+  activeRowId.value = null;
 };
 
 const selectedFieldOptions = [

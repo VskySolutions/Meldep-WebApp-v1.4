@@ -3,7 +3,7 @@
     <div class="row q-col-gutter-lg q-pa-sm">
       <div class="col-12 col-md-6">
         <q-list dense>
-          
+
           <q-item>
             <q-item-section>
               <div class="text-caption text-grey">
@@ -25,7 +25,7 @@
               </div>
             </q-item-section>
           </q-item>
-          
+
           <q-item>
             <q-item-section>
               <div class="text-caption text-grey">
@@ -105,17 +105,6 @@
           <q-item>
             <q-item-section>
               <div class="text-caption text-grey">
-                Draft/Confirmed
-              </div>
-              <div class="q-mb-sm">
-                {{ model.editingStatus === 1  ? 'Draft' : 'Confirmed'  }}
-              </div>
-            </q-item-section>
-          </q-item>
-
-          <q-item>
-            <q-item-section>
-              <div class="text-caption text-grey">
                 Requirement Identified User Type
               </div>
               <div class="q-mb-sm">
@@ -123,7 +112,7 @@
               </div>
             </q-item-section>
           </q-item>
-          
+
           <q-item>
             <q-item-section>
               <div class="text-caption text-grey">
@@ -236,7 +225,7 @@
             </div>
           </q-item-section>
         </q-item> -->
-        
+
         <q-item>
           <q-item-section>
             <div class="text-caption text-grey">
@@ -247,7 +236,7 @@
             </div>
           </q-item-section>
         </q-item>
-        
+
         <q-item>
           <q-item-section>
             <div class="text-caption text-grey">
@@ -280,7 +269,7 @@
             </div>
           </q-item-section>
         </q-item>
-        
+
         <q-item>
           <q-item-section>
             <div class="text-caption text-grey">

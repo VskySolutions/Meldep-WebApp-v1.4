@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs.Models;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -364,7 +365,7 @@ namespace Vsky.Services.Projects
            bool lookup = false
        )
         {
-            var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && !x.IsTemplate && x.SiteId == siteId);
+            var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && !x.IsTemplate && !x.IsArchived && x.SiteId == siteId);
 
             bool isAdmin = await IsCurrentUserAdmin(userId, siteId);
             if (!isAdmin)
@@ -505,7 +506,7 @@ namespace Vsky.Services.Projects
         #region GetAllProjectListForDropdown
         public async Task<List<Project>> GetAllProjectListForDropdown(string SiteId, string LoggedUserId, string employeeId, string[] statuses = null)
         {
-            var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && x.Active && !x.IsTemplate && x.SiteId == SiteId);
+            var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && !x.IsArchived && !x.IsTemplate && x.SiteId == SiteId);
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
             if (!IsAdmin)
@@ -539,25 +540,25 @@ namespace Vsky.Services.Projects
                 StartDate = x.StartDate,
                 Customer = new CompanyClients { Id = x.Customer.Id, Name = x.Customer.Company != null ? x.Customer.Company.Name : string.Join(" ", x.Customer.Person.FirstName, x.Customer.Person.LastName).Trim() },
                 TotalModuleCount = x.ProjectModules.Count(m => !m.Deleted && !m.Project.Deleted && !m.IsMoved && m.ProjectModuleStatus.DropDownValue != "Close"),
-                TotalTasksCount = x.ProjectTasks.Count(m => !m.Deleted && !m.IsMoved && !m.ProjectModule.Deleted && !m.ProjectModule.IsMoved && !m.Project.Deleted && m.Project.Active)
+                TotalTasksCount = x.ProjectTasks.Count(m => !m.Deleted && !m.IsMoved && !m.ProjectModule.Deleted && !m.ProjectModule.IsMoved && !m.Project.Deleted && !m.Project.IsArchived)
             });
 
             var list = await query.OrderBy(m => m.Name.Replace(" ", "")).ToListAsync();
             return list;
         }
 
-        public async Task<List<CommonDropDown>> GetProjectsListForDropdown(string SiteId, string LoggedUserId, string employeeId, bool isTemplate, string ActiveStatus, bool isAllProject)
+        public async Task<List<CommonDropDown>> GetProjectsListForDropdown(string SiteId, string LoggedUserId, string employeeId, bool isTemplate, string archiveStatus, bool isAllProject)
         {
             var query = _projectRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.IsTemplate == isTemplate);
 
-            bool? isActiveFilter = ActiveStatus == "all"
-              ? null
-              : Convert.ToBoolean(ActiveStatus);
+            bool? isArchivedFilter = archiveStatus == "all"
+            ? null
+              : Convert.ToBoolean(archiveStatus);
 
             // Apply filter only if value exists
-            if (isActiveFilter.HasValue)
+            if (isArchivedFilter.HasValue)
             {
-                query = query.Where(x => x.Active == isActiveFilter.Value);
+                query = query.Where(x => x.IsArchived == isArchivedFilter.Value);
             }
 
             if (!isAllProject)

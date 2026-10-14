@@ -93,7 +93,7 @@ namespace Vsky.Services.Requirements
             bool lookup = false)
         {
             //var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted);
-            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
+            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && !x.Project.Deleted && !x.Project.IsArchived);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
@@ -423,7 +423,7 @@ namespace Vsky.Services.Requirements
             bool lookup = false
         )
         {
-            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.ProjectId == projectId);
+            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.ProjectId == projectId && !x.Project.IsArchived);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
@@ -535,7 +535,7 @@ namespace Vsky.Services.Requirements
         public async Task<List<CommonDropDown>> GetAllRequirementListForDropdown(string siteId, string projectModuleId = null, string projectId = null, string requirementType = null)
         {
             var query = _requirementRepository.TableNoTracking
-                .Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && x.Project.Active);
+                .Where(x => x.SiteId == siteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived);
 
             if (!string.IsNullOrEmpty(requirementType) && requirementType != "undefined")
                 query = query.Where(x => x.RequirementType.DropDownValue.Contains(requirementType));

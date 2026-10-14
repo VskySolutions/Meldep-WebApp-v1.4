@@ -101,7 +101,7 @@ namespace Vsky.Services.ProjectReleaseTrackings
                     x.SiteId == SiteId &&
                     x.ProjectId == projectId &&
                     !x.Project.IsTemplate &&
-                    x.Project.Active &&
+                    !x.Project.IsArchived &&
                     !x.IsMoved &&
                     !excludedTaskStatuses.Contains(x.Status.DropDownValue.ToLower())
                 )

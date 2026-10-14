@@ -175,6 +175,16 @@
                     }}
                   </q-tooltip>
                 </q-btn>
+                <q-btn
+                  v-if="multiSelectIssueIds.length > 0"
+                  icon="o_restart_alt"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-sm"
+                  @click.stop="setDefaultsForMultiSelects"
+                >
+                  <q-tooltip>Unselect All Issues</q-tooltip>
+                </q-btn>
                 <q-btn v-if="role === 'admin' && !isViewer" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
@@ -262,7 +272,7 @@
                     dense
                     no-caps
                     color="white"
-                    icon="o_clear_all"
+                    icon="o_restart_alt"
                     @click.stop="setDefaultsForMultiSelects"
                   >
                     <q-tooltip>Unselect all issues</q-tooltip>

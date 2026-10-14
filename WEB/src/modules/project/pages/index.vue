@@ -176,7 +176,7 @@
                   class="text-primary btnRounded q-ml-xs"
                   @click="$router.push({ path: `/all-project-planner`, state: {fromProjectList: true } })"
                 >
-                  <q-tooltip>All project planner</q-tooltip>
+                  <q-tooltip>Project Task Planner</q-tooltip>
                 </q-btn>
                 <q-btn
                   v-if="role === 'admin'"
@@ -962,7 +962,7 @@
                           @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: `/all-project-planner`, state: {projectId: props.row.id } })"
                         >
                           <q-item-section avatar><q-icon name="o_task" size="xs" /></q-item-section>
-                          <q-item-section>Planner</q-item-section>
+                          <q-item-section>Project Task Planner</q-item-section>
                         </q-item>
                         <q-item
                           v-if="!search.isTemplate"

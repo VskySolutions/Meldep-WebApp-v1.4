@@ -75,7 +75,7 @@ namespace Vsky.Services.ProjectModules
         )
         {
             //var query = _projectModuleRepository.TableNoTracking.Where(x => !x.Deleted);
-            var query = _projectModuleRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && x.Project.Active && x.SiteId == SiteId && !x.Project.IsTemplate);
+            var query = _projectModuleRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsArchived && x.SiteId == SiteId && !x.Project.IsTemplate);
 
             bool isAdmin = await IsCurrentUserAdmin(loggedUserId, SiteId);
             if (!isAdmin)
@@ -385,7 +385,7 @@ namespace Vsky.Services.ProjectModules
                                                     !m.ProjectModule.Deleted &&
                                                     !m.ProjectModule.IsMoved &&
                                                     !m.Project.Deleted &&
-                                                    m.Project.Active &&
+                                                    !m.Project.IsArchived &&
                                                     m.Status.DropDownValue != "Close"
                                               ) + ")" : x.Name,
                            Value = x.Id,

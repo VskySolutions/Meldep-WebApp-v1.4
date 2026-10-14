@@ -234,6 +234,16 @@
                     }}
                   </q-tooltip>
                 </q-btn>
+                <q-btn
+                  v-if="ActivityIds.length > 0"
+                  icon="o_restart_alt"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-sm"
+                  @click="setDefaultsForMultiSelects()"
+                >
+                  <q-tooltip>Unselect All Activities</q-tooltip>
+                </q-btn>
                 <!-- Button to Open Sorting Dialog -->
                 <q-btn
                   color="primary"
@@ -372,28 +382,28 @@
                         v-for="col in headerProps.cols"
                         :key="col.name"
                       >
-                      {{ col.label }}
-                      <!-- Sort icon only -->
-                      <q-icon
-                        v-if="col.sortable"
-                        :name=" projectActivityPagination[props.row.project.id]?.sortBy === col.name ? ( projectActivityPagination[props.row.project.id]?.descending ? 'o_arrow_downward' : 'o_arrow_upward' ) : 'o_unfold_more' "
-                        size="16px"
-                        class="cursor-pointer q-ml-sm"
-                        @click.stop="sortActivityColumn(col, props.row.project.id)"
-                      >
-                        <q-tooltip>
-                          {{
-                            projectActivityPagination[props.row.project.id]?.sortBy === col.name
-                              ? (
-                                  projectActivityPagination[props.row.project.id]?.descending
-                                    ? 'Sort Ascending'
-                                    : 'Sort Descending'
-                                )
-                              : 'Sort'
-                          }}
-                        </q-tooltip>
-                      </q-icon>
-                    </q-th>
+                        {{ col.label }}
+                        <!-- Sort icon only -->
+                        <q-icon
+                          v-if="col.sortable"
+                          :name=" projectActivityPagination[props.row.project.id]?.sortBy === col.name ? ( projectActivityPagination[props.row.project.id]?.descending ? 'o_arrow_downward' : 'o_arrow_upward' ) : 'o_unfold_more' "
+                          size="16px"
+                          class="cursor-pointer q-ml-sm"
+                          @click.stop="sortActivityColumn(col, props.row.project.id)"
+                        >
+                          <q-tooltip>
+                            {{
+                              projectActivityPagination[props.row.project.id]?.sortBy === col.name
+                                ? (
+                                    projectActivityPagination[props.row.project.id]?.descending
+                                      ? 'Sort Ascending'
+                                      : 'Sort Descending'
+                                  )
+                                : 'Sort'
+                            }}
+                          </q-tooltip>
+                        </q-icon>
+                      </q-th>
                       <q-th auto-width class="text-center">Actions</q-th>
                     </q-tr>
                   </template>
@@ -1645,6 +1655,12 @@ function setDefaultsForMultiSelects () {
   showMultiSelectOptions.value = false;
 
   localStorage.removeItem("selectedActivityIds");
+
+ rows.value.forEach(row => {
+  row.activities?.forEach(activity => {
+    activity.checkboxStatus = false;
+  });
+});
 }
 // function paginatedTotalHours(activities, pagination) {
 //   if (!activities?.length || !pagination) return "00:00";

@@ -369,9 +369,9 @@ namespace Vsky.Api.Controllers
             }
         }
 
-        //[HttpGet("allDropdown/list/{isTemplate}/{ActiveStatus}/{isAllProject}")]
+        //[HttpGet("allDropdown/list/{isTemplate}/{archiveStatus}/{isAllProject}")]
         [HttpGet("allDropdown/list")]
-        public async Task<IActionResult> GetProjectsListForDropdown(bool isTemplate, string ActiveStatus, bool isAllProject)
+        public async Task<IActionResult> GetProjectsListForDropdown(bool isTemplate, string archiveStatus, bool isAllProject)
         {
             try
             {
@@ -380,7 +380,7 @@ namespace Vsky.Api.Controllers
                 //var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
                 var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
-                var list = await _projectService.GetProjectsListForDropdown(SiteId, LoggedUserId, employeeId, isTemplate, ActiveStatus, isAllProject);
+                var list = await _projectService.GetProjectsListForDropdown(SiteId, LoggedUserId, employeeId, isTemplate, archiveStatus, isAllProject);
                 var model = _mapper.Map<List<CommonDropDown>>(list);
                 return Ok(model);
             }

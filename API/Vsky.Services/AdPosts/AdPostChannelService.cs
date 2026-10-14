@@ -44,7 +44,7 @@ namespace Vsky.Services.AdPosts
         // It also supports sorting and includes related data .The method allows for both full and lookup (limited) data retrieval modes.
         public IPagedList<AdPostChannel> GetAllAdPostChannel(string SiteId, string SearchText, List<string> projectIds, string name, List<string> customerIds, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
         {
-            var query = _adPostChannelRepository.TableNoTracking.Where(x => !x.Deleted && x.Project.SiteId == SiteId);
+            var query = _adPostChannelRepository.TableNoTracking.Where(x => !x.Deleted && x.Project.SiteId == SiteId && !x.Project.Deleted && !x.Project.IsArchived);
 
             if (projectIds != null && projectIds.Any())
                 query = query.Where(x => projectIds.Contains(x.ProjectId));
