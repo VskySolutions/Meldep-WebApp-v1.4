@@ -85,7 +85,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
             int PageIndex = 1,
             int PageSize = int.MaxValue)
         {
-            var query = _projectWeeklyPlanRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
+            var query = _projectWeeklyPlanRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && !x.Project.IsArchived);
             var dropdownData = _dropdownRepository.TableNoTracking.FirstOrDefault(x => x.Id == PlanTypeId);
             var NotesType = "Project " + dropdownData.DropDownValue + " Plan";
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
