@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.Design;
 using Vsky.Services.Sites;
 using Vsky.Services.Common;
+using Vsky.Services.ApplicationUserRoles;
 
 namespace Vsky.Services.Leads
 {
@@ -25,13 +26,15 @@ namespace Vsky.Services.Leads
         private readonly IRepository<LeadActivities> _leadActivitiesRepository;
         private readonly IRepository<Notes> _notesRepository;
         private readonly ICommonService _commonService;
+        private readonly IApplicationUserRoleService _applicationUserRoleService;
 
         public LeadService(
             UserManager<ApplicationUser> userManager,
             IRepository<Lead> leadRepository,
             IRepository<LeadStages> leadStagesRepository,
             IRepository<LeadActivities> leadActivitiesRepository, IRepository<Notes> notesRepository,
-            ICommonService commonService)
+            ICommonService commonService,
+            IApplicationUserRoleService applicationUserRoleService)
         {
             _userManager = userManager;
             _leadRepository = leadRepository;
@@ -39,6 +42,7 @@ namespace Vsky.Services.Leads
             _leadActivitiesRepository = leadActivitiesRepository;
             _notesRepository = notesRepository;
             _commonService = commonService;
+            _applicationUserRoleService = applicationUserRoleService;
         }
         #endregion
 
@@ -71,7 +75,7 @@ namespace Vsky.Services.Leads
         {
             var query = _leadRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId);
 
-            bool isAdmin = await IsCurrentUserAdmin(userId);
+            bool isAdmin = await IsCurrentUserAdmin(userId, SiteId);
             if (!isAdmin)
             {
                 query = query.Where(p => leadGroupIdsForUser.Contains(p.LeadGroupId));
@@ -367,12 +371,13 @@ namespace Vsky.Services.Leads
         #endregion
 
         #region private method
-        private async Task<bool> IsCurrentUserAdmin(string CId)
+        private async Task<bool> IsCurrentUserAdmin(string CId, string SiteId)
         {
             var userdata = await _userManager.FindByIdAsync(CId);
             var user = await _userManager.FindByNameAsync(userdata.UserName);
-            var roles = await _userManager.GetRolesAsync(user);
-            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin");
+            //var roles = await _userManager.GetRolesAsync(user);
+            var roles = await _applicationUserRoleService.GetRoleNamesByUserAndSite(user.Id, SiteId);
+            var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
 
             return isAdmin;
         }

@@ -18,8 +18,9 @@ export function useMultiSelectDropdown (serviceCall, config = {}) {
 
   async function load (...params) {
     const resp = await serviceCall(...params);
+    const items = getResponseArray(resp);
 
-    const mapped = resp
+    const mapped = items
       .map(item => {
         const text = labelFn ? labelFn(item) : getNestedValue(item, labelKey);
         return {
@@ -104,8 +105,9 @@ export function useSingleSelectDropdown (serviceCall, config = {}) {
 
   async function load (...params) {
     const resp = await serviceCall(...params);
+const items = getResponseArray(resp);
 
-    const mapped = resp
+    const mapped = items
       .map(item => {
         const text = labelFn
           ? labelFn(item)
@@ -168,8 +170,9 @@ export function useTagsDropdown (serviceCall) {
 
   async function load (...params) {
     const resp = await serviceCall(...params);
+    const items = getResponseArray(resp);
 
-    const mapped = resp.filter(item => item && item.name)
+    const mapped = items.filter(item => item && item.name)
       .map(item => ({
         text: item.name,
         value: item.id,
@@ -234,7 +237,9 @@ export function useSingleSelectDropdownWithRowIndex(serviceCall, config = {}) {
 
   const load = async (rowIndex, ...params) => {
     const resp = await serviceCall(...params);
-    const mapped = mapData(resp);
+    const items = getResponseArray(resp);
+
+    const mapped = mapData(items);
     listByIndex.value[rowIndex] = mapped;
     listFilterByIndex.value[rowIndex] = mapped;
     return mapped;
@@ -273,4 +278,41 @@ export function useSingleSelectDropdownWithRowIndex(serviceCall, config = {}) {
     getByIndex,
     clearByIndex
   };
+}
+
+function getResponseArray(resp) {
+  // Already an array
+  if (Array.isArray(resp)) {
+    return resp;
+  }
+
+  // Empty or whitespace-only response
+  if (resp == null || (typeof resp === "string" && !resp.trim())) {
+    console.warn("Dropdown service returned an empty response.");
+    return [];
+  }
+
+  // Axios response: { data: [...] }
+  if (Array.isArray(resp?.data)) {
+    return resp.data;
+  }
+
+  // Nested response: { data: { data: [...] } }
+  if (Array.isArray(resp?.data?.data)) {
+    return resp.data.data;
+  }
+
+  // JSON returned as a string
+  if (typeof resp === "string") {
+    try {
+      const parsed = JSON.parse(resp);
+      return getResponseArray(parsed);
+    } catch (error) {
+      console.error("Invalid JSON dropdown response:", resp);
+      return [];
+    }
+  }
+
+  console.error("Unexpected dropdown response:", resp);
+  return [];
 }

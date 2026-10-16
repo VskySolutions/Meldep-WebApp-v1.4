@@ -12,6 +12,7 @@ using System.Globalization;
 using SendGrid.Helpers.Mail;
 using AngleSharp.Dom;
 using Microsoft.PowerBI.Api.Models;
+using Vsky.Services.ApplicationUserRoles;
 
 namespace Vsky.Services.Dashboard
 {
@@ -32,6 +33,7 @@ namespace Vsky.Services.Dashboard
         private readonly IRepository<VW_UserProjectPinned> _vwUserProjectPinnedRepository;
         private readonly IRepository<VW_UserProjectColor> _vwUserProjectColorRepository;
         private readonly IRepository<Project> _projectRepository;
+        private readonly IApplicationUserRoleService _applicationUserRoleService;
 
         public VWDashboardServices(
             IRepository<VW_Customer> vwCustomerListRepository,
@@ -47,7 +49,8 @@ namespace Vsky.Services.Dashboard
             IRepository<VW_UserTaskTags> vwUserTaskTagsRepository,
             IRepository<VW_UserProjectPinned> vwUserProjectPinnedRepository,
             IRepository<VW_UserProjectColor> vwUserProjectColorRepository,
-            IRepository<Project> projectRepository)
+            IRepository<Project> projectRepository,
+            IApplicationUserRoleService applicationUserRoleService)
         {
             _vwCustomerListRepository = vwCustomerListRepository;
             _vwCustomerProjectListRepository = vwCustomerProjectListRepositor;
@@ -63,6 +66,7 @@ namespace Vsky.Services.Dashboard
             _vwUserProjectPinnedRepository = vwUserProjectPinnedRepository;
             _vwUserProjectColorRepository = vwUserProjectColorRepository;
             _projectRepository = projectRepository;
+            _applicationUserRoleService = applicationUserRoleService;
         }
         #endregion
 
@@ -119,7 +123,7 @@ namespace Vsky.Services.Dashboard
             var userdata = _userManager.FindByIdAsync(logginuser).GetAwaiter().GetResult();
             var user = _userManager.FindByNameAsync(userdata.UserName).GetAwaiter().GetResult();
 
-            bool IsAdmin = await IsCurrentUserAdmin(logginuser);
+            bool IsAdmin = await IsCurrentUserAdmin(logginuser, SiteId);
             if (user != null && !user.Deleted && user.Active)
             {
                 //Get user roles
@@ -349,7 +353,9 @@ namespace Vsky.Services.Dashboard
                 //Get user roles
                 var roles = _userManager.GetRolesAsync(user).GetAwaiter().GetResult();
 
-                isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
+                //isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
+
+                isAdmin = await IsCurrentUserAdmin(logginuser, SiteId);
                 if (!isAdmin)
                 {
                     query = query.Where(x =>
@@ -538,7 +544,7 @@ namespace Vsky.Services.Dashboard
                     .ThenInclude(r => r.SitesProjectRolesPermissions)
             .Where(m => m.SiteId == SiteId);
 
-            bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId);
+            bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
             // Get projects created by logged-in user
             var createdProjectIds = new HashSet<string>(
                 await _projectRepository.TableNoTracking
@@ -641,7 +647,7 @@ namespace Vsky.Services.Dashboard
             var query = _vwRequirementRepository.TableNoTracking
                 .Where(x => x.SiteId == SiteId);
 
-            bool isAdmin = await IsCurrentUserAdmin(LoggedUserId);
+            bool isAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
             // Get projects created by the logged-in user
             var createdProjectIds = new HashSet<string>(
@@ -780,7 +786,7 @@ namespace Vsky.Services.Dashboard
                         .Include(x => x.ProjectActivities.Where(a => a.Active))
                         .Where(x => x.SiteId == SiteId);
 
-            bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId);
+            bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
             // Get projects created by logged-in user
             var createdProjectIds = new HashSet<string>(
                 await _projectRepository.TableNoTracking
@@ -950,7 +956,7 @@ namespace Vsky.Services.Dashboard
                         .Where(p => !p.Deleted))
                 .Where(m => m.SiteId == SiteId);
 
-            bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId);
+            bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
             // Get projects created by logged-in user
             var createdProjectIds = new HashSet<string>(
                 await _projectRepository.TableNoTracking
@@ -1074,11 +1080,12 @@ namespace Vsky.Services.Dashboard
             return _vwEmployeeTaskActivitySummaryRepository.TableNoTracking.FirstOrDefault(m => m.AssignToId == EmployeeId);
         }
 
-        private async Task<bool> IsCurrentUserAdmin(string CId)
+        private async Task<bool> IsCurrentUserAdmin(string CId, string SiteId)
         {
             var userdata = await _userManager.FindByIdAsync(CId);
             var user = await _userManager.FindByNameAsync(userdata.UserName);
-            var roles = await _userManager.GetRolesAsync(user);
+            //var roles = await _userManager.GetRolesAsync(user);
+            var roles = await _applicationUserRoleService.GetRoleNamesByUserAndSite(user.Id, SiteId);
             var isAdmin = roles.Contains("Admin") || roles.Contains("Site Super Admin") || roles.Contains("System Super Admin") || roles.Contains("Project Admin");
 
             return isAdmin;

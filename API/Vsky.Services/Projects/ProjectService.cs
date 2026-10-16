@@ -282,6 +282,7 @@ namespace Vsky.Services.Projects
                         .ToList(),
                 }).ToList(),
                 CurrentUserManage =
+                    isAdmin ||
                     x.CreatedById == userId ||
                     x.ProjectEmployeeMappings
                         .Where(m =>
