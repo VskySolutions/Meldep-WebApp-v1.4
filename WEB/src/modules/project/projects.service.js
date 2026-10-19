@@ -182,9 +182,9 @@ export default {
   getWeeklyProjects (model) {
     return http.post("/projects/get-project-weekly-plan", model).then(response => response.data);
   },
-  getWeeklyProjectPlanInDetail (id, planTypeId, skipIndex, takeCount, weekEndDate) {
+  getWeeklyProjectPlanInDetail (id, planTypeId, skipIndex, takeCount, weekEndDate, projectTaskId) {
     const endDate = weekEndDate && weekEndDate !== "undefined" ? weekEndDate : "";
-    return http.post("/projects/get-project-weekly-plan-details?projectId=" + id + "&planTypeId=" + planTypeId + "&skipIndex=" + skipIndex + "&takeCount=" + takeCount + "&weekEndDate=" + endDate).then(response => response.data);
+    return http.post("/projects/get-project-weekly-plan-details?projectId=" + id + "&planTypeId=" + planTypeId + "&skipIndex=" + skipIndex + "&takeCount=" + takeCount + "&weekEndDate=" + endDate + "&projectTaskId=" + projectTaskId).then(response => response.data);
   },
   addProjectPlanApprover (projectId, planApproverId) {
     return http.post("/projects/add-Project-Plan-Approver?projectId=" + projectId + "&planApproverId=" + planApproverId).then(response => response.data);

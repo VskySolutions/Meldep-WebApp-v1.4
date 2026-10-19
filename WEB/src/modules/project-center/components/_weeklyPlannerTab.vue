@@ -194,8 +194,13 @@ import { notifyWarning } from "assets/utils";
 import useFilters from "composables/useFilters";
 
 const { toDate } = useFilters();
-const props = defineProps({ projectId: { type: String, default: "" }, weekEndDate: { type: String, default: "" } });
+const props = defineProps({
+  projectId: { type: String, default: "" },
+  projectTaskId: { type: String, default: "" },
+  weekEndDate: { type: String, default: "" }
+});
 const projectId = props.projectId;
+const projectTaskId = props.projectTaskId;
 const weekEndDate = toDate(props.weekEndDate);
 
 const loading = ref(true);
@@ -222,7 +227,7 @@ const getProjectWeeklyPlanType = async () => {
 // for weekly project plans
 const getProjectWeeklyTargetPlans = () => {
   loading.value = true;
-  projectService.getWeeklyProjectPlanInDetail(projectId, planTypeId.value, 0, takeCount.value, weekEndDate).then((resp) => {
+  projectService.getWeeklyProjectPlanInDetail(projectId, planTypeId.value, 0, takeCount.value, weekEndDate, projectTaskId).then((resp) => {
     projectWeeklyPlanDates.value = resp;
   }).finally(() => {
     loading.value = false;
@@ -294,7 +299,7 @@ const filterRequestMapping = (mappings, type) => {
 
 const loadProjectWeeklyPlanLines = async (index) => {
   skipIndex.value = index + 1;
-  const resp = await projectService.getWeeklyProjectPlanInDetail(projectId, planTypeId.value, skipIndex.value, takeCount.value, weekEndDate);
+  const resp = await projectService.getWeeklyProjectPlanInDetail(projectId, planTypeId.value, skipIndex.value, takeCount.value, weekEndDate, projectTaskId);
   projectWeeklyPlanDates.value.push(...resp);
   if (resp?.length === 0) {
     notifyWarning({ message: "No Week Available" });

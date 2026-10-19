@@ -1670,6 +1670,7 @@ namespace Vsky.Data
             {
                 entity.ToTable("Project_WeeklyPlan_Dates_Lines");
                 entity.HasOne(d => d.ProjectWeeklyPlanDates).WithMany(d => d.ProjectWeeklyPlanDatesLines).HasForeignKey(d => d.ProjectWeeklyPlanDatesId);
+                entity.HasOne(d => d.ProjectTask).WithMany(x => x.ProjectWeeklyPlanDatesLines).HasForeignKey(d => d.TaskId);
             });
 
             builder.Entity<ProjectWeeklyPlanDatesLinesAssignedTo>(entity =>

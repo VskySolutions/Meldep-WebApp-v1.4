@@ -75,4 +75,5 @@ public class ProjectTask : BaseEntity
     public virtual ICollection<ProjectTask_Tags> ProjectTask_Tags { get; set; } = new List<ProjectTask_Tags>();
     public virtual ICollection<ProjectTaskRelatedMapping> ProjectTaskRelatedMappings { get; set; } = new List<ProjectTaskRelatedMapping>();
     public virtual ICollection<ProjectWeeklyPlanDatesReqTaskIssueMapping> ProjectWeeklyPlanDatesReqTaskIssueMappingList { get; set; } = new List<ProjectWeeklyPlanDatesReqTaskIssueMapping>();
+    public virtual ICollection<ProjectWeeklyPlanDatesLines> ProjectWeeklyPlanDatesLines { get; set; } = new List<ProjectWeeklyPlanDatesLines>();
 }

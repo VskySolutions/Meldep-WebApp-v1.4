@@ -5,6 +5,7 @@ using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SendGrid.Helpers.Mail;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
@@ -60,6 +61,33 @@ namespace Vsky.Services.ProjectWeeklyPlan
 
             var item = await query.FirstOrDefaultAsync();
             return item;
+        }
+        #endregion
+
+        #region IsWeekendDateExists
+        public async Task<bool> IsWeekendDateExists(
+            string projectId,
+            string planTypeId,
+            DateTime weekendDate,
+            string? excludeId = null)
+        {
+            var date = weekendDate.Date;
+            var nextDate = date.AddDays(1);
+
+            var query = _projectWeeklyPlanRepository.TableNoTracking
+                .Where(x =>
+                    x.ProjectId == projectId &&
+                    x.ProjectWeeklyPlanDates.Any(m =>
+                        !m.Deleted &&
+                        m.PlanTypeId == planTypeId &&
+                        m.WeekDate >= date &&
+                        m.WeekDate < nextDate &&
+                        (string.IsNullOrEmpty(excludeId) ||
+                         m.Id != excludeId)
+                    )
+                );
+
+            return await query.AnyAsync();
         }
         #endregion
 

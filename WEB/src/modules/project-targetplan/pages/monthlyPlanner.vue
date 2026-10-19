@@ -369,13 +369,31 @@
                   @mouseenter="!planDate.isApproved ? projectMonthlyPlanDateLineHovered = planDate.id : null"
                   @mouseleave="!planDate.isApproved ? projectMonthlyPlanDateLineHovered = null : null"
                 >
-                  <tr
+                  <template
                     v-for="(line, lineIndex) in planDate.projectWeeklyPlanDatesLines"
                     :key="line.id"
                   >
+                    <tr v-if="line.taskId" class="linked-task-row">
+                      <td v-if="lineIndex === 0" class="task-title-spacer"></td>
+                      <td
+                        colspan="2"
+                        class="linked-task-title text-center hoverable-cell"
+                        @click.stop="onProjectTaskView(line.taskId)"
+                      >
+                        Project Task - {{ line.projectTask?.projectTaskNumber }} - {{ line.projectTask?.name }}
+                        <q-tooltip>View Project Task</q-tooltip>
+                      </td>
+                      <td class="task-title-spacer"></td>
+                    </tr>
+                  <tr>
                     <td
                       v-if="lineIndex === 0"
-                      :rowspan="planDate.projectWeeklyPlanDatesLines.length"
+                      :rowspan="
+                        planDate.projectWeeklyPlanDatesLines.length +
+                        planDate.projectWeeklyPlanDatesLines.filter(
+                          (item, index) => index > 0 && item.taskId
+                        ).length
+                      "
                       class="text-center"
                     >
                       {{ convertDateToMonthLabel(planDate.weekDate) }}
@@ -584,7 +602,7 @@
                                       dense
                                       :loading="resourceProcessing"
                                       :disable="addResourceBtn"
-                                      @click="{onAddResourceToLine(planDate, line, resourceModel.value); lastDescriptionBeforeClose = null;}"
+                                      @click="onAddResourceToLine(planDate, line, resourceModel.value)"
                                     />
                                   </div>
                                 </q-popup-edit>
@@ -613,7 +631,11 @@
                               color="grey"
                               size="sm"
                               class="q-mr-xs"
-                              @click="activeExpected = { rowId: null}; line.expectedDescription = lastDescriptionBeforeClose;lastDescriptionBeforeClose = null"
+                              @click="
+                                activeExpected = { rowId: null };
+                                line.expectedDescription = lastExpectedDescriptionBeforeClose ?? '';
+                                lastExpectedDescriptionBeforeClose = null;
+                              "
                             >
                               Cancel
                             </q-btn>
@@ -702,7 +724,11 @@
                             color="grey"
                             size="sm"
                             class="q-mr-xs"
-                            @click="activeActual = { rowId: null}; line.actualDescription = lastDescriptionBeforeClose; lastDescriptionBeforeClose = null"
+                            @click="
+                              activeActual = { rowId: null };
+                              line.actualDescription = lastActualDescriptionBeforeClose ?? '';
+                              lastActualDescriptionBeforeClose = null;
+                            "
                           >
                             Cancel
                           </q-btn>
@@ -750,6 +776,7 @@
                       </q-btn>
                     </td>
                   </tr>
+                  </template>
                   <tr v-if="planDate?.projectWeeklyPlanDatesLines?.length === 0">
                     <td class="text-center">
                       {{ convertDateToMonthLabel(planDate.weekDate) }}
@@ -990,7 +1017,9 @@ const skipIndex = ref(0);
 const takeCount = ref(4);
 
 const projectMonthlyPlanDateLineHovered = ref(null);
-const lastDescriptionBeforeClose = ref(null);
+// const lastDescriptionBeforeClose = ref(null);
+const lastExpectedDescriptionBeforeClose = ref(null);
+const lastActualDescriptionBeforeClose = ref(null);
 
 const isFullAccess = ref(true);
 const isViewAccess = ref(true);
@@ -1288,11 +1317,14 @@ const convertDateToMonthLabel = (currentMonth) => {
 // Add new project Week
 const addMonthlyPlanDate = async (monthDate) => {
   if (isWeekendAlreadyPlanned(monthDate, projectMonthlyPlanDates.value)) {
-    notifyError({ message: "Duplicate Monthly" });
+    notifyError({ message: "This plan date already exists for the selected project." });
   } else {
     const newId = uid();
     const model = ref({
       id: newId,
+      ProjectWeeklyPlan: {
+        ProjectId: activeProjectId.value
+      },
       projectWeeklyPlanId: activeProjectPlanId.value,
       planTypeId: planTypeId.value,
       weekDate: monthDate,
@@ -1343,20 +1375,40 @@ const loadProjectMonthlyPlanLines = async (index) => {
   loading.value = false;
 };
 
+// const handleExpectedEdit = (planDate, line) => {
+//   if (!planDate.isApproved) {
+//     activeExpected.value = { rowId: line.id };
+//     lastDescriptionBeforeClose.value = line.expectedDescription;
+//     line.expectedDescription = line.expectedDescription || "";
+//   }
+// };
+
+// const handleActualEdit = (isFullAccess, line, isCompleted) => {
+//   if (isFullAccess && !isCompleted) {
+//     activeActual.value = { rowId: line.id };
+//     lastDescriptionBeforeClose.value = line.actualDescription;
+//   }
+// };
+
 const handleExpectedEdit = (planDate, line) => {
   if (!planDate.isApproved) {
+    lastExpectedDescriptionBeforeClose.value =
+      line.expectedDescription ?? "";
+
     activeExpected.value = { rowId: line.id };
-    lastDescriptionBeforeClose.value = line.expectedDescription;
     line.expectedDescription = line.expectedDescription || "";
   }
 };
 
 const handleActualEdit = (isFullAccess, line, isCompleted) => {
   if (isFullAccess && !isCompleted) {
+    lastActualDescriptionBeforeClose.value =
+      line.actualDescription ?? "";
+
     activeActual.value = { rowId: line.id };
-    lastDescriptionBeforeClose.value = line.actualDescription;
   }
 };
+
 
 const addMonthlyPlanDateLines = async (planDates) => {
   const hasEmptyDescriptions = planDates.projectWeeklyPlanDatesLines.some(
@@ -1377,7 +1429,9 @@ const addMonthlyPlanDateLines = async (planDates) => {
     const resp = await projectService.saveProjectWeeklyPlanDatesLine(model.value);
     resp.isEditExpectedDescription = false;
     planDates.projectWeeklyPlanDatesLines.unshift(resp);
-    activeExpected.value.rowId = resp.id;
+    lastExpectedDescriptionBeforeClose.value = "";
+    // activeExpected.value.rowId = resp.id;
+    activeExpected.value = { rowId: resp.id };
     resp.expectedDescription = resp.expectedDescription || "";
   } else {
     notifyError({ message: "Please Enter Existing Plan" });
@@ -1393,7 +1447,11 @@ const saveExpectedPlan = async (line) => {
       line.isEditExpectedDescription = true;
       const resp = await projectService.saveProjectWeeklyPlanDatesLine(line);
       line = resp;
-      activeExpected.value.rowId = null;
+      // activeExpected.value.rowId = null;
+      // line.isEditExpectedDescription = false;
+      Object.assign(line, resp);
+      activeExpected.value = { rowId: null };
+      lastExpectedDescriptionBeforeClose.value = null;
       line.isEditExpectedDescription = false;
     }
   } catch (error) {
@@ -1414,7 +1472,11 @@ const saveActualLine = async (line) => {
       line.isEditActualDescription = true;
       const resp = await projectService.saveProjectWeeklyPlanDatesLine(line);
       line = resp;
-      activeActual.value.rowId = null;
+      // activeActual.value.rowId = null;
+      // line.isEditActualDescription = false;
+      Object.assign(line, resp);
+      activeActual.value = { rowId: null };
+      lastActualDescriptionBeforeClose.value = null;
       line.isEditActualDescription = false;
     }
   } catch (error) {
@@ -1906,5 +1968,14 @@ watch(
 }
 .min-height-auto {
     min-height: auto;
+}
+.linked-task-title {
+  background-color: #f0f7fc;
+  border-left: 3px solid #1b75ab;
+  overflow-wrap: anywhere;
+}
+
+.linked-task-title:hover {
+  text-decoration: underline;
 }
 </style>

@@ -131,7 +131,7 @@ namespace Vsky.Services.ProjectActivities
             if (SprintWeekEndDate != null)
             {
                 query = query.Where(x =>
-                    x.Task.ProjectWeeklyPlanDatesReqTaskIssueMappingList.Any(m =>
+                    x.Task.ProjectWeeklyPlanDatesLines.Any(m =>
                         !m.Deleted &&
                         m.TaskId == x.TaskId &&
                         m.ProjectWeeklyPlanDates.WeekDate.Date == SprintWeekEndDate.Value.Date &&
@@ -375,7 +375,7 @@ namespace Vsky.Services.ProjectActivities
             if (SprintWeekEndDate != null)
             {
                 query = query.Where(x =>
-                    x.Task.ProjectWeeklyPlanDatesReqTaskIssueMappingList.Any(m =>
+                    x.Task.ProjectWeeklyPlanDatesLines.Any(m =>
                         !m.Deleted &&
                         m.TaskId == x.TaskId &&
                         m.ProjectWeeklyPlanDates.WeekDate.Date == SprintWeekEndDate.Value.Date &&
@@ -438,15 +438,33 @@ namespace Vsky.Services.ProjectActivities
                         Id = x.Task.Status.Id,
                         DropDownValue = x.Task.Status.DropDownValue
                     },
-                    ProjectWeeklyPlanDatesReqTaskIssueMappingList = x.Task.ProjectWeeklyPlanDatesReqTaskIssueMappingList.Where(p => !p.Deleted && p.ProjectWeeklyPlanDates.PlanType.DropDownValue.ToLower() == "weekly").Select(p => new ProjectWeeklyPlanDatesReqTaskIssueMapping
-                    {
-                        Id = p.Id,
-                        ProjectWeeklyPlanDates = new ProjectWeeklyPlanDates
+                    //ProjectWeeklyPlanDatesReqTaskIssueMappingList = x.Task.ProjectWeeklyPlanDatesReqTaskIssueMappingList.Where(p => !p.Deleted && p.ProjectWeeklyPlanDates.PlanType.DropDownValue.ToLower() == "weekly").Select(p => new ProjectWeeklyPlanDatesReqTaskIssueMapping
+                    //{
+                    //    Id = p.Id,
+                    //    ProjectWeeklyPlanDates = new ProjectWeeklyPlanDates
+                    //    {
+                    //        Id = p.ProjectWeeklyPlanDates.Id,
+                    //        WeekDate = p.ProjectWeeklyPlanDates.WeekDate
+                    //    }
+                    //}).ToList(),
+                    ProjectWeeklyPlanDatesLines = x.Task.ProjectWeeklyPlanDatesLines
+                        .Where(line =>
+                            !line.Deleted &&
+                            line.TaskId == x.Task.Id &&
+                            line.ProjectWeeklyPlanDates.PlanType.DropDownValue.ToLower() == "weekly")
+                        .Select(line => new ProjectWeeklyPlanDatesLines
                         {
-                            Id = p.ProjectWeeklyPlanDates.Id,
-                            WeekDate = p.ProjectWeeklyPlanDates.WeekDate
-                        }
-                    }).ToList(),
+                            Id = line.Id,
+                            TaskId = line.TaskId,
+                            ProjectWeeklyPlanDatesId = line.ProjectWeeklyPlanDatesId,
+
+                            ProjectWeeklyPlanDates = new ProjectWeeklyPlanDates
+                            {
+                                Id = line.ProjectWeeklyPlanDates.Id,
+                                WeekDate = line.ProjectWeeklyPlanDates.WeekDate
+                            }
+                        })
+                        .ToList(),
                     //Requirement = new Requirement
                     //{
                     //    Id = x.Task.Requirement.Id,

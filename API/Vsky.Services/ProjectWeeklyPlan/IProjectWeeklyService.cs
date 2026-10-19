@@ -15,6 +15,14 @@ namespace Vsky.Services.ProjectWeeklyPlan
         Task<Models.ProjectWeeklyPlan> GetByProjectId(string SiteId, string ProjectId);
         #endregion
 
+        #region IsWeekendDateExists
+        Task<bool> IsWeekendDateExists(
+            string projectId,
+            string planTypeId,
+            DateTime weekendDate,
+            string? excludeId = null);
+        #endregion
+
         #region GetAllProjectWeeklyPlanList
         Task<IPagedList<Models.ProjectWeeklyPlan>> GetAllProjectWeeklyPlanListAsync(
             string SiteId,

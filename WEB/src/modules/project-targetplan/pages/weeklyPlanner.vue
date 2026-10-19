@@ -375,413 +375,443 @@
                   @mouseenter="!planDate.isApproved ? projectWeeklyPlanDateLineHovered = planDate.id : null"
                   @mouseleave="!planDate.isApproved ? projectWeeklyPlanDateLineHovered = null : null"
                 >
-                  <tr
+                  <template
                     v-for="(line, lineIndex) in planDate.projectWeeklyPlanDatesLines"
                     :key="line.id"
                   >
-                    <td
-                      v-if="lineIndex === 0"
-                      :rowspan="planDate.projectWeeklyPlanDatesLines.length"
-                      class="weekDetails text-center"
-                    >
-                      {{ planDate.weekDate }}
-                      <hr>
-                      <div class="weekTotal">
-                        <h6 class="flex items-center justify-center">
-                          Total:-
-                          <b style="color: #1b75ab;">
-                            {{ getTotalHoursForWeekSummary(planDate.employeeEstimateHoursForWeekSummaryList) }}
-                          </b>
-                          <div v-if="(planDate.employeeEstimateHoursForWeekSummaryList?.length > 0 ? true : false )" class="resourceIcon position-relative">
-                            <q-icon name="o_groups" size="sm" color="primary" class="q-ml-xs" />
-                            <q-tooltip class="bg-grey-8 text-white shadow-2">
-                              <table class="table boarded GreyTable">
-                                <thead>
-                                  <tr>
-                                    <td colspan="2" class="text-center" style="font-size: 13px;">Resource Summary</td>
-                                  </tr>
-                                  <tr>
-                                    <th class="text-start">Resource Name</th>
-                                    <th class="text-end">Est. Hours</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr v-for="group in planDate?.employeeEstimateHoursForWeekSummaryList" :key="group.employeeId">
-                                    <td>{{ group.employee?.person.firstName + " " + group.employee?.person.lastName }}</td>
-                                    <td class="text-end">
-                                      {{ group.totalEstimatedHours }}
-                                    </td>
-                                  </tr>
-                                  <tr v-if="planDate?.employeeEstimateHoursForWeekSummaryList?.length > 0">
-                                    <td class="text-end">Total Hours</td>
-                                    <td class="text-end">{{ getTotalHoursForWeekSummary(planDate.employeeEstimateHoursForWeekSummaryList) }}</td>
-                                  </tr>
-                                </tbody>
-                              </table>
+                    <tr v-if="line.taskId" class="linked-task-row">
+                      <td v-if="lineIndex === 0" class="task-title-spacer"></td>
+
+                      <td
+                        colspan="2"
+                        class="linked-task-title text-center hoverable-cell"
+                        @click.stop="onProjectTaskView(line.taskId)"
+                      >Project Task -
+                        {{ line.projectTask?.projectTaskNumber }} -
+                        {{ line.projectTask?.name }}
+                        <q-tooltip>View Project Task</q-tooltip>
+                      </td>
+
+                      <td class="task-title-spacer"></td>
+                    </tr>
+                    <tr>
+                      <td
+                        v-if="lineIndex === 0"
+                        :rowspan="
+                          planDate.projectWeeklyPlanDatesLines.length +
+                          planDate.projectWeeklyPlanDatesLines.filter(
+                            (item, index) => index > 0 && item.taskId
+                          ).length
+                        "
+                        class="weekDetails text-center"
+                      >
+                        {{ planDate.weekDate }}
+                        <hr>
+                        <div class="weekTotal">
+                          <h6 class="flex items-center justify-center">
+                            Total:-
+                            <b style="color: #1b75ab;">
+                              {{ getTotalHoursForWeekSummary(planDate.employeeEstimateHoursForWeekSummaryList) }}
+                            </b>
+                            <div v-if="(planDate.employeeEstimateHoursForWeekSummaryList?.length > 0 ? true : false )" class="resourceIcon position-relative">
+                              <q-icon name="o_groups" size="sm" color="primary" class="q-ml-xs" />
+                              <q-tooltip class="bg-grey-8 text-white shadow-2">
+                                <table class="table boarded GreyTable">
+                                  <thead>
+                                    <tr>
+                                      <td colspan="2" class="text-center" style="font-size: 13px;">Resource Summary</td>
+                                    </tr>
+                                    <tr>
+                                      <th class="text-start">Resource Name</th>
+                                      <th class="text-end">Est. Hours</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr v-for="group in planDate?.employeeEstimateHoursForWeekSummaryList" :key="group.employeeId">
+                                      <td>{{ group.employee?.person.firstName + " " + group.employee?.person.lastName }}</td>
+                                      <td class="text-end">
+                                        {{ group.totalEstimatedHours }}
+                                      </td>
+                                    </tr>
+                                    <tr v-if="planDate?.employeeEstimateHoursForWeekSummaryList?.length > 0">
+                                      <td class="text-end">Total Hours</td>
+                                      <td class="text-end">{{ getTotalHoursForWeekSummary(planDate.employeeEstimateHoursForWeekSummaryList) }}</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </q-tooltip>
+                              <span class="text-primary">{{ planDate.employeeEstimateHoursForWeekSummaryList.length }}</span>
+                            </div>
+                          </h6>
+                        </div>
+                        <hr>
+                        <div class="planDateActions">
+                          <q-btn
+                            v-if="isFullAccess && !planDate.isApproved"
+                            :disable="!(projectWeeklyPlanDateLineHovered === planDate.id)"
+                            icon="o_add"
+                            color="grey-7"
+                            size="sm"
+                            class="q-mr-xs q-mb-xs"
+                            @click="addWeeklyPlanDateLines(planDate)"
+                          >
+                            <q-tooltip>Add Line</q-tooltip>
+                          </q-btn>
+                          <q-btn
+                            v-if="isFullAccess && showApprovePlanAction && !planDate.isApproved"
+                            icon="o_lock"
+                            color="primary"
+                            size="sm"
+                            class="q-mr-xs q-mb-xs"
+                            @click="approveThisWeeklyPlan(planDate.id, true)"
+                          >
+                            <q-tooltip>Click Here To Lock This Plan</q-tooltip>
+                          </q-btn>
+                          <q-btn
+                            v-if="!planDate.isApproved && !showApprovePlanAction"
+                            icon="o_lock_open"
+                            color="grey"
+                            size="sm"
+                            class="q-mr-xs q-mb-xs cursor-inherit"
+                          >
+                            <q-tooltip>Plan Unlocked</q-tooltip>
+                          </q-btn>
+                          <q-btn
+                            v-if="isFullAccess && showApprovePlanAction && planDate.isApproved && !planDate.isCompleted"
+                            icon="o_lock_open"
+                            color="secondary"
+                            size="sm"
+                            class="q-mr-xs q-mb-xs"
+                            @click="approveThisWeeklyPlan(planDate.id, false)"
+                          >
+                            <q-tooltip>Click Here To Unlock This Plan</q-tooltip>
+                          </q-btn>
+                          <q-btn
+                            v-if="(showApprovePlanAction && planDate.isApproved && planDate.isCompleted) || (!showApprovePlanAction && planDate.isApproved)"
+                            icon="o_lock"
+                            color="primary"
+                            size="sm"
+                            class="q-mr-xs q-mb-xs cursor-inherit"
+                          >
+                            <q-tooltip>
+                              {{ "Plan Locked By - " + planDate.approvedBy?.person?.firstName + " " + planDate.approvedBy?.person?.lastName + " (" + planDate?.approvedOnUtc + ")" }}
                             </q-tooltip>
-                            <span class="text-primary">{{ planDate.employeeEstimateHoursForWeekSummaryList.length }}</span>
+                          </q-btn>
+                          <q-btn
+                            v-if="planDate.isApproved && !showApprovePlanAction && !planDate.isCompleted"
+                            icon="o_pause_circle"
+                            color="grey"
+                            size="sm"
+                            class="q-mr-xs q-mb-xs cursor-inherit"
+                          >
+                            <q-tooltip>Waiting For Completion</q-tooltip>
+                          </q-btn>
+                          <q-btn
+                            v-if="isFullAccess && planDate.isApproved && showApprovePlanAction && !planDate.isCompleted"
+                            icon="o_percent"
+                            size="sm"
+                            color="green"
+                            class="q-mr-xs q-mb-xs"
+                            @click="showCompletionDialog = true; selectedProjectPlanDateId = planDate.id;"
+                          >
+                            <q-tooltip>Click Here To Mark As Completed</q-tooltip>
+                          </q-btn>
+                          <q-btn
+                            v-if="planDate.isApproved && planDate.isCompleted"
+                            size="sm"
+                            :color="
+                              planDate.completionPercentage <= 25 ? 'red' :
+                              planDate.completionPercentage <= 50 ? 'orange' :
+                              planDate.completionPercentage <= 75 ? 'primary' :
+                              'green'
+                            "
+                            class="q-mr-xs q-mb-xs cursor-inherit fs-13"
+                          >
+                            {{ planDate.completionPercentage }}%
+                            <q-tooltip>
+                              {{ "Marked Completed By - " + planDate.completedBy?.person?.firstName + " " + planDate.completedBy?.person?.lastName + " (" + planDate?.completedOnUtc + ")" }}
+                            </q-tooltip>
+                          </q-btn>
+                        </div>
+                      </td>
+                      <td
+                        :class="isFullAccess && !planDate.isApproved ? 'cursor-pointer' : ''"
+                        @dblclick="isFullAccess && handleExpectedEdit(planDate, line)"
+                      >
+                        <template v-if="activeExpected.rowId === line.id">
+                          <div class="row">
+                            <q-editor
+                              v-model="line.expectedDescription"
+                              class="cursor-auto full-width"
+                              :toolbar="toolbar"
+                              :fonts="fonts"
+                            />
                           </div>
-                        </h6>
-                      </div>
-                      <hr>
-                      <div class="planDateActions">
-                        <q-btn
-                          v-if="isFullAccess && !planDate.isApproved"
-                          :disable="!(projectWeeklyPlanDateLineHovered === planDate.id)"
-                          icon="o_add"
-                          color="grey-7"
-                          size="sm"
-                          class="q-mr-xs q-mb-xs"
-                          @click="addWeeklyPlanDateLines(planDate)"
-                        >
-                          <q-tooltip>Add Line</q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          v-if="isFullAccess && showApprovePlanAction && !planDate.isApproved"
-                          icon="o_lock"
-                          color="primary"
-                          size="sm"
-                          class="q-mr-xs q-mb-xs"
-                          @click="approveThisWeeklyPlan(planDate.id, true)"
-                        >
-                          <q-tooltip>Click Here To Lock This Plan</q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          v-if="!planDate.isApproved && !showApprovePlanAction"
-                          icon="o_lock_open"
-                          color="grey"
-                          size="sm"
-                          class="q-mr-xs q-mb-xs cursor-inherit"
-                        >
-                          <q-tooltip>Plan Unlocked</q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          v-if="isFullAccess && showApprovePlanAction && planDate.isApproved && !planDate.isCompleted"
-                          icon="o_lock_open"
-                          color="secondary"
-                          size="sm"
-                          class="q-mr-xs q-mb-xs"
-                          @click="approveThisWeeklyPlan(planDate.id, false)"
-                        >
-                          <q-tooltip>Click Here To Unlock This Plan</q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          v-if="(showApprovePlanAction && planDate.isApproved && planDate.isCompleted) || (!showApprovePlanAction && planDate.isApproved)"
-                          icon="o_lock"
-                          color="primary"
-                          size="sm"
-                          class="q-mr-xs q-mb-xs cursor-inherit"
-                        >
-                          <q-tooltip>
-                            {{ "Plan Locked By - " + planDate.approvedBy?.person?.firstName + " " + planDate.approvedBy?.person?.lastName + " (" + planDate?.approvedOnUtc + ")" }}
-                          </q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          v-if="planDate.isApproved && !showApprovePlanAction && !planDate.isCompleted"
-                          icon="o_pause_circle"
-                          color="grey"
-                          size="sm"
-                          class="q-mr-xs q-mb-xs cursor-inherit"
-                        >
-                          <q-tooltip>Waiting For Completion</q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          v-if="isFullAccess && planDate.isApproved && showApprovePlanAction && !planDate.isCompleted"
-                          icon="o_percent"
-                          size="sm"
-                          color="green"
-                          class="q-mr-xs q-mb-xs"
-                          @click="showCompletionDialog = true; selectedProjectPlanDateId = planDate.id;"
-                        >
-                          <q-tooltip>Click Here To Mark As Completed</q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          v-if="planDate.isApproved && planDate.isCompleted"
-                          size="sm"
-                          :color="
-                            planDate.completionPercentage <= 25 ? 'red' :
-                            planDate.completionPercentage <= 50 ? 'orange' :
-                            planDate.completionPercentage <= 75 ? 'primary' :
-                            'green'
-                          "
-                          class="q-mr-xs q-mb-xs cursor-inherit fs-13"
-                        >
-                          {{ planDate.completionPercentage }}%
-                          <q-tooltip>
-                            {{ "Marked Completed By - " + planDate.completedBy?.person?.firstName + " " + planDate.completedBy?.person?.lastName + " (" + planDate?.completedOnUtc + ")" }}
-                          </q-tooltip>
-                        </q-btn>
-                      </div>
-                    </td>
-                    <td
-                      :class="isFullAccess && !planDate.isApproved ? 'cursor-pointer' : ''"
-                      @dblclick="isFullAccess && handleExpectedEdit(planDate, line)"
-                    >
-                      <template v-if="activeExpected.rowId === line.id">
-                        <div class="row">
+                          <div class="row flex items-center q-my-xs">
+                            <div class="col-2">
+                              <q-input v-model="line.expectedHours" outlined hide-bottom-space :dense="true" :readonly="true" label="Est. Hrs" class="q-mr-sm" />
+                            </div>
+                            <div class="col-5">
+                              <div class="TaskActivity flex items-center">
+                                <!-- Task Assignment - Action Button -->
+                                <div class="q-mr-xs">
+                                  <q-icon name="o_group_add" color="grey-8" size="sm" />
+                                  <q-tooltip>Assign Resource?</q-tooltip>
+                                  <q-popup-edit
+                                    class="small-popup-title"
+                                    style="width: 280px;"
+                                    @before-show="() => {
+                                      resourceModel.value = { id: uid(), employeeId: null, estimatedHours: ''};
+                                      addResourceBtn = true;
+                                      weeklyEmployeeDropdownSingleSelect.load(activeProjectId, planTypeId, planDate.weekDate)
+                                    }"
+                                  >
+                                    <div class="row justify-between items-center q-mb-sm">
+                                      <h3>Add Resource</h3>
+                                      <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                                    </div>
+                                    <formSingleSelectDropdown
+                                      v-model="resourceModel.value.employeeId"
+                                      label="Select Employee"
+                                      :isClearable="false"
+                                      :options="weeklyEmployeeDropdownSingleSelect.list.value"
+                                      :filter="weeklyEmployeeDropdownSingleSelect.filter"
+                                      @update:model-value="val => checkIfEmployeeAlreadyExistsInPlanLine(line.id, resourceModel.value)"
+                                    />
+
+                                    <label class="q-mt-sm">Est. Hrs <span class="text-red">*</span></label>
+                                    <q-input
+                                      v-model="resourceModel.value.estimatedHours"
+                                      outlined
+                                      hide-bottom-space
+                                      dense
+                                      mask="##:##"
+                                      maxlength="5"
+                                      :rules="[validateHours]"
+                                      class="full-width"
+                                      @keyup="checkAddResourceFields(resourceModel.value)"
+                                      @blur="resourceModel.value.estimatedHours = formatHoursValue(resourceModel.value.estimatedHours);"
+                                    >
+                                      <template #hint>
+                                        <span
+                                          v-if="resourceModel.value.estimatedHours && validateHours(resourceModel.value.estimatedHours) === true && resourceModel.value.estimatedHours !== '00:00'""
+                                          class="text-caption text-primary"
+                                        >
+                                          {{ getHoursMinutesText(resourceModel.value.estimatedHours) }}
+                                        </span>
+                                        <span v-else>
+                                          hh:mm
+                                        </span>
+                                      </template>
+                                    </q-input>
+                                    <div class="row justify-end q-gutter-sm q-mt-sm">
+                                      <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                                      <q-btn
+                                        v-close-popup
+                                        label="Set"
+                                        color="primary"
+                                        dense
+                                        :loading="processing"
+                                        :disable="addResourceBtn"
+                                        @click="onAddResourceToLine(planDate, line, resourceModel.value)"
+                                      />
+                                    </div>
+                                  </q-popup-edit>
+                                </div>
+                                <!-- Task Assignment - Labels -->
+                                <div
+                                  v-for="(resource, resourceIndex) in line.projectWeeklyPlanDatesLinesAssignedTo"
+                                  :key="resource.id"
+                                  class="Person position-relative q-mr-xs"
+                                >
+                                  {{ (resource?.employee?.person?.firstName?.trim()?.[0] || '') + (resource?.employee?.person?.lastName?.trim()?.[0] || '') + "(" + resource.estimatedHours + ")" }}
+                                  <q-icon class="delete" name="o_close" color="red" size="xs" @click="onDeleteResourceToLine(planDate, line, resource, resourceIndex)" />
+                                  <q-tooltip>
+                                    <div>
+                                      <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
+                                      <span>{{ resource.employee?.person?.firstName + ' ' + resource.employee?.person?.lastName }}</span>
+                                    </div>
+                                  </q-tooltip>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-5 flex items-center justify-end">
+                              <q-btn
+                                v-if="activeExpected.rowId"
+                                icon-right="o_close"
+                                color="grey"
+                                size="sm"
+                                class="q-mr-xs"
+                                @click="() => {
+                                  line.expectedDescription = lastExpectedDescriptionBeforeClose ?? '';
+                                  activeExpected.rowId = null;
+                                  lastExpectedDescriptionBeforeClose = null;
+                                }"
+                              >
+                                Cancel
+                              </q-btn>
+                              <q-btn v-if="activeExpected.rowId" icon-right="o_check" color="primary" size="sm" :loading="processing" @click="saveExpectedPlan(line, planDate.weekDate)">
+                                Save
+                              </q-btn>
+                            </div>
+                          </div>
+                        </template>
+                        <template v-else>
+                          <div class="row flex">
+                            <div class="col-12 position-relative">
+                              <div
+                                class="plan-desc q-mt-md RichTextEditor"
+                                v-html="
+                                  // line.expectedDescription?.length === 0 || line.expectedDescription === ' ' || line.expectedDescription === '<br>' ?
+                                  !line.expectedDescription ||
+                                    !line.expectedDescription.trim() ||
+                                    line.expectedDescription.trim().toLowerCase() === '<br>' ?
+                                      '<span class=placeholder style=color:grey;font-style:italic;font-size:13px;>'+
+                                      (!planDate.isApproved ? 'Double Click To Enter Your Weekly Plan' : 'No Description Available') +'</span>'
+                                    : line.expectedDescription"
+                              />
+                              <q-icon
+                                v-if="planDate.isApproved"
+                                name="o_lock"
+                                size="xs"
+                                style="position: absolute;top: 2px;right: 2px;"
+                              />
+                            </div>
+                            <div v-if="line.expectedDescriptionUpdatedOnUtc" class="col-12">
+                              <div class="row q-py-xs" style="border-top: 1px solid #cfcfcf;">
+                                <div class="col-xxl-5 col-xl-6 col-lg-12 col-md-12 col-sm-12 col-xs-12 flex">
+                                  <div class="flex items-center">
+                                    <q-icon name="o_schedule" color="grey-8" size="sm" />
+                                    <b class="fs-15 q-px-sm" style="color: #1b75ab;line-height: 25px;">{{ line.expectedHours }}</b>
+                                  </div>
+                                  <div class="TaskActivity flex items-center">
+                                    <!-- Task Assignment - Label -->
+                                    <div class="q-mr-xs">
+                                      <q-icon name="o_group" color="grey-8" size="sm" />
+                                    </div>
+                                    <!-- Task Assignment - Resource Label -->
+                                    <div v-for="resource in line.projectWeeklyPlanDatesLinesAssignedTo" :key="resource.id" class="Person q-mr-xs">
+                                      {{ (resource?.employee?.person?.firstName?.trim()?.[0] || '') + (resource?.employee?.person?.lastName?.trim()?.[0] || '') + "(" + resource.estimatedHours + ")" }}
+                                      <q-tooltip>
+                                        <div>
+                                          <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
+                                          <span>{{ resource.employee?.person?.firstName + ' ' + resource.employee?.person?.lastName }}</span>
+                                        </div>
+                                        <div>
+                                          <q-icon name="o_mail" color="white" size="xs" class="q-mr-xs" />
+                                          <span>{{ resource.employee?.person?.primaryEmailAddress }}</span>
+                                        </div>
+                                        <div v-if="resource.estimatedHours > 0">
+                                          <q-icon name="o_timer" color="white" size="xs" class="q-mr-xs" />
+                                          <span>{{ resource.estimatedHours }} Est. hrs</span>
+                                        </div>
+                                      </q-tooltip>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="col-xxl-7 col-xl-6 col-lg-12 col-md-12 col-sm-12 col-xs-12 text-end">
+                                  <div class="LastUpdatedBy text-capitalize q-md-mt-xs">
+                                    <!-- Last Updated:- {{ line?.expectedDescriptionUpdatedBy?.person?.firstName + ' '+ line?.expectedDescriptionUpdatedBy?.person?.lastName + '('+ line?.expectedDescriptionUpdatedOnUtc +')' }} -->
+                                    <div>
+                                      Created By:-
+                                      {{ line?.expectedDescriptionCreatedBy?.person?.firstName + ' ' +
+                                        line?.expectedDescriptionCreatedBy?.person?.lastName +
+                                        '(' + line?.expectedDescriptionCreatedOnUtc + ')' }}
+                                    </div>
+
+                                    <div>
+                                      Last Updated:-
+                                      {{ line?.expectedDescriptionUpdatedBy?.person?.firstName + ' ' +
+                                        line?.expectedDescriptionUpdatedBy?.person?.lastName +
+                                        '(' + line?.expectedDescriptionUpdatedOnUtc + ')' }}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <q-tooltip v-if="isFullAccess && !planDate.isApproved">Double click to edit</q-tooltip>
+                          </div>
+                        </template>
+                      </td>
+                      <td :class="isFullAccess && !planDate.isCompleted ? 'cursor-pointer' : ''" @dblclick="isFullAccess && handleActualEdit(line, planDate.isCompleted)">
+                        <template v-if="activeActual.rowId === line.id">
                           <q-editor
-                            v-model="line.expectedDescription"
-                            class="cursor-auto full-width"
+                            v-model="line.actualDescription"
+                            class="cursor-auto"
                             :toolbar="toolbar"
                             :fonts="fonts"
                           />
-                        </div>
-                        <div class="row flex items-center q-my-xs">
-                          <div class="col-2">
-                            <q-input v-model="line.expectedHours" outlined hide-bottom-space :dense="true" :readonly="true" label="Est. Hrs" class="q-mr-sm" />
-                          </div>
-                          <div class="col-5">
-                            <div class="TaskActivity flex items-center">
-                              <!-- Task Assignment - Action Button -->
-                              <div class="q-mr-xs">
-                                <q-icon name="o_group_add" color="grey-8" size="sm" />
-                                <q-tooltip>Assign Resource?</q-tooltip>
-                                <q-popup-edit
-                                  class="small-popup-title"
-                                  style="width: 280px;"
-                                  @before-show="() => {
-                                    resourceModel.value = { id: uid(), employeeId: null, estimatedHours: ''};
-                                    addResourceBtn = true;
-                                    weeklyEmployeeDropdownSingleSelect.load(activeProjectId, planTypeId, planDate.weekDate)
-                                  }"
-                                >
-                                  <div class="row justify-between items-center q-mb-sm">
-                                    <h3>Add Resource</h3>
-                                    <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
-                                  </div>
-                                  <formSingleSelectDropdown
-                                    v-model="resourceModel.value.employeeId"
-                                    label="Select Employee"
-                                    :isClearable="false"
-                                    :options="weeklyEmployeeDropdownSingleSelect.list.value"
-                                    :filter="weeklyEmployeeDropdownSingleSelect.filter"
-                                    @update:model-value="val => checkIfEmployeeAlreadyExistsInPlanLine(line.id, resourceModel.value)"
-                                  />
-
-                                  <label class="q-mt-sm">Est. Hrs <span class="text-red">*</span></label>
-                                  <q-input
-                                    v-model="resourceModel.value.estimatedHours"
-                                    outlined
-                                    hide-bottom-space
-                                    dense
-                                    mask="##:##"
-                                    maxlength="5"
-                                    :rules="[validateHours]"
-                                    class="full-width"
-                                    @keyup="checkAddResourceFields(resourceModel.value)"
-                                    @blur="resourceModel.value.estimatedHours = formatHoursValue(resourceModel.value.estimatedHours);"
-                                  >
-                                    <template #hint>
-                                      <span
-                                        v-if="resourceModel.value.estimatedHours && validateHours(resourceModel.value.estimatedHours) === true && resourceModel.value.estimatedHours !== '00:00'""
-                                        class="text-caption text-primary"
-                                      >
-                                        {{ getHoursMinutesText(resourceModel.value.estimatedHours) }}
-                                      </span>
-                                      <span v-else>
-                                        hh:mm
-                                      </span>
-                                    </template>
-                                  </q-input>
-                                  <div class="row justify-end q-gutter-sm q-mt-sm">
-                                    <q-btn v-close-popup label="Cancel" color="grey" flat dense />
-                                    <q-btn
-                                      v-close-popup
-                                      label="Set"
-                                      color="primary"
-                                      dense
-                                      :loading="processing"
-                                      :disable="addResourceBtn"
-                                      @click="{onAddResourceToLine(planDate, line, resourceModel.value); lastDescriptionBeforeClose = null; }"
-                                    />
-                                  </div>
-                                </q-popup-edit>
-                              </div>
-                              <!-- Task Assignment - Labels -->
-                              <div
-                                v-for="(resource, resourceIndex) in line.projectWeeklyPlanDatesLinesAssignedTo"
-                                :key="resource.id"
-                                class="Person position-relative q-mr-xs"
-                              >
-                                {{ (resource?.employee?.person?.firstName?.trim()?.[0] || '') + (resource?.employee?.person?.lastName?.trim()?.[0] || '') + "(" + resource.estimatedHours + ")" }}
-                                <q-icon class="delete" name="o_close" color="red" size="xs" @click="onDeleteResourceToLine(planDate, line, resource, resourceIndex)" />
-                                <q-tooltip>
-                                  <div>
-                                    <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
-                                    <span>{{ resource.employee?.person?.firstName + ' ' + resource.employee?.person?.lastName }}</span>
-                                  </div>
-                                </q-tooltip>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-5 flex items-center justify-end">
+                          <div class="row flex justify-end q-mt-xs">
                             <q-btn
-                              v-if="activeExpected.rowId"
+                              v-if="activeActual.rowId"
                               icon-right="o_close"
                               color="grey"
                               size="sm"
                               class="q-mr-xs"
-                              @click="activeExpected = { rowId: null}; line.expectedDescription = lastDescriptionBeforeClose; lastDescriptionBeforeClose = null"
+                              @click="() => {
+                                line.actualDescription = lastActualDescriptionBeforeClose ?? '';
+                                activeActual.rowId = null;
+                                lastActualDescriptionBeforeClose = null;
+                              }"
                             >
                               Cancel
                             </q-btn>
-                            <q-btn v-if="activeExpected.rowId" icon-right="o_check" color="primary" size="sm" :loading="processing" @click="saveExpectedPlan(line, planDate.weekDate)">
+                            <q-btn
+                              v-if="activeActual.rowId"
+                              icon-right="o_check"
+                              color="primary"
+                              size="sm"
+                              :loading="processing"
+                              @click="saveActualLine(line)"
+                            >
                               Save
                             </q-btn>
                           </div>
-                        </div>
-                      </template>
-                      <template v-else>
-                        <div class="row flex">
-                          <div class="col-12 position-relative">
-                            <div
-                              class="plan-desc q-mt-md RichTextEditor"
-                              v-html="
-                                // line.expectedDescription?.length === 0 || line.expectedDescription === ' ' || line.expectedDescription === '<br>' ?
-                                !line.expectedDescription ||
-                                  !line.expectedDescription.trim() ||
-                                  line.expectedDescription.trim().toLowerCase() === '<br>' ?
-                                    '<span class=placeholder style=color:grey;font-style:italic;font-size:13px;>'+
-                                    (!planDate.isApproved ? 'Double Click To Enter Your Weekly Plan' : 'No Description Available') +'</span>'
-                                  : line.expectedDescription"
-                            />
+                        </template>
+                        <template v-else>
+                          <div class="position-relative">
+                            <div v-if="line.actualDescription?.length > 0" class="plan-desc q-mt-md RichTextEditor" v-html="line.actualDescription" />
+                            <q-tooltip v-if="line.actualDescription?.length > 0 && line.actualDescription !== '<br>' && isFullAccess && !planDate.isCompleted">Double click to edit</q-tooltip>
+                            <div v-if="(line.actualDescription?.length === 0 || line.actualDescription === '<br>')" class="fs-12 text-red">No Description Available</div>
                             <q-icon
-                              v-if="planDate.isApproved"
+                              v-if="planDate.isApproved && planDate.isCompleted"
                               name="o_lock"
                               size="xs"
                               style="position: absolute;top: 2px;right: 2px;"
                             />
                           </div>
-                          <div v-if="line.expectedDescriptionUpdatedOnUtc" class="col-12">
-                            <div class="row q-py-xs" style="border-top: 1px solid #cfcfcf;">
-                              <div class="col-xxl-5 col-xl-6 col-lg-12 col-md-12 col-sm-12 col-xs-12 flex">
-                                <div class="flex items-center">
-                                  <q-icon name="o_schedule" color="grey-8" size="sm" />
-                                  <b class="fs-15 q-px-sm" style="color: #1b75ab;line-height: 25px;">{{ line.expectedHours }}</b>
-                                </div>
-                                <div class="TaskActivity flex items-center">
-                                  <!-- Task Assignment - Label -->
-                                  <div class="q-mr-xs">
-                                    <q-icon name="o_group" color="grey-8" size="sm" />
-                                  </div>
-                                  <!-- Task Assignment - Resource Label -->
-                                  <div v-for="resource in line.projectWeeklyPlanDatesLinesAssignedTo" :key="resource.id" class="Person q-mr-xs">
-                                    {{ (resource?.employee?.person?.firstName?.trim()?.[0] || '') + (resource?.employee?.person?.lastName?.trim()?.[0] || '') + "(" + resource.estimatedHours + ")" }}
-                                    <q-tooltip>
-                                      <div>
-                                        <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
-                                        <span>{{ resource.employee?.person?.firstName + ' ' + resource.employee?.person?.lastName }}</span>
-                                      </div>
-                                      <div>
-                                        <q-icon name="o_mail" color="white" size="xs" class="q-mr-xs" />
-                                        <span>{{ resource.employee?.person?.primaryEmailAddress }}</span>
-                                      </div>
-                                      <div v-if="resource.estimatedHours > 0">
-                                        <q-icon name="o_timer" color="white" size="xs" class="q-mr-xs" />
-                                        <span>{{ resource.estimatedHours }} Est. hrs</span>
-                                      </div>
-                                    </q-tooltip>
-                                  </div>
-                                </div>
-                              </div>
-                              <div class="col-xxl-7 col-xl-6 col-lg-12 col-md-12 col-sm-12 col-xs-12 text-end">
-                                <div class="LastUpdatedBy text-capitalize q-md-mt-xs">
-                                  <!-- Last Updated:- {{ line?.expectedDescriptionUpdatedBy?.person?.firstName + ' '+ line?.expectedDescriptionUpdatedBy?.person?.lastName + '('+ line?.expectedDescriptionUpdatedOnUtc +')' }} -->
-                                  <div>
-                                    Created By:-
-                                    {{ line?.expectedDescriptionCreatedBy?.person?.firstName + ' ' +
-                                      line?.expectedDescriptionCreatedBy?.person?.lastName +
-                                      '(' + line?.expectedDescriptionCreatedOnUtc + ')' }}
-                                  </div>
-
-                                  <div>
-                                    Last Updated:-
-                                    {{ line?.expectedDescriptionUpdatedBy?.person?.firstName + ' ' +
-                                      line?.expectedDescriptionUpdatedBy?.person?.lastName +
-                                      '(' + line?.expectedDescriptionUpdatedOnUtc + ')' }}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <q-tooltip v-if="isFullAccess && !planDate.isApproved">Double click to edit</q-tooltip>
-                        </div>
-                      </template>
-                    </td>
-                    <td :class="isFullAccess && !planDate.isCompleted ? 'cursor-pointer' : ''" @dblclick="isFullAccess && handleActualEdit(line, planDate.isCompleted)">
-                      <template v-if="activeActual.rowId === line.id">
-                        <q-editor
-                          v-model="line.actualDescription"
-                          class="cursor-auto"
-                          :toolbar="toolbar"
-                          :fonts="fonts"
-                        />
-                        <div class="row flex justify-end q-mt-xs">
-                          <q-btn
-                            v-if="activeActual.rowId"
-                            icon-right="o_close"
-                            color="grey"
-                            size="sm"
-                            class="q-mr-xs"
-                            @click="activeActual = { rowId: null}; line.actualDescription = lastDescriptionBeforeClose; lastDescriptionBeforeClose = null"
-                          >
-                            Cancel
-                          </q-btn>
-                          <q-btn
-                            v-if="activeActual.rowId"
-                            icon-right="o_check"
-                            color="primary"
-                            size="sm"
-                            :loading="processing"
-                            @click="saveActualLine(line)"
-                          >
-                            Save
-                          </q-btn>
-                        </div>
-                      </template>
-                      <template v-else>
-                        <div class="position-relative">
-                          <div v-if="line.actualDescription?.length > 0" class="plan-desc q-mt-md RichTextEditor" v-html="line.actualDescription" />
-                          <q-tooltip v-if="line.actualDescription?.length > 0 && line.actualDescription !== '<br>' && isFullAccess && !planDate.isCompleted">Double click to edit</q-tooltip>
-                          <div v-if="(line.actualDescription?.length === 0 || line.actualDescription === '<br>')" class="fs-12 text-red">No Description Available</div>
-                          <q-icon
-                            v-if="planDate.isApproved && planDate.isCompleted"
-                            name="o_lock"
-                            size="xs"
-                            style="position: absolute;top: 2px;right: 2px;"
-                          />
-                        </div>
-                        <div v-if="line.actualDescriptionUpdatedOnUtc" class="LastUpdatedBy text-capitalize text-end">
-                          <!-- Last Updated:- {{ line?.actualDescriptionUpdatedBy?.person?.firstName + ' '+ line?.actualDescriptionUpdatedBy?.person?.lastName + '('+ line?.actualDescriptionUpdatedOnUtc +')' }} -->
-                           <div>
-                              Created By:-
-                              {{ line?.actualDescriptionCreatedBy?.person?.firstName + ' ' +
-                                line?.actualDescriptionCreatedBy?.person?.lastName +
-                                '(' + line?.actualDescriptionCreatedOnUtc + ')' }}
-                            </div>
-
+                          <div v-if="line.actualDescriptionUpdatedOnUtc" class="LastUpdatedBy text-capitalize text-end">
+                            <!-- Last Updated:- {{ line?.actualDescriptionUpdatedBy?.person?.firstName + ' '+ line?.actualDescriptionUpdatedBy?.person?.lastName + '('+ line?.actualDescriptionUpdatedOnUtc +')' }} -->
                             <div>
-                              Last Updated:-
-                              {{ line?.actualDescriptionUpdatedBy?.person?.firstName + ' ' +
-                                line?.actualDescriptionUpdatedBy?.person?.lastName +
-                                '(' + line?.actualDescriptionUpdatedOnUtc + ')' }}
-                            </div>
-                        </div>
-                      </template>
-                    </td>
-                    <td class="text-center">
-                      <q-btn
-                        v-if="isFullAccess"
-                        :disable="planDate.isApproved"
-                        icon-right="o_delete"
-                        size="sm"
-                        style="font-size: 10px;border: 1px solid red;color: red;background: transparent;"
-                        @click="deleteWeeklyPlanDatesLine(planDate.projectWeeklyPlanDatesLines, line, lineIndex)"
-                      >
-                        <q-tooltip v-if="!planDate.isApproved">Delete Line</q-tooltip>
-                      </q-btn>
-                    </td>
-                  </tr>
+                                Created By:-
+                                {{ line?.actualDescriptionCreatedBy?.person?.firstName + ' ' +
+                                  line?.actualDescriptionCreatedBy?.person?.lastName +
+                                  '(' + line?.actualDescriptionCreatedOnUtc + ')' }}
+                              </div>
+
+                              <div>
+                                Last Updated:-
+                                {{ line?.actualDescriptionUpdatedBy?.person?.firstName + ' ' +
+                                  line?.actualDescriptionUpdatedBy?.person?.lastName +
+                                  '(' + line?.actualDescriptionUpdatedOnUtc + ')' }}
+                              </div>
+                          </div>
+                        </template>
+                      </td>
+                      <td class="text-center">
+                        <q-btn
+                          v-if="isFullAccess"
+                          :disable="planDate.isApproved"
+                          icon-right="o_delete"
+                          size="sm"
+                          style="font-size: 10px;border: 1px solid red;color: red;background: transparent;"
+                          @click="deleteWeeklyPlanDatesLine(planDate.projectWeeklyPlanDatesLines, line, lineIndex)"
+                        >
+                          <q-tooltip v-if="!planDate.isApproved">Delete Line</q-tooltip>
+                        </q-btn>
+                      </td>
+                    </tr>
+                  </template>
                   <tr v-if="planDate?.projectWeeklyPlanDatesLines.length === 0">
                     <td class="text-center">
                       {{ planDate.weekDate }}
@@ -1024,7 +1054,9 @@ const skipIndex = ref(0);
 const takeCount = ref(4);
 
 const projectWeeklyPlanDateLineHovered = ref(null);
-const lastDescriptionBeforeClose = ref(null);
+// const lastDescriptionBeforeClose = ref(null);
+const lastExpectedDescriptionBeforeClose = ref(null);
+const lastActualDescriptionBeforeClose = ref(null);
 
 const isFullAccess = ref(true);
 const isViewAccess = ref(true);
@@ -1379,13 +1411,16 @@ const addWeeklyPlanDate = async (weekendDate) => {
   if (!weekendDate) return;
 
   if (isWeekendAlreadyPlanned(weekendDate, projectWeeklyPlanDates.value)) {
-    notifyError({ message: "Duplicate WeekEnd" });
+    notifyError({ message: "This plan date already exists for the selected project" });
     return;
   }
 
   const newId = uid();
   const model = ref({
       id: newId,
+      ProjectWeeklyPlan: {
+        ProjectId: activeProjectId.value
+      },
       projectWeeklyPlanId: activeProjectPlanId.value,
       planTypeId: planTypeId.value,
       weekDate: weekendDate,
@@ -1456,19 +1491,37 @@ const loadProjectWeeklyPlanLines = async (index) => {
   loading.value = false;
 };
 
+// const handleExpectedEdit = (planDate, line) => {
+//   if (!planDate.isApproved) {
+//     activeExpected.value = { rowId: line.id };
+//     lastDescriptionBeforeClose.value = line.expectedDescription;
+//     line.expectedDescription = line.expectedDescription || "";
+//   }
+// };
 const handleExpectedEdit = (planDate, line) => {
   if (!planDate.isApproved) {
+    lastExpectedDescriptionBeforeClose.value =
+      line.expectedDescription ?? "";
+
     activeExpected.value = { rowId: line.id };
-    lastDescriptionBeforeClose.value = line.expectedDescription;
-    line.expectedDescription = line.expectedDescription || "";
   }
 };
 
+// const handleActualEdit = (line, isCompleted) => {
+//   processing.value = false;
+//   if (!isCompleted) {
+//     activeActual.value = { rowId: line.id };
+//     lastDescriptionBeforeClose.value = line.actualDescription;
+//   }
+// };
 const handleActualEdit = (line, isCompleted) => {
   processing.value = false;
+
   if (!isCompleted) {
+    lastActualDescriptionBeforeClose.value =
+      line.actualDescription ?? "";
+
     activeActual.value = { rowId: line.id };
-    lastDescriptionBeforeClose.value = line.actualDescription;
   }
 };
 
@@ -1490,7 +1543,10 @@ const addWeeklyPlanDateLines = async (planDates) => {
     const resp = await projectService.saveProjectWeeklyPlanDatesLine(model.value);
     resp.isEditExpectedDescription = false;
     planDates.projectWeeklyPlanDatesLines.unshift(resp);
-    activeExpected.value.rowId = resp;
+    lastExpectedDescriptionBeforeClose.value = "";
+    activeExpected.value = { rowId: resp.id };
+    resp.expectedDescription = resp.expectedDescription || "";
+    // activeExpected.value.rowId = resp;
   } else {
     notifyError({ message: "Please Enter Existing Plan" });
   }
@@ -1505,9 +1561,10 @@ const saveExpectedPlan = async (line, weekDate) => {
       line.isEditExpectedDescription = true;
       line.weekDate = weekDate;
       const resp = await projectService.saveProjectWeeklyPlanDatesLine(line);
-      Object.assign(line, null);
+      // Object.assign(line, null);
       Object.assign(line, resp);
       activeExpected.value.rowId = null;
+      lastExpectedDescriptionBeforeClose.value = null;
       line.isEditExpectedDescription = false;
     }
   } catch (error) {
@@ -1530,6 +1587,7 @@ const saveActualLine = async (line) => {
       const resp = await projectService.saveProjectWeeklyPlanDatesLine(line);
       Object.assign(line, resp);
       activeActual.value.rowId = null;
+      lastActualDescriptionBeforeClose.value = null;
       line.isEditActualDescription = false;
     }
   } catch (error) {
@@ -1985,5 +2043,14 @@ watch(
 }
 .min-height-auto {
     min-height: auto;
+}
+.linked-task-title {
+  background-color: #f0f7fc;
+  border-left: 3px solid #1b75ab;
+  overflow-wrap: anywhere;
+}
+
+.linked-task-title:hover {
+  text-decoration: underline;
 }
 </style>

@@ -744,6 +744,7 @@
                           <q-card-section v-if="selectedDate">
                             <weeklyProjectPlan
                               :project-id="activityProps.row.project.id"
+                              :project-task-id="activityProps.row.task.id"
                               :week-end-date="selectedDate"
                             />
                           </q-card-section>
@@ -1051,10 +1052,16 @@ const getProjectActivities = (props) => {
             checkboxStatus: ActivityIds.value.includes(activity.id),
             isEditable: currentUserManage,
             isNotes: currentUserNotes,
-            // hasCurrentWeek,
-            hasCurrentWeek: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList?.some(m => isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)) || false,
-            weekDates: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList
-              ? activity.task.projectWeeklyPlanDatesReqTaskIssueMappingList.map(m => ({
+            // hasCurrentWeek: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList?.some(m => isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)) || false,
+            // weekDates: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList
+            //   ? activity.task.projectWeeklyPlanDatesReqTaskIssueMappingList.map(m => ({
+            //     value: String(m.projectWeeklyPlanDates?.id),
+            //     text: toDate(m.projectWeeklyPlanDates?.weekDate) || null
+            //   }))
+            //   : [],
+            hasCurrentWeek: activity.task?.projectWeeklyPlanDatesLines?.some(m => isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)) || false,
+            weekDates: activity.task?.projectWeeklyPlanDatesLines
+              ? activity.task.projectWeeklyPlanDatesLines.map(m => ({
                 value: String(m.projectWeeklyPlanDates?.id),
                 text: toDate(m.projectWeeklyPlanDates?.weekDate) || null
               }))

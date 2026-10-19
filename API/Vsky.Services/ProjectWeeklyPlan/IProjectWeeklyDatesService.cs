@@ -11,7 +11,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
     {
         Task<ProjectWeeklyPlanDates> GetById(string id);
         Task<ProjectWeeklyPlanDates> GetByIdInDetail(string id);
-        Task<List<Models.ProjectWeeklyPlanDates>> GetProjectWeeklyPlanDatesByProjectId(string projectId, string planTypeId, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null);
+        Task<List<Models.ProjectWeeklyPlanDates>> GetProjectWeeklyPlanDatesByProjectId(string projectId, string planTypeId, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null, string projectTaskId = null);
         Task<List<EmployeeEstimateHoursForWeekSummary>> GetEmployeeHourSummaryByWeekPlanId(string planTypeId, string planWeekId);
         Task<string> CheckIfProjectWeeklyPlanIsCreated(string projectId, string planTypeId, DateTime weekDate);
 

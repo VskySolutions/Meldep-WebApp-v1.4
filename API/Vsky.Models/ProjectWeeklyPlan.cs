@@ -79,6 +79,9 @@ namespace Vsky.Models
     public class ProjectWeeklyPlanDatesLines : BaseEntity
     {
         public string ProjectWeeklyPlanDatesId { get; set; }
+        public string TaskId { get; set; }
+        public string RequirementId { get; set; }
+        public string IssueId { get; set; }
         public string ExpectedDescription { get; set; }
         public string ActualDescription { get; set; } = "";
 
@@ -111,6 +114,10 @@ namespace Vsky.Models
         public virtual ApplicationUser ActualDescriptionCreatedBy { get; set; }
         public virtual ApplicationUser ActualDescriptionUpdatedBy { get; set; }
         public virtual ProjectWeeklyPlanDates ProjectWeeklyPlanDates { get; set; }
+
+        public virtual ProjectTask ProjectTask { get; set; }
+        public virtual Requirement Requirement { get; set; }
+        public virtual Issue Issue { get; set; }
 
         public virtual ICollection<ProjectWeeklyPlanDatesLinesAssignedTo> ProjectWeeklyPlanDatesLinesAssignedTo { get; set; } = new List<ProjectWeeklyPlanDatesLinesAssignedTo>();
     }

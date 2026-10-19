@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -116,6 +117,13 @@ namespace Vsky.Services.ProjectWeeklyPlan
             }).FirstOrDefaultAsync();
             
             return item;
+        }
+        public async Task<List<ProjectWeeklyPlanDatesLines>> GetAllLinesByProjectWeeklyPlanDatesId(string projectWeeklyPlanDatesId)
+        {
+            return await _projectWeeklyPlanDatesLinesRepository.TableNoTracking
+               .Where(x => !x.Deleted && x.ProjectWeeklyPlanDatesId == projectWeeklyPlanDatesId)
+               .Include(m => m.ProjectTask)
+               .ToListAsync();
         }
         #endregion
 

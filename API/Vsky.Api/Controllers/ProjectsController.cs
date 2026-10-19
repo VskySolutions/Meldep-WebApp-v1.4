@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using AutoMapper;
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -725,7 +726,7 @@ namespace Vsky.Api.Controllers
                     //Add Project Employees
                     string ProjectId = entity.Id;
 
-                    if(SiteData.IsFileUploadOrExternal)
+                    if (SiteData.IsFileUploadOrExternal)
                     {
                         if (model.ProjectFiles != null && model.ProjectFiles.Any())
                         {
@@ -776,7 +777,7 @@ namespace Vsky.Api.Controllers
                         {
                             foreach (var item in model.FilePathModelList)
                             {
-                                if (item.Flag != "New") 
+                                if (item.Flag != "New")
                                     continue;
 
                                 // Create Picture record for external file
@@ -1099,7 +1100,7 @@ namespace Vsky.Api.Controllers
                             .Select(file => file.Id.Trim().ToLower())
                             .ToList();
                         var existingFileIds = new List<string>();
-                      
+
                         entity.CustomerId = model.CustomerId;
                         entity.CompanyContactId = model.CompanyContactId;
                         entity.ProjectTypeId = model.ProjectTypeId;
@@ -1133,7 +1134,7 @@ namespace Vsky.Api.Controllers
                         _projectService.UpdateProject(entity);
 
 
-                        if(SiteData.IsFileUploadOrExternal)
+                        if (SiteData.IsFileUploadOrExternal)
                         {
                             var missingFileIds = new List<string>();
 
@@ -1171,7 +1172,7 @@ namespace Vsky.Api.Controllers
 
                             if (model.ProjectFiles != null && model.ProjectFiles.Any())
                             {
-                               
+
                                 int existingImagesCount = await _commonService.GetPicturesCountBySubModuleId(id, "Projects");
 
                                 // Upload multiple files to Azure
@@ -1259,7 +1260,7 @@ namespace Vsky.Api.Controllers
                                 }
                             }
                         }
-                        
+
                         if (IsProjectStatusChanged)
                         {
                             string projectStatus = _dropDownService.GetDropDownById(model.ProjectStatusId).Result.DropDownValue;
@@ -1272,7 +1273,7 @@ namespace Vsky.Api.Controllers
                         if (IsPlanApproverChanged)
                             _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "Projects", entity.Id, model.Name, entity.Id, model.Name, "Plan Approver", model.PlanApproverId, LoggedUserId, GetDateTime);
                     }
-                   
+
                     if (model.Tab == "2_tab")
                     {
                         if (model.ProjectEmployeeMappings != null &&
@@ -1492,7 +1493,7 @@ namespace Vsky.Api.Controllers
                             }
                         }
                     }
-                  
+
                     return Ok(entity);
                 }
                 return ModelStateError(ModelState);
@@ -1547,7 +1548,7 @@ namespace Vsky.Api.Controllers
 
                     if (!string.IsNullOrEmpty(model.ProjectColor))
                     {
-                       
+
                         // Check if ProjectColor record exists for this project & user
                         var existsProjectColor = await _projectsColorService.GetProjectsColorByUser(entity.Id, LoggedUserId);
 
@@ -2177,7 +2178,7 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
-               // var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                // var employeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
                 var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
                 int Status = 2;
@@ -2224,11 +2225,11 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("get-project-weekly-plan-details")]
-        public async Task<IActionResult> GetProjectWeeklyPlanAsync(string projectId, string planTypeId, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null)
+        public async Task<IActionResult> GetProjectWeeklyPlanAsync(string projectId, string planTypeId, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null, string projectTaskId = null)
         {
             try
             {
-                var Data = await _projectWeeklyDatesService.GetProjectWeeklyPlanDatesByProjectId(projectId, planTypeId, skipIndex, takeCount, weekEndDate);
+                var Data = await _projectWeeklyDatesService.GetProjectWeeklyPlanDatesByProjectId(projectId, planTypeId, skipIndex, takeCount, weekEndDate, projectTaskId);
                 if (Data != null)
                     return Ok(Data);
                 else
@@ -2371,7 +2372,7 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
-                
+
                 entity.IsCompleted = true;
                 entity.CompletionPercentage = completionPercentage;
                 entity.CompletedById = LoggedUserId;
@@ -2519,6 +2520,23 @@ namespace Vsky.Api.Controllers
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
+                var isDuplicate = await _projectWeeklyService
+                .IsWeekendDateExists(
+                    model.ProjectWeeklyPlan.ProjectId,
+                    model.PlanTypeId,
+                    model.WeekDate,
+                    (!string.IsNullOrWhiteSpace(model.Id)) ? model.Id : null
+                );
+
+                if (isDuplicate)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "This plan date already exists for the selected project."
+                    });
+                }
+
                 var PlanData = await _projectWeeklyService.GetById(SiteId, model.ProjectWeeklyPlanId);
                 PlanData.UpdatedById = LoggedUserId;
                 PlanData.UpdatedOnUtc = GetDateTime;
@@ -2585,78 +2603,117 @@ namespace Vsky.Api.Controllers
 
                     ProjectWeeklyPlanDateId = newWeekDatemodel.Id;
                 }
-                int index = 0;
+                //int index = 0;
                 if (!string.IsNullOrEmpty(ProjectWeeklyPlanDateId) && model.Ids.Any())
                 {
-                    var GetAllExistingMappings = await _projectWeeklyPlanDatesReqTaskIssueMappingService.GetAllByProjectWeeklyPlanDatesId(ProjectWeeklyPlanDateId);
+                    //var GetAllExistingMappings = await _projectWeeklyPlanDatesReqTaskIssueMappingService.GetAllByProjectWeeklyPlanDatesId(ProjectWeeklyPlanDateId);
+                    var existingLines = await _projectWeeklyDatesLinesService.GetAllLinesByProjectWeeklyPlanDatesId(ProjectWeeklyPlanDateId);
+
 
                     foreach (var id in model.Ids)
                     {
-                        if ((model.Type == "Requirement" && GetAllExistingMappings.Any(m => m.RequirementId == id)) ||
-                           (model.Type == "Project Task" && GetAllExistingMappings.Any(m => m.TaskId == id)) ||
-                           (model.Type == "Issue" && GetAllExistingMappings.Any(m => m.IssueId == id)))
+                        //if ((model.Type == "Requirement" && GetAllExistingMappings.Any(m => m.RequirementId == id)) ||
+                        //   (model.Type == "Project Task" && GetAllExistingMappings.Any(m => m.TaskId == id)) ||
+                        //   (model.Type == "Issue" && GetAllExistingMappings.Any(m => m.IssueId == id)))
+                        //{
+                        //    //index++;
+                        //    continue;
+                        //}
+                        var existingLine = model.Type == "Project Task" ? existingLines.FirstOrDefault(m => m.TaskId == id) : null;
+
+                        if (existingLine != null)
                         {
-                            index++;
-                            continue;
+                            if (!string.IsNullOrWhiteSpace(model.Description))
+                            {
+                                var combinedDescription = string.IsNullOrWhiteSpace(existingLine.ExpectedDescription)
+                                    ? model.Description
+                                    : $"{existingLine.ExpectedDescription}<br/>{model.Description}";
+
+                                existingLine.ExpectedDescription =
+                                    await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
+                                        combinedDescription,
+                                        SiteData.Name,
+                                        "project-weeklymonthly",
+                                        existingLine.Id,
+                                        existingLine.ExpectedDescription
+                                    );
+                            }
+
+                            existingLine.ExpectedDescriptionUpdatedById = LoggedUserId;
+                            existingLine.ExpectedDescriptionUpdatedOnUtc = GetDateTime;
+
+                            _projectWeeklyDatesLinesService
+                                .UpdateProjectWeeklyPlanDatesLines(existingLine);
+                        }
+                        else
+                        {
+                            var LineData = new ProjectWeeklyPlanDatesLines();
+                            LineData.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
+
+                            //var description = $"<strong>{model.Type} - {model.Numbers[index]} - {model.Names[index]}</strong>";
+
+                            //if (!string.IsNullOrWhiteSpace(model.Description))
+                            //{
+                            //    description += $"<br/>{model.Description}";
+                            //}
+
+                            LineData.ExpectedDescription = await _azureBlobImageServices
+                                     .ProcessHtmlAndManageImagesAsync(
+                                         model.Description,
+                                         SiteData.Name,
+                                         "project-weeklymonthly",
+                                         LineData.Id
+                                     );
+
+                            LineData.ExpectedDescriptionCreatedById = LoggedUserId;
+                            LineData.ExpectedDescriptionCreatedOnUtc = GetDateTime;
+                            LineData.ExpectedDescriptionUpdatedById = LoggedUserId;
+                            LineData.ExpectedDescriptionUpdatedOnUtc = GetDateTime;
+                            LineData.ActualDescription = "";
+
+                            //if (model.Type == "Requirement")
+                            //    LineData.RequirementId = id;
+
+                            if (model.Type == "Project Task")
+                                LineData.TaskId = id;
+
+                            //if (model.Type == "Issue")
+                            //    LineData.IssueId = id;
+
+                            _projectWeeklyDatesLinesService.InsertProjectWeeklyPlanDatesLines(LineData);
+                            existingLines.Add(LineData);
                         }
 
+                        //if (model.Type == "Requirement")
+                        //{
+                        //    var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
+                        //    newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
+                        //    newMapping.RequirementId = id;
+                        //    newMapping.CreatedById = LoggedUserId;
+                        //    newMapping.CreatedOnUtc = GetDateTime;
+                        //    _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
+                        //}
 
-                        var LineData = new ProjectWeeklyPlanDatesLines();
-                        LineData.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
+                        //if (model.Type == "Project Task")
+                        //{
+                        //    var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
+                        //    newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
+                        //    newMapping.TaskId = id;
+                        //    newMapping.CreatedById = LoggedUserId;
+                        //    newMapping.CreatedOnUtc = GetDateTime;
+                        //    _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
+                        //}
 
-                        var description = $"<strong>{model.Type} - {model.Numbers[index]} - {model.Names[index]}</strong>";
-
-                        if (!string.IsNullOrWhiteSpace(model.Description))
-                        {
-                            description += $"<br/>{model.Description}";
-                        }
-
-                        LineData.ExpectedDescription = await _azureBlobImageServices
-                                 .ProcessHtmlAndManageImagesAsync(
-                                     description,
-                                     SiteData.Name,
-                                     "project-weeklymonthly",
-                                     LineData.Id
-                                 );
-
-                        LineData.ExpectedDescriptionCreatedById = LoggedUserId;
-                        LineData.ExpectedDescriptionCreatedOnUtc = GetDateTime;
-                        LineData.ExpectedDescriptionUpdatedById = LoggedUserId;
-                        LineData.ExpectedDescriptionUpdatedOnUtc = GetDateTime;
-                        LineData.ActualDescription = "";
-
-                        _projectWeeklyDatesLinesService.InsertProjectWeeklyPlanDatesLines(LineData);
-
-                        if (model.Type == "Requirement")
-                        {
-                            var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
-                            newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
-                            newMapping.RequirementId = id;
-                            newMapping.CreatedById = LoggedUserId;
-                            newMapping.CreatedOnUtc = GetDateTime;
-                            _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
-                        }
-
-                        if (model.Type == "Project Task")
-                        {
-                            var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
-                            newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
-                            newMapping.TaskId = id;
-                            newMapping.CreatedById = LoggedUserId;
-                            newMapping.CreatedOnUtc = GetDateTime;
-                            _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
-                        }
-
-                        if (model.Type == "Issue")
-                        {
-                            var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
-                            newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
-                            newMapping.IssueId = id;
-                            newMapping.CreatedById = LoggedUserId;
-                            newMapping.CreatedOnUtc = GetDateTime;
-                            _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
-                        }
-                        index++;
+                        //if (model.Type == "Issue")
+                        //{
+                        //    var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
+                        //    newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
+                        //    newMapping.IssueId = id;
+                        //    newMapping.CreatedById = LoggedUserId;
+                        //    newMapping.CreatedOnUtc = GetDateTime;
+                        //    _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
+                        //}
+                        //index++;
                     }
                     return Ok();
                 }
