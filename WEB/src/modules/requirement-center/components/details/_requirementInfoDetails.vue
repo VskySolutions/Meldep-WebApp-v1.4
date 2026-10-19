@@ -157,6 +157,17 @@
             </q-item-section>
           </q-item>
 
+          <q-item>
+            <q-item-section>
+              <div class="text-caption text-grey">
+                Short Description
+              </div>
+              <div class="q-mb-sm">
+                <span v-html="model.shortDescription" />
+              </div>
+            </q-item-section>
+          </q-item>
+
         </q-list>
       </div>
       <div class="col-12 col-md-6">

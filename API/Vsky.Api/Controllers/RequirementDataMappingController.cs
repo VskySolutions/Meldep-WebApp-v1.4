@@ -253,66 +253,66 @@ namespace Vsky.Api.Controllers
                             }
 
                             //save notes
-                            if(data.Notes != null && data.Notes.Any())
-                            {
-                                foreach (var noteItem in data.Notes)
-                                {
-                                    // Update notes
-                                    if (!string.IsNullOrEmpty(noteItem.Id))
-                                    {
-                                        var note = await _requirementDataMappingNotesService.GetRequirementDataMappingNotesById(noteItem.Id);
+                            //if(data.Notes != null && data.Notes.Any())
+                            //{
+                            //    foreach (var noteItem in data.Notes)
+                            //    {
+                            //        // Update notes
+                            //        if (!string.IsNullOrEmpty(noteItem.Id))
+                            //        {
+                            //            var note = await _requirementDataMappingNotesService.GetRequirementDataMappingNotesById(noteItem.Id);
 
-                                        if (note == null)
-                                            continue;
+                            //            if (note == null)
+                            //                continue;
 
-                                        if (!string.IsNullOrEmpty(noteItem.Note))
-                                        {
-                                            note.Note = await _azureBlobImageServices
-                                                .ProcessHtmlAndManageImagesAsync(
-                                                    noteItem.Note,
-                                                    SiteData.Name,
-                                                    "requirement-data-mapping-notes",
-                                                    note.Id,
-                                                    note.Note
-                                                );
-                                        }
-                                        note.UpdatedById = LoggedUserId;
-                                        note.UpdatedOnUtc = GetDateTime;
+                            //            if (!string.IsNullOrEmpty(noteItem.Note))
+                            //            {
+                            //                note.Note = await _azureBlobImageServices
+                            //                    .ProcessHtmlAndManageImagesAsync(
+                            //                        noteItem.Note,
+                            //                        SiteData.Name,
+                            //                        "requirement-data-mapping-notes",
+                            //                        note.Id,
+                            //                        note.Note
+                            //                    );
+                            //            }
+                            //            note.UpdatedById = LoggedUserId;
+                            //            note.UpdatedOnUtc = GetDateTime;
 
-                                        if (noteItem.Deleted)
-                                        {
-                                            note.Deleted = true;
-                                        }
+                            //            if (noteItem.Deleted)
+                            //            {
+                            //                note.Deleted = true;
+                            //            }
 
-                                        _requirementDataMappingNotesService.UpdateRequirementDataMappingNotes(note);
-                                    }
-                                    else
-                                    {
-                                        var note = new RequirementDataMappingNotes();
-                                        note.Id = Guid.NewGuid().ToString();
-                                        note.RequirementDataMappingId = mapping.Id;
+                            //            _requirementDataMappingNotesService.UpdateRequirementDataMappingNotes(note);
+                            //        }
+                            //        else
+                            //        {
+                            //            var note = new RequirementDataMappingNotes();
+                            //            note.Id = Guid.NewGuid().ToString();
+                            //            note.RequirementDataMappingId = mapping.Id;
                                             
-                                        if (!string.IsNullOrEmpty(noteItem.Note))
-                                        {
-                                            note.Note = await _azureBlobImageServices
-                                                .ProcessHtmlAndManageImagesAsync(
-                                                    noteItem.Note,
-                                                    SiteData.Name,
-                                                    "requirement-data-mapping-notes",
-                                                    note.Id
-                                                );
-                                        }
+                            //            if (!string.IsNullOrEmpty(noteItem.Note))
+                            //            {
+                            //                note.Note = await _azureBlobImageServices
+                            //                    .ProcessHtmlAndManageImagesAsync(
+                            //                        noteItem.Note,
+                            //                        SiteData.Name,
+                            //                        "requirement-data-mapping-notes",
+                            //                        note.Id
+                            //                    );
+                            //            }
 
-                                        note.CreatedById = LoggedUserId;
-                                        note.CreatedOnUtc = GetDateTime;
-                                        note.UpdatedById = LoggedUserId;
-                                        note.UpdatedOnUtc = GetDateTime;
-                                        note.Deleted = false;
+                            //            note.CreatedById = LoggedUserId;
+                            //            note.CreatedOnUtc = GetDateTime;
+                            //            note.UpdatedById = LoggedUserId;
+                            //            note.UpdatedOnUtc = GetDateTime;
+                            //            note.Deleted = false;
 
-                                        _requirementDataMappingNotesService.InsertRequirementDataMappingNotes(note);
-                                    }
-                                }
-                            }
+                            //            _requirementDataMappingNotesService.InsertRequirementDataMappingNotes(note);
+                            //        }
+                            //    }
+                            //}
 
                             // Add saved mapping to return list
                             savedMappings.Add(mapping);

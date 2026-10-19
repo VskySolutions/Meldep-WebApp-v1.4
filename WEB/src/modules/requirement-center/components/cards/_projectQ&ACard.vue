@@ -14,7 +14,7 @@
         <div class="q-ml-md">
           <div class="row items-center">
             <div class="text-subtitle1 text-weight-bold">
-              Project Questions Answers
+              Q&A
             </div>
 
             <q-badge

@@ -42,13 +42,14 @@ export function onEditRequirementDataMapping (id, isRequirementReadonly, refresh
     .onDismiss(() => { refresh(); });
 }
 
-export function onRequirementDataMappingNoteEdit (id, isManageNotes) {
+export function onRequirementDataMappingNoteEdit (id, isManageNotes, refreshDataMappingList) {
   // activeRowId.value = id;
   $q.dialog({
     component: editDataMappingNotes,
     componentProps: { id, isManageNotes }
   }).onOk(() => {
+    refreshDataMappingList();
   })
-    .onCancel(() => { })
-    .onDismiss(() => { });
+    .onCancel(() => { refreshDataMappingList(); })
+    .onDismiss(() => { refreshDataMappingList(); });
 }

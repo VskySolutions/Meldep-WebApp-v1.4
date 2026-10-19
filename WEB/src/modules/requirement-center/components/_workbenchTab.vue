@@ -9,27 +9,6 @@
         align="left"
         inline-label
       >
-        <q-tab name="requirementDescription">
-          <div class="row items-center no-wrap">
-            View Requirement Log
-            <q-icon
-              name="o_info"
-              size="16px"
-              class="q-ml-xs cursor-pointer text-grey-7"
-            >
-              <q-tooltip
-                anchor="top middle"
-                self="bottom middle"
-                :offset="[0, 6]"
-              >
-                <div style="max-width: 320px; white-space: normal;">
-                  Detailed information about the Requirement.
-                </div>
-              </q-tooltip>
-           </q-icon>
-          </div>
-        </q-tab>
-
         <q-tab name="requirementScope">
           <div class="row items-center no-wrap">
             Initial Scope
@@ -51,7 +30,34 @@
           </div>
         </q-tab>
 
-        <q-tab name="requirementShortDescription">
+        <q-tab name="requirementDescription">
+          <div class="row items-center no-wrap">
+            REQ Log
+            <q-icon
+              name="o_info"
+              size="16px"
+              class="q-ml-xs cursor-pointer text-grey-7"
+            >
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 6]"
+              >
+                <div style="max-width: 320px; white-space: normal;">
+                  Detailed information about the Requirement.
+                </div>
+              </q-tooltip>
+           </q-icon>
+          </div>
+        </q-tab>
+
+        <q-tab name="requirementNotes">
+          <div class="row items-center no-wrap">
+            Notes
+          </div>
+        </q-tab>
+
+        <q-tab name="requirementShortDescription" class="hidden">
           <div class="row items-center no-wrap">
             Requirement Short Description
             <q-icon
@@ -72,27 +78,9 @@
           </div>
         </q-tab>
 
-        <q-tab name="requirementFiles">
-          <div class="row items-center no-wrap">
-            Requirement Files
-          </div>
-        </q-tab>
-
-        <q-tab name="requirementDataMappings">
-          <div class="row items-center no-wrap">
-            Requirement Data Mappings
-          </div>
-        </q-tab>
-
-        <q-tab name="requirementNotes">
-          <div class="row items-center no-wrap">
-            Notes
-          </div>
-        </q-tab>
-
         <q-tab name="qAndA">
           <div class="row items-center no-wrap">
-            Project Questions Answers
+            Q&A
             <q-badge
               rounded
               color="grey-3"
@@ -100,20 +88,6 @@
               class="q-ml-xs hidden"
             >
               {{ props.projectQACount }}
-            </q-badge>
-          </div>
-        </q-tab>
-
-        <q-tab name="actionItems">
-          <div class="row items-center no-wrap">
-            Action Items
-            <q-badge
-              rounded
-              color="grey-3"
-              text-color="black"
-              class="q-ml-xs hidden"
-            >
-              {{ props.projectActionItemsCount }}
             </q-badge>
           </div>
         </q-tab>
@@ -128,6 +102,26 @@
               class="q-ml-xs hidden"
             >
               {{ props.taskCount }}
+            </q-badge>
+          </div>
+        </q-tab>
+
+        <q-tab name="requirementDataMappings">
+          <div class="row items-center no-wrap">
+            REQ Data Mappings
+          </div>
+        </q-tab>
+
+        <q-tab name="actionItems">
+          <div class="row items-center no-wrap">
+            Action Items
+            <q-badge
+              rounded
+              color="grey-3"
+              text-color="black"
+              class="q-ml-xs hidden"
+            >
+              {{ props.projectActionItemsCount }}
             </q-badge>
           </div>
         </q-tab>
@@ -159,11 +153,18 @@
           </div>
         </q-tab>
 
+        <q-tab name="requirementFiles">
+          <div class="row items-center no-wrap">
+            Requirement Files
+          </div>
+        </q-tab>
+
         <q-tab name="requirementInfo">
           <div class="row items-center no-wrap">
             Requirement Info
           </div>
         </q-tab>
+
       </q-tabs>
     </q-card>
 

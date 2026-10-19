@@ -50,7 +50,7 @@ const notes = ref([]);
 const getAllRequirementNoteByTypeAndRecord = () => {
   loading.value = true;
   commonService.getAllNoteByTypeAndRecord(props.id, 'Requirement', true).then((resp) => {
-    const allowedNoteTypes = ["Client Weekly Status", "Next Steps"];
+    const allowedNoteTypes = ["Weekly Status", "Weekly Next Steps"];
 
     notes.value = _.cloneDeep(resp).filter((x) =>
       allowedNoteTypes.includes(x.noteType?.dropDownValue)

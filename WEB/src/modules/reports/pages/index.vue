@@ -245,7 +245,15 @@
                 <span v-if="preReportGroupName !== props.row.reportGroup.dropDownValue" :set="preReportGroupName = props.row.reportGroup.dropDownValue">{{ props.row.reportGroup.dropDownValue }}</span>
               </q-td>
               <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">
+                <a
+                  :href="props.row.url"
+                  target="_blank"
+                  class="text-underline text-dark"
+                  style="text-decoration: none; color: #007bff;"
+                >
                 {{ props.row.reportName }}
+                <q-tooltip v-if="props.row.url">View Report</q-tooltip>
+                </a>
               </q-td>
               <!-- <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 10%;">
                 <a

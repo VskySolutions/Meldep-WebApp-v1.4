@@ -170,7 +170,7 @@
                             name="o_visibility"
                             class="cursor-pointer q-mr-sm"
                             size="xs"
-                            @click="onRequirementDataMappingNoteEdit(props.row.id, false)"
+                            @click="onRequirementDataMappingNoteEdit(props.row.id, false, refreshDataMappingList)"
                           >
                             <q-tooltip>
                               View Notes
@@ -188,7 +188,7 @@
                             name="o_assignment"
                             class="cursor-pointer q-mr-sm"
                             size="xs"
-                            @click="onRequirementDataMappingNoteEdit(props.row.id, true)"
+                            @click="onRequirementDataMappingNoteEdit(props.row.id, true, refreshDataMappingList)"
                           >
                             <q-tooltip>
                               Manage Notes
@@ -360,9 +360,9 @@ const getRequirementDataMapping = (requirementId) => {
   });
 };
 
-// const refreshDataMappingList = () => {
-//   getRequirementDataMapping();
-// };
+const refreshDataMappingList = () => {
+  getRequirementDataMapping(model.value.requirementId);
+};
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
@@ -596,10 +596,22 @@ watch(() => requirementId, (newValue, oldValue) => {
   }
 }, { immediate: true });
 
+watch(
+  () => model.value.requirementId,
+  (newId, oldId) => {
+    if (newId && newId !== oldId) {
+      getRequirementDataMapping(newId);
+    } else if (!newId) {
+      DataMappingRows.value = [];
+    }
+  }
+);
+
 onMounted(() => {
   // requirementsByProjectModuleIdForDropdown.load(model.value.projectModuleId, model.value.projectId, 'Data Integration');
   projectNameDropdownSingleSelect.load();
 });
+
 </script>
 <style>
 .q-dialog__inner--minimized > div{

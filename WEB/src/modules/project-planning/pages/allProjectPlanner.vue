@@ -3399,7 +3399,6 @@ const onClearRequirement = () => {
 
 const requirementStatusMap = ref({});
 async function handleRequirementPopupShow (rowId, requirementStatusLabel, projectStatusLabel) {
-  debugger;
   if (requirementStatusMap.value[rowId]) return;
 
   if (!dropdownMasterCache.value["Requirement Status"]) {

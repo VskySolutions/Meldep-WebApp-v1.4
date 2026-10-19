@@ -212,7 +212,6 @@ const onUpdateMonth = (val) => {
 };
 console.log(model.value.type);
 const handleViewClick = (id) => {
-  debugger;
   if (model.value.type === 'Project Task') {
     onProjectTaskView(id);
   } else if (model.value.type === 'Requirement') {

@@ -465,7 +465,7 @@ namespace Vsky.Services.RequirementDataMappings
                 }).ToList(),
             });
 
-            var item = await query.ToListAsync();
+            var item = await query.OrderByDescending(x => x.CreatedOnUtc).ToListAsync();
             return item;
         }
         #endregion

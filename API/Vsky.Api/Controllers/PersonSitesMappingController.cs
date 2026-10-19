@@ -203,16 +203,16 @@ namespace Vsky.Api.Controllers
                     //await _db.SaveChangesAsync();
 
                     // Send Invitation Email
-                    var siteName = await GetSiteNameById(SiteId);
-                    var invitedByName = await _personSitesMappingService.GetInvitedByCreatedById(personSiteMapping.CreatedById);
+                    //var siteName = await GetSiteNameById(SiteId);
+                    //var invitedByName = await _personSitesMappingService.GetInvitedByCreatedById(personSiteMapping.CreatedById);
 
-                    await _workflowMessageService.SendSiteShareInvitationMail(
-                        person,
-                        model.Email,
-                        siteName,
-                        invitedByName.CreatedBy.Person.FullName,
-                        SiteId
-                    );
+                    //await _workflowMessageService.SendSiteShareInvitationMail(
+                    //    person,
+                    //    model.Email,
+                    //    siteName,
+                    //    invitedByName.CreatedBy.Person.FullName,
+                    //    SiteId
+                    //);
 
                     return Ok(new { message = "User saved successfully" });
                 }

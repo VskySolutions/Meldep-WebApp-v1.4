@@ -34,7 +34,7 @@
           >
             <q-tab
               name="1_tab"
-              label="Team Task Updates"
+              label="View Task Notes"
               class="q-px-lg q-mr-md"
             />
 

@@ -10,23 +10,58 @@
       <div class="q-pa-md cardTable">
         <div class="q-gutter-y-md">
           <q-tabs v-model="tab" dense class="text-primary" active-color="primary" indicator-color="primary" active-class="bg-blue-1 borderRadiusTabs" align="left" narrow-indicator inline-label mobile-arrows>
-            <q-tab name="1_tab" label="Team Task Updates" class="q-px-lg q-mr-md" />
-            <q-tab name="2_tab" label="Questions for Client" class="q-px-lg q-mr-md hidden" />
-            <q-tab name="3_tab" label="Updates to Share with Client" class="q-px-lg q-mr-md" />
+            <q-tab name="1_tab" label="View Task Notes" class="q-px-lg q-mr-md" />
+            <q-tab name="2_tab" label="Client Meeting Updates" class="q-px-lg q-mr-md" />
+            <q-tab name="3_tab" label="Weekly Status" class="q-px-lg q-mr-md" />
+            <q-tab name="4_tab" label="Weekly Next Steps" class="q-px-lg q-mr-md" />
+            <q-tab name="5_tab" label="Roadblocks" class="q-px-lg q-mr-md" />
+            <q-tab name="6_tab" label="Questions for Client" class="q-px-lg q-mr-md hidden" />
+            <q-tab name="7_tab" label="Updates to Share with Client" class="q-px-lg q-mr-md hidden" />
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated>
+
             <q-tab-panel name="1_tab">
               <viewTeamTaskUpdates
                 :id="selectedRequirementId"
               />
             </q-tab-panel>
-            <q-tab-panel name="2_tab" class="hidden">
+
+            <q-tab-panel name="2_tab">
+              <viewClientMeetingUpdatesView
+                :id="selectedRequirementId"
+                :noteType="clientMeetingNoteType"
+              />
+            </q-tab-panel>
+
+            <q-tab-panel name="3_tab">
+              <viewClientMeetingUpdatesView
+                :id="selectedRequirementId"
+                :noteType="weeklyStatusNoteType"
+              />
+            </q-tab-panel>
+
+            <q-tab-panel name="4_tab">
+              <viewClientMeetingUpdatesView
+                :id="selectedRequirementId"
+                :noteType="weeklyNextStepNoteType"
+              />
+            </q-tab-panel>
+
+            <q-tab-panel name="5_tab">
+              <viewClientMeetingUpdatesView
+                :id="selectedRequirementId"
+                :noteType="roadBlockNoteType"
+              />
+            </q-tab-panel>
+
+            <q-tab-panel name="6_tab" class="hidden">
               <viewQuestionsForClient
                 :id="selectedRequirementId"
               />
             </q-tab-panel>
-            <q-tab-panel name="3_tab">
+
+            <q-tab-panel name="7_tab">
               <viewUpdatesToShareWithClient
                 :id="selectedRequirementId"
               />
@@ -49,6 +84,7 @@ import requirementService from "../requirement.service";
 import viewTeamTaskUpdates from "src/modules/requirement/components/_teamTaskUpdatesView.vue";
 import viewQuestionsForClient from "src/modules/requirement/components/_questionsForClientView.vue";
 import viewUpdatesToShareWithClient from "src/modules/requirement/components/_updatesToShareWithClientView.vue";
+import viewClientMeetingUpdatesView from "./_clientMeetingUpdatesView.vue";
 
 // Props values i.e. come from query string
 const props = defineProps({ id: { type: String, default: "" } });
@@ -59,6 +95,10 @@ const changeLogRows = ref([]);
 const selectedRequirementId = ref(props.id);
 const loading = ref(true);
 const tab = ref("1_tab");
+const clientMeetingNoteType="Client Meeting Updates";
+const weeklyStatusNoteType="Weekly Status";
+const weeklyNextStepNoteType="Weekly Next Steps";
+const roadBlockNoteType="Roadblocks";
 
 // Define emits
 defineEmits([...useDialogPluginComponent.emits]);

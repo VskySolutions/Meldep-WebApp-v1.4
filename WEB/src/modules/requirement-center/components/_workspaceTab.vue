@@ -11,7 +11,7 @@
       >
         <q-tab name="qAndA">
           <div class="row items-center no-wrap">
-            Project Questions Answers 
+            Q&A 
             <q-badge
               rounded
               color="grey-3"

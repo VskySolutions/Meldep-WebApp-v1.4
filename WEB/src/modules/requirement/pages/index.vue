@@ -874,7 +874,7 @@
                   @click="onRequirementNotesProgressUpdates(props.row.id)"
                 >
                   <q-tooltip>
-                    Req. Work & Progress Updates
+                    View Notes
                   </q-tooltip>
                 </q-icon>
                 <a
@@ -884,7 +884,7 @@
                   @click="onNoteAdd(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, `${props.row.project.name} : ${props.row.title}`, refreshRequirementList, true)"
                 >
                   <q-tooltip anchor="bottom middle" self="top middle">
-                    Note
+                    Manage Notes
                   </q-tooltip>
                   <q-icon name="o_assignment" />
                   <q-badge

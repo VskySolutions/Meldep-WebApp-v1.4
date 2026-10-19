@@ -36,7 +36,7 @@
                 name="o_visibility"
                 class="cursor-pointer q-mr-sm"
                 size="xs"
-                @click="onRequirementDataMappingNoteEdit(props.row.id, false)"
+                @click="onRequirementDataMappingNoteEdit(props.row.id, false, refreshDataMappingByRequirementId)"
               >
                 <q-tooltip>
                   View Notes
@@ -104,6 +104,10 @@ const getAllDataMappingByRequirementId = (propss) => {
     .finally(() => {
       loading.value = false;
     });
+};
+
+const refreshDataMappingByRequirementId = () => {
+  getAllDataMappingByRequirementId({ pagination: pagination.value });
 };
 
 // ------------------------------------------------------------------------------------

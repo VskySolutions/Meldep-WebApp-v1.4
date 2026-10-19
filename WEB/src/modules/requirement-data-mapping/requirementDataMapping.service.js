@@ -1,11 +1,6 @@
 import { http } from "boot/axios";
 
 export default {
-
-  getRequirementDataMapping (requirementId) {
-    return http.get(`/requirement-data-mappings/get-data-mappings/${requirementId}`).then(response => response.data);
-  },
-
   getRequirementDataMapping (requirementId) {
     return http.get(`/requirement-data-mappings/get-data-mappings/${requirementId}`).then(response => response.data);
   },

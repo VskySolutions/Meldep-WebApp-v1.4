@@ -319,7 +319,7 @@
                   v-if="mapping.requirementDataMappingNotes.length > 0"
                     name="o_visibility"
                     class="cursor-pointer q-mr-sm"
-                    @click="onRequirementDataMappingNoteEdit(mapping.id, false)"
+                    @click="onRequirementDataMappingNoteEdit(mapping.id, false, refreshDataMappingList)"
                   >
                     <q-tooltip>
                       View Notes
