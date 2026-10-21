@@ -1,7 +1,16 @@
 <template>
   <div
     class="col scroll"
-    style="overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column;"
+    :class="{ 'q-pa-sm': props.isRequirementCenter }"
+    :style="{
+      overflowY: 'auto',
+      flexGrow: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      ...(props.isRequirementCenter
+        ? { border: '0.5px solid #1b75ab' }
+        : {})
+    }"
   >
     <q-timeline color="secondary">
       <q-timeline-entry
@@ -40,9 +49,11 @@ import commonService from "services/common.service";
 const props = defineProps({
   id: { type: String, default: "" },
   showDescriptionInfo: { type: Boolean, default: false },
-  noteType: { type: String, default: "" }
+  noteType: { type: String, default: "" },
+  isRequirementCenter: { type: Boolean, default: false }
 });
 
+console.log("props.noteType", props.noteType);
 // common variables
 const loading = ref(true);
 const notes = ref([]);
@@ -78,5 +89,8 @@ watch(
 <style scoped>
 :deep(.q-timeline__content) {
   padding-bottom: 0 !important;
+}
+:deep(.q-timeline__subtitle) {
+  color: #1b75ab !important;
 }
 </style>

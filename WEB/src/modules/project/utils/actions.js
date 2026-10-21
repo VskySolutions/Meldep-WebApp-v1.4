@@ -101,16 +101,19 @@ export const onSubmitProjectArchiveUnArchiveToggle = (
   isArchived,
   refreshProjectList
 ) => {
-  const newIsArchived = !isArchived;
+  const isCurrentlyArchive = isArchived === true;
+  const newIsArchive = !isCurrentlyArchive;
 
   const payload = {
     id,
-    isArchived: newIsArchived
+    archiveStatus: newIsArchive ? "Archive" : "Unarchive"
   };
 
   $q.dialog({
     title: "Confirmation",
-    message: `Are you sure you want to ${newIsArchived ? "archive" : "unarchive"} this project?`,
+    message:  newIsArchive
+      ? "Are you sure you want to archive this project? The project will be set to Inactive."
+      : "Are you sure you want to unarchive this project?",
     ok: { label: "Yes", color: "primary" },
     cancel: { label: "No", color: "negative" }
   }).onOk(async () => {
@@ -118,11 +121,11 @@ export const onSubmitProjectArchiveUnArchiveToggle = (
       activeRowId.value = id;
       await projectService.updateProjectColor(id, payload);
       notifySuccess({
-        message: `Project has been ${newIsArchived ? "archived" : "unarchived"} successfully.`
+        message: `Project has been ${newIsArchive ? "archived" : "unarchived"} successfully.`
       });
       refreshProjectList();
     } catch (error) {
-      const msg = `Failed to ${newIsArchived ? "archive" : "unarchive"} the project.`;
+      const msg = `Failed to ${newIsArchive ? "archive" : "unarchive"} the project.`;
       sendError(msg, error);
     } finally {
       activeRowId.value = null;

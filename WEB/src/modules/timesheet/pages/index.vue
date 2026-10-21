@@ -662,7 +662,7 @@ const {
 
   defaultSearch: {
     searchText: "",
-    createdBy: "",
+    createdBy: "Created By Me",
     employeeId: "",
     projectId: "",
     projectModuleId: "",

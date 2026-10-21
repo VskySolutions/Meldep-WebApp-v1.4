@@ -403,6 +403,12 @@ watch(() => searchText.value, () => {
   getAllTimeInTimeOut({ pagination: pagination.value });
 });
 
+watch(() => search.value.createdBy, (newValue) => {
+  if (newValue === "Created By Me") {
+    search.value.employeeId = ""; // Clear the employee selection
+  }
+});
+
 // On page rendering
 onMounted(() => {
   tableRef.value.requestServerInteraction();

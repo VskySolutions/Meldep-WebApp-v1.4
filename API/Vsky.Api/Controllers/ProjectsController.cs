@@ -1582,7 +1582,17 @@ namespace Vsky.Api.Controllers
                     if (model.ActiveStatus != null)
                         entity.Active = model.ActiveStatus == "Active" ? true : false;
 
-                    entity.IsArchived = model.IsArchived;
+                    if (model.ArchiveStatus != null)
+                    {
+                        entity.IsArchived = model.ArchiveStatus == "Archive";
+
+                        if (entity.IsArchived)
+                        {
+                            entity.Active = false;
+                        }
+                    }
+
+
                     entity.UpdatedById = LoggedUserId;
                     entity.UpdatedOnUtc = GetDateTime;
                     _projectService.UpdateProject(entity);

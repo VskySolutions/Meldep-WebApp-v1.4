@@ -11,6 +11,7 @@ import addViewFiles from "src/modules/project-tasks/components/_uploadFilesToTas
 import taskStatusLog from "modules/project-tasks/components/_taskStatusLog.vue";
 import AddBulkTask from "modules/project-tasks/components/addBulk.vue";
 import EditBulkTask from "modules/project-tasks/components/editBulk.vue";
+import addEditTaskWeeklyPlanner from "modules/project-tasks/components/_addEditTaskWeeklyPlanner.vue";
 
 let $q;
 let activeRowId;
@@ -186,3 +187,17 @@ export function onProjectTaskStatusChangeLog (id, refresh) {
     .onCancel(() => { activeRowId.value = id; })
     .onDismiss(() => { activeRowId.value = id; });
 }
+
+export function onProjectTaskWeeklyPlanAddEdit  (id, taskName, projectId, projectName, refresh) {
+  activeRowId.value = id;
+  $q.dialog({
+    component: addEditTaskWeeklyPlanner,
+    componentProps: { id, taskName, projectId, projectName }
+  }).onOk(() => {
+    refresh();
+  }).onCancel(() => {
+    activeRowId.value = null;
+  }).onDismiss(() => {
+    activeRowId.value = null;
+  });
+};

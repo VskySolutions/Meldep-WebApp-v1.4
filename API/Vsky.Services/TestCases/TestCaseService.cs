@@ -393,6 +393,7 @@ namespace Vsky.Services.TestCases
                 {
                     Id = x.Project.Id,
                     Name = x.Project.Name,
+                    IsArchived = x.Project.IsArchived,
                     CurrentUserManage =
                     IsAdmin ||
                     x.Project.CreatedById == LoggedUserId ||

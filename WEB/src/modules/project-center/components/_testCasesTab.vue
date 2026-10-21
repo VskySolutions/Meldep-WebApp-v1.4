@@ -34,7 +34,7 @@
           <!-- <q-td>{{ propsTestCase.row.status.dropDownValue }}</q-td> -->
           <q-td style="width: 5%;">
             <q-select
-              v-if="propsTestCase.row.isEditable"
+              v-if="propsTestCase.row.isEditable && !propsTestCase.row.project.isArchived"
               v-model="propsTestCase.row.status.id"
               outlined
               stack-label

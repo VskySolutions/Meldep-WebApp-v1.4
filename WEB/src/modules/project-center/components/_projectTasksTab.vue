@@ -60,7 +60,7 @@
           </q-td> -->
           <q-td style="width: 5%">
             <q-select
-              v-if="propsTask.row.isEditable"
+              v-if="propsTask.row.isEditable && !propsTask.row.project.isArchived"
               v-model="propsTask.row.status.id"
               outlined
               stack-label

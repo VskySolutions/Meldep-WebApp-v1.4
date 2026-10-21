@@ -204,6 +204,19 @@
                   </div>
                 </q-td>
                 <q-td
+                  v-if="selectedColumnNames.includes('requirement.projectModule.name')"
+                  class="common-q-td hoverable-cell"
+                  @click="onProjectModuleView(props.row.requirement.projectModuleId)"
+                >
+                  <span
+                    v-if="preProjectModuleName !== props.row.requirement.projectModule.name"
+                    :set="preProjectModuleName = props.row.requirement.projectModule.name"
+                  >
+                    {{ props.row.requirement.projectModule.name }}
+                    <q-tooltip>View Project Module</q-tooltip>
+                  </span>
+                </q-td>
+                <q-td
                   v-if="selectedColumnNames.includes('requirement.title')"
                   class="common-q-td hoverable-cell"
                 >
@@ -399,6 +412,12 @@ import {
   onProjectView
 } from "src/modules/project/utils/dialogs.js";
 
+// Shared Project Module Dialogs
+import {
+  initProjectModuleDialogs,
+  onProjectModuleView
+} from "src/modules/project-modules/utils/dialogs.js";
+
 import {
   initRequirementDialogs,
   onRequirementView
@@ -430,6 +449,7 @@ const rows = ref([]);
 const shownProjects = new Set();
 const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
+  { name: "requirement.projectModule.name", label: "Project Module", field: "requirement.projectModule.name", align: "left", sortable: true, default: true },
   { name: "requirement.title", label: "Requirement", field: "requirement.title", align: "left", sortable: true, default: true },
   { name: "title", label: "Question", field: "title", align: "left", sortable: true, default: true },
   { name: "lastAnswer", label: "Answer", field: "lastAnswer", align: "left", sortable: false, default: true },
@@ -708,6 +728,7 @@ initQuestionsAnswersDialogs(activeRowId);
 initProjectDialogs(activeRowId);
 initRequirementDialogs(activeRowId);
 initQuestionsAnswersActions(activeRowId);
+initProjectModuleDialogs(activeRowId);
 
 // ----------------------------
 // Applied Filter Labels.

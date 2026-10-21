@@ -339,7 +339,7 @@ namespace Vsky.Services.ProjectActionItem
           int pageSize = int.MaxValue
       )
         {
-            var query = _projectActionItemsRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && x.SiteId == SiteId && x.ProjectId == projectId);
+            var query = _projectActionItemsRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsTemplate && x.SiteId == SiteId && x.ProjectId == projectId);
 
             //sorting
             if (!string.IsNullOrWhiteSpace(sortBy))

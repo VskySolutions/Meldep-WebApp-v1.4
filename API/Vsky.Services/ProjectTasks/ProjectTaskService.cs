@@ -461,7 +461,7 @@ namespace Vsky.Services.ProjectTasks
             int pageSize = int.MaxValue
         )
         {
-            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && !x.IsMoved && x.ProjectId == projectId);
+            var query = _projectTaskRepository.TableNoTracking.Where(x => x.SiteId == SiteId && !x.Deleted && !x.Project.Deleted && !x.ProjectModule.Deleted && !x.Project.IsTemplate && !x.IsMoved && x.ProjectId == projectId);
 
             bool isAdmin = await IsCurrentUserAdmin(loggedUserId, SiteId);
 
@@ -494,6 +494,7 @@ namespace Vsky.Services.ProjectTasks
                 {
                     Id = x.Project.Id,
                     Name = x.Project.Name,
+                    IsArchived = x.Project.IsArchived,
                     ProjectStatus = new DropDown
                     {
                         Id = x.Project.ProjectStatus.Id,

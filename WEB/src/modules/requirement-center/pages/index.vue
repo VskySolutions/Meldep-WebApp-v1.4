@@ -15,7 +15,7 @@
                 <q-breadcrumbs-el label="Requirement Center" />
                 <q-breadcrumbs-el :label="requirement.project?.name" />
                 <q-breadcrumbs-el :label="requirement.title" />
-                
+
               </q-breadcrumbs>
             </div>
           </q-card-section>

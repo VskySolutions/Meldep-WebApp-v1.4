@@ -31,6 +31,7 @@ namespace Vsky.Api.Models
         public string Description { get; set; }
         public string Website { get; set; }
         public string ActiveStatus { get; set; }
+        public string ArchiveStatus { get; set; }
         public string EmployeeMappings { get; set; }
 
         public DateTime? StartDate { get; set; }

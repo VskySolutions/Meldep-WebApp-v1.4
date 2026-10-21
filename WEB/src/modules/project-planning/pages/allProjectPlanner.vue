@@ -5535,23 +5535,7 @@ const { tagsDropdown } = tagModule();
 // On page rendering (SOP Change)
 // ------------------------------------------------------------------------------------
 function loadProjectNameDropdown() {
-  const statusText =
-    projectActiveInActiveDropdown
-      .getLabelByValue(search.value.statusId)
-      ?.toLowerCase()
-      ?.trim();
-
-  let isActive;
-
-  if (statusText === 'inactive') {
-    isActive = false;
-  } else if (statusText === 'active') {
-    isActive = true;
-  } else {
-    isActive = null;
-  }
-
-  projectNameDropdown.load(false, isActive);
+  projectNameDropdown.load(false, false);
 }
 
 onMounted(async () => {

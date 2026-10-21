@@ -210,7 +210,13 @@ namespace Vsky.Services.ProjectQuestionsAnswer
                 Requirement = x.Requirement == null ? null : new Requirement
                 {
                     Id = x.Requirement.Id,
-                    Title = x.Requirement.Title
+                    Title = x.Requirement.Title,
+                    ProjectModuleId = x.Requirement.ProjectModuleId,
+                    ProjectModule = new ProjectModule
+                    {
+                        Name = x.Requirement.ProjectModule.Name
+
+                    }
                 },
 
                 CreatedBy = x.CreatedBy == null ? null : new ApplicationUser
@@ -252,7 +258,7 @@ namespace Vsky.Services.ProjectQuestionsAnswer
           int pageSize = int.MaxValue
       )
         {
-            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsTemplate && !x.Project.IsArchived && x.SiteId == SiteId && x.ProjectId == projectId);
+            var query = _projectQuestionsAnswersRepository.TableNoTracking.Where(x => !x.Deleted && !x.Project.Deleted && !x.Project.IsTemplate && x.SiteId == SiteId && x.ProjectId == projectId);
 
             //sorting
             if (!string.IsNullOrWhiteSpace(sortBy))

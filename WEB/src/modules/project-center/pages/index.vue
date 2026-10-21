@@ -116,7 +116,6 @@
                       </div>
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-
                       <div class="form-group">
                         <div class="q-mb-xs">Active</div>
                         <div class="text-black q-mb-sm">
@@ -126,7 +125,15 @@
                     </div>
                   </div>
                   <div class="row q-col-gutter-x-md q-mb-md q-mt-md">
-                    <div class="col-3 ">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+                      <div class="form-group">
+                        <div class="q-mb-xs">Archive/Unarchive</div>
+                        <div class="text-black q-mb-sm">
+                          {{  model.isArchived ? "Archive" : "Unarchive"  }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
                       <div class="form-group">
                         <div class="q-mb-xs">Project Leads</div>
                         <div class="text-black q-mb-sm">
@@ -135,7 +142,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="col-3 ">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
                       <div class="form-group">
                         <div class="q-mb-xs">Project Coordinator</div>
                         <div class="text-black q-mb-sm">
@@ -150,7 +157,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
                       <div class="form-group">
                         <div class="q-mb-xs q-mr-lg">System Analyst</div>
                         <div class="text-black">
@@ -159,7 +166,9 @@
                         </div>
                       </div>
                     </div>
-                    <div class="col-3">
+                  </div>
+                  <div class="row q-col-gutter-x-md q-mb-md q-mt-md">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
                       <div class="form-group">
                         <div class="q-mb-xs q-mr-lg">System Architect</div>
                         <div class="text-black">
@@ -168,7 +177,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
                       <div class="form-group">
                         <div class="q-mb-xs q-mr-lg">Project Billing Admin:</div>
                         <div class="text-black">
@@ -177,7 +186,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="col-8">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
                       <div class="form-group">
                         <div class="q-mb-xs q-mr-lg">Team Members:</div>
                         <div class="text-black">
@@ -284,7 +293,7 @@
                         <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">{{ propsRequirements.row.title }}</q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
-                            v-if="propsRequirements.row.isEditable"
+                            v-if="propsRequirements.row.isEditable && !propsRequirements.row.project.isArchived"
                             v-model="propsRequirements.row.status.id"
                             :options="requirementStatusDropdownSingleSelect.list.value"
                             :filter="requirementStatusDropdownSingleSelect.filter"
@@ -297,7 +306,7 @@
                         </q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
-                            v-if="propsRequirements.row.isEditable"
+                            v-if="propsRequirements.row.isEditable && !propsRequirements.row.project.isArchived"
                             v-model="propsRequirements.row.priority.id"
                             :options="requirementPriorityDropdownSingleSelect.list.value"
                             :filter="requirementPriorityDropdownSingleSelect.filter"
@@ -344,7 +353,7 @@
                         <q-td style="width: 5%;">{{ propsIssue.row.type.dropDownValue }}</q-td>
                         <q-td style="width: 5%;">
                           <formSingleSelectDropdown
-                            v-if="propsIssue.row.isEditable"
+                            v-if="propsIssue.row.isEditable && !propsIssue.row.project.isArchived"
                             v-model="propsIssue.row.status.id"
                             :options="issueStatusDropdownSingleSelect.list.value"
                             :filter="issueStatusDropdownSingleSelect.filter"

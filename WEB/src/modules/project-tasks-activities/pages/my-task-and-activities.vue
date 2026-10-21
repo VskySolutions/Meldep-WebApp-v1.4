@@ -319,7 +319,7 @@
                     class="cursor-pointer"
                     @click="setActiveRowIdInLocalStorage(props.row.project.id); $router.push({ path: `/all-project-planner`, state: {projectId: props.row.project.id } })"
                   >
-                    <q-tooltip>Project Planner</q-tooltip>
+                    <q-tooltip>Project Task Planner</q-tooltip>
                   </q-icon>
                   <q-icon
                     name="o_radio_button_checked" size="xs"

@@ -1,0 +1,501 @@
+<template>
+  <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" persistent full-height position="right" @hide="onDialogHide">
+    <q-card  class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width:1600px !important; max-width: 100vw !important;">
+      <q-card-section class="card-header with-tools bg-primary stickyHeader">
+        <div class="text-h2 text-white">Add/Edit Weekly Plan</div>
+        <q-btn v-close-popup icon="o_close" class="close" color="white" flat round dense  />
+      </q-card-section>
+      <q-separator />
+       <q-form greedy @submit.prevent.stop="onSubmit">
+        <div class="q-pa-md cardTable">
+          <div class="q-gutter-y-md">
+            <fieldset>
+              <legend>
+                <q-breadcrumbs class="text-brown text-weight-bold text-h3">
+                  <template #separator>
+                    <q-icon size="1.5em" name="o_chevron_right" color="primary" />
+                  </template>
+                  <q-breadcrumbs-el :label="'Project - ' + props.projectName" />
+                  <q-breadcrumbs-el class="text-primary" :label="'Task - ' + props.taskName" />
+                </q-breadcrumbs>
+              </legend>
+              <div class="row full-width">
+                <div class="col-12 flex justify-end q-px-sm q-my-sm">
+                  <q-btn icon="o_add" outline label="Add Lines" size="sm" no-caps class="text-primary btnRounded" @click="onAddProjectPlanLines()" />
+                </div>
+              </div>
+              <div class="row full-width q-px-sm">
+                <div v-if="model.weekDateLines?.length > 0" class="col-12 full-width">
+                  <table class="WhiteTable full-width">
+                    <thead>
+                      <tr>
+                        <th class="text-start" width="150px">Week End <span class="required">*</span></th>
+                        <th class="text-start">Expected Plan <span class="required">*</span></th>
+                        <th class="text-start">Actual Plan</th>
+                        <th width="50px">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(line, lineIndex) in model.weekDateLines" :key="line.id">
+                        <td>
+                          <formDate
+                            v-model="line.weekDate"
+                            label="Week End"
+                            :dateOptions="isSunday"
+                            :navigationMinYearMonth="minMonth"
+                            :minimal="true"
+                            :firstDayOfWeek="1"
+                          />
+                        </td>
+                        <td>
+                          <div class="row q-mb-sm">
+                            <q-editor
+                              v-model="line.expectedDescription"
+                              class="full-width"
+                              :dense="$q.screen.lt.md"
+                              :toolbar="toolbar"
+                              :fonts="fonts"
+                            />
+                          </div>
+                          <div class="row">
+                            <div class="col-xxl-1 col-xl-1 col-lg-2 col-md-2 col-sm-2 col-xs-2 flex items-center">
+                              <q-input v-model="line.expectedHours" outlined hide-bottom-space :dense="true" :readonly="true" label="Est. Hrs*" class="q-mr-sm" />
+                            </div>
+                            <div class="col-xxl-11 col-xl-11 col-lg-10 col-md-10 col-sm-10 col-xs-10 flex items-center">
+                              <div class="TaskActivity flex items-center">
+                                <!-- Task Assignment - Action Button -->
+                                <div class="q-mr-sm">
+                                  <q-icon name="o_group_add" color="grey-8" size="sm" class="cursor-pointer" @click="resetResourceModel" />
+                                  <q-tooltip>Assign Resource?</q-tooltip>
+                                  <q-popup-edit
+                                    class="small-popup-title"
+                                    style="width: 280px;"
+                                    @before-show="() => {addResourceBtn = true}"
+                                  >
+                                    <div class="row justify-between items-center q-mb-sm">
+                                      <h3>Add Resource</h3>
+                                      <q-btn v-close-popup icon="o_close" size="sm" color="black" flat round dense />
+                                    </div>
+                                    <formSingleSelectDropdown
+                                      v-model="selectedResourcesOptions"
+                                      label="Select Employee"
+                                      :options="activeEmployeesDropdownSingleSelect.list.value"
+                                      :filter="activeEmployeesDropdownSingleSelect.filter"
+                                      @update:model-value="(val) => checkIfEmployeeAlreadyExistsInPlanLine(line.saveWeeklyLinesAssignTos, val)"
+                                    />
+                                    <label class="q-mt-sm">Est. Hrs <span class="text-red">*</span></label>
+                                    <q-input
+                                      v-model="resourceModel.estimatedHours"
+                                      outlined
+                                      hide-bottom-space
+                                      dense
+                                      mask="##:##"
+                                      maxlength="5"
+                                      :rules="[validateHours]"
+                                      class="full-width"
+                                      @keyup="checkAddResourceFields(resourceModel)"
+                                      @blur="resourceModel.estimatedHours = formatHoursValue(resourceModel.estimatedHours);"
+                                    >
+                                    <template #hint>
+                                      <span
+                                        v-if="resourceModel.estimatedHours && validateHours(resourceModel.estimatedHours) === true && resourceModel.estimatedHours !== '00:00'""
+                                        class="text-caption text-primary"
+                                      >
+                                        {{ getHoursMinutesText(resourceModel.estimatedHours) }}
+                                      </span>
+                                      <span v-else>
+                                        hh:mm
+                                      </span>
+                                    </template>
+                                    </q-input>
+                                    <div class="row justify-end q-gutter-sm q-mt-sm">
+                                      <q-btn v-close-popup label="Cancel" color="grey" flat dense />
+                                      <q-btn v-close-popup label="Set" color="primary" dense :disable="addResourceBtn" :loading="resourceProcessing" @click="onAddResourceToLine(line, resourceModel)" />
+                                    </div>
+                                  </q-popup-edit>
+                                </div>
+                                <!-- Task Assignment - Labels -->
+                                <div v-for="(resource, resourceIndex) in line.saveWeeklyLinesAssignTos" :key="resource.id" class="Person position-relative q-mr-xs">
+                                  {{ (resource?.firstName?.trim()?.[0] || '') + (resource?.lastName?.trim()?.[0] || '') + "(" + resource.estimatedHours + ")" }}
+                                  <q-icon class="delete" name="o_close" color="red" size="xs" @click="onDeleteResourceToLine(line, resource, resourceIndex)" />
+                                  <q-tooltip>
+                                    <div>
+                                      <q-icon name="o_person" color="white" size="xs" class="q-mr-xs" />
+                                      <span>{{ resource.firstName + ' ' + resource?.lastName }}</span>
+                                    </div>
+                                  </q-tooltip>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <q-editor
+                            v-model="line.actualDescription"
+                            class="full-width"
+                            :dense="$q.screen.lt.md"
+                            :toolbar="toolbar"
+                            :fonts="fonts"
+                          />
+                        </td>
+                        <td class="text-center">
+                          <q-btn :disable="model.weekDateLines?.length > 1 ? false : true" icon="o_delete" outline size="sm" color="red" no-caps class="q-ml-sm" @click="onDeleteProjectPlanLines(lineIndex)" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div v-else class="col-12 full-width q-my-md">
+                  <h6 class="text-red text-center">No plan added</h6>
+                </div>
+              </div>
+              <div class="row full-width flex justify-center q-px-sm q-mt-sm">
+                <q-btn size="md" color="grey-4" outline label="Close" type="button" class="text-grey-9 q-mr-xs" style="width: 120px;" no-caps @click="toggleProjectChatBox" />
+                <q-btn size="md" color="primary" outline label="Save & Close" type="button" :loading="processing" :disable="disableActionButton || processing" style="width: 120px;" no-caps @click="OnSaveProjectPlan()" />
+              </div>
+            </fieldset>
+          </div>
+        </div>
+      </q-form>
+    </q-card>
+  </q-dialog>
+</template>
+
+<script setup>
+import { ref, onMounted, watch } from "vue";
+import { useQuasar, uid, date } from "quasar";
+import { notifyError } from "assets/utils";
+
+import projectService from "modules/project/projects.service";
+
+// SOP Change :- Shared Inputs
+import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
+import formDate from "src/components/form-inputs/_formDate.vue";
+
+// SOP Change :- Shared Dropdowns
+import projectModule from "src/modules/project/utils/dropdowns.js";
+import employeeModule from "src/modules/employee/utils/dropdowns.js";
+import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
+
+const $q = useQuasar();
+const { fonts, toolbar } = getEditorConfig($q);
+const resourceProcessing = ref(false);
+const processing = ref(false);
+const disableActionButton = ref(true);
+
+const props = defineProps({
+  id: { type: String, default: "" },
+  projectId: { type: String, default: "" },
+  projectName: { type: String, default: "" },
+  taskName: { type: String, default: "" }
+});
+
+
+const chatOpen = ref(false);
+const toggleProjectChatBox = () => { chatOpen.value = !chatOpen.value; };
+
+const model = ref({
+  projectId: props?.projectId ? props.projectId : null,
+  weekDate: null,
+  planTypeId: null,
+  weekDateLines: []
+});
+
+const getProjectWeeklyPlanType = () => {
+  projectService.getProjectWeeklyPlanTypeId("Project Weekly Target Planning", "Weekly").then((resp) => {
+    model.value.planTypeId = resp;
+  });
+};
+
+function getHoursMinutesText(value) {
+  if (!value) return "";
+  value = String(value).trim();
+  // Hours only: 45 or 45:
+  if (/^\d{1,2}:?$/.test(value)) {
+    const hrs = parseInt(value, 10);
+
+    return hrs > 0
+      ? `${hrs} hr${hrs > 1 ? "s" : ""}`
+      : "";
+  }
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) return "";
+
+  const hrs = parseInt(match[1], 10);
+  let mins = parseInt(match[2], 10);
+
+  if (match[2].length === 1) {
+    mins *= 10;
+  }
+
+  if (mins > 59 || (hrs === 0 && mins === 0)) {
+    return "";
+  }
+  const result = [];
+  if (hrs > 0) {
+    result.push(`${hrs} hr${hrs > 1 ? "s" : ""}`);
+  }
+  if (mins > 0) {
+    result.push(`${mins} min`);
+  }
+  return result.join(" ");
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+// Project Plan:- Add new project week.
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+const today = new Date();
+
+// // Navigation min month to block past month navigation
+const minMonth = date.formatDate(today, "YYYY/MM");
+
+// Only allow Sundays and today/future
+const isSunday = (dateStr) => {
+  const day = new Date(dateStr);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  return (
+    day.getDay() === 0 // && day >= todayStart
+  );
+};
+
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+// Project Plan Lines
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+const onAddProjectPlanLines = () => {
+  const lineModel = ref({
+    id: uid(),
+    expectedDescription: null,
+    actualDescription: null,
+    saveWeeklyLinesAssignTos: []
+  });
+  model.value.weekDateLines.unshift(lineModel.value);
+};
+
+const onDeleteProjectPlanLines = (lineIndex) => {
+  $q.dialog({
+    title: "Delete Line?",
+    message: "Are you sure you want to delete weekly plan line?",
+    cancel: true,
+    persistent: true
+  }).onOk(() => {
+    model.value.weekDateLines?.splice(lineIndex, 1);
+  });
+};
+
+const OnSaveProjectPlan = async () => {
+  processing.value = true;
+  try {
+    processing.value = true;
+    await projectService.addProjectToWeeklyPlan(model.value);
+  } catch (error) {
+    console.error("Error while saving project to weekly plan:", error);
+    notifyError({ message: "An error occurred while saving the project weekly plan." });
+  } finally {
+    setTimeout(() => {
+      processing.value = false;
+    }, 1500);
+    toggleProjectChatBox();
+  }
+};
+
+function validateHours(value) {
+  const strValue = String(value ?? "").trim();
+  if (!strValue) {
+    return true;
+  }
+  if (/^\d{1,2}$/.test(strValue)) {
+    return true;
+  }
+  if (/^\d{1,2}:$/.test(strValue)) {
+    return true;
+  }
+  const match = strValue.match(/^(\d{1,2}):(\d{1,2})$/);
+
+  if (!match) {
+    return "Invalid hours format.";
+  }
+
+  const minutes = Number(match[2]);
+  if (minutes > 59) {
+    return "Minutes can't exceed 59.";
+  }
+
+  return true;
+}
+
+function formatHoursValue(value) {
+  if (!value) return value;
+  value = String(value).trim();
+
+  if (!value.includes(":")) {
+    return `${value.padStart(2, "0")}:00`;
+  }
+  const [hours, minutes = "00"] = value.split(":");
+  return `${hours.padStart(2, "0")}:${minutes.padEnd(2, "0")}`;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+// Project Plan:- Add resource to line under project weeklines.
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+const addResourceBtn = ref(true);
+const selectedResourcesOptions = ref([]);
+
+const resourceModel = ref({
+  id: uid(),
+  projectWeeklyPlanDatesLineId: "",
+  employeeId: null,
+  estimatedHours: "",
+  firstName: "",
+  lastName: ""
+});
+
+const resetResourceModel = () => {
+  resourceModel.value = {
+    id: uid(),
+    projectWeeklyPlanDatesLineId: "",
+    employeeId: null,
+    estimatedHours: "",
+    firstName: "",
+    lastName: ""
+  };
+  selectedResourcesOptions.value = [];
+};
+
+const checkIfEmployeeAlreadyExistsInPlanLine = async (existingResources, selectOption) => {
+  const isEmployeeAdded = existingResources?.some(r => r.employeeId === selectOption.value);
+  if (isEmployeeAdded) {
+    resourceModel.value.employeeId = null;
+    resourceModel.value.firstName = "";
+    resourceModel.value.lastName = "";
+    selectedResourcesOptions.value = [];
+    notifyError({ message: "Cannot Add Duplicate Employee" });
+  } else {
+    const selectedEmployee = activeEmployeesDropdownSingleSelect.list.value.find(
+      (employee) => employee.value === selectOption
+    );
+
+    if (!selectedEmployee) {
+      notifyError({ message: "Employee not found" });
+      return;
+    }
+
+    const fullName = selectedEmployee.text?.trim?.() || "";
+    const nameParts = fullName.trim().split(" ");
+    resourceModel.value.employeeId = selectedResourcesOptions.value;
+    resourceModel.value.firstName = nameParts[0];
+    resourceModel.value.lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+    checkAddResourceFields(resourceModel.value);
+  }
+};
+
+const checkAddResourceFields = (resource) => {
+  const hasMissingData =
+    !resource?.employeeId ||
+    !resource?.estimatedHours ||
+    validateHours(resource.estimatedHours) !== true;
+  addResourceBtn.value = hasMissingData;
+};
+
+// const isPositiveNumberOrDecimal = (value) => {
+//   const regex = /^\d+(\.\d+)?$/;
+//   return regex.test(String(value));
+// };
+
+const onAddResourceToLine = async (line, resource) => {
+  resourceProcessing.value = true;
+  try {
+    if (!line.saveWeeklyLinesAssignTos) {
+      line.saveWeeklyLinesAssignTos = [];
+    }
+    resource.projectWeeklyPlanDatesLineId = line.id;
+    line.saveWeeklyLinesAssignTos.push({ ...resource });
+    line.expectedHours = getTotalWeekLineExpectedHours(line);
+  } catch (error) {
+    console.error("Error in submitting the resource:", error);
+  } finally {
+    resourceProcessing.value = true;
+    setTimeout(() => {
+      resourceProcessing.value = false;
+    }, 1500);
+  }
+};
+
+const onDeleteResourceToLine = (line, resource, resourceIndex) => {
+  $q.dialog({
+    title: "Remove Employee From Plan?",
+    message: "Are you sure you want to remove this employee from plan?",
+    cancel: true,
+    persistent: true
+  }).onOk(() => {
+    line.saveWeeklyLinesAssignTos.splice(resourceIndex, 1);
+    getTotalWeekLineExpectedHours(line);
+    notifyError({ message: "Resource Deleted" });
+  });
+};
+
+const getTotalWeekLineExpectedHours = (line = {}) => {
+  let totalMinutes = 0;
+
+  line.saveWeeklyLinesAssignTos?.forEach(assignTo => {
+    const value = String(assignTo.estimatedHours ?? '').trim();
+
+    if (/^\d{1,2}:\d{2}$/.test(value)) {
+      const [hours, minutes] = value.split(':').map(Number);
+      totalMinutes += hours * 60 + minutes;
+    }
+  });
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+// ------------------------------------------------------------------------------------
+// Advance Filter :- All Dropdowns (SOP Change)
+// ------------------------------------------------------------------------------------
+const { projectNameDropdownSingleSelect
+} = projectModule();
+
+const { activeEmployeesDropdownSingleSelect } = employeeModule();
+
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+// Search: When user types in search
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+watch(
+  () => model.value,
+  (newModelValue) => {
+    const hasMissingData =
+      !newModelValue?.projectId?.length ||
+      newModelValue?.weekDateLines?.some(line =>!line?.weekDate || line.weekDate.trim() === "") ||
+      newModelValue?.weekDateLines?.some(line => !line?.expectedHours || line.expectedHours.trim() === "") ||
+      newModelValue?.weekDateLines?.some(line => !line?.expectedDescription || line.expectedDescription.trim() === "" || line.expectedDescription.trim() === "<br>")
+    ;
+    disableActionButton.value = hasMissingData;
+  },
+  { deep: true }
+);
+
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+// On Page Load
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+
+onMounted(() => {
+  projectNameDropdownSingleSelect.load();
+  onAddProjectPlanLines();
+  getProjectWeeklyPlanType();
+  activeEmployeesDropdownSingleSelect.load();
+});
+
+</script>
+<style scoped>
+.TaskActivity .Person {
+  border-radius: 10%;
+  background-color: #5d5d5d;
+  color: white;
+  font-size: 12px;
+  padding: 2px 3px;
+}
+</style>

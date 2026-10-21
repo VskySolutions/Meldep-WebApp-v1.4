@@ -930,7 +930,7 @@
                           <q-item-section>View</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="props.row.isEditable"
+                          v-if="props.row.isEditable && !props.row.isArchived"
                           v-ripple clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id); onProjectEdit(props.row.id, false, refreshProjectList, refreshProjectNameDropdown)"
                         >
@@ -938,7 +938,7 @@
                           <q-item-section>Edit</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="(props.row.isEditable || pMRole) && !search.isTemplate"
+                          v-if="(props.row.isEditable || pMRole) && !search.isTemplate && !props.row.isArchived"
                           v-ripple clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id); onProjectEdit(props.row.id, true, refreshProjectList)"
                         >
@@ -946,7 +946,7 @@
                           <q-item-section>Charter</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="props.row.createdById === loggedUserId || role === 'admin' || props.row.isProjectManager"
+                          v-if="props.row.createdById === loggedUserId || role === 'admin' || props.row.isProjectManager && !props.row.isArchived"
                           v-ripple
                           clickable
                           class="hidden"
@@ -956,7 +956,7 @@
                           <q-item-section>Assign Users</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="!search.isTemplate"
+                          v-if="!search.isTemplate && !props.row.isArchived"
                           v-ripple
                           clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: `/all-project-planner`, state: {projectId: props.row.id } })"
@@ -965,7 +965,7 @@
                           <q-item-section>Project Task Planner</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="!search.isTemplate"
+                          v-if="!search.isTemplate && !props.row.isArchived"
                           v-ripple
                           clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/project-targetplan/weeklyplanner', state: {projectId: props.row.id } })"
@@ -974,7 +974,7 @@
                           <q-item-section>Weekly Planner</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="!search.isTemplate"
+                          v-if="!search.isTemplate && !props.row.isArchived"
                           v-ripple
                           clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/project-targetplan/monthlyplanner', state: {projectId: props.row.id } })"
@@ -983,7 +983,7 @@
                           <q-item-section>Monthly Planner</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="!search.isTemplate"
+                          v-if="!search.isTemplate && !props.row.isArchived"
                           v-ripple
                           clickable
                           @click="$router.push({ path: `/project-planning/calendar`, state: {projectId: props.row.id, projectName: props.row.name, projectStatus: props.row.projectStatus.dropDownValue } })"
@@ -992,7 +992,7 @@
                           <q-item-section>Calendar</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="props.row.isEditable && !search.isTemplate && user.isFileUploadOrExternal"
+                          v-if="props.row.isEditable && !search.isTemplate && user.isFileUploadOrExternal && !props.row.isArchived"
                           v-ripple clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id); onProjectFilesView(props.row.id, props.row.name, refreshProjectList)"
                         >
@@ -1000,7 +1000,7 @@
                           <q-item-section>Files</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="!props.row.isTemplate && props.row.isEditable"
+                          v-if="!props.row.isTemplate && props.row.isEditable && !props.row.isArchived"
                           v-ripple
                           clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id); convertProjectTemplate(props.row.id, props.row.name, props.row.startDate, refreshProjectList)"
@@ -1009,7 +1009,7 @@
                           <q-item-section>Convert To Template?</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="props.row.isEditable"
+                          v-if="props.row.isEditable && !props.row.isArchived"
                           v-ripple
                           clickable
                           @click="setActiveRowIdInLocalStorage(props.row.id)"
@@ -1062,7 +1062,7 @@
                             </div>
                           </q-item-section>
                         </q-item>
-                        <q-item v-if="props.row.isEditable">
+                        <q-item v-if="props.row.isEditable && !props.row.isArchived">
                           <q-item-section avatar>
                           <q-icon v-if="props.row.projectColor" name="o_circle" :style="`border-radius:50%;color:${props.row.projectColor}; background-color:${props.row.projectColor};`" size="xs" />
                           <q-icon v-else name="o_question_mark" size="xs" />
@@ -1090,7 +1090,7 @@
                           </q-item-section>
                         </q-item>
                         <q-item
-                          v-if="props.row.isEditable" v-ripple clickable
+                          v-if="props.row.isEditable && !props.row.isArchived" v-ripple clickable
                           @click="() => { onSubmitProjectPinned(props.row.id, !props.row.isPinned, refreshProjectList); }"
                         >
                           <q-item-section avatar>
@@ -1099,7 +1099,7 @@
                           <q-item-section>{{ props.row.isPinned ? "Unpin" : "Pin" }}</q-item-section>
                         </q-item>
                         <q-item
-                          v-if="!search.isTemplate && props.row.isEditable"
+                          v-if="(props.row.isEditable || pMRole) && !search.isTemplate"
                           v-ripple
                           clickable
                           @click="onSubmitProjectArchiveUnArchiveToggle(props.row.id, props.row.isArchived, refreshProjectList)"

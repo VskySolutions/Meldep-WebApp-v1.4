@@ -423,7 +423,7 @@ namespace Vsky.Services.Requirements
             bool lookup = false
         )
         {
-            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.ProjectId == projectId && !x.Project.IsArchived);
+            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == SiteId && x.ProjectId == projectId);
 
             bool IsAdmin = await IsCurrentUserAdmin(LoggedUserId, SiteId);
 
@@ -481,6 +481,7 @@ namespace Vsky.Services.Requirements
                 {
                     Id = x.Project.Id,
                     Name = x.Project.Name,
+                    IsArchived = x.Project.IsArchived,
                     CurrentUserManage =
                     IsAdmin ||
                     x.Project.CreatedById == LoggedUserId ||

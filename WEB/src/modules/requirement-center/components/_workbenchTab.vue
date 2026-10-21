@@ -51,12 +51,6 @@
           </div>
         </q-tab>
 
-        <q-tab name="requirementNotes">
-          <div class="row items-center no-wrap">
-            Notes
-          </div>
-        </q-tab>
-
         <q-tab name="requirementShortDescription" class="hidden">
           <div class="row items-center no-wrap">
             Requirement Short Description
@@ -75,6 +69,12 @@
                 </div>
               </q-tooltip>
             </q-icon>
+          </div>
+        </q-tab>
+
+        <q-tab name="notes">
+          <div class="row items-center no-wrap">
+            Notes
           </div>
         </q-tab>
 
@@ -205,6 +205,66 @@
               @select="selectedReqDescription = $event"
             />
           </q-tab-panel>
+          <q-tab-panel name="notes" class="q-pa-none">
+            <!-- Inner Notes Tabs -->
+            <q-tabs
+              v-model="activeNotesTab"
+              dense
+              indicator-color="primary"
+              active-color="primary"
+              active-class="bg-blue-1 borderRadiusTabs"
+              align="left"
+              narrow-indicator
+              inline-label
+              mobile-arrows
+            >
+              <q-tab name="clientMeetingUpdates" label="Client Meeting Updates" class="q-px-lg q-mr-md" />
+              <q-tab name="weeklyStatus" label="Weekly Status" class="q-px-lg q-mr-md" />
+              <q-tab name="weeklyNextSteps" label="Weekly Next Steps" class="q-px-lg q-mr-md" />
+              <q-tab name="roadblocks" label="Roadblocks" class="q-px-lg q-mr-md" />
+            </q-tabs>
+            <q-separator />
+            <!-- Inner Notes Tab Panels -->
+            <q-tab-panels v-model="activeNotesTab" animated>
+
+              <q-tab-panel name="clientMeetingUpdates" class="q-pa-none">
+                <viewClientMeetingUpdatesView
+                  :id="requirementId"
+                  :noteType="clientMeetingNoteType"
+                  :isRequirementCenter="true"
+                  @select="selectedClientMeetingUpdates = $event"
+                />
+              </q-tab-panel>
+
+              <q-tab-panel name="weeklyStatus" class="q-pa-none">
+                <viewClientMeetingUpdatesView
+                  :id="requirementId"
+                  :noteType="weeklyStatusNoteType"
+                  :isRequirementCenter="true"
+                  @select="selectedWeeklyStatus = $event"
+                />
+              </q-tab-panel>
+
+              <q-tab-panel name="weeklyNextSteps" class="q-pa-none">
+                <viewClientMeetingUpdatesView
+                  :id="requirementId"
+                  :noteType="weeklyNextStepNoteType"
+                  :isRequirementCenter="true"
+                  @select="selectedWeeklyNextSteps = $event"
+                />
+              </q-tab-panel>
+
+              <q-tab-panel name="roadblocks" class="q-pa-none">
+                <viewClientMeetingUpdatesView
+                  :id="requirementId"
+                  :noteType="roadBlockNoteType"
+                  :isRequirementCenter="true"
+                  @select="selectedRoadblocks = $event"
+                />
+              </q-tab-panel>
+
+            </q-tab-panels>
+          </q-tab-panel>
 
           <q-tab-panel name="requirementFiles" class="q-pa-none">
             <RequirementFilesTabularView
@@ -220,15 +280,6 @@
               :requirement-id="requirementId"
               :active-tab="leftTab"
               @select="selectedReqDataMappings = $event"
-            />
-          </q-tab-panel>
-
-          <q-tab-panel name="requirementNotes" class="q-pa-none">
-            <RequirementNoteDetails
-              :id="requirementId"
-              notes-type="Requirement"
-              :active-tab="leftTab"
-              @select="selectedReqNotes = $event"
             />
           </q-tab-panel>
 
@@ -320,6 +371,7 @@ import RequirementShortDescriptionDetails from './details/_requirementShortDescr
 import RequirementScopeDetails from './details/_requirementScopeDetails.vue';
 import RequirementNoteDetails from './details/_requirementNoteDetails.vue';
 import RequirementDataMappingsTabularView from './tabularView/_requirementDataMappingTabularView.vue';
+import viewClientMeetingUpdatesView from "src/modules/requirement/components/_clientMeetingUpdatesView.vue";
 
 const props = defineProps({
   requirementId: String,
@@ -359,9 +411,17 @@ const selectedQA = ref(null);
 const selectedReqDescription = ref(null);
 const selectedActionItems = ref(null);
 const selectedReqFiles = ref(null);
-const selectedReqNotes = ref(null);
 const selectedReqDataMappings = ref(null);
+const selectedClientMeetingUpdates = ref(null);
+const selectedWeeklyStatus = ref(null);
+const selectedWeeklyNextSteps = ref(null);
+const selectedRoadblocks = ref(null);
+const clientMeetingNoteType="Client Meeting Updates";
+const weeklyStatusNoteType="Weekly Status";
+const weeklyNextStepNoteType="Weekly Next Steps";
+const roadBlockNoteType="Roadblocks";
 const timesheetSearchModel = ref({});
+const activeNotesTab = ref('clientMeetingUpdates')
 
 const onSelectGroup = group => {
   selectedGroup.value = group;

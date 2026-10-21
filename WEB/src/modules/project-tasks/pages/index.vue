@@ -775,6 +775,10 @@
                           <q-item-section avatar><q-icon name="o_assignment_ind" size="xs" /></q-item-section>
                           <q-item-section>Task Assignment</q-item-section>
                         </q-item>
+                        <q-item v-if="props.row.isEditable" class="hidden" v-ripple clickable @click="onProjectTaskWeeklyPlanAddEdit(props.row.id, props.row.name, props.row.project.id,props.row.project.name, refreshProjectTaskList)">
+                          <q-item-section avatar><q-icon name="o_calendar_month" size="xs" /></q-item-section>
+                          <q-item-section>Add/Edit Weekly Plan</q-item-section>
+                        </q-item>
                         <q-item v-if="props.row.isEditable" v-ripple clickable @click="openTagDialog(props.row.id)">
                           <q-item-section avatar><q-icon name="o_local_offer" size="xs" /></q-item-section>
                           <q-item-section>
@@ -955,7 +959,8 @@ import {
   onProjectTaskFiles,
   onProjectTaskCopy,
   onProjectTaskMove,
-  onProjectTaskNotesAdd
+  onProjectTaskNotesAdd,
+  onProjectTaskWeeklyPlanAddEdit
 } from "src/modules/project-tasks/utils/dialogs.js";
 
 // Shared Project Task Activity
