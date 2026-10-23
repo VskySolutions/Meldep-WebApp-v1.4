@@ -37,6 +37,9 @@
                   <div
                     class="note-wrapper RichTextEditor"
                   >
+                    <span v-if="note.noteType?.dropDownValue">
+                      <span>{{ note.noteType?.dropDownValue }} - </span>
+                    </span>
                     <span class="text-black note-text" v-html="note.note" />
                   </div>
               </div>

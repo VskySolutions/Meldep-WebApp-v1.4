@@ -200,7 +200,6 @@
               <q-tr
                 :props="props"
                 :class="activeRowId == props.row.id ? 'highlight' : ''"
-                :set="(preProjectName = null, preProjectModuleName = null, resetTracking())"
               >
                 <q-td :colspan="computedColumns.length" style="background: #dbf2ff;" class="text-center text-bold text-primary">
                   {{ props.row.requirementTitle }}
@@ -228,6 +227,7 @@
                 v-for="(mapping, mappingIndex) in props.row.dataMappings"
                 :key="mapping.id"
                 :class="highlightedId == mapping.id ? 'highlight' : ''"
+                :set="(preProjectName = null, preProjectModuleName = null, preProjectRequirementId = null, resetTracking())"
               >
                 <q-td
                   v-if="selectedColumnNames.includes('requirement.project.name')"
@@ -235,8 +235,8 @@
                 >
                   <div class="row no-wrap items-center justify-between">
                     <span
-                      v-if="preProjectName !== mapping.requirement.project.name"
-                      :set="preProjectName = mapping.requirement.project.name"
+                      v-if="preProjectName !== mapping.requirement.project.name || preProjectRequirementId !== mapping.requirement.id"
+                      :set="(preProjectName = mapping.requirement.project.name, preProjectRequirementId = mapping.requirement.id)"
                       class="cursor-pointer"
                       @click="onProjectView(mapping.requirement.project.id)"
                     >

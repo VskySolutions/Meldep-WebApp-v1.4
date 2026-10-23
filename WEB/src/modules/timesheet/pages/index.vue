@@ -74,6 +74,13 @@
                         :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
                       />
                       <singleSelectDropdown
+                        v-model="search.requirementId"
+                        label="Requirement"
+                        :disable="!search.projectModuleId"
+                        :options="requirementByProjectModuleIdForDropdownSingleSelect.list.value"
+                        :filter="requirementByProjectModuleIdForDropdownSingleSelect.filter"
+                      />
+                      <singleSelectDropdown
                         v-model="search.projectTaskId"
                         label="Project Tasks"
                         :options="projectTasksByProjectIdAndModuleIdForDropdownSingleSelect.list.value"
@@ -456,6 +463,7 @@ import employeeModule from "src/modules/employee/utils/dropdowns.js";
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 import projectTaskModule from "src/modules/project-tasks/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 
 // Shared Inputs
 import singleSelectDropdown from "src/components/form-inputs/_singleSelectDropdown.vue";
@@ -583,6 +591,7 @@ const getTimesheets = async ({ pagination: p }) => {
   search.value.fromDate = isValidDate(search.value.fromDate) ? search.value.fromDate : null;
   search.value.projectId = search.value.projectId === "" ? null : search.value.projectId;
   search.value.projectModuleId = search.value.projectModuleId === "" ? null : search.value.projectModuleId;
+  search.value.requirementId = search.value.requirementId === "" ? null : search.value.requirementId;
 
   const sorts = {};
   const multi = multiSort.value;
@@ -666,6 +675,7 @@ const {
     employeeId: "",
     projectId: "",
     projectModuleId: "",
+    requirementId: "",
     projectTaskId: "",
     activityDate: "",
     fromDate: null,
@@ -1020,6 +1030,7 @@ const onAdvanceClear = () => {
   search.value.weekFilter = "";
   search.value.projectId = null;
   search.value.projectModuleId = null;
+  search.value.requirementId = null;
   search.value.projectTaskId = null;
   search.value.projectActivityId = null;
   search.value.employeeId = null;
@@ -1080,6 +1091,7 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.employeeId, activeEmployeesDropdownSingleSelect.list, "Employee Name"),
   ...mapFilterToLabel(search.value.projectId, projectNameDropdownSingleSelect.list, "Projects"),
   ...mapFilterToLabel(search.value.projectModuleId, projectModulesByProjectIdForDropdownSingleSelect.list, "Project Modules"),
+  ...mapFilterToLabel(search.value.requirementId, requirementByProjectModuleIdForDropdownSingleSelect.list, "Requirement"),  
   ...mapFilterToLabel(search.value.projectTaskId, projectTasksByProjectIdAndModuleIdForDropdownSingleSelect.list, "Project Tasks"),
   ...mapFilterToLabel(search.value.weekFilter, weekFilterList, "Week Filter"),
   ...(search.value.activityDate ? { "Activity Date": search.value.activityDate } : {}),
@@ -1096,6 +1108,8 @@ function onClearFilters (key) {
     search.value.projectId = null;
   } else if (key === "Project Modules") {
     search.value.projectModuleId = null;
+  } else if (key === "Requirement") {
+    search.value.requirementId = null;
   } else if (key === "Project Tasks") {
     search.value.projectTaskId = null;
   } else if (key === "Week Filter") {
@@ -1124,6 +1138,7 @@ const { activeEmployeesDropdownSingleSelect } = employeeModule();
 const { projectNameDropdownSingleSelect } = projectModule();
 const { projectModulesByProjectIdForDropdownSingleSelect } = projectModuleOfProjectModule();
 const { projectTasksByProjectIdAndModuleIdForDropdownSingleSelect } = projectTaskModule();
+const { requirementByProjectModuleIdForDropdownSingleSelect } = requirementModule();
 
 // ----------------------------
 // Save static search into localstorage.
@@ -1146,6 +1161,36 @@ watch(() => search.value.projectId, async (newValue, oldValue) => {
   search.value.projectModuleId = null;
   await projectModulesByProjectIdForDropdownSingleSelect.load(false, false, search.value.projectId);
 }, { immediate: true });
+
+const normalize = (val) => {
+  if (Array.isArray(val)) {
+    return val.length > 0 ? val[0] : null;
+  }
+  return val ?? null;
+};
+
+watch(
+  () => search.value.projectModuleId,
+  async (newId, oldId) => {
+    const newVal = normalize(newId);
+    const oldVal = normalize(oldId);
+
+    const isValid = newVal != null && newVal !== "";
+
+    // Clear Requirement only when the module actually changes
+    if (oldId !== undefined && oldId !== null && newVal !== oldVal) {
+      search.value.requirementId = null;
+    }
+
+    // Always load the Requirement dropdown
+    if (isValid) {
+      await requirementByProjectModuleIdForDropdownSingleSelect.load(newVal);
+    } else {
+      requirementByProjectModuleIdForDropdownSingleSelect.list.value = [];
+    }
+  },
+  { immediate: true }
+);
 
 watch(() => search.value.projectModuleId, (newValue, oldValue) => {
   if (!newValue || newValue === oldValue) return;

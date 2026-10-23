@@ -17,7 +17,8 @@ namespace Vsky.Services.Timesheets
             string projectId, 
             string projectModuleId, 
             string projectTaskId, 
-            string projectActivityId, 
+            string projectActivityId,
+            string requirementId, 
             DateTime? activityDate, 
             DateTime? fromDate, 
             DateTime? toDate,
@@ -89,6 +90,10 @@ namespace Vsky.Services.Timesheets
 
         #region GetAllTimesheetListForDropdown
         Task<List<Timesheet>> GetAllTimesheetListForDropdown(string SiteId);
+        #endregion
+
+        #region
+        List<Timesheet> GetTimesheetDescriptionsByRequirementId(string siteId, string requirementId);
         #endregion
 
         #region HasTimesheetForDate

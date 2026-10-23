@@ -58,7 +58,8 @@ namespace Vsky.Services.Timesheets
             string projectId, 
             string projectModuleId, 
             string projectTaskId, 
-            string projectActivityId, 
+            string projectActivityId,
+            string requirementId,
             DateTime? activityDate, 
             DateTime? fromDate, 
             DateTime? toDate,
@@ -111,6 +112,11 @@ namespace Vsky.Services.Timesheets
             if (!string.IsNullOrWhiteSpace(projectActivityId))
             {
                 query = query.Where(x => x.TimesheetLines.Any(m => m.ProjectActivityId == projectActivityId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(requirementId))
+            {
+                query = query.Where(x => x.TimesheetLines.Any(m => m.Task.RequirementId == requirementId));
             }
 
             decimal? searchHours = null;
@@ -797,6 +803,53 @@ namespace Vsky.Services.Timesheets
         }
         #endregion
 
+        #region
+        public List<Timesheet> GetTimesheetDescriptionsByRequirementId(string siteId, string requirementId)
+        {
+            var query = _timesheetRepository.TableNoTracking
+                .Where(x =>
+                    !x.Deleted &&
+                    x.SiteId == siteId &&
+                    x.TimesheetLines.Any(line =>
+                        !line.Deleted &&
+                        line.Task.RequirementId == requirementId));
+
+            return query
+                .OrderByDescending(x => x.TimesheetDate)
+                .Select(x => new Timesheet
+                {
+                    Id = x.Id,
+                    TimesheetDate = x.TimesheetDate,
+                    User = new ApplicationUser
+                    {
+                        Person = new Person
+                        {
+                            Id = x.User.Person.Id,
+                            FullName = x.User.Person.FirstName + " " + x.User.Person.LastName,
+                        }
+                    },
+
+                    TimesheetLines = x.TimesheetLines
+                        .Where(line =>
+                            !line.Deleted &&
+                            line.Task.RequirementId == requirementId)
+                        .Select(line => new TimesheetLines
+                        {
+                            Id = line.Id,
+                            Description = line.Description,
+                            Hours = line.Hours,
+
+                            Task = new ProjectTask
+                            {
+                                Id = line.Task.Id,
+                                Name = line.Task.Name
+                            },                            
+                        })
+                        .ToList()
+                })
+                .ToList();
+        }
+        #endregion
 
         #region HasTimesheetForDate
         public async Task<bool> HasTimesheetForDate(

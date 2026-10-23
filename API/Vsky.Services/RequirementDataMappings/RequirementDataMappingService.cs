@@ -124,67 +124,6 @@ namespace Vsky.Services.RequirementDataMappings
         #endregion
 
         #region GetAllRequirementDataMappingGroups
-        //public async Task<List<RequirementDataMappingGroup>> GetAllRequirementDataMappingGroups(string siteId)
-        //{
-        //    var query = _requirementDataMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.Requirement.SiteId == siteId)
-        //        .Select(x => new
-        //        {
-        //            RequirementId = x.RequirementId,
-        //            RequirementTitle = x.Requirement.Title,
-
-        //            Mapping = new RequirementDataMapping
-        //            {
-        //                Id = x.Id,
-        //                RequirementId = x.RequirementId,
-        //                Source = x.Source,
-        //                Target = x.Target,
-        //                CreatedOnUtc = x.CreatedOnUtc,
-        //                CreatedBy = new ApplicationUser
-        //                {
-        //                    Id = x.CreatedBy.Id,
-        //                    UserName = x.CreatedBy.UserName,
-        //                    Person = new Person
-        //                    {
-        //                        Id = x.CreatedBy.Person.Id,
-        //                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
-        //                    }
-        //                },
-        //                RequirementDataMappingNotes =
-        //                    x.RequirementDataMappingNotes
-        //                        .Where(n => !n.Deleted)
-        //                        .OrderBy(n => n.CreatedOnUtc)
-        //                        .Select(n => new RequirementDataMappingNotes
-        //                        {
-        //                            Id = n.Id,
-        //                            RequirementDataMappingId =
-        //                                n.RequirementDataMappingId,
-        //                            Note = n.Note,
-        //                            CreatedOnUtc = n.CreatedOnUtc
-        //                        })
-        //                        .ToList()
-        //            }
-        //        });
-
-        //    var result = await query.ToListAsync();
-
-        //    return result
-        //        .GroupBy(x => new
-        //        {
-        //            x.RequirementId,
-        //            x.RequirementTitle
-        //        })
-        //        .Select(x => new RequirementDataMappingGroup
-        //        {
-        //            RequirementId = x.Key.RequirementId,
-        //            RequirementTitle = x.Key.RequirementTitle,
-        //            DataMappings = x
-        //                .Select(m => m.Mapping)
-        //                .OrderByDescending(m => m.CreatedOnUtc)
-        //                .ToList()
-        //        })
-        //        .ToList();
-        //}
-
         public async Task<IPagedList<RequirementDataMappingGroup>> GetAllRequirementDataMappingGroups(
             string SiteId,
             string loggedUserId,
@@ -258,10 +197,11 @@ namespace Vsky.Services.RequirementDataMappings
                     x.RequirementId,
                     x.RequirementTitle
                 })
-                .Select(x => new RequirementDataMappingGroup
+                .Select(g => new RequirementDataMappingGroup
                 {
-                    RequirementId = x.Key.RequirementId,
-                    RequirementTitle = x.Key.RequirementTitle
+                    RequirementId = g.Key.RequirementId,
+                    RequirementTitle = g.Key.RequirementTitle,
+                    CreatedOnUtc = g.Max(x => x.CreatedOnUtc)
                 });
 
             // Sorting Requirement groups
@@ -275,7 +215,7 @@ namespace Vsky.Services.RequirementDataMappings
                 }
                 else
                 {
-                    requirementQuery = requirementQuery.OrderBy(x => x.RequirementTitle);
+                    requirementQuery = requirementQuery.OrderByDescending(x => x.CreatedOnUtc);
                 }
             }
             else
@@ -365,14 +305,13 @@ namespace Vsky.Services.RequirementDataMappings
                             .ToList()
                 });
 
-            var mappings = await mappingQuery.ToListAsync();
+            var mappings = await mappingQuery.OrderByDescending(x => x.CreatedOnUtc).ToListAsync();
 
             // Put mappings under their Requirement
             foreach (var requirement in pagedRequirements)
             {
                 requirement.DataMappings = mappings
-                    .Where(x =>
-                        x.RequirementId == requirement.RequirementId)
+                    .Where(x => x.RequirementId == requirement.RequirementId)
                     .OrderByDescending(x => x.CreatedOnUtc)
                     .ToList();
             }

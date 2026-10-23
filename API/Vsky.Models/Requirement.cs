@@ -169,6 +169,7 @@ namespace Vsky.Models
         public string RequirementId { get; set; }
         public string RequirementTitle { get; set; }
         public DateTime? UpdatedOnUtc { get; set; }
+        public DateTime? CreatedOnUtc { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
         //public List<string> DataMappingIds { get; set; } = new List<string>();

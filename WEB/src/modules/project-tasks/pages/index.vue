@@ -394,14 +394,16 @@
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('requirement.requirementNumber')"
-                  class="common-q-td hoverable-cell"
+                  class="common-q-td"
+                  :class="props.row.requirement?.requirementNumber ? 'hoverable-cell' : ''"
                   style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
-                  @click="onRequirementView(props.row.requirement?.id)"
                 >
-                  <span v-if="props.row.requirement?.requirementNumber">
-                    #{{ props.row.requirement?.requirementNumber }}
-                    <q-tooltip>View Requirement</q-tooltip>
-                  </span>
+                  <div v-if="props.row.requirement?.requirementNumber">
+                    <span @click="onRequirementView(props.row.requirement?.id)">
+                      #{{ props.row.requirement?.requirementNumber }}
+                      <q-tooltip>View Requirement</q-tooltip>
+                    </span>
+                  </div>
                 </q-td>
                 <q-td
                   v-if="selectedColumnNames.includes('name')"

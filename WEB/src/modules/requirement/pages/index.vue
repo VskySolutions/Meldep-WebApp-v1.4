@@ -566,6 +566,7 @@
                   {{
                     getAnswerShortDescription(props.row.shortDescription)
                   }}
+                  <q-tooltip>{{ props.row.shortDescription }}</q-tooltip>
                 </div>
                 <!-- <div v-html="props.row.shortDescription" /> -->
               </q-td>

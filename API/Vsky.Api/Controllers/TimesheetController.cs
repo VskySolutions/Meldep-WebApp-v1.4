@@ -134,6 +134,7 @@ namespace Vsky.Api.Controllers
                     searchModel.ProjectModuleId,
                     searchModel.ProjectTaskId,
                     searchModel.ProjectActivityId,
+                    searchModel.RequirementId,
                     searchModel.ActivityDate,
                     searchModel.FromDate,
                     searchModel.ToDate,
@@ -444,6 +445,7 @@ namespace Vsky.Api.Controllers
                 searchModel.ProjectModuleId,
                 searchModel.ProjectTaskId,
                 searchModel.ProjectActivityId,
+                searchModel.RequirementId,
                 searchModel.ActivityDate,
                 searchModel.FromDate,
                 searchModel.ToDate,
@@ -657,6 +659,21 @@ namespace Vsky.Api.Controllers
 
             return Ok(model);
         }
+
+        #region
+        [HttpGet("get-timesheet-descriptions-by-requirement/{requirementId}")]
+        public IActionResult GetTimesheetDescriptionsByRequirementId(string requirementId)
+        {
+            var SiteId = _globalVariable.SiteId;
+
+            if (string.IsNullOrWhiteSpace(requirementId))
+                return BadRequest(new BadRequestError("No timesheet description found with the specified id."));
+
+            var result = _timesheetService.GetTimesheetDescriptionsByRequirementId(SiteId, requirementId);
+
+            return Ok(result);
+        }
+        #endregion
 
         #region CreateTimesheet
         // Title: CreateTimesheet
