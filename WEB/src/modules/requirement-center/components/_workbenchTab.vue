@@ -135,6 +135,12 @@
           </div>
         </q-tab>
 
+        <q-tab name="timesheetOverview">
+          <div class="row items-center no-wrap">
+            Timesheet Overview
+          </div>
+        </q-tab>
+
         <q-tab name="testCases">
           <div class="row items-center no-wrap">
             Test Cases
@@ -313,13 +319,21 @@
             />
           </q-tab-panel>
 
-         <q-tab-panel name="timesheet" class="q-pa-none">
+          <q-tab-panel name="timesheet" class="q-pa-none">
             <TimesheetTabularView
               :requirement-id="requirementId"
               :project-id="projectId"
               :active-tab="leftTab"
               @select="onSelectGroup"
               @search-change="timesheetSearchModel = $event"
+            />
+          </q-tab-panel>
+          <q-tab-panel name="timesheetOverview" class="q-pa-none">
+            <TimesheetOverview
+              :requirement-id="requirementId"
+              :project-id="projectId"
+              :active-tab="leftTab"
+              @select="selectedReqDescription = $event"
             />
           </q-tab-panel>
 
@@ -365,6 +379,7 @@ import TimesheetTabularView from './tabularView/_timesheetTabularView.vue';
 import TestCaseTabularView from './tabularView/_testCaseTabularView.vue';
 import IssueTabularView from './tabularView/_issueTabularView.vue';
 import RequirementDescriptionDetails from './details/_requirementDescriptionDetails.vue';
+import TimesheetOverview from './details/_timesheetOverview.vue';
 import RequirementInfoDetails from './details/_requirementInfoDetails.vue';
 import RequirementFilesTabularView from './tabularView/_requirementFilesTabularView.vue';
 import RequirementShortDescriptionDetails from './details/_requirementShortDescriptionDetails.vue';

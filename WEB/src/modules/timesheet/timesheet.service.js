@@ -24,6 +24,10 @@ export default {
     return http.get(`/Timesheet/${id}`).then(response => response.data);
   },
 
+  getTimesheetDescriptionsByRequirementId (requirementId) {
+    return http.get(`/Timesheet/get-timesheet-descriptions-by-requirement/${requirementId}`).then(response => response.data);
+  },
+
   getTimesheetLinesDetailsByIds (ids) {
     const idsQuery = ids.join(",");
     return http.get(`/Timesheet/timesheet-lines-detailsbyids?ids=${idsQuery}`).then(response => response.data);

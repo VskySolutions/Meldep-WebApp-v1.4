@@ -13,6 +13,7 @@
             <q-tab name="2_tab" label="Task Info." class="q-px-lg q-mr-md" />
             <q-tab name="3_tab" label="Task Activities" class="q-px-lg" :disable="disableTab" />
             <q-tab name="4_tab" label="Task Files" class="q-px-lg" :disable="disableTab" />
+            <q-tab name="5_tab" label="Weekly Plan" class="q-px-lg" :disable="disableTab" />
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" animated class="q-mt-xs">
@@ -229,7 +230,6 @@
                 </div>
               </fieldset>
             </q-tab-panel>
-
             <q-tab-panel name="3_tab">
               <fieldset class="q-mb-lg">
                 <legend>Task Activities</legend>
@@ -307,6 +307,12 @@
                 </q-table>
               </fieldset>
             </q-tab-panel>
+            <q-tab-panel name="5_tab">
+              <weeklyProjectPlan
+                :project-id="model.project.id"
+                :project-task-id="model.id"
+              />
+            </q-tab-panel>
           </q-tab-panels>
         </div>
       </div>
@@ -324,6 +330,7 @@ import useFilters from "composables/useFilters";
 
 import viewIssue from "modules/issue/components/view.vue";
 import viewRequirement from "modules/requirement/components/view.vue";
+import weeklyProjectPlan from "modules/project-center/components/_weeklyPlannerTab.vue";
 
 // Common variables
 const { toDate } = useFilters();

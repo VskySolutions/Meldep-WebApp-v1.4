@@ -37,7 +37,15 @@ namespace Vsky.Services.ProjectWeeklyPlan
         public async Task<List<Models.ProjectWeeklyPlanDates>> GetProjectWeeklyPlanDatesByProjectId(string projectId, string planTypeId, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null, string projectTaskId = null)
         {
             var query = _projectWeeklyPlanDatesRepository.TableNoTracking
-            .Where(x => !x.Deleted && x.ProjectWeeklyPlan != null && x.ProjectWeeklyPlan.ProjectId == projectId && x.PlanTypeId == planTypeId && (weekEndDate == null || x.WeekDate == weekEndDate.Value))
+            .Where(x => !x.Deleted && x.ProjectWeeklyPlan != null && x.ProjectWeeklyPlan.ProjectId == projectId && x.PlanTypeId == planTypeId && (weekEndDate == null || x.WeekDate == weekEndDate.Value) &&
+                (
+                    string.IsNullOrWhiteSpace(projectTaskId) ||
+                    projectTaskId == "undefined" ||
+                    x.ProjectWeeklyPlanDatesLines.Any(n =>
+                        !n.Deleted &&
+                        n.TaskId == projectTaskId)
+                )
+            )
             .OrderByDescending(m => m.WeekDate)
             .Skip(skipIndex * takeCount)
             .Take(takeCount)
