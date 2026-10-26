@@ -137,7 +137,7 @@
 
         <q-tab name="timesheetOverview">
           <div class="row items-center no-wrap">
-            Timesheet Overview
+            Timesheet Details
           </div>
         </q-tab>
 

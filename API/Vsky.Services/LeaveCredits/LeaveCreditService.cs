@@ -50,7 +50,7 @@ namespace Vsky.Services.LeaveCredits
         // It also supports sorting and includes related data .The method allows for both full and lookup (limited) data retrieval modes.
         public IPagedList<LeaveCredit> GetAllLeaveCredits(string SiteId, string SearchText, List<string> employeeIds, int years, string sortBy, bool descending, int page = 1, int pageSize = int.MaxValue, bool lookup = false)
         {
-            var query = _leaveCreditRepository.TableNoTracking.Where(x => !x.Deleted && x.Employee.SiteId == SiteId);
+            var query = _leaveCreditRepository.TableNoTracking.Where(x => !x.Deleted && x.Employee.SiteId == SiteId && !x.Employee.Deleted);
 
             if (employeeIds != null && employeeIds.Any())
                 query = query.Where(x => employeeIds.Contains(x.EmployeeId));

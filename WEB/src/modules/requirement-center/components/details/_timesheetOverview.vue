@@ -20,7 +20,7 @@
           v-if="!loading && allTimesheetDescriptions.length === 0"
           class="text-center text-grey q-pa-md"
         >
-          No Timesheet Descriptions Available
+          No Timesheet Details Available
         </div>
 
         <div v-if="loading" class="text-center q-pa-md">

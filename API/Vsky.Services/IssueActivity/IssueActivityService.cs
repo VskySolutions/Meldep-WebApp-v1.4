@@ -38,9 +38,9 @@ namespace Vsky.Services.IssueActivitys
         }
         #endregion
       
-        public List<IssueActivity> GetByIssueId(string id)
+        public List<IssueActivity> GetByIssueId(string siteId, string id)
         {
-            var query = _issueActivityRepository.TableNoTracking.Where(x => !x.Deleted);
+            var query = _issueActivityRepository.TableNoTracking.Where(x => !x.Deleted && x.Issue.SiteId == siteId && x.IssueId == id);
 
             var projectedData = query.Select(x => new IssueActivity
             {

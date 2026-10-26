@@ -936,7 +936,7 @@
                      :limits="!requirementDrawerOpen ? [0, 0] : [10, 90]"
                     >
                       <template #before>
-                        <div v-if="requirementDrawerOpen && selectedModule">
+                        <div v-if="requirementDrawerOpen && selectedModule && selectedProject">
                           <q-toolbar
                             class="bg-green-2 column q-pa-sm"
                             style="align-items: start !important"
@@ -1324,7 +1324,7 @@
                       <template #after>
                         <q-splitter v-model="ActivitySplit" class="">
                           <template #before>
-                            <div v-if="selectedRequirement">
+                            <div v-if="selectedRequirement && selectedProject">
                               <q-toolbar class="bg-green-2 column q-pa-sm" style="align-items:start !important">
                                 <!-- First line: title + actions -->
                                 <div class="row items-center justify-between q-gutter-sm full-width q-mb-sm">
@@ -4428,6 +4428,7 @@ const onDeleteTaskActivity = (item) => {
     loading.value = true;
     activitiesService.deleteProjectActivity(item.id).then(resp => {
       notifySuccess({ message: "Activity is deleted successfully." });
+      refreshProjectTaskList();
       LoadTaskActivities(selectedTaskId.value);
       loading.value = false;
     });

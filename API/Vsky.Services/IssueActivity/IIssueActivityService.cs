@@ -15,7 +15,7 @@ namespace Vsky.Services.IssueActivitys
 
         Task<IssueActivity> GetById(string id);
 
-        List<IssueActivity> GetByIssueId(string id);
+        List<IssueActivity> GetByIssueId(string siteId, string id);
 
 
         void InsertIssueActivity(IssueActivity entity);

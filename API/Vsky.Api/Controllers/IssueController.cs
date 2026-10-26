@@ -435,7 +435,9 @@ namespace Vsky.Api.Controllers
         [HttpGet("{id}/issueActivity")]
         public async Task<IActionResult> GetActivityLogById(string id)
         {
-            var entity = _issueActivityService.GetByIssueId(id);
+            var siteId = _globalVariable.SiteId;
+
+            var entity = _issueActivityService.GetByIssueId(siteId, id);
             if (entity == null)
                 return BadRequest(new BadRequestError("No issue activity log found with the specified id."));
 
