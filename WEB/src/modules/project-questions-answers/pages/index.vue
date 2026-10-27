@@ -208,11 +208,8 @@
                   class="common-q-td hoverable-cell"
                   @click="onProjectModuleView(props.row.requirement.projectModuleId)"
                 >
-                  <span
-                    v-if="preProjectModuleName !== props.row.requirement.projectModule.name"
-                    :set="preProjectModuleName = props.row.requirement.projectModule.name"
-                  >
-                    {{ props.row.requirement.projectModule.name }}
+                  <span v-if="isFirstProjectModuleRow(props.row)">
+                    {{ props.row.requirement?.projectModule?.name }}
                     <q-tooltip>View Project Module</q-tooltip>
                   </span>
                 </q-td>
@@ -221,7 +218,7 @@
                   class="common-q-td hoverable-cell"
                 >
                   <div class="row no-wrap items-center justify-between">
-                    <template v-if="isFirstProjectRow(props.row)">
+                    <template v-if="isFirstRequirementRow(props.row)">
                       <span>
                         <span
                           class="cursor-pointer"
@@ -538,6 +535,23 @@ function isFirstProjectRow(row) {
   const previousProjectId = rows.value[currentIndex - 1]?.project?.id;
 
   return currentProjectId !== previousProjectId;
+}
+
+function isFirstProjectModuleRow(row) {
+  const currentIndex = rows.value.findIndex(
+    item => item.id === row.id
+  );
+
+  if (currentIndex === -1) return false;
+  if (currentIndex === 0) return true;
+
+  const previousRow = rows.value[currentIndex - 1];
+
+  return (
+    row.project?.id !== previousRow.project?.id ||
+    row.requirement?.projectModuleId !==
+      previousRow.requirement?.projectModuleId
+  );
 }
 
 function isFirstRequirementRow(row) {
