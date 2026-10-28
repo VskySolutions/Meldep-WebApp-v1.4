@@ -21,7 +21,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
         #region GetById
         public async Task<ProjectWeeklyPlanDatesLines> GetById(string id)
         {
-            var query = await _projectWeeklyPlanDatesLinesRepository.TableNoTracking.FirstOrDefaultAsync(x => !x.Deleted && x.Id == id);
+            var query = await _projectWeeklyPlanDatesLinesRepository.Table.FirstOrDefaultAsync(x => !x.Deleted && x.Id == id);
             return query;
         }
         public async Task<ProjectWeeklyPlanDatesLines> GetInDetailById(string id)
@@ -31,7 +31,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
             {
                 Id = n.Id,
                 ProjectWeeklyPlanDatesId = n.ProjectWeeklyPlanDatesId,
-                ExpectedDescription = n.ExpectedDescription,
+                ExpectedDescription = n.ExpectedDescription ?? "",
                 ExpectedHours = n.ExpectedHours,
                 ExpectedDescriptionCreatedOnUtc = n.ExpectedDescriptionCreatedOnUtc,
                 ExpectedDescriptionCreatedById = n.ExpectedDescriptionCreatedById,
@@ -59,7 +59,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
                         LastName = n.ExpectedDescriptionUpdatedBy.Person.LastName
                     }
                 },
-                ActualDescription = n.ActualDescription,
+                ActualDescription = n.ActualDescription ?? "",
                 ActualDescriptionCreatedOnUtc = n.ActualDescriptionCreatedOnUtc,
                 ActualDescriptionCreatedById = n.ActualDescriptionUpdatedById,
                 ActualDescriptionCreatedBy = new ApplicationUser

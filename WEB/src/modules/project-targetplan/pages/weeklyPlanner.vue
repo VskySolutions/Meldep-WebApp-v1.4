@@ -384,7 +384,7 @@
 
                       <td
                         colspan="2"
-                        class="linked-task-title text-left hoverable-cell"
+                        class="linked-task-title text-center hoverable-cell"
                         @click.stop="onProjectTaskView(line.taskId)"
                       >Project Task -
                         {{ line.projectTask?.projectTaskNumber }} -
@@ -832,66 +832,6 @@
                       <div class="flex justify-center items-center">
                         No Plan Available
                         <q-icon v-if="planDate.isApproved" name="o_lock" size="xs" />
-                      </div>
-                    </td>
-                  </tr>
-                  <tr class="" v-if="planDate.projectWeeklyPlanDatesReqTaskIssueMapping?.length > 0">
-                    <td class="text-center">External Linked</td>
-                    <td colspan="3">
-                      <div class="row">
-                        <div v-if="filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Requirement')?.length > 0" class="col-4 flex">
-                          <h3 class="q-mr-sm">Requirements</h3>
-                          <q-badge
-                            v-for="(item) in filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Requirement')"
-                            :key="item.id"
-                            class="q-mr-sm cursor-pointer"
-                          >
-                            <div @click="onRequirementView(item.requirementId)">
-                              {{ item.requirement.requirementNumber }}
-                              <q-icon name="o_info">
-                                <q-tooltip>
-                                  <span
-                                    v-html="
-                                      item.requirement.shortDescription
-                                        ? `${item.requirement.title} - ${item.requirement.shortDescription}`
-                                        : item.requirement.title
-                                    "
-                                  >
-                                  </span>
-                                </q-tooltip>
-                              </q-icon>
-                            </div>
-                            <q-icon v-if="isFullAccess" name="o_close" class="q-ml-xs" color="red" @click="removeMappingFromWeek(item.id, 'Requirement')"><q-tooltip>Remove Requirement?</q-tooltip></q-icon>
-                          </q-badge>
-                        </div>
-                        <div v-if="filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Tasks')?.length > 0" class="col-4 flex">
-                          <h3 class="q-mr-sm">Tasks</h3>
-                          <q-badge
-                            v-for="(item) in filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Tasks')"
-                            :key="item.id"
-                            class="q-mr-sm cursor-pointer"
-                          >
-                            <div @click="onProjectTaskView(item.taskId)">
-                              {{ item.task.projectTaskNumber }}
-                              <q-icon name="o_info"><q-tooltip>{{ item.task.name }}</q-tooltip></q-icon>
-                            </div>
-                            <q-icon v-if="isFullAccess" name="o_close" class="q-ml-xs" color="red" @click="removeMappingFromWeek(item.id, 'Task')"><q-tooltip>Remove Task?</q-tooltip></q-icon>
-                          </q-badge>
-                        </div>
-                        <div v-if="filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Issue')?.length > 0" class="col-4 flex">
-                          <h3 class="q-mr-sm">Issues</h3>
-                          <q-badge
-                            v-for="(item) in filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Issue')"
-                            :key="item.id"
-                            class="q-mr-sm cursor-pointer"
-                          >
-                            <div @click="onIssueView(item.issueId)">
-                              {{ item.issue.issueNumber }}
-                              <q-icon name="o_info"><q-tooltip>{{ item.issue.name }}</q-tooltip></q-icon>
-                            </div>
-                            <q-icon v-if="isFullAccess" name="o_close" class="q-ml-xs" color="red" @click="removeMappingFromWeek(item.id, 'Issue')"><q-tooltip>Remove Issue?</q-tooltip></q-icon>
-                          </q-badge>
-                        </div>
                       </div>
                     </td>
                   </tr>

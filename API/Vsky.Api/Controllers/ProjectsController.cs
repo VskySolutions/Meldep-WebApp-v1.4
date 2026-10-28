@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
 using AutoMapper;
@@ -70,7 +72,6 @@ namespace Vsky.Api.Controllers
         private readonly IProjectWeeklyDatesService _projectWeeklyDatesService;
         private readonly IProjectWeeklyDatesLinesService _projectWeeklyDatesLinesService;
         private readonly IProjectWeeklyPlanDatesLinesAssignedToService _projectWeeklyPlanDatesLinesAssignedToService;
-        private readonly IProjectWeeklyPlanDatesReqTaskIssueMappingService _projectWeeklyPlanDatesReqTaskIssueMappingService;
         private readonly ISitesModifiedLogsService _sitesModifiedLogsService;
         private readonly IIssueService _issueService;
         private readonly IProjectTaskService _projectTaskService;
@@ -119,7 +120,6 @@ namespace Vsky.Api.Controllers
             IProjectWeeklyDatesService projectWeeklyDatesService,
             IProjectWeeklyDatesLinesService projectWeeklyDatesLinesService,
             IProjectWeeklyPlanDatesLinesAssignedToService projectWeeklyPlanDatesLinesAssignedToService,
-            IProjectWeeklyPlanDatesReqTaskIssueMappingService projectWeeklyPlanDatesReqTaskIssueMappingService,
             ISitesModifiedLogsService sitesModifiedLogsService,
             IIssueService issueService,
             IProjectTaskService projectTaskService,
@@ -167,7 +167,6 @@ namespace Vsky.Api.Controllers
             _projectWeeklyDatesService = projectWeeklyDatesService;
             _projectWeeklyDatesLinesService = projectWeeklyDatesLinesService;
             _projectWeeklyPlanDatesLinesAssignedToService = projectWeeklyPlanDatesLinesAssignedToService;
-            _projectWeeklyPlanDatesReqTaskIssueMappingService = projectWeeklyPlanDatesReqTaskIssueMappingService;
             _sitesModifiedLogsService = sitesModifiedLogsService;
             _issueService = issueService;
             _projectTaskService = projectTaskService;
@@ -2239,7 +2238,11 @@ namespace Vsky.Api.Controllers
         {
             try
             {
-                var Data = await _projectWeeklyDatesService.GetProjectWeeklyPlanDatesByProjectId(projectId, planTypeId, skipIndex, takeCount, weekEndDate, projectTaskId);
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+
+                var Data = await _projectWeeklyDatesService.GetProjectWeeklyPlanDatesByProjectId(projectId, planTypeId, skipIndex, takeCount, weekEndDate, projectTaskId,LoggedUserId, employeeId);
                 if (Data != null)
                     return Ok(Data);
                 else
@@ -2519,6 +2522,203 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region Add Update Project Plan
+
+        [HttpPost("add-update-project-task-weekly-plan")]
+        public async Task<IActionResult> AddUpdateProjectTaskWeeklyPlan(SaveProjectWeeklyPlan model)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+
+                var SiteData = await _siteService.GetById(SiteId);
+                var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                // Get Project Weekly Plan
+                var WeeklyProjectData = await _projectWeeklyService.GetByProjectId(SiteId, model.ProjectId);
+
+                // Add or Update Project Weekly Plan
+                if (WeeklyProjectData != null)
+                {
+                    WeeklyProjectData.UpdatedById = LoggedUserId;
+                    WeeklyProjectData.UpdatedOnUtc = GetDateTime;
+
+                    _projectWeeklyService.UpdateProjectWeeklyPlan(WeeklyProjectData);
+                }
+                else
+                {
+                    WeeklyProjectData = new ProjectWeeklyPlan
+                    {
+                        SiteId = SiteId,
+                        ProjectId = model.ProjectId,
+                        CreatedById = LoggedUserId,
+                        CreatedOnUtc = GetDateTime,
+                        UpdatedById = LoggedUserId,
+                        UpdatedOnUtc = GetDateTime
+                    };
+
+                    _projectWeeklyService.InsertProjectWeeklyPlan(WeeklyProjectData);
+                }
+                var WeeklyDate = new ProjectWeeklyPlanDates();
+                // Process Multiple Weekly Plan Rows
+                if (model.weekDateLines != null && model.weekDateLines.Any())
+                {
+                    foreach (var line in model.weekDateLines)
+                    {
+                        if (!line.Deleted && line.WeekDate != null)
+                        {
+                            WeeklyDate = WeeklyProjectData.ProjectWeeklyPlanDates.FirstOrDefault(m => m.WeekDate == Convert.ToDateTime(line.WeekDate));
+                            if (WeeklyDate == null)
+                            {
+                                WeeklyDate = new ProjectWeeklyPlanDates();
+                                WeeklyDate.ProjectWeeklyPlanId = WeeklyProjectData.Id;
+                                WeeklyDate.PlanTypeId = model.PlanTypeId;
+                                WeeklyDate.WeekDate = Convert.ToDateTime(line.WeekDate);
+                                WeeklyDate.CreatedById = LoggedUserId;
+                                WeeklyDate.CreatedOnUtc = GetDateTime;
+                                WeeklyDate.UpdatedById = LoggedUserId;
+                                WeeklyDate.UpdatedOnUtc = GetDateTime;
+
+                                _projectWeeklyDatesService.InsertProjectWeeklyPlanDates(WeeklyDate);
+                            }
+                            else
+                            {
+                                WeeklyDate.UpdatedById = LoggedUserId;
+                                WeeklyDate.UpdatedOnUtc = GetDateTime;
+
+                                _projectWeeklyDatesService.UpdateProjectWeeklyPlanDates(WeeklyDate);
+                            }
+                        }
+
+                        var existingWeeklyDateLine = await _projectWeeklyDatesLinesService.GetById(line.Id);
+
+                        if (existingWeeklyDateLine != null && !line.Deleted)
+                        {
+                            existingWeeklyDateLine.ProjectWeeklyPlanDatesId = WeeklyDate.Id;
+
+                            
+                             if (!string.IsNullOrEmpty(line.Description))
+                             {
+                                 existingWeeklyDateLine.ExpectedDescription =
+                                        await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
+                                            line.Description,
+                                            SiteData.Name,
+                                            "project-weeklymonthly",
+                                            existingWeeklyDateLine.Id,
+                                            existingWeeklyDateLine.ExpectedDescription
+                                        );
+                             }
+
+                             existingWeeklyDateLine.ExpectedHours = line.ExpectedHours;
+                             existingWeeklyDateLine.ExpectedDescriptionUpdatedById = LoggedUserId;
+                             existingWeeklyDateLine.ExpectedDescriptionUpdatedOnUtc = GetDateTime;
+
+                           
+                              if (string.IsNullOrEmpty(existingWeeklyDateLine.ActualDescription))
+                              {
+                                  existingWeeklyDateLine.ActualDescriptionCreatedById = LoggedUserId;
+                                  existingWeeklyDateLine.ActualDescriptionCreatedOnUtc = GetDateTime;
+                              }
+
+                              if (!string.IsNullOrEmpty(line.ActualDescription))
+                              {
+                                  existingWeeklyDateLine.ActualDescription =
+                                        await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
+                                            line.ActualDescription,
+                                            SiteData.Name,
+                                            "project-weeklymonthly",
+                                            existingWeeklyDateLine.Id,
+                                            existingWeeklyDateLine.ActualDescription
+                                        );
+                              }
+
+                              existingWeeklyDateLine.ActualDescriptionUpdatedById = LoggedUserId;
+                              existingWeeklyDateLine.ActualDescriptionUpdatedOnUtc = GetDateTime;
+
+                              _projectWeeklyDatesLinesService.UpdateProjectWeeklyPlanDatesLines(existingWeeklyDateLine);
+
+                        }
+
+                        else if (existingWeeklyDateLine == null && !line.Deleted)
+                        {
+
+                            var LineData = new ProjectWeeklyPlanDatesLines
+                            {
+                                ProjectWeeklyPlanDatesId = WeeklyDate.Id,
+                                TaskId = model.TaskId,
+                                ExpectedHours = line.ExpectedHours,
+                                ActualDescriptionCreatedById = LoggedUserId,
+                                ActualDescriptionCreatedOnUtc = GetDateTime,
+                                ActualDescriptionUpdatedById = LoggedUserId,
+                                ActualDescriptionUpdatedOnUtc = GetDateTime,
+                                ExpectedDescriptionCreatedById = LoggedUserId,
+                                ExpectedDescriptionCreatedOnUtc = GetDateTime,
+                                ExpectedDescriptionUpdatedById = LoggedUserId,
+                                ExpectedDescriptionUpdatedOnUtc = GetDateTime
+                            };
+
+                            if (!string.IsNullOrEmpty(line.Description))
+                            {
+                                LineData.ExpectedDescription =
+                                    await _azureBlobImageServices
+                                        .ProcessHtmlAndManageImagesAsync(
+                                            line.Description,
+                                            SiteData.Name,
+                                            "project-weeklymonthly",
+                                            LineData.Id);
+                            }
+
+                            if (!string.IsNullOrEmpty(line.ActualDescription))
+                            {
+                                LineData.ActualDescription =
+                                    await _azureBlobImageServices
+                                        .ProcessHtmlAndManageImagesAsync(
+                                            line.ActualDescription,
+                                            SiteData.Name,
+                                            "project-weeklymonthly",
+                                            LineData.Id);
+                            }
+
+                            _projectWeeklyDatesLinesService.InsertProjectWeeklyPlanDatesLines(LineData);
+
+                            // Save Assigned Employees
+                            if (line.saveWeeklyLinesAssignTos != null &&
+                                line.saveWeeklyLinesAssignTos.Any())
+                            {
+                                foreach (var item in line.saveWeeklyLinesAssignTos)
+                                {
+                                    var AssignTo =
+                                        new ProjectWeeklyPlanDatesLinesAssignedTo
+                                        {
+                                            ProjectWeeklyPlanDatesLineId = LineData.Id,
+                                            EmployeeId = item.EmployeeId,
+                                            EstimatedHours = item.EstimatedHours,
+                                            CreatedById = LoggedUserId,
+                                            CreatedOnUtc = GetDateTime
+                                        };
+
+                                    _projectWeeklyPlanDatesLinesAssignedToService.InsertProjectWeeklyPlanDatesLinesAssignedTo(AssignTo);
+                                }
+                            }
+                        }
+                        else if (existingWeeklyDateLine != null && line.Deleted)
+                        {
+                            _projectWeeklyDatesLinesService.DeleteProjectWeeklyPlanDatesLines(existingWeeklyDateLine);
+                        }
+                    }
+                }
+
+                return Ok(WeeklyProjectData.Id);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message + ":- " + ex.InnerException);
+            }
+        }
+
+        #endregion
+
         #region Add Project Plan Week
         [HttpPost("add-project-weeklyplan-date")]
         public async Task<IActionResult> AddProjectWeeklyPlanDates(ProjectWeeklyPlanDates model)
@@ -2613,22 +2813,12 @@ namespace Vsky.Api.Controllers
 
                     ProjectWeeklyPlanDateId = newWeekDatemodel.Id;
                 }
-                //int index = 0;
                 if (!string.IsNullOrEmpty(ProjectWeeklyPlanDateId) && model.Ids.Any())
                 {
-                    //var GetAllExistingMappings = await _projectWeeklyPlanDatesReqTaskIssueMappingService.GetAllByProjectWeeklyPlanDatesId(ProjectWeeklyPlanDateId);
                     var existingLines = await _projectWeeklyDatesLinesService.GetAllLinesByProjectWeeklyPlanDatesId(ProjectWeeklyPlanDateId);
-
 
                     foreach (var id in model.Ids)
                     {
-                        //if ((model.Type == "Requirement" && GetAllExistingMappings.Any(m => m.RequirementId == id)) ||
-                        //   (model.Type == "Project Task" && GetAllExistingMappings.Any(m => m.TaskId == id)) ||
-                        //   (model.Type == "Issue" && GetAllExistingMappings.Any(m => m.IssueId == id)))
-                        //{
-                        //    //index++;
-                        //    continue;
-                        //}
                         var existingLine = model.Type == "Project Task" ? existingLines.FirstOrDefault(m => m.TaskId == id) : null;
 
                         if (existingLine != null)
@@ -2693,64 +2883,11 @@ namespace Vsky.Api.Controllers
                             _projectWeeklyDatesLinesService.InsertProjectWeeklyPlanDatesLines(LineData);
                             existingLines.Add(LineData);
                         }
-
-                        //if (model.Type == "Requirement")
-                        //{
-                        //    var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
-                        //    newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
-                        //    newMapping.RequirementId = id;
-                        //    newMapping.CreatedById = LoggedUserId;
-                        //    newMapping.CreatedOnUtc = GetDateTime;
-                        //    _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
-                        //}
-
-                        //if (model.Type == "Project Task")
-                        //{
-                        //    var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
-                        //    newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
-                        //    newMapping.TaskId = id;
-                        //    newMapping.CreatedById = LoggedUserId;
-                        //    newMapping.CreatedOnUtc = GetDateTime;
-                        //    _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
-                        //}
-
-                        //if (model.Type == "Issue")
-                        //{
-                        //    var newMapping = new ProjectWeeklyPlanDatesReqTaskIssueMapping();
-                        //    newMapping.ProjectWeeklyPlanDatesId = ProjectWeeklyPlanDateId;
-                        //    newMapping.IssueId = id;
-                        //    newMapping.CreatedById = LoggedUserId;
-                        //    newMapping.CreatedOnUtc = GetDateTime;
-                        //    _projectWeeklyPlanDatesReqTaskIssueMappingService.InsertProjectWeeklyPlanDatesReqTaskIssue(newMapping);
-                        //}
-                        //index++;
                     }
                     return Ok();
                 }
                 else
                     return BadRequest("Something Went Wrong....");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
-            }
-        }
-
-        [HttpPost("delete-RequirementTaskIssue-To-WeeklyPlan-Date")]
-        public async Task<IActionResult> DeleteRequirementTaskIssueToWeeklyPlanDateAsync(string MappingId)
-        {
-            try
-            {
-                var LoggedUserId = User.GetLoggedInUserId<string>();
-                var SiteId = _globalVariable.SiteId;
-                var SiteData = await _siteService.GetById(SiteId);
-                var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
-
-                var Data = await _projectWeeklyPlanDatesReqTaskIssueMappingService.GetById(MappingId);
-                Data.Deleted = true;
-                _projectWeeklyPlanDatesReqTaskIssueMappingService.UpdateProjectWeeklyPlanDatesReqTaskIssue(Data);
-
-                return Ok(true);
             }
             catch (Exception ex)
             {
@@ -2771,11 +2908,70 @@ namespace Vsky.Api.Controllers
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
-                // Update Weekly Plan
-                var weeklyDate = await _projectWeeklyDatesService.GetById(model.ProjectWeeklyPlanDatesId);
-                weeklyDate.UpdatedById = LoggedUserId;
-                weeklyDate.UpdatedOnUtc = GetDateTime;
-                _projectWeeklyDatesService.UpdateProjectWeeklyPlanDates(weeklyDate);
+                ProjectWeeklyPlanDates weeklyDate = null;
+                if (!string.IsNullOrWhiteSpace(model.ProjectId) && model.WeekDate != null)
+                {
+
+                    var WeeklyProjectData = await _projectWeeklyService.GetByProjectId(SiteId, model.ProjectId);
+
+                    // Add or Update Project Weekly Plan
+                    if (WeeklyProjectData != null)
+                    {
+                        WeeklyProjectData.UpdatedById = LoggedUserId;
+                        WeeklyProjectData.UpdatedOnUtc = GetDateTime;
+
+                        _projectWeeklyService.UpdateProjectWeeklyPlan(WeeklyProjectData);
+                    }
+                    else
+                    {
+                        WeeklyProjectData = new ProjectWeeklyPlan
+                        {
+                            SiteId = SiteId,
+                            ProjectId = model.ProjectId,
+                            CreatedById = LoggedUserId,
+                            CreatedOnUtc = GetDateTime,
+                            UpdatedById = LoggedUserId,
+                            UpdatedOnUtc = GetDateTime
+                        };
+
+                        _projectWeeklyService.InsertProjectWeeklyPlan(WeeklyProjectData);
+                    }
+                    //  var WeeklyDate = new ProjectWeeklyPlanDates();
+                    weeklyDate = WeeklyProjectData.ProjectWeeklyPlanDates?.FirstOrDefault(m => m.WeekDate == Convert.ToDateTime(model.WeekDate));
+                    if (weeklyDate == null)
+                    {
+                        weeklyDate = new ProjectWeeklyPlanDates
+                        {
+                            ProjectWeeklyPlanId = WeeklyProjectData.Id,
+                            PlanTypeId = model.PlanTypeId,
+                            WeekDate = Convert.ToDateTime(model.WeekDate),
+                            CreatedById = LoggedUserId,
+                            CreatedOnUtc = GetDateTime,
+                            UpdatedById = LoggedUserId,
+                            UpdatedOnUtc = GetDateTime
+                        };
+
+                        _projectWeeklyDatesService.InsertProjectWeeklyPlanDates(weeklyDate);
+                    }
+                    else
+                    {
+                        weeklyDate.UpdatedById = LoggedUserId;
+                        weeklyDate.UpdatedOnUtc = GetDateTime;
+
+                        _projectWeeklyDatesService.UpdateProjectWeeklyPlanDates(weeklyDate);
+                    }
+                }
+                else
+                {
+                    weeklyDate = await _projectWeeklyDatesService.GetById(model.ProjectWeeklyPlanDatesId);
+                    if (weeklyDate != null)
+                    {
+                        weeklyDate.UpdatedById = LoggedUserId;
+                        weeklyDate.UpdatedOnUtc = GetDateTime;
+                        _projectWeeklyDatesService.UpdateProjectWeeklyPlanDates(weeklyDate);
+                    }
+
+                }
 
                 var line = await _projectWeeklyDatesLinesService.GetById(model.Id);
                 bool isNew = line == null;
@@ -2784,6 +2980,7 @@ namespace Vsky.Api.Controllers
                 {
                     Id = model.Id,
                     ProjectWeeklyPlanDatesId = model.ProjectWeeklyPlanDatesId,
+                    TaskId = model.TaskId,
                     ExpectedDescriptionCreatedById = LoggedUserId,
                     ExpectedDescriptionCreatedOnUtc = GetDateTime
                 };

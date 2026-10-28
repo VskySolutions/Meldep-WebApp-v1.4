@@ -23,7 +23,6 @@ namespace Vsky.Services.ProjectActivities
     {
         #region Define Services
         private readonly IRepository<ProjectActivity> _projectActivityRepository;
-        private readonly IRepository<ProjectWeeklyPlanDatesReqTaskIssueMapping> _projectWeeklyPlanDatesReqTaskIssueMapping;
         private readonly IRepository<Notes> _notesRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICommonService _commonService;
@@ -33,14 +32,12 @@ namespace Vsky.Services.ProjectActivities
         public ProjectActivityService
             (
             IRepository<ProjectActivity> projectActivityRepository,
-            IRepository<ProjectWeeklyPlanDatesReqTaskIssueMapping> projectWeeklyPlanDatesReqTaskIssueMapping,
             IRepository<Notes> notesRepository,
             UserManager<ApplicationUser> userManager,
             ICommonService commonService
             )
         {
             _projectActivityRepository = projectActivityRepository;
-            _projectWeeklyPlanDatesReqTaskIssueMapping = projectWeeklyPlanDatesReqTaskIssueMapping;
             _notesRepository = notesRepository;
             _userManager = userManager;
             _commonService = commonService;
@@ -197,15 +194,6 @@ namespace Vsky.Services.ProjectActivities
                         Id = x.Task.Status.Id,
                         DropDownValue = x.Task.Status.DropDownValue
                     },
-                    ProjectWeeklyPlanDatesReqTaskIssueMappingList = x.Task.ProjectWeeklyPlanDatesReqTaskIssueMappingList.Where(p => !p.Deleted && p.ProjectWeeklyPlanDates.PlanType.DropDownValue.ToLower() == "weekly").Select(p => new ProjectWeeklyPlanDatesReqTaskIssueMapping
-                    {
-                        Id = p.Id,
-                        ProjectWeeklyPlanDates = new ProjectWeeklyPlanDates
-                        {
-                            Id = p.ProjectWeeklyPlanDates.Id,
-                            WeekDate = p.ProjectWeeklyPlanDates.WeekDate
-                        }
-                    }).ToList()
                 },
                 Project = new Project
                 {
@@ -438,15 +426,6 @@ namespace Vsky.Services.ProjectActivities
                         Id = x.Task.Status.Id,
                         DropDownValue = x.Task.Status.DropDownValue
                     },
-                    //ProjectWeeklyPlanDatesReqTaskIssueMappingList = x.Task.ProjectWeeklyPlanDatesReqTaskIssueMappingList.Where(p => !p.Deleted && p.ProjectWeeklyPlanDates.PlanType.DropDownValue.ToLower() == "weekly").Select(p => new ProjectWeeklyPlanDatesReqTaskIssueMapping
-                    //{
-                    //    Id = p.Id,
-                    //    ProjectWeeklyPlanDates = new ProjectWeeklyPlanDates
-                    //    {
-                    //        Id = p.ProjectWeeklyPlanDates.Id,
-                    //        WeekDate = p.ProjectWeeklyPlanDates.WeekDate
-                    //    }
-                    //}).ToList(),
                     ProjectWeeklyPlanDatesLines = x.Task.ProjectWeeklyPlanDatesLines
                         .Where(line =>
                             !line.Deleted &&
@@ -465,19 +444,6 @@ namespace Vsky.Services.ProjectActivities
                             }
                         })
                         .ToList(),
-                    //Requirement = new Requirement
-                    //{
-                    //    Id = x.Task.Requirement.Id,
-                    //    ProjectWeeklyPlanDatesReqTaskIssueMappingList = x.Task.Requirement.ProjectWeeklyPlanDatesReqTaskIssueMappingList.Where(p => !p.Deleted && p.ProjectWeeklyPlanDates.PlanType.DropDownValue.ToLower() == "weekly").Select(p => new ProjectWeeklyPlanDatesReqTaskIssueMapping
-                    //    {
-                    //        Id = p.Id,
-                    //        ProjectWeeklyPlanDates = new ProjectWeeklyPlanDates
-                    //        {
-                    //            Id = p.ProjectWeeklyPlanDates.Id,
-                    //            WeekDate = p.ProjectWeeklyPlanDates.WeekDate
-                    //        }
-                    //    }).ToList(),
-                    //}
                 },
                 Project = new Project
                 {

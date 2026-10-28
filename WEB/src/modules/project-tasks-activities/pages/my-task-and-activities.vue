@@ -1031,20 +1031,6 @@ const getProjectActivities = (props) => {
               activity.project?.currentUserManage ?? false;
           const currentUserNotes =
               activity.project?.currentUserNotes ?? false;
-          // const taskWeeklyPlanMappings =
-          //   activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList || [];
-
-          // const requirementWeeklyPlanMappings =
-          //   activity.task?.requirement
-          //     ?.projectWeeklyPlanDatesReqTaskIssueMappingList || [];
-
-          // const hasCurrentWeek =
-          //   taskWeeklyPlanMappings.some(m =>
-          //     isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)
-          //   ) ||
-          //   requirementWeeklyPlanMappings.some(m =>
-          //     isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)
-          //   );
 
           return {
             ...activity,
@@ -1052,13 +1038,6 @@ const getProjectActivities = (props) => {
             checkboxStatus: ActivityIds.value.includes(activity.id),
             isEditable: currentUserManage,
             isNotes: currentUserNotes,
-            // hasCurrentWeek: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList?.some(m => isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)) || false,
-            // weekDates: activity.task?.projectWeeklyPlanDatesReqTaskIssueMappingList
-            //   ? activity.task.projectWeeklyPlanDatesReqTaskIssueMappingList.map(m => ({
-            //     value: String(m.projectWeeklyPlanDates?.id),
-            //     text: toDate(m.projectWeeklyPlanDates?.weekDate) || null
-            //   }))
-            //   : [],
             hasCurrentWeek: activity.task?.projectWeeklyPlanDatesLines?.some(m => isCurrentWeek(m.projectWeeklyPlanDates?.weekDate)) || false,
             weekDates: activity.task?.projectWeeklyPlanDatesLines
               ? activity.task.projectWeeklyPlanDatesLines.map(m => ({

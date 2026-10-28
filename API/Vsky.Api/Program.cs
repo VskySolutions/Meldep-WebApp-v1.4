@@ -488,7 +488,6 @@ namespace Vsky.Api
             builder.Services.AddScoped<ISitesModulesMenusPermissionsService, SitesModulesMenusPermissionsService>();
             builder.Services.AddScoped<IProjectWeeklyService, ProjectWeeklyService>();
             builder.Services.AddScoped<IProjectWeeklyDatesService, ProjectWeeklyDatesService>();
-            builder.Services.AddScoped<IProjectWeeklyPlanDatesReqTaskIssueMappingService, ProjectWeeklyPlanDatesReqTaskIssueMappingService>();
             builder.Services.AddScoped<IProjectWeeklyDatesLinesService, ProjectWeeklyDatesLinesService>();
             builder.Services.AddScoped<IProjectWeeklyPlanDatesLinesAssignedToService, ProjectWeeklyPlanDatesLinesAssignedToService>();
             builder.Services.AddScoped<IProjectUserMappingService, ProjectUserMappingService>();

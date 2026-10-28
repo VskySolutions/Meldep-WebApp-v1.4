@@ -1657,15 +1657,6 @@ namespace Vsky.Data
                 entity.HasOne(e => e.PlanType).WithMany().HasForeignKey(e => e.PlanTypeId);
             });
 
-            builder.Entity<ProjectWeeklyPlanDatesReqTaskIssueMapping>(entity =>
-            {
-                entity.ToTable("Project_WeeklyPlan_Dates_ReqTaskIssueMapping");
-                entity.HasOne(d => d.ProjectWeeklyPlanDates).WithMany(d => d.ProjectWeeklyPlanDatesReqTaskIssueMapping).HasForeignKey(d => d.ProjectWeeklyPlanDatesId);
-                entity.HasOne(e => e.Requirement).WithMany().HasForeignKey(e => e.RequirementId);
-                entity.HasOne(e => e.Task).WithMany(m => m.ProjectWeeklyPlanDatesReqTaskIssueMappingList).HasForeignKey(e => e.TaskId);
-                entity.HasOne(e => e.Issue).WithMany().HasForeignKey(e => e.IssueId);
-            });
-
             builder.Entity<ProjectWeeklyPlanDatesLines>(entity =>
             {
                 entity.ToTable("Project_WeeklyPlan_Dates_Lines");

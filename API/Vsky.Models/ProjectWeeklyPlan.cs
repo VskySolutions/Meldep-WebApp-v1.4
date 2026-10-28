@@ -53,27 +53,9 @@ namespace Vsky.Models
         public virtual ProjectWeeklyPlan ProjectWeeklyPlan { get; set; }
         public virtual DropDown PlanType { get; set; }
         public virtual ICollection<ProjectWeeklyPlanDatesLines> ProjectWeeklyPlanDatesLines { get; set; } = new List<ProjectWeeklyPlanDatesLines>();
-        public virtual ICollection<ProjectWeeklyPlanDatesReqTaskIssueMapping> ProjectWeeklyPlanDatesReqTaskIssueMapping { get; set; } = new List<ProjectWeeklyPlanDatesReqTaskIssueMapping>();
 
         [NotMapped]
         public virtual List<EmployeeEstimateHoursForWeekSummary> EmployeeEstimateHoursForWeekSummaryList { get; set; } = new List<EmployeeEstimateHoursForWeekSummary>();
-    }
-
-    public class ProjectWeeklyPlanDatesReqTaskIssueMapping : BaseEntity
-    {
-        public string ProjectWeeklyPlanDatesId { get; set; }
-        public string RequirementId { get; set; }
-        public string TaskId { get; set; }
-        public string IssueId { get; set; }
-
-        public string CreatedById { get; set; }
-        public DateTime CreatedOnUtc { get; set; }
-        public bool Deleted { get; set; }
-
-        public virtual ProjectWeeklyPlanDates ProjectWeeklyPlanDates { get; set; }
-        public virtual Requirement Requirement { get; set; }
-        public virtual ProjectTask Task { get; set; }
-        public virtual Issue Issue { get; set; }
     }
 
     public class ProjectWeeklyPlanDatesLines : BaseEntity
@@ -104,6 +86,10 @@ namespace Vsky.Models
         public bool IsEditActualDescription { get; set; }
         [NotMapped]
         public DateTime? WeekDate { get; set; }
+        [NotMapped]
+        public string ProjectId { get; set; }
+        [NotMapped]
+        public string PlanTypeId { get; set; }
 
         public string? DeletedById { get; set; }
         public DateTime? DeletedOnUtc { get; set; }
@@ -144,13 +130,19 @@ namespace Vsky.Models
         public string ProjectId { get; set; }
         public string PlanTypeId { get; set; }
         public string WeekDate { get; set; }
+        public string TaskId { get; set; }
 
         public List<SaveWeeklyLines> weekDateLines { get; set; } = new List<SaveWeeklyLines>();
     }
     public class SaveWeeklyLines
     {
         public string Id { get; set; }
+        public string WeekDate { get; set; }
         public string Description { get; set; }
+        public string ActualDescription { get; set; }
+        public bool IsEditExpectedDescription { get; set; }
+        public bool IsEditActualDescription { get; set; }
+        public bool Deleted { get; set; }
 
         [JsonConverter(typeof(HoursConverter))]
         public decimal ExpectedHours { get; set; }
@@ -162,6 +154,7 @@ namespace Vsky.Models
         public string Id { get; set; }
         public string ProjectWeeklyPlanDatesLineId { get; set; }
         public string EmployeeId { get; set; }
+        public bool Deleted { get; set; }
 
         [JsonConverter(typeof(HoursConverter))]
         public decimal EstimatedHours { get; set; }

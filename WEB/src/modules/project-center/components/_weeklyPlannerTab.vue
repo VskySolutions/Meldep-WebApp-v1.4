@@ -110,55 +110,6 @@
               </div>
             </td>
           </tr>
-          <tr v-if="planDate.projectWeeklyPlanDatesReqTaskIssueMapping?.length > 0">
-            <td class="text-center">External Linked</td>
-            <td colspan="3">
-              <div class="row">
-                <div v-if="filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Requirement')?.length > 0" class="col-4 flex">
-                  <h3 class="q-mr-sm">Requirements</h3>
-                  <q-badge
-                    v-for="(item) in filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Requirement')"
-                    :key="item.id"
-                    class="q-mr-sm cursor-pointer"
-                  >
-                    <div @click="onRequirementView(item.requirementId)">
-                      {{ item.requirement.requirementNumber }}
-                      <q-icon name="o_info"><q-tooltip>{{ item.requirement.title }}</q-tooltip></q-icon>
-                    </div>
-                    <q-icon v-if="isFullAccess" name="o_close" class="q-ml-xs" color="red" @click="removeMappingFromWeek(item.id, 'Requirement')"><q-tooltip>Remove Requirement?</q-tooltip></q-icon>
-                  </q-badge>
-                </div>
-                <div v-if="filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Tasks')?.length > 0" class="col-4 flex">
-                  <h3 class="q-mr-sm">Tasks</h3>
-                  <q-badge
-                    v-for="(item) in filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Tasks')"
-                    :key="item.id"
-                    class="q-mr-sm cursor-pointer"
-                  >
-                    <div @click="onTaskView(item.taskId)">
-                      {{ item.task.projectTaskNumber }}
-                      <q-icon name="o_info"><q-tooltip>{{ item.task.name }}</q-tooltip></q-icon>
-                    </div>
-                    <q-icon v-if="isFullAccess" name="o_close" class="q-ml-xs" color="red" @click="removeMappingFromWeek(item.id, 'Task')"><q-tooltip>Remove Task?</q-tooltip></q-icon>
-                  </q-badge>
-                </div>
-                <div v-if="filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Issue')?.length > 0" class="col-4 flex">
-                  <h3 class="q-mr-sm">Issues</h3>
-                  <q-badge
-                    v-for="(item) in filterRequestMapping(planDate.projectWeeklyPlanDatesReqTaskIssueMapping, 'Issue')"
-                    :key="item.id"
-                    class="q-mr-sm cursor-pointer"
-                  >
-                    <div @click="onIssueView(item.issueId)">
-                      {{ item.issue.issueNumber }}
-                      <q-icon name="o_info"><q-tooltip>{{ item.issue.name }}</q-tooltip></q-icon>
-                    </div>
-                    <q-icon v-if="isFullAccess" name="o_close" class="q-ml-xs" color="red" @click="removeMappingFromWeek(item.id, 'Issue')"><q-tooltip>Remove Issue?</q-tooltip></q-icon>
-                  </q-badge>
-                </div>
-              </div>
-            </td>
-          </tr>
           <tr style="background-color: rgb(231 231 231);">
             <td colspan="4" />
           </tr>

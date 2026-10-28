@@ -84,7 +84,7 @@ namespace Vsky.Api.Models
         public virtual ICollection<ProjectTaskFilesModel> ProjectTaskFilesList { get; set; } = new List<ProjectTaskFilesModel>();
         public virtual ICollection<ProjectTask_Tags> ProjectTask_Tags { get; set; } = new List<ProjectTask_Tags>();
         public virtual ICollection<ProjectTaskRelatedMapping> ProjectTaskRelatedMappings { get; set; } = new List<ProjectTaskRelatedMapping>();
-        public virtual ICollection<ProjectWeeklyPlanDatesReqTaskIssueMapping> ProjectWeeklyPlanDatesReqTaskIssueMappingList { get; set; } = new List<ProjectWeeklyPlanDatesReqTaskIssueMapping>();
+        
     }
 
     public record ProjectTaskSearchModel : BaseSearchModel

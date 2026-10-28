@@ -34,18 +34,14 @@ namespace Vsky.Services.ProjectWeeklyPlan
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<List<Models.ProjectWeeklyPlanDates>> GetProjectWeeklyPlanDatesByProjectId(string projectId, string planTypeId, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null, string projectTaskId = null)
+        public async Task<List<Models.ProjectWeeklyPlanDates>> GetProjectWeeklyPlanDatesByProjectId(string projectId, string planTypeId, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null, string projectTaskId = null, string LoggedUserId = null, string employeeId = null)
         {
             var query = _projectWeeklyPlanDatesRepository.TableNoTracking
-            .Where(x => !x.Deleted && x.ProjectWeeklyPlan != null && x.ProjectWeeklyPlan.ProjectId == projectId && x.PlanTypeId == planTypeId && (weekEndDate == null || x.WeekDate == weekEndDate.Value) &&
-                (
-                    string.IsNullOrWhiteSpace(projectTaskId) ||
-                    projectTaskId == "undefined" ||
-                    x.ProjectWeeklyPlanDatesLines.Any(n =>
-                        !n.Deleted &&
-                        n.TaskId == projectTaskId)
-                )
-            )
+            .Where(x => !x.Deleted && x.ProjectWeeklyPlan != null && x.ProjectWeeklyPlan.ProjectId == projectId && x.PlanTypeId == planTypeId && (weekEndDate == null || x.WeekDate == weekEndDate.Value)
+             && (string.IsNullOrWhiteSpace(projectTaskId)
+            || projectTaskId == "undefined"
+            || x.ProjectWeeklyPlanDatesLines.Any(n =>
+                !n.Deleted && n.TaskId == projectTaskId)))
             .OrderByDescending(m => m.WeekDate)
             .Skip(skipIndex * takeCount)
             .Take(takeCount)
@@ -84,6 +80,27 @@ namespace Vsky.Services.ProjectWeeklyPlan
                     }
                 },
                 CompletedOnUtc = m.CompletedOnUtc,
+                ProjectWeeklyPlan = new Models.ProjectWeeklyPlan
+                {
+                    Project = new Models.Project
+                    {
+                        PlanApproverId = m.ProjectWeeklyPlan.Project.PlanApproverId,
+                        CurrentUserManage =
+                        m.ProjectWeeklyPlan.Project.CreatedById == LoggedUserId ||
+                        m.ProjectWeeklyPlan.CreatedById == LoggedUserId ||
+                        m.ProjectWeeklyPlan.Project.ProjectEmployeeMappings
+                            .Where(mapping =>
+                                !mapping.Deleted &&
+                                mapping.EmployeeId == employeeId)
+                            .Any(mapping => mapping.ProjectEmployeeRoleMappings
+                                .Where(role => !role.Deleted)
+                                .Any(role => role.SitesProjectRoles
+                                    .SitesProjectRolesPermissions
+                                    .Any(permission =>
+                                        !permission.Deleted &&
+                                        permission.FullAccess)))
+                    }
+                },
                 ProjectWeeklyPlanDatesLines = m.ProjectWeeklyPlanDatesLines.Where(n => !n.Deleted && (weekEndDate == null || n.ProjectWeeklyPlanDates.WeekDate == weekEndDate.Value)
                 && (string.IsNullOrWhiteSpace(projectTaskId)
                 || projectTaskId == "undefined"
@@ -94,7 +111,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
                     Id = n.Id,
                     ProjectWeeklyPlanDatesId = n.ProjectWeeklyPlanDatesId,
                     TaskId = n.TaskId,
-                    ExpectedDescription = n.ExpectedDescription,
+                    ExpectedDescription = n.ExpectedDescription ?? "",
                     ExpectedHours = n.ExpectedHours,
                     ExpectedDescriptionCreatedById = n.ExpectedDescriptionCreatedById,
                     ExpectedDescriptionCreatedBy = n.ExpectedDescriptionCreatedBy == null ? null : new ApplicationUser
@@ -128,7 +145,7 @@ namespace Vsky.Services.ProjectWeeklyPlan
                         }
                     },
                     ExpectedDescriptionUpdatedOnUtc = n.ExpectedDescriptionUpdatedOnUtc,
-                    ActualDescription = n.ActualDescription,
+                    ActualDescription = n.ActualDescription ?? "",
                     ActualDescriptionCreatedById = n.ActualDescriptionCreatedById,
                     ActualDescriptionCreatedBy = n.ActualDescriptionCreatedBy == null ? null : new ApplicationUser
                     {
@@ -182,34 +199,6 @@ namespace Vsky.Services.ProjectWeeklyPlan
                     }).ToList()
                 }
             ).ToList(),
-                ProjectWeeklyPlanDatesReqTaskIssueMapping = m.ProjectWeeklyPlanDatesReqTaskIssueMapping.Where(n => !n.Deleted)
-                .Select(n => new ProjectWeeklyPlanDatesReqTaskIssueMapping
-                {
-                    Id = n.Id,
-                    ProjectWeeklyPlanDatesId = n.ProjectWeeklyPlanDatesId,
-                    RequirementId = n.RequirementId,
-                    Requirement = n.Requirement == null ? null : new Requirement
-                    {
-                        Id = n.Requirement.Id,
-                        RequirementNumber = n.Requirement.RequirementNumber,
-                        Title = n.Requirement.Title,
-                        ShortDescription = n.Requirement.ShortDescription
-                    },
-                    TaskId = n.TaskId,
-                    Task = n.Task == null ? null : new ProjectTask
-                    {
-                        Id = n.Task.Id,
-                        ProjectTaskNumber = n.Task.ProjectTaskNumber,
-                        Name = n.Task.Name,
-                    },
-                    IssueId = n.IssueId,
-                    Issue = n.Issue == null ? null : new Issue
-                    {
-                        Id = n.Issue.Id,
-                        IssueNumber = n.Issue.IssueNumber,
-                        Name = n.Issue.Name,
-                    }
-                }).ToList(),
                 EmployeeEstimateHoursForWeekSummaryList = m.ProjectWeeklyPlanDatesLines.Where(dl => !dl.Deleted)
                 .SelectMany(n => n.ProjectWeeklyPlanDatesLinesAssignedTo.Where(a => !a.Deleted))
                 .GroupBy(o => o.EmployeeId)

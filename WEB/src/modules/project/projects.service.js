@@ -207,6 +207,9 @@ export default {
   addProjectToWeeklyPlan (model) {
     return http.post("/projects/add-project-to-weekly-plan", model).then(response => response.data);
   },
+  addUpdateProjectTaskWeeklyPlan (model) {
+    return http.post("/projects/add-update-project-task-weekly-plan", model).then(response => response.data);
+  },
   getProjectWeeklyPlanTypeId (type, value) {
     return http.post("/projects/get-project-weekly-type-id?type=" + type + "&value=" + value).then(response => response.data);
   },
