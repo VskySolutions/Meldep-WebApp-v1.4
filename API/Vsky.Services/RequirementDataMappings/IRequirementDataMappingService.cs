@@ -56,6 +56,10 @@ namespace Vsky.Services.RequirementDataMappings
         Task<RequirementDataMapping> GetRequirementDataMappingReqById(string requirementId);
         #endregion
 
+        #region GetRequirementDataMappingsDetailsByRequirementId
+        Task<List<RequirementDataMapping>> GetRequirementDataMappingsDetailsByRequirementId(string requirementId);
+        #endregion 
+
         #region GetRequirementDataMappingsByRequirementId
         Task<List<RequirementDataMapping>> GetRequirementDataMappingsByRequirementId(string requirementId);
         #endregion

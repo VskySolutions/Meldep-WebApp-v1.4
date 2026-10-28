@@ -359,6 +359,12 @@ namespace Vsky.Services.RequirementDataMappings
 
         public async Task<List<RequirementDataMapping>> GetRequirementDataMappingsByRequirementId(string requirementId)
         {
+            return await _requirementDataMappingRepository.Table
+                .Where(x => !x.Deleted && x.RequirementId == requirementId)
+                .ToListAsync();
+        }
+        public async Task<List<RequirementDataMapping>> GetRequirementDataMappingsDetailsByRequirementId(string requirementId)
+        {
             var query = _requirementDataMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.RequirementId == requirementId);
 
             query = query.Select(x => new RequirementDataMapping
@@ -441,7 +447,7 @@ namespace Vsky.Services.RequirementDataMappings
 
             //_requirementDataMappingRepository.Update(entity);
 
-            var mapping = _requirementDataMappingRepository.TableNoTracking.FirstOrDefaultAsync(x => x.Id == entity.Id).Result;
+            var mapping = _requirementDataMappingRepository.Table.FirstOrDefaultAsync(x => x.Id == entity.Id).Result;
 
             if (mapping != null)
             {

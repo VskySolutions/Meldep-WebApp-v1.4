@@ -36,7 +36,7 @@
                 name="o_visibility"
                 class="cursor-pointer q-mr-sm"
                 size="xs"
-                @click="onRequirementDataMappingNoteEdit(props.row.id, false, refreshDataMappingByRequirementId)"
+                @click="onRequirementDataMappingNoteEdit(props.row.id, props.row.source, props.row.target, false, refreshDataMappingByRequirementId)"
               >
                 <q-tooltip>
                   View Notes

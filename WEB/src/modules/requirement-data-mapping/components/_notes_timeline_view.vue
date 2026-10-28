@@ -2,7 +2,12 @@
   <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" persistent position="right"  @hide="onDialogHide">
     <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic column no-wrap" style="width: 50vw; max-width: 50vw;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div class="text-h2 text-white">{{ isManageNotes ? 'Manage Notes' : 'View Notes' }}</div>
+        <div class="text-h2 text-white">
+          {{ isManageNotes
+            ? `Manage Notes for Source : ${source} & Target : ${target}`
+            : `Source : ${source} & Target : ${target}`
+          }}
+        </div>
         <q-btn
           v-close-popup
           icon="o_close"
@@ -89,7 +94,7 @@
                 </q-menu>
               </q-btn>
             </div>
-            <div v-else>              
+            <div v-else>
               <div class="fs-14 note-row">
                 <div class="note-wrapper RichTextEditor">
                   <span class="text-black note-text" v-html="notes.note" />
@@ -153,7 +158,9 @@ const { dialogRef, onDialogHide } = useDialogPluginComponent();
 // Props values i.e. come from query string
 const props = defineProps({
   id: { type: String, default: "" },
-  isManageNotes: { type: Boolean, default: "" }
+  isManageNotes: { type: Boolean, default: "" },
+  source: { type: String, default: "" },
+  target: { type: String, default: "" },
 });
 
 // common variables

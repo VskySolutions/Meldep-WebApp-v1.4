@@ -42,11 +42,11 @@ export function onEditRequirementDataMapping (id, isRequirementReadonly, refresh
     .onDismiss(() => { refresh(); });
 }
 
-export function onRequirementDataMappingNoteEdit (id, isManageNotes, refreshDataMappingList) {
+export function onRequirementDataMappingNoteEdit (id, source, target, isManageNotes, refreshDataMappingList) {
   // activeRowId.value = id;
   $q.dialog({
     component: editDataMappingNotes,
-    componentProps: { id, isManageNotes }
+    componentProps: { id, source, target, isManageNotes }
   }).onOk(() => {
     refreshDataMappingList();
   })

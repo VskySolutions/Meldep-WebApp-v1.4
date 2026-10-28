@@ -172,7 +172,7 @@ namespace Vsky.Api.Controllers
         {
             try
             {
-                var mappings = await _requirementDataMappingService.GetRequirementDataMappingsByRequirementId(requirementId);
+                var mappings = await _requirementDataMappingService.GetRequirementDataMappingsDetailsByRequirementId(requirementId);
 
                 var model = new RequirementDataMappingList
                 {

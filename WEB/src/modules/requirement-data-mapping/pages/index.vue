@@ -215,7 +215,7 @@
                   </q-icon>
                   <q-icon
                     name="o_delete_outline"
-                    class="cursor-pointer hidden"
+                    class="cursor-pointer"
                     color="negative"
                     @click="onSubmitBulkDataMappingDelete(props.row.id, props.row.requirementId, props.row.requirementTitle, refreshDataMappingList)"
                   >
@@ -316,10 +316,10 @@
                 </q-td>
                 <q-td class="text-center actions">
                   <q-icon
-                  v-if="mapping.requirementDataMappingNotes.length > 0"
+                    v-if="mapping.requirementDataMappingNotes.length > 0"
                     name="o_visibility"
                     class="cursor-pointer q-mr-sm"
-                    @click="onRequirementDataMappingNoteEdit(mapping.id, false, refreshDataMappingList)"
+                    @click="onRequirementDataMappingNoteEdit(mapping.id, mapping.source, mapping.target, false,  refreshDataMappingList)"
                   >
                     <q-tooltip>
                       View Notes

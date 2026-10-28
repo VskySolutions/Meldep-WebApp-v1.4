@@ -9,7 +9,7 @@
       <q-form ref="formRef" greedy @submit.prevent.stop="onSubmit">
         <div :class="['q-pa-md cardTable']">
           <div class="q-gutter-y-md">
-            <q-card>              
+            <q-card>
               <fieldset>
                 <legend>Data Mapping Info</legend>
                 <div>
@@ -170,7 +170,7 @@
                             name="o_visibility"
                             class="cursor-pointer q-mr-sm"
                             size="xs"
-                            @click="onRequirementDataMappingNoteEdit(props.row.id, false, refreshDataMappingList)"
+                            @click="onRequirementDataMappingNoteEdit(props.row.id, props.row.source, props.row.target, false, refreshDataMappingList)"
                           >
                             <q-tooltip>
                               View Notes
@@ -188,7 +188,7 @@
                             name="o_assignment"
                             class="cursor-pointer q-mr-sm"
                             size="xs"
-                            @click="onRequirementDataMappingNoteEdit(props.row.id, true, refreshDataMappingList)"
+                            @click="onRequirementDataMappingNoteEdit(props.row.id, props.row.source, props.row.target, true, refreshDataMappingList)"
                           >
                             <q-tooltip>
                               Manage Notes
@@ -453,7 +453,7 @@ const onSubmit = async (shouldClose, buttonType) => {
       notifyError({ message: "Add at least one data mapping." });
       return;
     }
-    
+
     rowValidations.value = nonDeletedRows.map((row) =>
       useVuelidate(rowRules, row, { $lazy: true, $autoDirty: true })
     );
@@ -514,7 +514,7 @@ const onSubmit = async (shouldClose, buttonType) => {
                 }
               ]
             : []
-        };        
+        };
       })
     };
 
