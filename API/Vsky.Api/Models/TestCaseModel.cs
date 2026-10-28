@@ -27,6 +27,7 @@ namespace Vsky.Api.Models
         public string TestedDateStr { get; set; }
         public int TestCaseNumber { get; set; }
         public DateTime CreatedOnUtc { get; set; }
+        public DateTime UpdatedOnUtc { get; set; }
         public string ProjectReleaseTrackingReqPlanTaskIssueMappingId { get; set; }
 
         public virtual Site Site { get; set; }

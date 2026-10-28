@@ -657,7 +657,7 @@ function validateVersion (newVersion, previousVersion, isAdmin) {
 
     if (result < 0) {
       notifyError({
-        message: `Version must be greator or equal to ${previousVersion}`
+        message: `Version must be greater or equal to ${previousVersion}`
       });
       return false;
     }

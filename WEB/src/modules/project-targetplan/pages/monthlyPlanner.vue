@@ -377,7 +377,7 @@
                       <td v-if="lineIndex === 0" class="task-title-spacer"></td>
                       <td
                         colspan="2"
-                        class="linked-task-title text-center hoverable-cell"
+                        class="linked-task-title text-left hoverable-cell"
                         @click.stop="onProjectTaskView(line.taskId)"
                       >
                         Project Task - {{ line.projectTask?.projectTaskNumber }} - {{ line.projectTask?.name }}

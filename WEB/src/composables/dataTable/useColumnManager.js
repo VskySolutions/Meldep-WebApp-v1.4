@@ -7,12 +7,14 @@ export function useColumnManager({
   isResizing
 }) {
   const allColumns = computed(() =>
-    columns.value.map(col => col.name)
+    columns.value
+    .filter(col => col.name !== "actions")
+    .map(col => col.name)
   );
 
   const defaultColumnNames = computed(() =>
     columns.value
-      .filter(col => col.default === true)
+      .filter(col => col.default === true && col.name !== "actions")
       .map(col => col.name)
   );
 
@@ -20,8 +22,7 @@ export function useColumnManager({
     () => columns.value,
     () => {
       if (
-        !Array.isArray(selectedColumnNames.value) ||
-        selectedColumnNames.value.length === 0
+        !Array.isArray(selectedColumnNames.value)
       ) {
         selectedColumnNames.value = [...defaultColumnNames.value];
       }
@@ -59,18 +60,32 @@ export function useColumnManager({
       }))
   );
 
+  // const computedColumns = computed(() => {
+  //   const selected = Array.isArray(selectedColumnNames.value)
+  //     ? [...selectedColumnNames.value]
+  //     : [];
+
+  //   const visibleColumns =
+  //     selected.length > 0
+  //       ? selected
+  //       : defaultColumnNames.value;
+
+  //   return columns.value
+  //     .filter(col => visibleColumns.includes(col.name))
+  //     .map(col => ({
+  //       ...col,
+  //       sortable: !isResizing.value && col.sortable
+  //     }));
+  // });
   const computedColumns = computed(() => {
     const selected = Array.isArray(selectedColumnNames.value)
-      ? [...selectedColumnNames.value]
-      : [];
-
-    const visibleColumns =
-      selected.length > 0
-        ? selected
-        : defaultColumnNames.value;
+      ? selectedColumnNames.value
+      : defaultColumnNames.value;
 
     return columns.value
-      .filter(col => visibleColumns.includes(col.name))
+      .filter(col =>
+        col.name !== "actions" && selected.includes(col.name)
+      )
       .map(col => ({
         ...col,
         sortable: !isResizing.value && col.sortable

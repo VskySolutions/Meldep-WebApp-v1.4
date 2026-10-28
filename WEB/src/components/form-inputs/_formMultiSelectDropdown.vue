@@ -45,9 +45,10 @@
                 <q-checkbox
                   :model-value="selected"
                   @update:model-value="toggleOption(opt)"
+                  class="q-mr-sm"
                 />
 
-                <span>{{ opt.text }}</span>
+                <span class="option-text">{{ opt.text }}</span>
               </div>
             </q-item-section>
           </q-item>
@@ -356,3 +357,13 @@ function getRoleAccess(role) {
   };
 }
 </script>
+<style>
+.option-text {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.5;
+}
+</style>

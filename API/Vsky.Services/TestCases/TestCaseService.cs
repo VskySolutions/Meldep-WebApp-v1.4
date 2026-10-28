@@ -215,6 +215,7 @@ namespace Vsky.Services.TestCases
                 WorkspaceId = x.WorkspaceId,
                 TestCaseNumber = x.TestCaseNumber,
                 CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
 
                 ProjectReleaseTrackingReqPlanTaskIssueMappingId = x.ProjectReleaseTrackingReqPlanTaskIssueMappings
                 .Where(m => !m.Deleted)
