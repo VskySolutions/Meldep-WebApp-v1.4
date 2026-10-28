@@ -45,7 +45,7 @@
                     </q-tooltip>
                   </q-icon>
                 </q-tab>
-                <q-tab v-if="!isManageDescription"name="2_tab" label="Requirement Info" class="q-px-lg" :disable="disableTab" />
+                <q-tab v-if="!isManageDescription" name="2_tab" label="Requirement Info" class="q-px-lg" :disable="disableTab" />
                 <q-tab  v-if="!isManageDescription" name="3_tab" label="Document Reference List" class="q-px-lg" :disable="disableTab" />
               </q-tabs>
               <q-separator />

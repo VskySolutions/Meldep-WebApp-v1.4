@@ -867,25 +867,32 @@
                     Manage Requirement Log
                   </q-tooltip>
                 </q-icon>
-                <q-icon
-                  v-if="props.row.isEditable || props.row.isNotes"
-                  name="o_note_alt"
-                  class="cursor-pointer q-mr-sm"
-                  size="xs"
-                  @click="onRequirementNotesProgressUpdates(props.row.id)"
-                >
-                  <q-tooltip>
-                    View Notes
-                  </q-tooltip>
-                </q-icon>
                 <a
                   v-if="props.row.isEditable || props.row.isNotes"
                   style="position: relative;"
                   class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm"
-                  @click="onNoteAdd(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, `${props.row.project.name} : ${props.row.title}`, refreshRequirementList, true)"
+                  @click="onRequirementNotesProgressUpdates(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, refreshRequirementList)"
                 >
                   <q-tooltip anchor="bottom middle" self="top middle">
                     Manage Notes
+                  </q-tooltip>
+                  <q-icon name="o_note_alt"/>
+                  <q-badge
+                    v-if="props.row.requirementNotesCount > 0"
+                    style="position: absolute; right: -16px; top: -15px;"
+                    color="green"
+                    text-color="white"
+                    :label="props.row.requirementNotesCount"
+                  />
+                </a>
+                <a
+                  v-if="props.row.isEditable || props.row.isNotes"
+                  style="position: relative;"
+                  class="q-icon notranslate cursor-pointer q-ml-sm q-mr-sm hidden"
+                  @click="onNoteAdd(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, `${props.row.project.name} : ${props.row.title}`, refreshRequirementList, true)"
+                >
+                  <q-tooltip anchor="bottom middle" self="top middle">
+                    View Notes
                   </q-tooltip>
                   <q-icon name="o_assignment" />
                   <q-badge

@@ -22,14 +22,14 @@ export function onRequirementView (id) {
     .onDismiss(() => { activeRowId.value = id; });
 }
 
-export function onRequirementNotesProgressUpdates (id) {
+export function onRequirementNotesProgressUpdates (id, type, moduleId, module, sub_Module, refreshRequirementList) {
   activeRowId.value = id;
   $q.dialog({
     component: viewRequirementNotesProgressUpdates,
-    componentProps: { id }
-  }).onOk(() => { activeRowId.value = id; })
-    .onCancel(() => { activeRowId.value = id; })
-    .onDismiss(() => { activeRowId.value = id; });
+    componentProps: { id, type: type, projectId: moduleId, projectName: module, RequirementTitle: sub_Module }
+  }).onOk(() => { activeRowId.value = id; refreshRequirementList(); })
+    .onCancel(() => { activeRowId.value = id; refreshRequirementList(); })
+    .onDismiss(() => { activeRowId.value = id; refreshRequirementList(); });
 }
 
 export function onRequirementAdd (

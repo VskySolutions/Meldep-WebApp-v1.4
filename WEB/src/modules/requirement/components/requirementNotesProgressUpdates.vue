@@ -31,6 +31,11 @@
               <viewClientMeetingUpdatesView
                 :id="selectedRequirementId"
                 :noteType="clientMeetingNoteType"
+                :noteTypeId="clientMeetingNoteTypeId"
+                :projectId="projectId"
+                :type="props.type"
+                :projectName="props.projectName"
+                :RequirementTitle="props.RequirementTitle"
               />
             </q-tab-panel>
 
@@ -38,6 +43,11 @@
               <viewClientMeetingUpdatesView
                 :id="selectedRequirementId"
                 :noteType="weeklyStatusNoteType"
+                :noteTypeId="weeklyStatusNoteTypeId"
+                :projectId="projectId"
+                :type="props.type"
+                :projectName="props.projectName"
+                :RequirementTitle="props.RequirementTitle"
               />
             </q-tab-panel>
 
@@ -45,6 +55,11 @@
               <viewClientMeetingUpdatesView
                 :id="selectedRequirementId"
                 :noteType="weeklyNextStepNoteType"
+                :noteTypeId="weeklyNextStepNoteTypeId"
+                :projectId="projectId"
+                :type="props.type"
+                :projectName="props.projectName"
+                :RequirementTitle="props.RequirementTitle"
               />
             </q-tab-panel>
 
@@ -52,6 +67,11 @@
               <viewClientMeetingUpdatesView
                 :id="selectedRequirementId"
                 :noteType="roadBlockNoteType"
+                :noteTypeId="roadBlockNoteTypeId"
+                :projectId="projectId"
+                :type="props.type"
+                :projectName="props.projectName"
+                :RequirementTitle="props.RequirementTitle"
               />
             </q-tab-panel>
 
@@ -86,19 +106,37 @@ import viewQuestionsForClient from "src/modules/requirement/components/_question
 import viewUpdatesToShareWithClient from "src/modules/requirement/components/_updatesToShareWithClientView.vue";
 import viewClientMeetingUpdatesView from "./_clientMeetingUpdatesView.vue";
 
+// SOP Change :- Shared Dropdowns
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
+
 // Props values i.e. come from query string
-const props = defineProps({ id: { type: String, default: "" } });
+const props = defineProps({ 
+  id: { type: String, default: "" },
+  projectId: { type: String, default: "" },
+  type: { type: String, default: "" },
+  noteType: { type: String, default: "" },
+  projectId: { type: String, default: "" },
+  projectName: { type: String, default: "" },
+  RequirementTitle: { type: String, default: "" }
+});
 const rows = ref([]);
 const changeLogRows = ref([]);
+const projectId = props.projectId;
 
 // Common variables
 const selectedRequirementId = ref(props.id);
 const loading = ref(true);
 const tab = ref("1_tab");
+
+// noteType and NoteTypeId
 const clientMeetingNoteType="Client Meeting Updates";
 const weeklyStatusNoteType="Weekly Status";
 const weeklyNextStepNoteType="Weekly Next Steps";
 const roadBlockNoteType="Roadblocks";
+const clientMeetingNoteTypeId = ref(null);
+const weeklyStatusNoteTypeId = ref(null);
+const weeklyNextStepNoteTypeId = ref(null);
+const roadBlockNoteTypeId = ref(null);
 
 // Define emits
 defineEmits([...useDialogPluginComponent.emits]);
@@ -139,6 +177,14 @@ const getRequirement = () => {
   });
 };
 
+// ----------------------------------------------------------------------------------------------------------------
+// Advance Filter:- Initialization Of All DropDowns
+// ----------------------------------------------------------------------------------------------------------------
+
+const {
+  noteTypeListSingleSelect
+} = requirementModule();
+
 watch(tab, (newTab) => {
   if (newTab === "1_tab") {
     getRequirement();
@@ -147,8 +193,14 @@ watch(tab, (newTab) => {
   }
 });
 
-onMounted(() => {
+onMounted(async () => {
   getRequirement();
+
+  await noteTypeListSingleSelect.load("Note Type");
+  clientMeetingNoteTypeId.value = await noteTypeListSingleSelect.getValueByLabel("Client Meeting Updates");
+  weeklyStatusNoteTypeId.value = await noteTypeListSingleSelect.getValueByLabel("Weekly Status");
+  weeklyNextStepNoteTypeId.value = await noteTypeListSingleSelect.getValueByLabel("Weekly Next Steps");
+  roadBlockNoteTypeId.value = await noteTypeListSingleSelect.getValueByLabel("Roadblocks");
 });
 </script>
 
