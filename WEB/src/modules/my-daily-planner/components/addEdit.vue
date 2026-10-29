@@ -336,8 +336,25 @@ const model = ref({
 
 // Validation rules
 const rules = {
-  dailyPlannerDateStr: { required: helpers.withMessage("Daily planner Date is required", required) }
+  dailyPlannerDateStr: {
+    required: helpers.withMessage(
+      "Daily planner Date is required",
+      required
+    ),
+    allowedDate: helpers.withMessage(
+      "Please select a Planner Date within the allowed date range.",
+      (value) =>
+        !value ||
+        getTimesheetAllowedDateRange(
+          value,
+          props.isForwarded,
+          true,
+          1
+        )
+    )
+  }
 };
+
 // Validate rules
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 
@@ -760,75 +777,80 @@ async function onSubmit (shouldClose, buttonType) {
       }
     }
 
-    if (!isValid || !(await v$.value.$validate())) return;
+    // if (!isValid || !(await v$.value.$validate())) return;
+    const isDateValid = await v$.value.$validate();
 
-    if (await v$.value.$validate() && isValid) {
-      processing.value = true;
-      const cleanedRows = dailyPlanRows.value.map(row => {
-        const trimmedHours = (row.hours ?? "").toString().trim();
-        let parsedHours;
-        if (row.deleted === true) {
-          parsedHours = 0.0;
-        } else {
-          parsedHours = trimmedHours === "" ? null : parseFloat(trimmedHours);
-        }
-        return {
-          ...row,
-          // hours: parsedHours,
-          isMyTaskActivity: row.isMyTaskActivity ?? false,
-          projectName: row.projectName ?? "",
-          moduleName: row.moduleName ?? "",
-          taskName: row.taskName ?? "",
-          projectActivityName: row.projectActivityName ?? ""
-        };
-      });
+    if (!isValid || !isDateValid) {
+      return;
+    }
 
-      const payload = {
-        isForwordedToTimesheet: props.isForwarded === "isForwarded",
-        dailyPlannerDate: model.value.dailyPlannerDateStr,
-        dailyPlannerLineModel: cleanedRows
+    // if (await v$.value.$validate() && isValid) {
+    processing.value = true;
+    const cleanedRows = dailyPlanRows.value.map(row => {
+      const trimmedHours = (row.hours ?? "").toString().trim();
+      let parsedHours;
+      if (row.deleted === true) {
+        parsedHours = 0.0;
+      } else {
+        parsedHours = trimmedHours === "" ? null : parseFloat(trimmedHours);
+      }
+      return {
+        ...row,
+        // hours: parsedHours,
+        isMyTaskActivity: row.isMyTaskActivity ?? false,
+        projectName: row.projectName ?? "",
+        moduleName: row.moduleName ?? "",
+        taskName: row.taskName ?? "",
+        projectActivityName: row.projectActivityName ?? ""
       };
+    });
 
-      const resp = await dailyplannerService.saveDailyPlanner(DailyPlannerId, payload);
-      DailyPlannerId = resp.dailyPlannerId;
+    const payload = {
+      isForwordedToTimesheet: props.isForwarded === "isForwarded",
+      dailyPlannerDate: model.value.dailyPlannerDateStr,
+      dailyPlannerLineModel: cleanedRows
+    };
 
-      // resp.dailyPlannerLineModel.forEach((row, index) => {
-      //   row.rowCounter = index;
-      // });
+    const resp = await dailyplannerService.saveDailyPlanner(DailyPlannerId, payload);
+    DailyPlannerId = resp.dailyPlannerId;
 
-      // dailyPlanRows.value = resp.dailyPlannerLineModel;
-      // Preserve or reset label condition based on button type
-      dailyPlanRows.value = resp.dailyPlannerLineModel.map(savedRow => {
-        const originalRow = cleanedRows.find(r => r.id === savedRow.id);
-        const wasLabel = originalRow?.isMyTaskActivity ?? false;
-        return {
-          ...savedRow,
-          rowIndex: originalRow?.rowIndex ?? 0,
-          isMyTaskActivity: buttonType === "continue" ? wasLabel : false,
-          projectName: originalRow?.projectName ?? "",
-          moduleName: originalRow?.moduleName ?? "",
-          taskName: originalRow?.taskName ?? "",
-          projectActivityName: originalRow?.projectActivityName ?? ""
-        };
-      });
+    // resp.dailyPlannerLineModel.forEach((row, index) => {
+    //   row.rowCounter = index;
+    // });
 
-      notifySuccess({ message: props.isForwarded === "isForwarded" ? "Forwarded to timesheet successfully." : "Planner saved successfully." });
-      dailyPlanRows.value.forEach((row, index) => {
-        if (row.projectId) {
-          projectModulesByProjectIdForDropdownSingleSelectWithRowIndex.load(index, false, true, row.projectId);
-          if (row.projectModuleId) {
-            projectTasksByProjectIdAndModuleIdForDropdownSingleSelectWithRowIndex.load(index, row.projectId, row.projectModuleId, employeeId);
-            if (row.projectTaskId) {
-              projectTaskActivityNameForDropdownSingleSelectWithRowIndex.load(index, row.projectId, row.projectModuleId, row.projectTaskId);
-            }
+    // dailyPlanRows.value = resp.dailyPlannerLineModel;
+    // Preserve or reset label condition based on button type
+    dailyPlanRows.value = resp.dailyPlannerLineModel.map(savedRow => {
+      const originalRow = cleanedRows.find(r => r.id === savedRow.id);
+      const wasLabel = originalRow?.isMyTaskActivity ?? false;
+      return {
+        ...savedRow,
+        rowIndex: originalRow?.rowIndex ?? 0,
+        isMyTaskActivity: buttonType === "continue" ? wasLabel : false,
+        projectName: originalRow?.projectName ?? "",
+        moduleName: originalRow?.moduleName ?? "",
+        taskName: originalRow?.taskName ?? "",
+        projectActivityName: originalRow?.projectActivityName ?? ""
+      };
+    });
+
+    notifySuccess({ message: props.isForwarded === "isForwarded" ? "Forwarded to timesheet successfully." : "Planner saved successfully." });
+    dailyPlanRows.value.forEach((row, index) => {
+      if (row.projectId) {
+        projectModulesByProjectIdForDropdownSingleSelectWithRowIndex.load(index, false, true, row.projectId);
+        if (row.projectModuleId) {
+          projectTasksByProjectIdAndModuleIdForDropdownSingleSelectWithRowIndex.load(index, row.projectId, row.projectModuleId, employeeId);
+          if (row.projectTaskId) {
+            projectTaskActivityNameForDropdownSingleSelectWithRowIndex.load(index, row.projectId, row.projectModuleId, row.projectTaskId);
           }
         }
-      });
-      $emit("ok");
-      if (shouldClose) {
-        $emit("hide");
       }
+    });
+    $emit("ok");
+    if (shouldClose) {
+      $emit("hide");
     }
+    // }
   } catch (error) {
     console.error("Error in submitting the planner:", error);
     notifyError({ message: "An error occurred while saving the planner." });

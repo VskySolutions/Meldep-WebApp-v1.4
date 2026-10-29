@@ -323,7 +323,10 @@ namespace Vsky.Services.ProjectWeeklyPlan
                                             !p.Deleted &&
                                             p.Notes))),
                     ProjectMessageCount = x.Project.ProjectsMessages.Count(m => !m.Deleted),
-                    ProjectNotesCount = _notesRepository.TableNoTracking.Count(m => !m.Deleted && m.SubModuleId == x.ProjectId && m.Type == NotesType)
+                    ProjectNotesCount = _notesRepository.TableNoTracking.Count(m => !m.Deleted && m.SubModuleId == x.ProjectId && m.Type == NotesType),
+                    ProjectPlanDateCount = x.Project.ProjectWeeklyPlans
+                        .SelectMany(p => p.ProjectWeeklyPlanDates)
+                        .Count(m => !m.Deleted && m.PlanTypeId == PlanTypeId),
                 },
                 ProjectWeeklyPlanDates = x.ProjectWeeklyPlanDates.Where(m => !m.Deleted && m.PlanTypeId == PlanTypeId && m.WeekDate >= startOfWeek && (IsAdmin || !m.IsApproved && !m.IsCompleted))
                 .Select(d => new ProjectWeeklyPlanDates

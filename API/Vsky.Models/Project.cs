@@ -45,6 +45,9 @@ public class Project : BaseEntity
     public int ProjectNotesCount { get; set; }
 
     [NotMapped]
+    public int ProjectPlanDateCount { get; set; }
+
+    [NotMapped]
     public int ProjectMessageCount { get; set; }
 
     [NotMapped]

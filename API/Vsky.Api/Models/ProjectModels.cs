@@ -55,7 +55,7 @@ namespace Vsky.Api.Models
         public string[] DevLeadIds { get; set; }
         public string[] TestLeadIds { get; set; }
 
-
+        public int ProjectPlanDateCount { get; set; }
         public int ProjectNotesCount { get; set; }
         public int ProjectMessageCount { get; set; }
         public int CompletedTaskCount { get; set; }

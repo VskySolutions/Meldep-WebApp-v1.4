@@ -170,7 +170,8 @@
                       @click="LoadProjectPlan(props.row)"
                     >
                       <q-badge color="black" floating>
-                        {{ props.row.projectWeeklyPlanDates ? props.row.projectWeeklyPlanDates.length : 0 }}
+                        <!-- {{ props.row.projectWeeklyPlanDates ? props.row.projectWeeklyPlanDates.length : 0 }} -->
+                        {{ props.row.project?.projectPlanDateCount ?? 0 }}
                       </q-badge>
                       <q-tooltip>View Plan</q-tooltip>
                     </q-btn>
@@ -192,7 +193,7 @@
                           </q-item>
                           <q-item v-if="isFullAccess" v-ripple clickable @click="$router.push({ path: `/all-project-planner`, state: {projectId: props.row.projectId } })">
                             <q-item-section avatar><q-icon name="o_task" size="xs" /></q-item-section>
-                            <q-item-section>Planner</q-item-section>
+                            <q-item-section>Project Task Planner</q-item-section>
                           </q-item>
                           <q-item v-ripple clickable @click="$router.push({ path: '/project-targetplan/weeklyplanner', state: {projectId: props.row.projectId } })">
                             <q-item-section avatar><q-icon name="o_calendar_view_week" size="xs" /></q-item-section>
@@ -312,7 +313,7 @@
                               </q-tooltip>
                             </q-icon>
                           </div>
-                          <div v-else-if="!isViewer" class="AddProjectPlanApprover q-mr-xs cursor-pointer">
+                          <div v-else-if="activeProjectName !== 'No Project Selected' && isFullAccess && !isViewer" class="AddProjectPlanApprover q-mr-xs cursor-pointer">
                             <q-icon name="o_person_add" size="sm" @click="showAddProjectPlanApproverModal = true; selectedPlanApproverId = null">
                               <q-tooltip anchor="bottom middle" self="top middle">
                                 Click here to add your plan approver?

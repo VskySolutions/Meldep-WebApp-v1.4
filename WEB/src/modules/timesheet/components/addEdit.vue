@@ -399,7 +399,18 @@ const columns = ref([
 // Validation rules
 // ----------------------------------------------------------------------------------------------------------------
 const rules = {
-  timesheetDateStr: { required: helpers.withMessage("Timesheet Date is required", required) }
+  timesheetDateStr: {
+    required: helpers.withMessage(
+      "Timesheet Date is required",
+      required
+    ),
+    allowedDate: helpers.withMessage(
+      "Please select a Timesheet Date within the allowed date range.",
+      (value) =>
+        !value ||
+        getTimesheetAllowedDateRange(value, true, 1)
+    )
+  }
 };
 
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
