@@ -201,7 +201,7 @@
                 :props="props"
                 :class="activeRowId == props.row.id ? 'highlight' : ''"
               >
-                <q-td :colspan="computedColumns.length" style="background: #dbf2ff;" class="text-center text-bold text-primary">
+                <q-td  v-if="computedColumns.length > 0" :colspan="computedColumns.length" style="background: #dbf2ff;" class="text-center text-bold text-primary">
                   {{ props.row.requirementTitle }}
                 </q-td>
                 <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
@@ -538,7 +538,7 @@ function resetTracking () {
   shownProjects.clear(); // Clear the set before rendering rows
 }
 
-const highlightedId = computed(() => { return activeRowId.value; });
+const highlightedId = computed(() => activeRowId.value);
 
 function setActiveRowIdInLocalStorage(id) {
   activeRowId.value = id;
@@ -652,7 +652,7 @@ const onAdvanceClear = () => {
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions
 // ------------------------------------------------------------------------------------
-initRequirementDataMappingDialogs();
+initRequirementDataMappingDialogs(activeRowId);
 initProjectDialogs(activeRowId);
 initProjectModuleDialogs(activeRowId);
 initRequirementDataMappingActions(activeRowId);

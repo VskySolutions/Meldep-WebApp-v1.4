@@ -1251,7 +1251,10 @@ const columns = ref([
 // Get/Map Requirement list to table
 const getAllRequirement = async ({ pagination: p }) => {
   loading.value = true;
-  const number = search.value.requirementNumber ? search.value.requirementNumber.replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "") : "";
+  let number = search.value.requirementNumber ? search.value.requirementNumber.replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "") : "";
+  if (Number(number) > 2147483647) {
+    number = "";
+  }
   search.value.requirementNumber = number || "0";
   search.value.fromDate = search.value.fromDate ? toDate(search.value.fromDate) : null;
   search.value.toDate = search.value.toDate ? toDate(search.value.toDate) : null;

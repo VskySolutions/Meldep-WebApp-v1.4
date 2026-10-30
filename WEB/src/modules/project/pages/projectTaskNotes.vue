@@ -1140,12 +1140,14 @@ const getProjectTasks = async (props) => {
   try {
     const { page, rowsPerPage, sortBy, descending } = props.pagination;
 
-    const taskNumber = searchTaskModule.value.projectTaskNumber
+    let taskNumber = searchTaskModule.value.projectTaskNumber
       ? searchTaskModule.value.projectTaskNumber
         .replace(/[^0-9]/g, "")
         .replace(/^0+(?!$)/, "")
       : "";
-
+    if (Number(taskNumber) > 2147483647) {
+      taskNumber = "";
+    }
     searchTaskModule.value.projectTaskNumber = taskNumber || 0;
 
     const payload = {

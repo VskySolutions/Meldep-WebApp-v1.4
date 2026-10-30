@@ -1051,7 +1051,10 @@ const getAllProjectTaskList = async ({ pagination: p }) => {
   const { page, rowsPerPage, sortBy, descending } = p;
 
   // sanitize task number
-  const taskNumber = (search.value.projectTaskNumber || "").replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "");
+  let taskNumber = (search.value.projectTaskNumber || "").replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "");
+  if (Number(taskNumber) > 2147483647) {
+    taskNumber = "";
+  }
   search.value.projectTaskNumber = taskNumber || "0";
 
   // Build sort payload

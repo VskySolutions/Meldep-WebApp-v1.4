@@ -132,7 +132,11 @@
                       </q-tr>
                     </template>
                     <template #body="props">
-                      <q-tr :class="props.row.deleted ? 'hidden' : ''">
+                      <q-tr :class="[
+                          props.row.deleted ? 'hidden' : '',
+                          highlightedId == props.row.id ? 'highlight' : ''
+                        ]"
+                      >
                         <q-td style="width: 20%;">
                           <q-input
                             v-model="props.row.source"
@@ -248,7 +252,7 @@
 <script setup>
 // Import libraries
 import { useDialogPluginComponent, useQuasar } from "quasar";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { required, helpers } from "@vuelidate/validators";
 import { notifySuccess, notifyError } from "assets/utils";
 import useVuelidate from "@vuelidate/core";
@@ -317,6 +321,8 @@ const DataMappingColumns = ref([
   { name: "target", label: "Target", field: "target", align: "left" }
   // { name: "note", label: "Note", field: "note", align: "left" }
 ]);
+
+const highlightedId = computed(() => { return activeRowId.value; });
 
 // get data mapping details on edit mode
 const getRequirementDataMapping = (requirementId) => {
@@ -390,7 +396,7 @@ const deleteRow = (index) => {
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions (SOP Change)
 // ------------------------------------------------------------------------------------
-initRequirementDataMappingDialogs();
+initRequirementDataMappingDialogs(activeRowId);
 initRequirementDialogs(activeRowId);
 
 // ------------------------------------------------------------------------------------
@@ -430,6 +436,7 @@ const modelV$ = useVuelidate(modelRules, model, { $lazy: true, $autoDirty: true 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
 const onSubmit = async (shouldClose, buttonType) => {
+  if (processing.value) return;
   activeButton.value = buttonType;
   // processing.value = true;
   try {
@@ -524,7 +531,7 @@ const onSubmit = async (shouldClose, buttonType) => {
     notifySuccess({
       message: "Data mapping is saved successfully."
     });
-    if (model.value.requirementName) {
+    if (model.value.requirementId) {
       await getRequirementDataMapping(model.value.requirementId);
     }
     $emit("ok");

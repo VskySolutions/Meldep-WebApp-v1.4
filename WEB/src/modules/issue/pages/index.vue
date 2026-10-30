@@ -974,7 +974,14 @@ const {
 const getAllIssue = async ({ pagination: p }) => {
   const { page, rowsPerPage, sortBy, descending } = p;
   loading.value = true;
-  const number = search.value.issueNumber ? search.value.issueNumber.replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "") : "";
+
+  let number = search.value.issueNumber
+    ? search.value.issueNumber.replace(/[^0-9]/g, "").replace(/^0+(?!$)/, "")
+    : "";
+
+  if (Number(number) > 2147483647) {
+    number = "";
+  }
   search.value.issueNumber = number || "0";
 
   const sorts = {};

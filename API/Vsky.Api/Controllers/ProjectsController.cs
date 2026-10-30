@@ -2597,44 +2597,49 @@ namespace Vsky.Api.Controllers
                         {
                             existingWeeklyDateLine.ProjectWeeklyPlanDatesId = WeeklyDate.Id;
 
-                            
-                             if (!string.IsNullOrEmpty(line.Description))
-                             {
-                                 existingWeeklyDateLine.ExpectedDescription =
-                                        await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
-                                            line.Description,
-                                            SiteData.Name,
-                                            "project-weeklymonthly",
-                                            existingWeeklyDateLine.Id,
-                                            existingWeeklyDateLine.ExpectedDescription
-                                        );
-                             }
+                            if (line.IsEditExpectedDescription)
+                            {
+                                if (!string.IsNullOrEmpty(line.Description))
+                                {
+                                    existingWeeklyDateLine.ExpectedDescription =
+                                           await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
+                                               line.Description,
+                                               SiteData.Name,
+                                               "project-weeklymonthly",
+                                               existingWeeklyDateLine.Id,
+                                               existingWeeklyDateLine.ExpectedDescription
+                                           );
+                                }
 
-                             existingWeeklyDateLine.ExpectedHours = line.ExpectedHours;
-                             existingWeeklyDateLine.ExpectedDescriptionUpdatedById = LoggedUserId;
-                             existingWeeklyDateLine.ExpectedDescriptionUpdatedOnUtc = GetDateTime;
+                                existingWeeklyDateLine.ExpectedHours = line.ExpectedHours;
+                                existingWeeklyDateLine.ExpectedDescriptionUpdatedById = LoggedUserId;
+                                existingWeeklyDateLine.ExpectedDescriptionUpdatedOnUtc = GetDateTime;
+                            }
 
-                           
-                              if (string.IsNullOrEmpty(existingWeeklyDateLine.ActualDescription))
-                              {
-                                  existingWeeklyDateLine.ActualDescriptionCreatedById = LoggedUserId;
-                                  existingWeeklyDateLine.ActualDescriptionCreatedOnUtc = GetDateTime;
-                              }
+                            if (line.IsEditActualDescription)
+                            {
 
-                              if (!string.IsNullOrEmpty(line.ActualDescription))
-                              {
-                                  existingWeeklyDateLine.ActualDescription =
-                                        await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
-                                            line.ActualDescription,
-                                            SiteData.Name,
-                                            "project-weeklymonthly",
-                                            existingWeeklyDateLine.Id,
-                                            existingWeeklyDateLine.ActualDescription
-                                        );
-                              }
+                                if (string.IsNullOrEmpty(existingWeeklyDateLine.ActualDescription))
+                                {
+                                    existingWeeklyDateLine.ActualDescriptionCreatedById = LoggedUserId;
+                                    existingWeeklyDateLine.ActualDescriptionCreatedOnUtc = GetDateTime;
+                                }
 
-                              existingWeeklyDateLine.ActualDescriptionUpdatedById = LoggedUserId;
-                              existingWeeklyDateLine.ActualDescriptionUpdatedOnUtc = GetDateTime;
+                                if (!string.IsNullOrEmpty(line.ActualDescription))
+                                {
+                                    existingWeeklyDateLine.ActualDescription =
+                                          await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
+                                              line.ActualDescription,
+                                              SiteData.Name,
+                                              "project-weeklymonthly",
+                                              existingWeeklyDateLine.Id,
+                                              existingWeeklyDateLine.ActualDescription
+                                          );
+                                }
+
+                                existingWeeklyDateLine.ActualDescriptionUpdatedById = LoggedUserId;
+                                existingWeeklyDateLine.ActualDescriptionUpdatedOnUtc = GetDateTime;
+                            }
 
                               _projectWeeklyDatesLinesService.UpdateProjectWeeklyPlanDatesLines(existingWeeklyDateLine);
 

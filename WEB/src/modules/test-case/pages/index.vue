@@ -575,11 +575,15 @@ const getAllTestCase = async ({ pagination: p }) => {
       ? toDate(search.value.toDate)
       : null;
 
-    const number = search.value.testCaseNumber
+    let number = search.value.testCaseNumber
       ? search.value.testCaseNumber
           .replace(/[^0-9]/g, "")
           .replace(/^0+(?!$)/, "")
       : "";
+
+    if (Number(number) > 2147483647) {
+      number = "";
+    }
 
     search.value.testCaseNumber = number || "0";
 

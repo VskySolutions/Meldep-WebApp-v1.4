@@ -156,6 +156,7 @@
                               :fonts="fonts"
                               :readonly="line.isApproved && !line.isFullAccess"
                               :class="{ 'readonly-editor': line.isApproved && !line.isFullAccess }"
+                              @update:model-value="line.isEditExpectedDescription = true"
                             />
                             <div v-if='line.id != null'class="col-12 text-right">
                               <div class="LastUpdatedBy text-capitalize q-md-mt-xs">
@@ -177,7 +178,7 @@
                           </div>
                           <div v-if="line.weekDate" class="row">
                             <div class="col-xxl-2 col-xl-2 col-lg-3 col-md-3 col-sm-3 col-xs-3 flex items-center">
-                              <q-input v-model="line.expectedHours" outlined hide-bottom-space :dense="true" :readonly="true" label="Est. Hrs*" class="q-mr-sm" />
+                              <q-input v-model="line.expectedHours" outlined hide-bottom-space :dense="true" :readonly="true" label="Est. Hrs" class="q-mr-sm" />
                             </div>
                             <div class="col-xxl-10 col-xl-10 col-lg-9 col-md-9 col-sm-9 col-xs-9 flex items-center">
                               <div class="TaskActivity flex items-center">
@@ -200,6 +201,7 @@
                                   >
                                     <q-tooltip>Assign Resource?</q-tooltip>
                                   </q-icon>
+                                  <span class="required">*</span>
                                   <q-popup-edit
                                     class="small-popup-title"
                                     style="width: 280px;"
@@ -303,6 +305,7 @@
                             :fonts="fonts"
                             :readonly="line.isApproved && !line.isFullAccess"
                             :class="{ 'readonly-editor': line.isApproved && !line.isFullAccess }"
+                            @update:model-value="line.isEditActualDescription = true"
                           />
                           <div v-if="line.id != null && line.actualDescriptionUpdatedOnUtc" class="LastUpdatedBy text-capitalize text-end">
                             <div>
@@ -649,7 +652,17 @@ const onSaveProjectPlan = async () => {
   try {
     processing.value = true;
     model.value.planTypeId = planTypeId.value;
-    await projectService.addUpdateProjectTaskWeeklyPlan(model.value);
+    const changedLines = model.value.weekDateLines.filter(
+      line =>
+        line.isEditActualDescription ||
+        line.isEditExpectedDescription
+    );
+
+    const updatedPlanModel = {
+      ...model.value,
+      weekDateLines: changedLines
+    };
+    await projectService.addUpdateProjectTaskWeeklyPlan(updatedPlanModel);
   } catch (error) {
     console.error("Error while saving project to weekly plan:", error);
     notifyError({ message: "An error occurred while saving the project weekly plan." });

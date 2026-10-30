@@ -4,11 +4,11 @@ import editDataMapping from "modules/requirement-data-mapping/components/addEdit
 import addEditDataMapping from "modules/requirement-data-mapping/components/addEdit.vue";
 
 let $q;
-// let activeRowId;
+let activeRowId;
 
-export function initRequirementDataMappingDialogs () {
+export function initRequirementDataMappingDialogs (rowRef) {
   $q = useQuasar();
-  // activeRowId = rowRef;
+  activeRowId = rowRef;
 }
 export function onAddRequirementDataMapping (
   projectId,
@@ -43,13 +43,14 @@ export function onEditRequirementDataMapping (id, isRequirementReadonly, refresh
 }
 
 export function onRequirementDataMappingNoteEdit (id, source, target, isManageNotes, refreshDataMappingList) {
-  // activeRowId.value = id;
+  activeRowId.value = id;
+  console.log('Updated active row ID:', activeRowId.value);
   $q.dialog({
     component: editDataMappingNotes,
     componentProps: { id, source, target, isManageNotes }
   }).onOk(() => {
     refreshDataMappingList();
   })
-    .onCancel(() => { refreshDataMappingList(); })
-    .onDismiss(() => { refreshDataMappingList(); });
+    .onCancel(() => { refreshDataMappingList(); activeRowId.value = null; })
+    .onDismiss(() => { refreshDataMappingList(); activeRowId.value = null; });
 }
