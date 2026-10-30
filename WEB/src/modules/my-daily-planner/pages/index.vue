@@ -236,10 +236,18 @@
                 </q-td>
                 <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
                   <q-icon
+                    v-if="
+                      !props.row.isForwordedToTimesheet &&
+                      storedUser.username === props.row.user.userName &&
+                      isCurrentWeekDate(props.row.dailyPlannerDate)
+                    "
                     name="o_forward"
                     class="cursor-pointer q-mr-sm"
-                    :class="props.row.isForwordedToTimesheet ? 'hidden' : (storedUser.username === props.row.user.userName ? '' : 'hidden')"
-                    @click="onDailyPlannerEdit(props.row.id, 'isForwarded', refreshDailyPlannerList)"
+                    @click="onDailyPlannerEdit(
+                      props.row.id,
+                      'isForwarded',
+                      refreshDailyPlannerList
+                    )"
                   >
                     <q-tooltip>Forward To Timesheet</q-tooltip>
                   </q-icon>
@@ -603,6 +611,23 @@ const sortColumn = (col) => {
   refreshDailyPlannerList();
 };
 
+function isCurrentWeekDate(date) {
+  if (!date) return false
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const selectedDate = new Date(date)
+  selectedDate.setHours(0, 0, 0, 0)
+
+  // Monday of current week
+  const daysSinceMonday = (today.getDay() + 6) % 7
+  const startOfWeek = new Date(today)
+  startOfWeek.setDate(today.getDate() - daysSinceMonday)
+
+  // Current week, Monday through today
+  return selectedDate >= startOfWeek && selectedDate <= today
+}
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Search and Clear
 // ----------------------------------------------------------------------------------------------------------------

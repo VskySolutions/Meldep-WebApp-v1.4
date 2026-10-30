@@ -408,7 +408,7 @@ const rules = {
       "Please select a Timesheet Date within the allowed date range.",
       (value) =>
         !value ||
-        getTimesheetAllowedDateRange(value, true, 1)
+        getTimesheetAllowedDateRange(value)
     )
   }
 };
@@ -763,31 +763,21 @@ function getProjectTaskActivityByTaskId(projectId, moduleId, taskId, row, rowInd
   }
 }
 
-function getTimesheetAllowedDateRange(
-  date,
-  thisWeek,
-  lastNumberOfWeeks
-) {
+function getTimesheetAllowedDateRange(date) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+
   const selectedDate = new Date(date)
   selectedDate.setHours(0, 0, 0, 0)
 
+  // Calculate Monday of the current week
   const startDate = new Date(today)
+  const day = startDate.getDay()
+  const daysSinceMonday = day === 0 ? 6 : day - 1
 
-  startDate.setDate(
-    startDate.getDate() -
-    startDate.getDay() -
-    (7 * lastNumberOfWeeks)
-  )
+  startDate.setDate(startDate.getDate() - daysSinceMonday)
 
-  startDate.setHours(0, 0, 0, 0)
-
-  return (
-    thisWeek &&
-    selectedDate >= startDate &&
-    selectedDate <= today
-  )
+  return selectedDate >= startDate && selectedDate <= today
 }
 
 function getHoursMinutesText(value) {

@@ -524,14 +524,27 @@
                   {{ props.row.projectModule.name }}
                 </span>
               </q-td>
-              <q-td v-if="selectedColumnNames.includes('requirementNumber')" class="text-right">
-                #{{ props.row.requirementNumber }}
+              <q-td v-if="selectedColumnNames.includes('requirementNumber')" class="text-right common-q-td hoverable-cell">
+                <span
+                  class="cursor-pointer"
+                  @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.id } })"
+                >
+                  #{{ props.row.requirementNumber }}
+                  <q-tooltip>Requirement Center</q-tooltip>
+                </span>
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('title')"
                 class="common-q-td hoverable-cell"
               >
-                <div class="row no-wrap items-center justify-between">
+                <span
+                  class="cursor-pointer"
+                  @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.id } })"
+                >
+                  {{ props.row.title }}
+                  <q-tooltip>Requirement Center</q-tooltip>
+                </span>
+                <!-- <div class="row no-wrap items-center justify-between">
                   <span>
                     <span
                       class="cursor-pointer"
@@ -552,7 +565,7 @@
                       <q-tooltip>Requirement Center</q-tooltip>
                     </q-icon>
                   </div>
-                </div>
+                </div> -->
               </q-td>
               <q-td v-if="selectedColumnNames.includes('shortDescription')"
                 class="common-q-td content-cell"
@@ -874,7 +887,7 @@
                   @click="onRequirementNotesProgressUpdates(props.row.id, 'Requirement', props.row.project.id, props.row.project.name, props.row.title, refreshRequirementList)"
                 >
                   <q-tooltip anchor="bottom middle" self="top middle">
-                    Manage Notes
+                    Notes
                   </q-tooltip>
                   <q-icon name="o_note_alt"/>
                   <q-badge

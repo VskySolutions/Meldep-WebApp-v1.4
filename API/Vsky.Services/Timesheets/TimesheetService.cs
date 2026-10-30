@@ -159,12 +159,24 @@ namespace Vsky.Services.Timesheets
                 query = _commonService.ApplySorting(query, sorts);
             }
 
+            var today = DateTime.Today;
+
+            // Calculate Monday of the current week
+            int daysSinceMonday = ((int)today.DayOfWeek + 6) % 7;
+            var startOfWeek = today.AddDays(-daysSinceMonday);
+
+            // Exclusive upper boundary (tomorrow)
+            var endDate = today.AddDays(1);
+
             query = query.OrderByDescending(x => x.TimesheetDate).Select(x => new Timesheet
             {
 
                 Id = x.Id,
                 TimesheetDate = x.TimesheetDate,
-                IsActionVisible = thisWeek && x.TimesheetDate >= DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.Date.DayOfWeek).AddDays(-(7 * lastNumberOfWeeks)),
+                //IsActionVisible = thisWeek && x.TimesheetDate >= DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.Date.DayOfWeek).AddDays(-(7 * lastNumberOfWeeks)),
+                IsActionVisible =
+                    x.TimesheetDate >= startOfWeek &&
+                    x.TimesheetDate < endDate,
                 Sites = new Site
                 {
                     Id = x.Sites.Id,

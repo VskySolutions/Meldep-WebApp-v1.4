@@ -634,21 +634,21 @@ function getTimesheetAllowedDateRange(
   thisWeek,
   lastNumberOfWeeks
 ) {
+  if (!date) return false
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+
   const selectedDate = new Date(date)
   selectedDate.setHours(0, 0, 0, 0)
+
+  // Calculate Monday of the current week
+  const daysSinceMonday = (today.getDay() + 6) % 7
+
   const startDate = new Date(today)
+  startDate.setDate(today.getDate() - daysSinceMonday)
 
-  startDate.setDate(
-    startDate.getDate() -
-    startDate.getDay() -
-    (7 * lastNumberOfWeeks)
-  )
-
-  startDate.setHours(0, 0, 0, 0)
-
-  // date range based on forwarded flag
+  // Forwarded: current week Monday through today only
   if (isForwarded === "isForwarded") {
     return (
       thisWeek &&
@@ -657,7 +657,7 @@ function getTimesheetAllowedDateRange(
     )
   }
 
-  // not forwarded allow current and future dates only
+  // Not forwarded: today and future dates
   return selectedDate >= today
 }
 
