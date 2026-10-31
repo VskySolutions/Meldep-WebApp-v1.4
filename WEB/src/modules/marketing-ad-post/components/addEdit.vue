@@ -499,6 +499,7 @@ const getAdPost = () => {
   loading.value = true;
   adPostService.getAdPostDetails(props.id).then((resp) => {
     model.value = _.cloneDeep(resp);
+    delete model.value.project;
     model.value.virtualPath = resp.picture ? resp.picture.virtualPath : "";
     model.value.description = resp.description ? resp.description : "";
   }).finally(() => {
@@ -830,7 +831,6 @@ const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 // Submit form
 // -------------------------------------------------------------------------------------------------------
 const onSubmit = async () => {
-  debugger;
   try {
     if (!isFileValid.value) {
       notifyWarning({ message: "Please upload a valid file" });
