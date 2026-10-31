@@ -131,6 +131,7 @@ namespace Vsky.Models
         public string RequirementId { get; set; }
         public string ProjectId { get; set; }
         public string ProjectModuleId { get; set; }
+        public string IntegrationDirectionId { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
 
@@ -143,6 +144,7 @@ namespace Vsky.Models
         public virtual Requirement Requirement { get; set; }
         public virtual Project Project { get; set; }
         public virtual ProjectModule ProjectModule { get; set; }
+        public virtual DropDown IntegrationDirection { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }
         public virtual ICollection<RequirementDataMappingNotes> RequirementDataMappingNotes { get; set; } = new List<RequirementDataMappingNotes>();
@@ -160,6 +162,7 @@ namespace Vsky.Models
         public string Id { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
+        public string IntegrationDirectionId { get; set; }
         public bool Deleted { get; set; }
         public List<SaveRequirementDataMappingNotes> Notes { get; set; } = new();
     }

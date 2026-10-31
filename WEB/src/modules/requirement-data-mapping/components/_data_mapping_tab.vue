@@ -31,6 +31,9 @@
             <q-td class="text-left common-q-td" >
               {{ props.row.target }}
             </q-td>
+            <q-td class="text-left common-q-td" >
+              {{ props.row.integrationDirection.dropDownValue }}
+            </q-td>
             <q-td class="text-center actions">
               <q-icon
                 name="o_visibility"
@@ -78,7 +81,8 @@ const activeRowId = ref(null);
 const pagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 const columns = ref([
   { name: "source", label: "Source", field: "source", align: "left", sortable: true },
-  { name: "target", label: "Target", field: "target", align: "left", sortable: true }
+  { name: "target", label: "Target", field: "target", align: "left", sortable: true },
+  { name: "integrationDirection.dropDownValue", label: "Integration Direction", field: "integrationDirection.dropDownValue", align: "left", sortable: true }
 ]);
 
 // get data mapping details on edit mode

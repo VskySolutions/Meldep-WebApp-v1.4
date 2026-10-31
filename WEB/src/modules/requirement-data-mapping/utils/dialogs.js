@@ -44,7 +44,6 @@ export function onEditRequirementDataMapping (id, isRequirementReadonly, refresh
 
 export function onRequirementDataMappingNoteEdit (id, source, target, isManageNotes, refreshDataMappingList) {
   activeRowId.value = id;
-  console.log('Updated active row ID:', activeRowId.value);
   $q.dialog({
     component: editDataMappingNotes,
     componentProps: { id, source, target, isManageNotes }

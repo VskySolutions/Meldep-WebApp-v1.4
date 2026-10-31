@@ -111,6 +111,7 @@ namespace Vsky.Api.Controllers
                     searchModel.ProjectIds,
                     searchModel.ProjectModuleIds,
                     searchModel.RequirementIds,
+                    searchModel.IntegrationDirectionId,
                     searchModel.Source,
                     searchModel.Target,
                     searchModel.SortBy,
@@ -222,6 +223,7 @@ namespace Vsky.Api.Controllers
                                 //mapping.ProjectModuleId = model.ProjectModuleId;
                                 mapping.Source = data.Source;
                                 mapping.Target = data.Target;
+                                mapping.IntegrationDirectionId = data.IntegrationDirectionId;
                                 mapping.UpdatedById = LoggedUserId;
                                 mapping.UpdatedOnUtc = GetDateTime;
 
@@ -240,6 +242,7 @@ namespace Vsky.Api.Controllers
                                     RequirementId = model.RequirementId,
                                     ProjectId = model.ProjectId,
                                     ProjectModuleId = model.ProjectModuleId,
+                                    IntegrationDirectionId = data.IntegrationDirectionId,
                                     Source = data.Source,
                                     Target = data.Target,
                                     CreatedById = LoggedUserId,

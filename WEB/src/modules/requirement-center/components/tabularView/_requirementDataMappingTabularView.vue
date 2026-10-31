@@ -50,6 +50,9 @@
             <q-td style="width: 15%;">
               {{ props.row.target }}
             </q-td>
+            <q-td style="width: 15%;">
+              {{ props.row.integrationDirection.dropDownValue }}
+            </q-td>
             <q-td style="width: 20%;">
               {{ props.row.createdBy.person.fullName }}
             </q-td>
@@ -92,9 +95,9 @@ const pagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 
 const columns = ref([
   { name: "source", label: "File Path", field: "source", align: "left", sortable: true },
   { name: "target", label: "File Name", field: "target", align: "left", sortable: true },
+   { name: "integrationDirection.dropDownValue", label: "Integration Direction", field: "integrationDirection.dropDownValue", align: "left", sortable: true },
   { name: "createdBy.person.fullName", label: "Created By", field: "createdBy.person.fullName", align: "left", sortable: true },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true },
-
 ]);
 
 const getRequirementDataMapping = () => {

@@ -3,7 +3,7 @@
     <q-card class="project6">
       <q-card-section class="card-header with-tools">
         <div class="row items-center">
-          <div class="col-12 col-xs-3 col-sm-2 col-md-3 col-lg-4 col-xl-2">
+          <div class="col-12 col-xs-3 col-sm-2 col-md-3 col-lg-4 col-xl-3">
             <q-breadcrumbs class="text-brown text-weight-bold text-h3">
               <template #separator>
                 <q-icon size="1.5em" name="o_chevron_right" color="primary" />
@@ -21,7 +21,7 @@
               </q-chip>
             </div>
           </div>
-          <div class="col-12 col-xs-6 col-sm-8 col-md-7 col-lg-6 col-xl-7">
+          <div class="col-12 col-xs-6 col-sm-8 col-md-7 col-lg-6 col-xl-6">
             <div class="row items-center justify-end no-wrap">
               <div class="row items-center" style="flex-wrap: nowrap;">
                 <div class="search-container position-relative">
@@ -80,6 +80,12 @@
                           />
                         </div>
                       </div>
+                      <singleSelectDropdown
+                        v-model="search.integrationDirectionId"
+                        label="Integration Direction"
+                        :options="dataMappingIntegrationDirectionDropdownSingleSelect.list.value"
+                        :filter="dataMappingIntegrationDirectionDropdownSingleSelect.filter"
+                      />
                       <!-- Search and Clear Buttons -->
                       <div class="row justify-end q-gutter-sm q-mb-sm">
                         <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showFilter = false; onAdvanceSearch(); }" />
@@ -287,6 +293,9 @@
                 <q-td v-if="selectedColumnNames.includes('target')" class="text-left common-q-td" >
                   {{ mapping.target }}
                 </q-td>
+                <q-td v-if="selectedColumnNames.includes('integrationDirection.dropDownValue')" class="text-left common-q-td" >
+                  {{ mapping.integrationDirection.dropDownValue }}
+                </q-td>
                 <q-td v-if="selectedColumnNames.includes('note')" class="RichTextEditor common-q-td hidden">
                   <div v-html="mapping.requirementDataMappingNotes[0]?.note" />
                 </q-td>
@@ -356,9 +365,11 @@ import requirementDataMappingService from "../requirementDataMapping.service";
 import projectModule from "src/modules/project/utils/dropdowns.js";
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
+import requirementDataMappingModule from "src/modules/requirement-data-mapping/utils/dropdowns.js";
 
 // Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
+import singleSelectDropdown from "src/components/form-inputs/_singleSelectDropdown.vue";
 
 // Shared DataTable Views
 import searchFilterBar from "src/components/dataTable/_searchFilterBar.vue";
@@ -421,6 +432,7 @@ const columns = ref([
   { name: "requirement.projectModule.name", label: "Module", field: "requirement.projectModule.name", align: "left", sortable: false, default: false },
   { name: "source", label: "Source", field: "source", align: "left", sortable: false, default: true },
   { name: "target", label: "Target", field: "target", align: "left", sortable: false, default: true },
+  { name: "integrationDirection.dropDownValue", label: "Integration Direction", field: "integrationDirection.dropDownValue", align: "left", sortable: false, default: true },
   { name: "createdBy.person.firstName", label: "Created By", field: "createdBy.person.firstName", align: "left", sortable: false, default: false },
   { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: false, default: false },
   { name: "updatedBy.person.firstName", label: "Updated By", field: "updatedBy.person.firstName", align: "left", sortable: false, default: false },
@@ -506,7 +518,8 @@ const {
     projectModuleIds: [],
     requirementIds: [],
     source: "",
-    target: ""
+    target: "",
+    integrationDirectionId: null
   },
 
   defaultPagination: {
@@ -642,7 +655,8 @@ const onAdvanceClear = () => {
   search.value.projectModuleIds = [];
   search.value.requirementIds = [];
   search.value.source = "",
-  search.value.target = ""
+  search.value.target = "",
+  search.value.integrationDirectionId = null;
   saveDataTableState({
     search: search.value
   });
@@ -673,10 +687,18 @@ const mapFilterToLabel = (ids, list, label) => {
   return { [label]: text };
 };
 
+const mapSingleFilterToLabel = (id, list, label) => {
+  if (id == null || id === "") return {};
+  const match = list.value.find(item => item.value === id);
+  const text = match ? match.text : id;
+  return { [label]: text };
+};
+
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
   ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
+  ...mapSingleFilterToLabel(search.value.integrationDirectionId, dataMappingIntegrationDirectionDropdownSingleSelect.list, "Integration Direction"),
   ...(search.value.source ? { Source: search.value.source } : {}),
   ...(search.value.target ? { Target: search.value.target } : {})
 }));
@@ -692,6 +714,8 @@ function onClearFilters (key) {
     search.value.source = "";
   } else if (key === "Target") {
     search.value.target = "";
+  } else if (key === "Integration Direction") {
+    search.value.integrationDirectionId = null;
   }
   delete appliedFilters.value[key];
   refreshDataMappingList();
@@ -712,6 +736,7 @@ function getFilterCount (key) {
 const { projectNameDropdown } = projectModule();
 const { projectModulesByProjectIdForDropdown } = projectModuleOfProjectModule();
 const { requirementsByProjectModuleIdForDropdown } = requirementModule();
+const { dataMappingIntegrationDirectionDropdownSingleSelect } = requirementDataMappingModule();
 
 // ----------------------------
 // Save static search into localstorage.
@@ -781,6 +806,7 @@ watch(activeRowId, (val) => {
 onMounted(() => {
   tableRef.value.requestServerInteraction();
   projectNameDropdown.load();
+  dataMappingIntegrationDirectionDropdownSingleSelect.load("Data Mapping Integration Direction");
 
   if (search.value.projectIds) projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
   if (search.value.projectModuleIds?.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds, '', 'Data Integration');

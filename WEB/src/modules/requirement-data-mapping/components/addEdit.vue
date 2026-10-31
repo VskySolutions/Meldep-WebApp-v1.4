@@ -126,7 +126,7 @@
                       <q-tr :props="props" class="bg-primary text-white">
                         <q-th v-for="col in props.cols" :key="col.name" class="text-start">
                           {{ col.label }}
-                          <span v-if="['source', 'target'].includes(col.name)" class="required">*</span>
+                          <span v-if="['source', 'target', 'integrationDirection.dropdown'].includes(col.name)" class="required">*</span>
                         </q-th>
                         <q-th class="text-center">Actions</q-th>
                       </q-tr>
@@ -159,7 +159,17 @@
                             @blur="getRowValidation(props.row)?.target?.$touch()"
                           />
                         </q-td>
-                        <q-td class="hidden" style="white-space: normal; overflow-wrap: break-word; width: 50%;">
+                        <q-td style="width: 20%;">
+                          <formSingleSelectDropdown
+                            v-model="props.row.integrationDirectionId"
+                            :options="dataMappingIntegrationDirectionDropdownSingleSelect.list.value"
+                            :filter="dataMappingIntegrationDirectionDropdownSingleSelect.filter"
+                            :error="getRowValidation(props.row)?.integrationDirectionId?.$error"
+                            :error-message="getRowValidation(props.row)?.integrationDirectionId?.$errors[0]?.$message"
+                            @blur="getRowValidation(props.row)?.integrationDirectionId?.$touch()"
+                          />
+                        </q-td>
+                        <q-td class="hidden" style="white-space: normal; overflow-wrap: break-word; width: 30%;">
                           <q-editor
                           v-model="props.row.note"
                           :dense="$q.screen.lt.md"
@@ -265,6 +275,7 @@ import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSele
 
 // SOP Change :- Shared Dropdowns
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
+import requirementDataMappingModule from "src/modules/requirement-data-mapping/utils/dropdowns.js";
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
 import projectModule from "src/modules/project/utils/dropdowns.js";
 
@@ -318,8 +329,8 @@ const model = ref({
 // Data Mapping
 const DataMappingColumns = ref([
   { name: "source", label: "Source", field: "source", align: "left", sortable: false },
-  { name: "target", label: "Target", field: "target", align: "left" }
-  // { name: "note", label: "Note", field: "note", align: "left" }
+  { name: "target", label: "Target", field: "target", align: "left" },
+  { name: "integrationDirection.dropdown", label: "Integration Direction", field: "integrationDirection.dropdown", align: "left" }
 ]);
 
 const highlightedId = computed(() => { return activeRowId.value; });
@@ -379,6 +390,7 @@ const onAdd = () => {
     id: "",
     source: "",
     target: "",
+    integrationDirectionId: null,
     note: "",
     deleted: false,
     notes: []
@@ -406,6 +418,7 @@ initRequirementDialogs(activeRowId);
 const { requirementsByProjectModuleIdForDropdown } = requirementModule();
 const { projectNameDropdownSingleSelect } = projectModule();
 const { projectModulesByProjectIdForDropdownSingleSelect } = projectModuleOfProjectModule();
+const { dataMappingIntegrationDirectionDropdownSingleSelect } = requirementDataMappingModule();
 
 // ==================================================================================
 // Validation rules
@@ -413,7 +426,8 @@ const { projectModulesByProjectIdForDropdownSingleSelect } = projectModuleOfProj
 
 const rowRules = {
   source: { required: helpers.withMessage("Source is required", required) },
-  target: { required: helpers.withMessage("Target is required", required) }
+  target: { required: helpers.withMessage("Target is required", required) },
+  integrationDirectionId : { required: helpers.withMessage("Integration Direction is required", required) }
 };
 
 const getRowValidation = (row) => {
@@ -510,6 +524,7 @@ const onSubmit = async (shouldClose, buttonType) => {
           id: row.id || "",
           source: row.source || "",
           target: row.target || "",
+          integrationDirectionId: row.integrationDirectionId || null,
           deleted: row.deleted || false,
           notes: row.note
             ? [
@@ -617,6 +632,7 @@ watch(
 onMounted(() => {
   // requirementsByProjectModuleIdForDropdown.load(model.value.projectModuleId, model.value.projectId, 'Data Integration');
   projectNameDropdownSingleSelect.load();
+  dataMappingIntegrationDirectionDropdownSingleSelect.load("Data Mapping Integration Direction");
 });
 
 </script>

@@ -109,12 +109,18 @@ namespace Vsky.Services.RequirementDataMappings
             {
                 Id = x.Id,
                 RequirementId = x.RequirementId,
+                IntegrationDirectionId = x.IntegrationDirectionId,
                 Source = x.Source,
                 Target = x.Target,
                 Requirement = new Requirement
                 {
                     Id = x.Requirement.Id,
                     Title = x.Requirement.Title
+                },
+                IntegrationDirection = new DropDown
+                {
+                    Id = x.IntegrationDirection.Id,
+                    DropDownValue = x.IntegrationDirection.DropDownValue
                 }
             });
 
@@ -131,6 +137,7 @@ namespace Vsky.Services.RequirementDataMappings
             List<string> projectIds,
             List<string> projectModuleIds,
             List<string> requirementIds,
+            string integrationDirectionId,
             string source,
             string target,
             string sortBy,
@@ -158,6 +165,9 @@ namespace Vsky.Services.RequirementDataMappings
                 query = query.Where(x => projectModuleIds.Contains(x.Requirement.ProjectModule.Id));
             }
 
+            if (!string.IsNullOrWhiteSpace(integrationDirectionId))
+                query = query.Where(x => x.IntegrationDirectionId == integrationDirectionId);
+
             if (!string.IsNullOrWhiteSpace(source))
             {
                 source = source.Trim().ToLower();
@@ -181,7 +191,9 @@ namespace Vsky.Services.RequirementDataMappings
                 query = query.Where(x =>
                     x.Requirement.Title.ToLower().Contains(SearchText) ||
                     x.Source.ToLower().Contains(SearchText) ||
-                    x.Target.ToLower().Contains(SearchText));
+                    x.Target.ToLower().Contains(SearchText) ||
+                    x.IntegrationDirection.DropDownValue.ToLower().Contains(SearchText)
+                );
             }
 
             // Get the Requirement IDs after applying all filters
@@ -239,13 +251,16 @@ namespace Vsky.Services.RequirementDataMappings
             var mappingQuery = _requirementDataMappingRepository.TableNoTracking
                 .Where(x =>
                     !x.Deleted &&
-                    pagedRequirementIds.Contains(x.RequirementId))
+                    pagedRequirementIds.Contains(x.RequirementId) &&
+                      (string.IsNullOrWhiteSpace(integrationDirectionId) ||
+                    x.IntegrationDirectionId == integrationDirectionId))
                 .Select(x => new RequirementDataMapping
                 {
                     Id = x.Id,
                     ProjectId = x.ProjectId,
                     ProjectModuleId = x.ProjectModuleId,
                     RequirementId = x.RequirementId,
+                    IntegrationDirectionId = x.IntegrationDirectionId,
                     Source = x.Source,
                     Target = x.Target,
                     CreatedOnUtc = x.CreatedOnUtc,
@@ -263,6 +278,11 @@ namespace Vsky.Services.RequirementDataMappings
                             Id = x.Requirement.ProjectModule.Id,
                             Name = x.Requirement.ProjectModule.Name
                         }
+                    },
+                    IntegrationDirection = new DropDown
+                    {
+                        Id = x.IntegrationDirection.Id,
+                        DropDownValue = x.IntegrationDirection.DropDownValue
                     },
                     CreatedBy = new ApplicationUser
                     {
@@ -330,6 +350,7 @@ namespace Vsky.Services.RequirementDataMappings
                 Id = x.Id,
                 Source = x.Source,
                 Target = x.Target,
+                IntegrationDirectionId = x.IntegrationDirectionId,
                 CreatedOnUtc = x.CreatedOnUtc,
                 CreatedBy = new ApplicationUser
                 {
@@ -373,6 +394,7 @@ namespace Vsky.Services.RequirementDataMappings
                 ProjectId = x.ProjectId,
                 ProjectModuleId = x.ProjectModuleId,
                 RequirementId = x.RequirementId,
+                IntegrationDirectionId = x.IntegrationDirectionId,
                 Source = x.Source,
                 Target = x.Target,
                 CreatedById = x.CreatedById,
@@ -387,6 +409,11 @@ namespace Vsky.Services.RequirementDataMappings
                         Id = x.CreatedBy.PersonId,
                         FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
                     }
+                },
+                IntegrationDirection = new DropDown
+                {
+                    Id = x.IntegrationDirection.Id,
+                    DropDownValue = x.IntegrationDirection.DropDownValue
                 },
                 Requirement = new Requirement
                 {

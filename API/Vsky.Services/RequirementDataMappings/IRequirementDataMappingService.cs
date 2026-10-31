@@ -36,6 +36,7 @@ namespace Vsky.Services.RequirementDataMappings
             List<string> projectIds,
             List<string> projectModuleIds,
             List<string> requirementIds,
+            string integrationDirectionId,
             string source,
             string target,
             string sortBy,

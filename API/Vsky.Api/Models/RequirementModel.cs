@@ -131,6 +131,7 @@ namespace Vsky.Api.Models
         public string RequirementId { get; set; }
         public List<string> ProjectIds { get; set; }
         public List<string> ProjectModuleIds { get; set; }
+        public string IntegrationDirectionId { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
     }
