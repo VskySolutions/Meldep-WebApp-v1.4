@@ -75,6 +75,7 @@ namespace Vsky.Services.Requirements
             int requirementNumber,
             List<string> projectIds,
             List<string> projectModuleIds,
+            List<string> requirementIds,
             List<string> requirementGroupIds,
             string name,
             List<string> statusIds,
@@ -127,6 +128,9 @@ namespace Vsky.Services.Requirements
 
             if (projectModuleIds != null && projectModuleIds.Any())
                 query = query.Where(x => projectModuleIds.Contains(x.ProjectModuleId));
+
+            if (requirementIds != null && requirementIds.Any())
+                query = query.Where(x => requirementIds.Contains(x.Id));
 
             if (statusIds != null && statusIds.Any())
                 query = query.Where(x => statusIds.Contains(x.StatusId));

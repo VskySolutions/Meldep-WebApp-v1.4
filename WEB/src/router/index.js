@@ -82,6 +82,7 @@ import sopProcessRoutes from "src/modules/sop-process/routes";
 import projectActionItems from "src/modules/project-action-items/routes";
 import projectQuestionsAnswersRoutes from "src/modules/project-questions-answers/routes";
 import requirementDataMappingRoutes from "src/modules/requirement-data-mapping/routes";
+import requirementStatusTrackingRoutes from "src/modules/requirement-status-tracking/routes";
 
 routes.push(...userManagementRoutes);
 routes.push(...companyRoutes);
@@ -153,6 +154,7 @@ routes.push(...sopProcessRoutes);
 routes.push(...projectActionItems);
 routes.push(...projectQuestionsAnswersRoutes);
 routes.push(...requirementDataMappingRoutes);
+routes.push(...requirementStatusTrackingRoutes);
 
 export default route(function ({ store } /* { store, ssrContext } */) {
   const createHistory = process.env.SERVER

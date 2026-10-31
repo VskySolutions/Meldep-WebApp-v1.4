@@ -139,6 +139,7 @@
                       label="Drag file here or (+) to upload. (File)"
                       @file-selected="handleFile"
                       @file-valid="isFileValid = $event"
+                      :initialUrl="model.virtualPath"
                     />
                     <div v-if="v$.pictureId.$error" class="text-negative text-caption q-mt-xs">
                       {{ v$.pictureId.$errors[0]?.$message }}
@@ -829,6 +830,7 @@ const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 // Submit form
 // -------------------------------------------------------------------------------------------------------
 const onSubmit = async () => {
+  debugger;
   try {
     if (!isFileValid.value) {
       notifyWarning({ message: "Please upload a valid file" });
@@ -836,23 +838,23 @@ const onSubmit = async () => {
     }
     if (await v$.value.$validate()) {
       processing.value = true;
-      const payload = {
-        adNumber: model.value.adNumber,
-        name: model.value.name,
-        description: model.value.description,
-        projectId: model.value.projectId,
-        customerId: model.value.customerId,
-        url: model.value.url,
-        imageType: model.value.imageType,
-        imageProviderClientId: model.value.imageProviderClientId,
-        imageProviderEmpId: model.value.imageProviderEmpId,
-        contentType: model.value.contentType,
-        contentProviderClientId: model.value.contentProviderClientId,
-        contentProviderEmpId: model.value.contentProviderEmpId,
-        caption: model.value.caption,
-        tags: model.value.tags
-      };
-      await adPostService.saveAdPost(props.id, payload);
+      // const payload = {
+      //   adNumber: model.value.adNumber,
+      //   name: model.value.name,
+      //   description: model.value.description,
+      //   projectId: model.value.projectId,
+      //   customerId: model.value.customerId,
+      //   url: model.value.url,
+      //   imageType: model.value.imageType,
+      //   imageProviderClientId: model.value.imageProviderClientId,
+      //   imageProviderEmpId: model.value.imageProviderEmpId,
+      //   contentType: model.value.contentType,
+      //   contentProviderClientId: model.value.contentProviderClientId,
+      //   contentProviderEmpId: model.value.contentProviderEmpId,
+      //   caption: model.value.caption,
+      //   tags: model.value.tags
+      // };
+      await adPostService.saveAdPost(props.id, model.value);
       notifySuccess({ message: "Ad is saved successfully." });
       onDialogOK();
     }

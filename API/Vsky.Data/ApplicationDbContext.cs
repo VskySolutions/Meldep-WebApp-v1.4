@@ -193,6 +193,7 @@ namespace Vsky.Data
         public virtual DbSet<RequirementPinned> RequirementPinned { get; set; }
         public virtual DbSet<RequirementDataMapping> RequirementDataMapping { get; set; }
         public virtual DbSet<RequirementDataMappingNotes> RequirementDataMappingNotes { get; set; }
+        public virtual DbSet<RequirementStatusTracking> RequirementStatusTracking { get; set; }
 
         //Marketing -> Ad Post & Job Create
         public virtual DbSet<AdPost> AdPost { get; set; }
@@ -2136,7 +2137,25 @@ namespace Vsky.Data
 
                 entity.HasOne(r => r.RequirementDataMapping).WithMany(r => r.RequirementDataMappingNotes).HasForeignKey(r => r.RequirementDataMappingId);
             });
-            
+
+            // Mapping only: the table is provisioned externally (no migration / EnsureCreated).
+            builder.Entity<RequirementStatusTracking>(entity =>
+            {
+                entity.ToTable("Requirement_Status_Tracking");
+
+                //entity.Property(e => e.TrackingDate).HasColumnType("date");
+                //entity.Property(e => e.CurrentPercent).HasPrecision(5, 2);
+                //entity.Property(e => e.TimeSpentAsOfToday).HasPrecision(10, 2);
+                //entity.Property(e => e.EstimatedRemainingTime).HasPrecision(10, 2);
+                //entity.Property(e => e.Scope).HasPrecision(10, 2);
+
+                entity.HasOne(r => r.Requirement).WithMany().HasForeignKey(r => r.RequirementId);
+                entity.HasOne(r => r.Project).WithMany().HasForeignKey(r => r.ProjectId);
+                entity.HasOne(r => r.ProjectModule).WithMany().HasForeignKey(r => r.ProjectModuleId);
+                entity.HasOne(d => d.CreatedBy).WithMany().HasForeignKey(d => d.CreatedById);
+                entity.HasOne(d => d.UpdatedBy).WithMany().HasForeignKey(d => d.UpdatedById);
+            });
+
             #endregion
 
             #region Marketing -> Ad Post & Job Post

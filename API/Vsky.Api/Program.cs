@@ -122,6 +122,7 @@ using Vsky.Services.ReportSetting;
 using Vsky.Services.ReportSettingDetail;
 using Vsky.Services.ReportUserMappings;
 using Vsky.Services.RequirementDataMappings;
+using Vsky.Services.RequirementStatusTrackings;
 using Vsky.Services.Requirements;
 using Vsky.Services.RequirementsColor;
 using Vsky.Services.RequirementsPinned;
@@ -417,6 +418,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<IRequirementTagService, RequirementTagService>();
             builder.Services.AddScoped<IRequirementDataMappingService, RequirementDataMappingService>();
             builder.Services.AddScoped<IRequirementDataMappingNotesService, RequirementDataMappingNotesService>();
+            builder.Services.AddScoped<IRequirementStatusTrackingService, RequirementStatusTrackingService>();
 
             builder.Services.AddScoped<IAdPostService, AdPostService>();
             builder.Services.AddScoped<IAdPostChannelService, AdPostChannelService>();

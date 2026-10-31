@@ -113,6 +113,7 @@ namespace Vsky.Api.Controllers
                     searchModel.RequirementNumber,
                     searchModel.ProjectIds,
                     searchModel.ProjectModuleIds,
+                    searchModel.RequirementIds,
                     searchModel.RequirementGroupIds,
                     searchModel.Name,
                     searchModel.StatusIds,

@@ -96,14 +96,12 @@
                         :options="projectModulesByProjectIdForDropdown.list.value"
                         :filter="projectModulesByProjectIdForDropdown.filter"
                       />
-                      <div class="row items-center q-mb-sm">
-                        <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                          <label class="Cutomlabel q-mt-sm fs-13">Requirement</label>
-                        </div>
-                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
-                          <q-input v-model="search.name" fill-input class="q-mx-sm w-100 h-auto" :dense="true" />
-                        </div>
-                      </div>
+                      <multiSelectDropdown
+                        v-model="search.requirementIds"
+                        label="Requirement"
+                        :options="requirementsByProjectModuleIdForDropdown.list.value"
+                        :filter="requirementsByProjectModuleIdForDropdown.filter"
+                      />
                       <multiSelectDropdown
                         v-model="search.statusIds"
                         label="Requirement Status"
@@ -1435,7 +1433,7 @@ const onAdvanceClear = () => {
   search.value.projectIds = [];
   search.value.projectModuleIds = [];
   search.value.requirementGroupIds = [];
-  search.value.name = "";
+  search.value.requirementIds = [];
   search.value.statusIds = [];
   search.value.requirementTypeIds = [];
   search.value.identifiedUserTypeId = null;
@@ -1965,8 +1963,12 @@ const {
   requirementStatusDropdownSingleSelect,
   requirementPriorityDropdownSingleSelect,
   requirementIdentifiedUserTypeDropdownSingleSelect,
-  requirementTagsDropdown
+  requirementTagsDropdown,
+  requirementsByProjectModuleIdForDropdown
 } = requirementModule();
+
+// The Requirement text filter was replaced by a dropdown; drop any name persisted in table state so it can't filter invisibly.
+search.value.name = "";
 
 // ----------------------------
 // Applied Filter Labels.
@@ -1994,6 +1996,7 @@ const mapSingleFilterToLabel = (id, list, label) => {
 const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
+  ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
   ...mapFilterToLabel(search.value.requirementGroupIds, requirementGroupList, "Requirement Group Name"),
   ...mapFilterToLabel(search.value.statusIds, requirementStatusForDropdown.list, "Requirement Status"),
   ...mapFilterToLabel(search.value.requirementTypeIds, requirementTypeForDropdown.list, "Requirement Type"),
@@ -2002,7 +2005,6 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.identifiedEmployeeIds, activeEmployeesDropdown.list, "Employee Name"),
   ...mapFilterToLabel(search.value.requirementTagIds, requirementTagsDropdown.list, "Tags"),
   ...(search.value.requirementNumber > 0 ? { "Requirement Id": search.value.requirementNumber } : {}),
-  ...(search.value.name ? { Requirement: search.value.name } : {}),
   ...(search.value.fromDate ? { "Created From Date": search.value.fromDate } : {}),
   ...(search.value.toDate ? { "Created To Date": search.value.toDate } : {})
 }));
@@ -2011,6 +2013,7 @@ function getFilterCount (key) {
   switch (key) {
   case "Project Name": return search.value.projectIds?.length || 0;
   case "Project Module": return search.value.projectModuleIds?.length || 0;
+  case "Requirement": return search.value.requirementIds?.length || 0;
   case "Requirement Group Name": return search.value.requirementGroupIds?.length || 0;
   case "Requirement Status": return search.value.statusIds?.length || 0;
   case "Requirement Type": return search.value.requirementTypeIds?.length || 0;
@@ -2028,6 +2031,7 @@ function onClearFilters (key) {
     search.value.projectIds = [];
   } else if (key === "Project Module") {
     search.value.projectModuleIds = [];
+    search.value.requirementIds = [];
   } else if (key === "Requirement Group Name") {
     search.value.requirementGroupIds = [];
   } else if (key === "Requirement Status") {
@@ -2041,7 +2045,7 @@ function onClearFilters (key) {
   } else if (key === "Customer Name") {
     search.value.identifiedCustomerIds = [];
   } else if (key === "Requirement") {
-    search.value.name = "";
+    search.value.requirementIds = [];
   } else if (key === "Created From Date") {
     search.value.fromDate = "";
   } else if (key === "Created To Date") {
@@ -2086,6 +2090,20 @@ watch(() => search.value.projectIds, async (newValue, oldValue) => {
     search.value.projectModuleIds = [];
   }
 }, { immediate: true });
+
+// Requirement options depend on the selected modules (same as Issue List).
+watch(
+  () => [...(search.value.projectModuleIds || [])],
+  async (newValue) => {
+    if (newValue.length === 0) {
+      search.value.requirementIds = [];
+      return;
+    }
+
+    await requirementsByProjectModuleIdForDropdown.load(newValue);
+  },
+  { immediate: true }
+);
 
 watch(selectedField, (newVal) => {
   if (newVal) {

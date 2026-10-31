@@ -17,6 +17,7 @@ namespace Vsky.Services.Requirements
             int requirementNumber,
             List<string> projectIds,
             List<string> projectModuleIds,
+            List<string> requirementIds,
             List<string> requirementGroupIds,
             string name,
             List<string> statusIds,
