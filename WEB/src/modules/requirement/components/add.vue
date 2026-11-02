@@ -135,7 +135,67 @@
                     :filter="requirementTypeDropdownSingleSelect.filter"
                   />
                 </div>
-                <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                <div v-if="requirementTypeText === 'Data Integration'"class="col-12 col-sm-6 col-md-6 col-lg-4">
+                  <label class="q-mb-xs text-black">Source Label<span class="required">*</span>
+                    <q-icon
+                      name="o_info"
+                      size="16px"
+                      class="q-ml-xs cursor-pointer text-grey-7"
+                    >
+                      <q-tooltip
+                        anchor="top middle"
+                        self="bottom middle"
+                        :offset="[0, 6]"
+                      >
+                        <div style="max-width: 320px; white-space: normal;">
+                          Enter the label that identifies the source data column in the Requirement Data Mapping section.
+                        </div>
+                      </q-tooltip>
+                    </q-icon>
+                  </label>
+                  <q-input
+                    v-model="model.sourceLabel"
+                    outlined
+                    stack-label
+                    hide-bottom-space
+                    :dense="true"
+                    :error="v$.sourceLabel.$error"
+                    :error-message="v$.sourceLabel.$errors[0]?.$message"
+                    @blur="v$.sourceLabel.$touch"
+                  />
+                </div>
+                <div v-if="requirementTypeText === 'Data Integration'"class="col-12 col-sm-6 col-md-6 col-lg-4">
+                  <label class="q-mb-xs text-black">Target Label<span class="required">*</span>
+                    <q-icon
+                      name="o_info"
+                      size="16px"
+                      class="q-ml-xs cursor-pointer text-grey-7"
+                    >
+                      <q-tooltip
+                        anchor="top middle"
+                        self="bottom middle"
+                        :offset="[0, 6]"
+                      >
+                        <div style="max-width: 320px; white-space: normal;">
+                          Enter the label that identifies the target data column in the Requirement Data Mapping section.
+                        </div>
+                      </q-tooltip>
+                    </q-icon>
+                  </label>
+                  <q-input
+                    v-model="model.targetLabel"
+                    outlined
+                    stack-label
+                    hide-bottom-space
+                    :dense="true"
+                    :error="v$.targetLabel.$error"
+                    :error-message="v$.targetLabel.$errors[0]?.$message"
+                    @blur="v$.targetLabel.$touch"
+                  />
+                </div>
+              </div>
+              <div class="row q-col-gutter-x-md q-mb-md">
+                <div class="col-12 col-sm-6 col-md-6">
                   <formSingleSelectDropdown
                     v-model="model.areaId"
                     label="Area"
@@ -144,7 +204,7 @@
                     :filter="areaForDropdownSingleSelect.filter"
                   />
                 </div>
-                <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                <div class="col-12 col-sm-6 col-md-6">
                   <formSingleSelectDropdown
                     v-model="model.workspaceId"
                     label="Workspace"
@@ -772,7 +832,7 @@
 
 <script setup>
 import { useDialogPluginComponent, useQuasar, uid } from "quasar";
-import { required, helpers, minLength, maxLength } from "@vuelidate/validators";
+import { required, helpers, minLength, maxLength, requiredIf } from "@vuelidate/validators";
 import { ref, watch, onMounted, computed } from "vue";
 import { notifySuccess, notifyError, getLocalStorage } from "assets/utils";
 import { isDate } from "validators/zw_validators.js";
@@ -934,6 +994,8 @@ const rules = {
   },
   requirementOwnerId: { required: helpers.withMessage("Requirement Owner is required", required) },
   customerOwnerId: { required: helpers.withMessage("Customer Owner is required", required) },
+  sourceLabel: { required: helpers.withMessage( "Source Label is required", requiredIf(() => requirementTypeText.value === 'Data Integration')) },
+  targetLabel: { required: helpers.withMessage("Target Label is required", requiredIf(() => requirementTypeText.value === 'Data Integration'))},
   closeDateStr: {
     isDate: helpers.withMessage("Date is invalid", isDate)
   },
@@ -1147,6 +1209,14 @@ const {
 const identifiedUserTypeText = computed(() => {
   const selectedOption = requirementIdentifiedUserTypeDropdownSingleSelect.list.value.find(
     item => item.value === model.value.identifiedUserType
+  );
+  return selectedOption ? selectedOption.text : null;
+});
+
+// Computed property to get the requirementType's text
+const requirementTypeText = computed(() => {
+  const selectedOption = requirementTypeDropdownSingleSelect.list.value.find(
+    item => item.value === model.value.requirementTypeId
   );
   return selectedOption ? selectedOption.text : null;
 });
@@ -1405,6 +1475,13 @@ watch(() => model.value.projectId, async (newValue, oldValue) => {
   await customerContactByProjectIdDropdownSingleSelect.load(newValue);
 
 }, { immediate: true });
+
+watch(requirementTypeText, (newValue) => {
+  if (newValue !== 'Data Integration') {
+    model.value.sourceLabel = null;
+    model.value.targetLabel = null;
+  }
+});
 
 // ----------------------------------------------------------------------------------------------------------------
 // On page load

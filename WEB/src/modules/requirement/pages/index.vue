@@ -745,6 +745,18 @@
                   {{ props.row.requirementType.dropDownValue }}
               </q-td>
               <q-td
+                v-if="selectedColumnNames.includes('sourceLabel')"
+                class="common-q-td"
+              >
+                  {{ props.row.sourceLabel }}
+              </q-td>
+              <q-td
+                v-if="selectedColumnNames.includes('targetLabel')"
+                class="common-q-td"
+              >
+                  {{ props.row.targetLabel }}
+              </q-td>
+              <q-td
                 v-if="selectedColumnNames.includes('area.dropDownValue')"
                 class="common-q-td"
               >
@@ -1242,6 +1254,8 @@ const columns = ref([
   { name: "customerOwner.firstName", label: "Customer Owner", field: "customerOwner.firstName", align: "left", sortable: true, default: false },
   { name: "requirementTags", label: "Tags", field: row => row.requirementTags, align: "left", sortable: false, default: false },
   { name: "requirementType.dropDownValue", label: "Type", field: "requirementType.dropDownValue", align: "left", sortable: true, default: false },
+  { name: "sourceLabel", label: "Source Label", field: "sourceLabel", align: "left", sortable: true, default: false },
+  { name: "targetLabel", label: "Target Label", field: "targetLabel", align: "left", sortable: true, default: false },
   { name: "area.dropDownValue", label: "Area", field: "area.dropDownValue", align: "left", sortable: true, default: false },
   { name: "workspace.dropDownValue", label: "Workspace", field: "workspace.dropDownValue", align: "left", sortable: true, default: false },
   { name: "requirementEntered.person.firstName", label: "Entered By", field: "requirementEntered.person.firstName", align: "left", sortable: true, default: false },

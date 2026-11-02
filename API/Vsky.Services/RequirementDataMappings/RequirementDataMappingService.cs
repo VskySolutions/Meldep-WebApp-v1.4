@@ -352,6 +352,17 @@ namespace Vsky.Services.RequirementDataMappings
                 Target = x.Target,
                 IntegrationDirectionId = x.IntegrationDirectionId,
                 CreatedOnUtc = x.CreatedOnUtc,
+                Requirement = new Requirement
+                {
+                    Id = x.Requirement.Id,
+                    SourceLabel = x.Requirement.SourceLabel,
+                    TargetLabel = x.Requirement.TargetLabel,
+                },
+                IntegrationDirection = new DropDown
+                {
+                    Id = x.IntegrationDirection.Id,
+                    DropDownValue = x.IntegrationDirection.DropDownValue
+                },
                 CreatedBy = new ApplicationUser
                 {
                     Id = x.CreatedBy.Id,
@@ -419,6 +430,8 @@ namespace Vsky.Services.RequirementDataMappings
                 {
                     Id = x.Requirement.Id,
                     Title = x.Requirement.Title,
+                    SourceLabel = x.Requirement.SourceLabel,
+                    TargetLabel = x.Requirement.TargetLabel,
                     Project = new Project
                     {
                         Id = x.Requirement.Project.Id,

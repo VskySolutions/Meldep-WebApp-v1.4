@@ -196,6 +196,8 @@ namespace Vsky.Services.Requirements
                        m.Area.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
                        m.Workspace.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
                        m.RequirementType.DropDownValue.ToLower().Contains(SearchText.ToLower()) ||
+                       m.SourceLabel.ToLower().Contains(SearchText.ToLower()) ||
+                       m.TargetLabel.ToLower().Contains(SearchText.ToLower()) ||
                        m.IdentifiedDate == parsedDate.Date ||
                        m.PlannedStartDate == parsedDate.Date ||
                        m.PlannedEndDate == parsedDate.Date ||
@@ -234,6 +236,8 @@ namespace Vsky.Services.Requirements
                 PlannedEndDate = x.PlannedEndDate,
                 ActualStartDate = x.ActualStartDate,
                 ActualEndDate = x.ActualEndDate,
+                SourceLabel = x.SourceLabel,
+                TargetLabel = x.TargetLabel,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
                 ShortDescription = x.ShortDescription,
@@ -658,6 +662,8 @@ namespace Vsky.Services.Requirements
                 PlannedEndDate = x.PlannedEndDate,
                 ActualStartDate = x.ActualStartDate,
                 ActualEndDate = x.ActualEndDate,
+                SourceLabel = x.SourceLabel,
+                TargetLabel = x.TargetLabel,
                 CreatedOnUtc = x.CreatedOnUtc,
                 UpdatedOnUtc = x.UpdatedOnUtc,
                 Area = new DropDown
@@ -1106,6 +1112,21 @@ namespace Vsky.Services.Requirements
             }
 
             return result;
+        }
+        #endregion
+
+        #region
+        public async Task<Requirement> GetRequirementDataMappingLabelsByRequirementId(string requirementId)
+        {
+            return await _requirementRepository.TableNoTracking
+                .Where(x => x.Id == requirementId && !x.Deleted)
+                .Select(x => new Requirement
+                {
+                    Id = x.Id,
+                    SourceLabel = x.SourceLabel,
+                    TargetLabel = x.TargetLabel
+                })
+                .FirstOrDefaultAsync();
         }
         #endregion
 

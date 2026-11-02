@@ -45,6 +45,8 @@ namespace Vsky.Api.Models
         public string ActualStartDateStr { get; set; }
         public DateTime? ActualEndDate { get; set; }
         public string ActualEndDateStr { get; set; }
+        public string SourceLabel { get; set; }
+        public string TargetLabel { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public string CreatedById { get; set; }
         public string UpdatedById { get; set; }

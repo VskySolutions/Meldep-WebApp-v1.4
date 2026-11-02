@@ -22,7 +22,7 @@
         :color="'primary'"
       >
         <div class="fs-14 note-row">
-          <template v-if="editingNoteId === note.id && storedUser === note.user?.userName">
+          <template v-if="!props.isRequirementCenter && editingNoteId === note.id && storedUser === note.user?.userName">
             <div class="relative">
               <div class="col-11">
                 <q-editor
@@ -69,14 +69,24 @@
             </div>
           </template>
           <template v-else>
-            <div class="note-wrapper cursor-pointer RichTextEditor" @click="startEditing(note)">
+            <div
+              :class="{ 'cursor-pointer': !props.isRequirementCenter && storedUser === note.user?.userName }"
+              @click="!props.isRequirementCenter && startEditing(note)"
+            >
               <span class="text-black note-text" v-html="note.note" />
-              <q-tooltip v-if="storedUser === note.user?.userName">
+              <q-tooltip v-if="!props.isRequirementCenter && storedUser === note.user?.userName">
                 Click to edit
               </q-tooltip>
             </div>
           </template>
-          <q-btn flat dense round color="primary" icon="o_more_vert" :class="storedUser === note.user?.userName ? '' : 'hidden'">
+          <q-btn
+            v-if="!props.isRequirementCenter && storedUser === note.user?.userName"
+            flat
+            dense
+            round
+            color="primary"
+            icon="o_more_vert"
+          >
             <q-tooltip>More Options</q-tooltip>
             <q-menu auto-close>
               <q-list style="min-width: 40px">
@@ -109,7 +119,7 @@
     </div>
   </div>
     <!-- Footer -->
-    <div class="bg-white" style="position: sticky; bottom: 0; z-index: 10; border-top: 0px solid #ccc;">
+    <div  v-if="!props.isRequirementCenter" class="bg-white" style="position: sticky; bottom: 0; z-index: 10; border-top: 0px solid #ccc;">
       <div class="row items-center no-wrap">
         <div class="col-11">
           <q-editor

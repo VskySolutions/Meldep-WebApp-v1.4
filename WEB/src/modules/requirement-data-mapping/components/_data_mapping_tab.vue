@@ -104,6 +104,10 @@ const getAllDataMappingByRequirementId = (propss) => {
       rows.value = resp.requirementDataMappingsList.map(item => ({
         ...item
       }));
+      if (rows.value.length > 0) {
+        columns.value.find(x => x.name === "source").label = rows.value[0].requirement?.sourceLabel || "Source";
+        columns.value.find(x => x.name === "target").label = rows.value[0].requirement?.targetLabel || "Target";
+     }
     })
     .finally(() => {
       loading.value = false;

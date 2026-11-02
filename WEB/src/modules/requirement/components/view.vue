@@ -139,6 +139,16 @@
                     <div class="text-black">{{ model.requirementType.dropDownValue }}</div>
                   </div>
                 </div>
+                 <div  v-if="model.requirementType?.dropDownValue === 'Data Integration'" class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Source Label :</div>
+                    <div class="text-black">{{ model.sourceLabel  }}</div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Target Label :</div>
+                    <div class="text-black">{{ model.targetLabel  }}</div>
+                  </div>
+                </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Area : </div>

@@ -59,6 +59,32 @@
             </q-item-section>
           </q-item>
 
+          <template v-if="model.requirementType?.dropDownValue === 'Data Integration'">
+            <q-item>
+              <q-item-section>
+                <div class="text-caption text-grey">
+                  Source Label
+                </div>
+                <div class="q-mb-sm">
+                  {{ model.sourceLabel || "-" }}
+                </div>
+              </q-item-section>
+            </q-item>
+          </template>
+
+          <template v-if="model.requirementType?.dropDownValue === 'Data Integration'">
+            <q-item>
+              <q-item-section>
+                <div class="text-caption text-grey">
+                  Target Label
+                </div>
+                <div class="q-mb-sm">
+                  {{ model.targetLabel || "-" }}
+                </div>
+              </q-item-section>
+            </q-item>
+          </template>
+
           <q-item>
             <q-item-section>
               <div class="text-caption text-grey">

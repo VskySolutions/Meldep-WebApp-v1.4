@@ -269,6 +269,7 @@ import useVuelidate from "@vuelidate/core";
 import _ from "lodash";
 
 import requirementDataMappingService from "../requirementDataMapping.service";
+import requirementService from "src/modules/requirement/requirement.service";
 
 // SOP Change :- Shared Inputs
 import formSingleSelectDropdown from "src/components/form-inputs/_formSingleSelectDropdown.vue";
@@ -340,7 +341,6 @@ const getRequirementDataMapping = (requirementId) => {
   loading.value = true;
   requirementDataMappingService.getRequirementDataMapping(requirementId).then((resp) => {
     const mappings = resp.requirementDataMappingsList || [];
-
     if (mappings.length > 0) {
       const firstMapping = mappings[0];
 
@@ -372,8 +372,26 @@ const getRequirementDataMapping = (requirementId) => {
       notes: item.requirementDataMappingNotes || [],
       deleted: item.deleted || false
     }));
+
+
   }).finally(() => {
     loading.value = false;
+  });
+};
+
+const getRequirementDataMappingLabels = (requirementId) => {
+  requirementService.getRequirementDataMappingLabels(requirementId).then((resp) => {
+    DataMappingColumns.value = DataMappingColumns.value.map(column => {
+      if (column.name === "source") {
+        return { ...column, label: resp.sourceLabel || "Source" };
+      }
+
+      if (column.name === "target") {
+        return { ...column, label: resp.targetLabel || "Target" };
+      }
+
+      return column;
+    });
   });
 };
 
@@ -425,8 +443,18 @@ const { dataMappingIntegrationDirectionDropdownSingleSelect } = requirementDataM
 // ==================================================================================
 
 const rowRules = {
-  source: { required: helpers.withMessage("Source is required", required) },
-  target: { required: helpers.withMessage("Target is required", required) },
+   source: {
+    required: helpers.withMessage(
+      () => `${DataMappingColumns.value.find(x => x.name === "source")?.label || "Source"} is required`,
+      required
+    )
+  },
+  target: {
+    required: helpers.withMessage(
+      () => `${DataMappingColumns.value.find(x => x.name === "target")?.label || "Target"} is required`,
+      required
+    )
+  },
   integrationDirectionId : { required: helpers.withMessage("Integration Direction is required", required) }
 };
 
@@ -615,6 +643,7 @@ watch(
 watch(() => requirementId, (newValue, oldValue) => {
   if (newValue) {
     getRequirementDataMapping(requirementId);
+    getRequirementDataMappingLabels(requirementId);
   }
 }, { immediate: true });
 
@@ -623,6 +652,7 @@ watch(
   (newId, oldId) => {
     if (newId && newId !== oldId) {
       getRequirementDataMapping(newId);
+      getRequirementDataMappingLabels(newId);
     } else if (!newId) {
       DataMappingRows.value = [];
     }

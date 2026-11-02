@@ -17,6 +17,10 @@ export default {
     return http.get(`/requirement/description/${id}`).then(response => response.data);
   },
 
+  getRequirementDataMappingLabels (requirementId) {
+    return http.get(`/requirement/data-mapping-labels/${requirementId}`).then(response => response.data);
+  },
+
   getAllRequirementListForDropdown (projectModuleId, projectId, requirementType) {
     return http.get(`/requirement/dropdown/list?projectModuleId=${projectModuleId}&projectId=${projectId}&requirementType=${requirementType}`).then(response => response.data);
   },

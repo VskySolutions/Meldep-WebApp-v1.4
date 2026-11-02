@@ -94,6 +94,10 @@ namespace Vsky.Services.Requirements
             bool latestOnTop = true);
         #endregion
 
+        #region GetRequirementDataMappingLabelsByRequirementId
+        Task<Requirement> GetRequirementDataMappingLabelsByRequirementId(string requirementId);
+        #endregion
+
         #region InsertRequirement
         void InsertRequirement(Requirement entity);
         #endregion

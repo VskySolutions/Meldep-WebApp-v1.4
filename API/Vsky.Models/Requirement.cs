@@ -46,6 +46,8 @@ namespace Vsky.Models
         public DateTime? PlannedEndDate { get; set; }
         public DateTime? ActualStartDate { get; set; }
         public DateTime? ActualEndDate { get; set; }
+        public string SourceLabel { get; set; }
+        public string TargetLabel { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public string CreatedById { get; set; }
         public string UpdatedById { get; set; }

@@ -93,9 +93,9 @@ const projectModuleId = ref('');
 
 const pagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 const columns = ref([
-  { name: "source", label: "File Path", field: "source", align: "left", sortable: true },
-  { name: "target", label: "File Name", field: "target", align: "left", sortable: true },
-   { name: "integrationDirection.dropDownValue", label: "Integration Direction", field: "integrationDirection.dropDownValue", align: "left", sortable: true },
+  { name: "source", label: "Source", field: "source", align: "left", sortable: true },
+  { name: "target", label: "Target", field: "target", align: "left", sortable: true },
+  { name: "integrationDirection.dropDownValue", label: "Integration Direction", field: "integrationDirection.dropDownValue", align: "left", sortable: true },
   { name: "createdBy.person.fullName", label: "Created By", field: "createdBy.person.fullName", align: "left", sortable: true },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true },
 ]);
@@ -106,6 +106,10 @@ const getRequirementDataMapping = () => {
     rows.value = (resp.requirementDataMappingsList || []).map(item => ({
         ...item,
     }));
+    if (rows.value.length > 0) {
+      columns.value.find(x => x.name === "source").label = rows.value[0].requirement?.sourceLabel || "Source";
+      columns.value.find(x => x.name === "target").label = rows.value[0].requirement?.targetLabel || "Target";
+    }
   }).finally(() => {
     loading.value = false;
   });

@@ -279,6 +279,26 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region
+        [HttpGet("data-mapping-labels/{requirementId}")]
+        public async Task<IActionResult> GetRequirementDataMappingLabels(string requirementId)
+        {
+            try
+            {
+                var result = await _requirementService.GetRequirementDataMappingLabelsByRequirementId(requirementId);
+
+                if (result == null)
+                    return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region CreateRequirement
         // Title: CreateRequirement
         // Description: This endpoint handles the creation of a new Requirement. It maps the Requirement model to the Requirement entity, sets the creation details, and inserts the Requirement into the database. 
@@ -320,6 +340,8 @@ namespace Vsky.Api.Controllers
                     entity.PlannedEndDate = model.PlannedEndDate;
                     entity.ActualStartDate = model.ActualStartDate;
                     entity.ActualEndDate = model.ActualEndDate;
+                    entity.TargetLabel = model.TargetLabel;
+                    entity.SourceLabel = model.SourceLabel;
 
                     if (!string.IsNullOrEmpty(model.Description))
                     {
@@ -514,6 +536,8 @@ namespace Vsky.Api.Controllers
                     entity.PlannedEndDate = model.PlannedEndDate;
                     entity.ActualStartDate = model.ActualStartDate;
                     entity.ActualEndDate = model.ActualEndDate;
+                    entity.SourceLabel = model.SourceLabel;
+                    entity.TargetLabel = model.TargetLabel;
 
                     if (model.PriorityId != null)
                         entity.PriorityId = model.PriorityId;
