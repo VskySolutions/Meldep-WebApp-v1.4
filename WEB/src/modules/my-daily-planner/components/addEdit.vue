@@ -19,7 +19,8 @@
                     <div>
                       <formDate
                         v-model="model.dailyPlannerDateStr"
-                        label="Planner Date"
+                        label="Planner Date"                        
+                        :readonly="true"
                         :dateOptions="(date) => getTimesheetAllowedDateRange(date, props.isForwarded, true, 1)"
                         :error="v$.dailyPlannerDateStr.$error"
                         :error-message="v$.dailyPlannerDateStr.$errors[0]?.$message"

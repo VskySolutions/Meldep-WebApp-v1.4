@@ -94,7 +94,7 @@
                                 >
                                 <template #hint>
                                   <span
-                                    v-if="resourceModel.estimatedHours && validateHours(resourceModel.estimatedHours) === true && resourceModel.estimatedHours !== '00:00'""
+                                    v-if="resourceModel.estimatedHours && validateHours(resourceModel.estimatedHours) === true && resourceModel.estimatedHours !== '00:00'"
                                     class="text-caption text-primary"
                                   >
                                     {{ getHoursMinutesText(resourceModel.estimatedHours) }}

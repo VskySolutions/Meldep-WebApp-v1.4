@@ -19,11 +19,12 @@
         @blur="props.onBlur"
       >
         <template #append>
-          <q-icon name="o_calendar_month"
-            :class="['cursor-pointer', { 'disabled': props.readonly || props.disable }]"
+          <q-icon
+            name="o_calendar_month"
+            :class="['cursor-pointer', { 'disabled': props.disable }]"
           >
             <q-popup-proxy
-              v-if="!props.readonly && !props.disable"
+              v-if="!props.disable"
               ref="qDateProxy"
               transition-show="scale"
               transition-hide="scale"

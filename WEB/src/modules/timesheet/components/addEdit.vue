@@ -17,6 +17,7 @@
                     <formDate
                         v-model="model.timesheetDateStr"
                         label="Timesheet Date"
+                        :readonly="true"
                         :dateOptions="(date) => getTimesheetAllowedDateRange(date, true, 1)"
                         :error="v$.timesheetDateStr.$error"
                         :error-message="v$.timesheetDateStr.$errors[0]?.$message"
@@ -236,7 +237,7 @@
                       >
                         <template #hint>
                           <span
-                            v-if="props.row.hours && validateHours(props.row.hours) === true && props.row.hours !== '00:00'""
+                            v-if="props.row.hours && validateHours(props.row.hours) === true && props.row.hours !== '00:00'"
                             class="text-caption text-primary"
                           >
                             {{ getHoursMinutesText(props.row.hours) }}

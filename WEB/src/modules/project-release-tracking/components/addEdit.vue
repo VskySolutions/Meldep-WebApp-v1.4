@@ -124,6 +124,7 @@
                         v-model="model.plannedReleaseDateStr"
                         label="Planned Release Date"
                         :readonly="isReadOnlyMode"
+                        :disable="isReadOnlyMode"
                         :wrapperClass="'col-xxl-4 col-lg-4 col-md-4 col-sm-4 col-xs-12'"
                         :error="v$.plannedReleaseDateStr.$error"
                         :error-message="v$.plannedReleaseDateStr.$errors[0]?.$message"
