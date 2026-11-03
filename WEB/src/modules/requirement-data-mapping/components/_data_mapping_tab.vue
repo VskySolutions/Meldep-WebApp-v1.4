@@ -59,6 +59,7 @@ import { useDialogPluginComponent } from "quasar";
 import { ref, onMounted } from "vue";
 
 import requirementDataMappingService from "../requirementDataMapping.service";
+import requirementService from "src/modules/requirement/requirement.service";
 
 import {
   initRequirementDataMappingDialogs,
@@ -104,14 +105,26 @@ const getAllDataMappingByRequirementId = (propss) => {
       rows.value = resp.requirementDataMappingsList.map(item => ({
         ...item
       }));
-      if (rows.value.length > 0) {
-        columns.value.find(x => x.name === "source").label = rows.value[0].requirement?.sourceLabel || "Source";
-        columns.value.find(x => x.name === "target").label = rows.value[0].requirement?.targetLabel || "Target";
-     }
     })
     .finally(() => {
       loading.value = false;
     });
+};
+
+const getRequirementDataMappingLabels = (requirementId) => {
+  requirementService.getRequirementDataMappingLabels(requirementId).then((resp) => {
+    columns.value = columns.value.map(column => {
+      if (column.name === "source") {
+        return { ...column, label: resp.sourceLabel || "Source" };
+      }
+
+      if (column.name === "target") {
+        return { ...column, label: resp.targetLabel || "Target" };
+      }
+
+      return column;
+    });
+  });
 };
 
 const refreshDataMappingByRequirementId = () => {
@@ -127,5 +140,6 @@ initRequirementDataMappingDialogs();
 onMounted(() => {
   const propps = { pagination: pagination.value };
   getAllDataMappingByRequirementId(propps);
+  getRequirementDataMappingLabels(props.id);
 });
 </script>

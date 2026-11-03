@@ -70,6 +70,7 @@ import { computed, ref, watch } from 'vue';
 import { useAuthStore } from "stores/auth";
 
 import requirementDataMappingService from "modules/requirement-data-mapping/requirementDataMapping.service";
+import requirementService from "src/modules/requirement/requirement.service";
 
 // Shared DataTable Views
 import useSiteTableState from "composables/dataTable/useSiteTableState.js";
@@ -115,6 +116,22 @@ const getRequirementDataMapping = () => {
   });
 };
 
+const getRequirementDataMappingLabels = (requirementId) => {
+  requirementService.getRequirementDataMappingLabels(requirementId).then((resp) => {
+    columns.value = columns.value.map(column => {
+      if (column.name === "source") {
+        return { ...column, label: resp.sourceLabel || "Source" };
+      }
+
+      if (column.name === "target") {
+        return { ...column, label: resp.targetLabel || "Target" };
+      }
+
+      return column;
+    });
+  });
+};
+
 const {
 } = useSiteTableState({
   storageKey: "requirement-Center-Requirement-Data-Mapping-Tabular-List",
@@ -137,6 +154,7 @@ watch(
     await getRequirementDataMapping(
       props.requirementId
     );
+    getRequirementDataMappingLabels(props.requirementId);
   },
   { immediate: true }
 );

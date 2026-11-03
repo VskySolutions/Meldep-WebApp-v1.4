@@ -655,6 +655,17 @@ watch(
       getRequirementDataMappingLabels(newId);
     } else if (!newId) {
       DataMappingRows.value = [];
+      DataMappingColumns.value = DataMappingColumns.value.map(column => {
+        if (column.name === "source") {
+          return { ...column, label: "Source" };
+        }
+
+        if (column.name === "target") {
+          return { ...column, label: "Target" };
+        }
+
+        return column;
+      });
     }
   }
 );
