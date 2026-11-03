@@ -37,6 +37,12 @@
                 <!-- Dropdown Content -->
                 <q-menu v-model="showFilter" anchor="bottom left" self="top left" persistent no-parent-event style="width: 500px;" @click-outside="showFilter = false">
                   <q-card class="q-pa-sm">
+                    <singleSelectDropdown
+                      v-model="search.sortByFilter"
+                      label="Sort By Filter"
+                      :options="planSortByFilterDropdownSingleSelect.list.value"
+                      :filter="planSortByFilterDropdownSingleSelect.filter"
+                    />
                     <multiSelectDropdown
                       v-model="search.customerIds"
                       label="Customer Name"
@@ -385,7 +391,7 @@
 
                       <td
                         colspan="2"
-                        class="linked-task-title text-center hoverable-cell"
+                        class="linked-task-title text-left hoverable-cell"
                         @click.stop="onProjectTaskView(line.taskId)"
                       >Project Task -
                         {{ line.projectTask?.projectTaskNumber }} -
@@ -938,6 +944,7 @@ import employeeModule from "src/modules/employee/utils/dropdowns.js";
 import customerModule from "src/modules/customer/utils/dropdowns.js";
 import companyContactsModule from "src/modules/company-contacts/utils/dropdowns.js";
 import projectTargetPlanModule from "src/modules/project-targetplan/utils/dropdowns.js";
+
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 import useSiteTableState from "composables/datatable/useSiteTableState.js";
 
@@ -1181,7 +1188,7 @@ const LoadProjectPlan = async (weeklyPlan) => {
 
     showApprovePlanAction.value = employeeId === weeklyPlan.project.planApproverId;
     disableLoadMore.value = false;
-    projectWeeklyPlanDates.value = await projectService.getWeeklyProjectPlanInDetail(weeklyPlan.projectId, planTypeId.value, 0, takeCount.value);
+    projectWeeklyPlanDates.value = await projectService.getWeeklyProjectPlanInDetail(weeklyPlan.projectId, planTypeId.value, 0, takeCount.value, null, null, search.value.sortByFilter);
 
     // Update Local Storage.
     savePlannerState({
@@ -1701,11 +1708,12 @@ const onSearch = () => {
 };
 
 const onClear = () => {
-  Object.assign(search.value, defaultPlannerState.search);
+  // Object.assign(search.value, defaultPlannerState.search);
   if (routeProjectId?.value?.length > 0) { routeProjectId.value = ""; delete history?.state?.projectId; }
   activeProjectId.value = "";
   projectWeeklyPlanDates.value = [];
   search.value.planTypeId = planTypeId.value;
+  search.value.sortByFilter = null;
   savePlannerState({
     ...defaultPlannerState
   });
@@ -1737,6 +1745,7 @@ const mapSingleFilterToLabel = (id, list, label) => {
 };
 
 const appliedFilters = computed(() => ({
+  ...mapSingleFilterToLabel(search.value.sortByFilter, planSortByFilterDropdownSingleSelect.list, "Sort By Filter"),
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectCategoryIds, projectCategoriesDropdown.list, "Project Category"),
   ...mapFilterToLabel(search.value.projectCoordinatorIds, activeEmployeesDropdown.list, "Project Coordinator"),
@@ -1750,7 +1759,9 @@ const appliedFilters = computed(() => ({
 }));
 
 function onClearFilters (key) {
-  if (key === "Project Name") {
+  if (key === "Sort By Filter") {
+    search.value.sortByFilter = null;
+  } else if (key === "Project Name") {
     search.value.projectIds = [];
     if (routeProjectId?.value?.length > 0) { routeProjectId.value = ""; delete history?.state?.projectId; }
   } else if (key === "Project Category") {
@@ -1772,8 +1783,12 @@ function onClearFilters (key) {
   } else if (key === "Company Contact") {
     search.value.companyContactIds = [];
   }
-  delete appliedFilters.value[key];
-  getProjects({ pagination: pagination.value });
+  savePlannerState({
+    ...defaultPlannerState
+  });
+  onSearch();
+  // delete appliedFilters.value[key];
+  // getProjects({ pagination: pagination.value });
 }
 
 function getFilterCount (key) {
@@ -1811,7 +1826,7 @@ const {
 
 const { customerNameDropdown } = customerModule();
 const { companyContactNameDropdown } = companyContactsModule();
-const { weeklyEmployeeDropdownSingleSelect } = projectTargetPlanModule();
+const { weeklyEmployeeDropdownSingleSelect, planSortByFilterDropdownSingleSelect } = projectTargetPlanModule();
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // View Actions
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1852,6 +1867,7 @@ onMounted(async () => {
   projectTypesDropdown.load("Project Type");
   activeEmployeesDropdown.load(user.siteId);
   activeEmployeesDropdownSingleSelect.load(user.siteId);
+  planSortByFilterDropdownSingleSelect.load("Plan Sort By Filter");
 
   // Get Project Active/InActive and Set default to Active
   await projectActiveInActiveDropdown.load("Project Active Status");

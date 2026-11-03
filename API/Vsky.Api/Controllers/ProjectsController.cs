@@ -2234,7 +2234,7 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("get-project-weekly-plan-details")]
-        public async Task<IActionResult> GetProjectWeeklyPlanAsync(string projectId, string planTypeId, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null, string projectTaskId = null)
+        public async Task<IActionResult> GetProjectWeeklyPlanAsync(string projectId, string planTypeId, string sortByFilter = null, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null, string projectTaskId = null)
         {
             try
             {
@@ -2242,7 +2242,7 @@ namespace Vsky.Api.Controllers
                 var SiteId = _globalVariable.SiteId;
                 var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
 
-                var Data = await _projectWeeklyDatesService.GetProjectWeeklyPlanDatesByProjectId(projectId, planTypeId, skipIndex, takeCount, weekEndDate, projectTaskId,LoggedUserId, employeeId);
+                var Data = await _projectWeeklyDatesService.GetProjectWeeklyPlanDatesByProjectId(projectId, planTypeId, sortByFilter, skipIndex, takeCount, weekEndDate, projectTaskId,LoggedUserId, employeeId);
                 if (Data != null)
                     return Ok(Data);
                 else

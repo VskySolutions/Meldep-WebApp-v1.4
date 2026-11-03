@@ -34,14 +34,52 @@ namespace Vsky.Services.ProjectWeeklyPlan
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<List<Models.ProjectWeeklyPlanDates>> GetProjectWeeklyPlanDatesByProjectId(string projectId, string planTypeId, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null, string projectTaskId = null, string LoggedUserId = null, string employeeId = null)
+        public async Task<List<Models.ProjectWeeklyPlanDates>> GetProjectWeeklyPlanDatesByProjectId(
+            string projectId, 
+            string planTypeId, 
+            string sortByFilter = null,
+            int skipIndex = 0, 
+            int takeCount = 4, 
+            DateTime? weekEndDate = null, 
+            string projectTaskId = null, 
+            string LoggedUserId = null, 
+            string employeeId = null
+        )
         {
             var query = _projectWeeklyPlanDatesRepository.TableNoTracking
             .Where(x => !x.Deleted && x.ProjectWeeklyPlan != null && x.ProjectWeeklyPlan.ProjectId == projectId && x.PlanTypeId == planTypeId && (weekEndDate == null || x.WeekDate == weekEndDate.Value)
              && (string.IsNullOrWhiteSpace(projectTaskId)
             || projectTaskId == "undefined"
+            || projectTaskId == "null"
             || x.ProjectWeeklyPlanDatesLines.Any(n =>
-                !n.Deleted && n.TaskId == projectTaskId)))
+                !n.Deleted && n.TaskId == projectTaskId)));
+
+            // Filter By Module
+            if (sortByFilter == "Filter By Module")
+            {
+                query = query.Where(x =>
+                    x.ProjectWeeklyPlanDatesLines.Any(n =>
+                        !n.Deleted &&
+                        n.ProjectTask != null &&
+                        n.ProjectTask.ProjectModuleId != null &&
+                        !string.IsNullOrEmpty(n.ProjectTask.ProjectModule.Name)
+                    )
+                );
+            }
+            // Filter By Requirement
+            else if (sortByFilter == "Filter By Requirement")
+            {
+                query = query.Where(x =>
+                    x.ProjectWeeklyPlanDatesLines.Any(n =>
+                        !n.Deleted &&
+                        n.ProjectTask != null &&
+                        n.ProjectTask.RequirementId != null &&
+                        !string.IsNullOrEmpty(n.ProjectTask.Requirement.Title)
+                    )
+                );
+            };
+
+            query = query
             .OrderByDescending(m => m.WeekDate)
             .Skip(skipIndex * takeCount)
             .Take(takeCount)
@@ -104,8 +142,26 @@ namespace Vsky.Services.ProjectWeeklyPlan
                 ProjectWeeklyPlanDatesLines = m.ProjectWeeklyPlanDatesLines.Where(n => !n.Deleted && (weekEndDate == null || n.ProjectWeeklyPlanDates.WeekDate == weekEndDate.Value)
                 && (string.IsNullOrWhiteSpace(projectTaskId)
                 || projectTaskId == "undefined"
-                || n.TaskId == projectTaskId))
-                .OrderByDescending(n => n.ExpectedDescriptionCreatedOnUtc)
+                || projectTaskId == "null"
+                || n.TaskId == projectTaskId) &&
+
+                (sortByFilter != "Filter By Module" ||
+                    (n.ProjectTask != null &&
+                    n.ProjectTask.ProjectModule != null &&
+                    !string.IsNullOrEmpty(n.ProjectTask.ProjectModule.Name))) &&
+
+                (sortByFilter != "Filter By Requirement" ||
+                    (n.ProjectTask != null &&
+                    n.ProjectTask.Requirement != null &&
+                    !string.IsNullOrEmpty(n.ProjectTask.Requirement.Title)))
+                    )
+                        .OrderBy(n =>
+                sortByFilter == "Filter By Module"
+                    ? n.ProjectTask.ProjectModule.Name
+                    : sortByFilter == "Filter By Requirement"
+                        ? n.ProjectTask.Requirement.Title
+                        : "")
+                .ThenByDescending(n => n.ExpectedDescriptionCreatedOnUtc)
                 .Select(n => new ProjectWeeklyPlanDatesLines
                 {
                     Id = n.Id,
@@ -129,7 +185,9 @@ namespace Vsky.Services.ProjectWeeklyPlan
                     {
                         Id = n.ProjectTask.Id,
                         Name = n.ProjectTask.Name,
-                        ProjectTaskNumber = n.ProjectTask.ProjectTaskNumber
+                        ProjectTaskNumber = n.ProjectTask.ProjectTaskNumber,
+                        ProjectModuleId = n.ProjectTask.ProjectModuleId,
+                        RequirementId = n.ProjectTask.RequirementId
                     },
                     ExpectedDescriptionCreatedOnUtc = n.ExpectedDescriptionCreatedOnUtc, // fixed
                     ExpectedDescriptionUpdatedById = n.ExpectedDescriptionUpdatedById,

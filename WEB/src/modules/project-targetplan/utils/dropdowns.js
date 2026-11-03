@@ -14,8 +14,14 @@ export default function projectTargetPlanModule () {
     valueKey: "id"
   });
 
+  const planSortByFilterDropdownSingleSelect = useSingleSelectDropdown(commonService.getDropDown, {
+    labelKey: "dropdownValue",
+    valueKey: "dropdownValue"
+  });
+
   return {
     weeklyEmployeeDropdownSingleSelect,
-    ProjectPlanTypeDropdownSingleSelect
+    ProjectPlanTypeDropdownSingleSelect,
+    planSortByFilterDropdownSingleSelect
   };
 }
