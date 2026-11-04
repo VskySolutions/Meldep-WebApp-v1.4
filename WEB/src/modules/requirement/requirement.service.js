@@ -37,6 +37,10 @@ export default {
     return http.get(`/requirement/requirement-change-log/?id=${id}&latestOnTop=${latestOnTop}`).then(response => response.data);
   },
 
+  getRequirementsByProjectModuleId (projectModuleId) {
+    return http.get(`/requirement/getRequirementsByProjectModuleId/${projectModuleId}`).then(response => response.data);
+  },
+
   saveRequirement (id, model) {
     if (id) {
       return http.put(`/requirement/${id}`, model).then(response => response.data);

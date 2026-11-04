@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using AutoMapper;
 using ExcelDataReader;
 using HtmlAgilityPack;
@@ -30,6 +31,7 @@ using Vsky.Services.Requirements;
 using Vsky.Services.Sites;
 using Vsky.Services.SitesModifiedLog;
 using Vsky.Services.Timesheets;
+using static Dapper.SqlMapper;
 
 namespace Vsky.Api.Controllers
 {
@@ -2333,8 +2335,207 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region CopyModuleToProjects
+        //[HttpPost("copyModuleToTask")]
+        //public async Task<IActionResult> CopyModuleToProjects(ProjectTaskModel model)
+        //{
+        //    try
+        //    {
+        //        if (ModelState.IsValid)
+        //        {
+        //            var LoggedUserId = User.GetLoggedInUserId<string>();
+        //            var SiteId = _globalVariable.SiteId;
+        //            var SiteData = await _siteService.GetById(SiteId);
+        //            var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+        //            var moduleData = await _projectModuleService.GetProjectModuleById(model.ProjectModuleId);
+        //            if (moduleData != null)
+        //            {
+        //                if (model.ProjectIds != null && model.ProjectIds.Count > 0)
+        //                {
+        //                    foreach (var projectid in model.ProjectIds)
+        //                    {
+        //                        var entity = new ProjectModule();
+
+        //                        int NextSortOrderOfProjectModule = 0;
+        //                        if (!string.IsNullOrWhiteSpace(projectid) && projectid != "undefined")
+        //                        {
+        //                            NextSortOrderOfProjectModule = await _projectModuleService.GetLastSortOrderOfProjectModules(projectid) + 1;
+        //                        }
+        //                        entity.SiteId = SiteId;
+        //                        entity.ProjectId = projectid;
+        //                        entity.SortOrder = NextSortOrderOfProjectModule;
+        //                        entity.ProjectModuleNumber = await _projectModuleService.GetLastProjectModuleNumber() + 1;
+        //                        entity.ProjectModuleStatusId = moduleData.ProjectModuleStatusId;
+        //                        entity.Name = moduleData.Name;
+        //                        entity.Description = moduleData.Description;
+        //                        entity.Notes = moduleData.Notes;
+        //                        if (moduleData.StartDate != null)
+        //                            entity.StartDate = moduleData.StartDate;
+        //                        if (moduleData.EndDate != null)
+        //                            entity.EndDate = moduleData.EndDate;
+        //                        entity.CreatedById = LoggedUserId;
+        //                        entity.UpdatedById = LoggedUserId;
+        //                        entity.CreatedOnUtc = GetDateTime;
+        //                        entity.UpdatedOnUtc = GetDateTime;
+        //                        _projectModuleService.InsertProjectModule(entity);
+
+        //                        var requirementData = await _requirementService.GetRequirementById(model.RequirementId);
+        //                        if (requirementData == null)
+        //                            return BadRequest(new BadRequestError("No requirement id is found."));
+
+        //                        // Update or create the requirements
+        //                        var existRequirements = await _requirementService.GetRequirementByName(requirementData.Title, projectid, entity.Id);
+        //                        Requirement requirementEntity = new Requirement();
+        //                        //requirementEntity = existRequirements;
+
+        //                        if (existRequirements == null)
+        //                        {
+        //                            requirementEntity.ProjectId = projectid;
+        //                            requirementEntity.SiteId = SiteId;
+        //                            requirementEntity.RequirementNumber = await _requirementService.GetLastRequirementNumber() + 1;
+        //                            requirementEntity.ProjectModuleId = entity.Id;
+        //                            requirementEntity.Title = requirementData.Title;
+        //                            requirementEntity.RequirementTypeId = requirementData.RequirementTypeId;
+        //                            requirementEntity.TargetLabel = requirementData.TargetLabel;
+        //                            requirementEntity.SourceLabel = requirementData.SourceLabel;
+        //                            requirementEntity.AreaId = requirementData.AreaId;
+        //                            requirementEntity.WorkspaceId = requirementData.WorkspaceId;
+        //                            requirementEntity.IdentifiedUserType = requirementData.IdentifiedUserType;
+        //                            requirementEntity.IdentifiedDate = requirementData.IdentifiedDate;
+        //                            requirementEntity.RequirementOwnerId = requirementData.RequirementOwnerId;
+        //                            requirementEntity.CustomerOwnerId = requirementData.CustomerOwnerId;
+        //                            requirementEntity.PlannedStartDate = requirementData.PlannedStartDate;
+        //                            requirementEntity.PlannedEndDate = requirementData.PlannedEndDate;
+        //                            requirementEntity.ActualStartDate = requirementData.ActualStartDate;
+        //                            requirementEntity.ActualEndDate = requirementData.ActualEndDate;
+        //                            requirementEntity.PriorityId = requirementData.PriorityId;
+        //                            requirementEntity.StatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Requirement Status", "New");
+
+        //                            var UserTypeId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Requirement Identifier", "Employee");
+        //                            if (requirementData.IdentifiedUserType == UserTypeId)
+        //                                requirementEntity.IdentifiedEmployeeId = requirementData.IdentifiedEmployeeId;
+        //                            else
+        //                                requirementEntity.IdentifiedCustomerId = requirementData.IdentifiedCustomerId;
+
+        //                            if (requirementData.RequirementEnteredBy != null && requirementData.RequirementEnteredBy != "")
+        //                                requirementEntity.RequirementEnteredBy = requirementData.RequirementEnteredBy;
+        //                            else
+        //                                requirementEntity.RequirementEnteredBy = null;
+
+        //                            if (requirementData.ApprovalStatus != null && requirementData.ApprovalStatus != "")
+        //                                requirementEntity.ApprovalStatus = requirementData.ApprovalStatus;
+        //                            else
+        //                                requirementEntity.ApprovalStatus = null;
+
+        //                            if (!string.IsNullOrEmpty(requirementData.ShortDescription))
+        //                            {
+        //                                requirementEntity.ShortDescription = await _azureBlobImageServices
+        //                                    .ProcessHtmlAndManageImagesAsync(
+        //                                        requirementData.ShortDescription,
+        //                                        SiteData.Name,
+        //                                        "requirements",
+        //                                        requirementEntity.RequirementNumber.ToString()
+        //                                    );
+        //                            }
+
+        //                            if (!string.IsNullOrEmpty(requirementData.Scope))
+        //                            {
+        //                                requirementEntity.Scope = await _azureBlobImageServices
+        //                                    .ProcessHtmlAndManageImagesAsync(
+        //                                        requirementData.Scope,
+        //                                        SiteData.Name,
+        //                                        "requirements",
+        //                                        requirementEntity.RequirementNumber.ToString()
+        //                                    );
+        //                            }
+
+        //                            if (!string.IsNullOrEmpty(requirementData.Description))
+        //                            {
+        //                                requirementEntity.Description = await _azureBlobImageServices
+        //                                    .ProcessHtmlAndManageImagesAsync(
+        //                                        requirementData.Description,
+        //                                        SiteData.Name,
+        //                                        "requirements",
+        //                                        requirementEntity.RequirementNumber.ToString()
+        //                                    );
+        //                            }
+
+        //                            requirementEntity.CreatedById = LoggedUserId;
+        //                            requirementEntity.UpdatedById = LoggedUserId;
+        //                            requirementEntity.CreatedOnUtc = GetDateTime;
+        //                            requirementEntity.UpdatedOnUtc = GetDateTime;
+
+        //                            _requirementService.InsertRequirement(requirementEntity);
+        //                        }
+
+        //                        // tasks
+        //                        if (model.TaskIds != null && model.TaskIds.Count > 0)
+        //                        {
+        //                            foreach (var taskIds in model.TaskIds)
+        //                            {
+        //                                var taskData = await _taskService.GetById(taskIds);
+        //                                if (taskData != null)
+        //                                {
+        //                                    var taskEntity = new ProjectTask();
+
+        //                                    int moduleSortOrder = entity.SortOrder;
+        //                                    decimal NextSortOrderOfProjectTask = 0;
+        //                                    // Get last task sort order under this module
+        //                                    var CurrentModuleSortOrder = await _taskService.GetLastSortOrderOfProjectTasks(entity.Id);
+
+        //                                    // If no tasks found, lastTaskSortOrder will be 1.1m
+        //                                    if (CurrentModuleSortOrder == 1.1m)
+        //                                    {
+        //                                        NextSortOrderOfProjectTask = moduleSortOrder + 0.1m;
+        //                                    }
+        //                                    else
+        //                                    {
+        //                                        NextSortOrderOfProjectTask = Math.Round(CurrentModuleSortOrder + 0.1m, 1); // increment
+        //                                    }
+
+        //                                    taskEntity.SortOrder = NextSortOrderOfProjectTask;
+        //                                    taskEntity.SiteId = SiteId;
+        //                                    taskEntity.ProjectId = projectid;
+        //                                    taskEntity.ProjectModuleId = entity.Id;
+        //                                    taskEntity.RequirementId = requirementEntity.Id;
+        //                                    taskEntity.StatusId = taskData.StatusId;
+        //                                    taskEntity.PriorityId = taskData.PriorityId;
+        //                                    taskEntity.ProjectTaskNumber = await _taskService.GetLastProjectTaskNumber() + 1;
+        //                                    taskEntity.Name = taskData.Name;
+        //                                    taskEntity.Description = taskData.Description;
+        //                                    if (taskData.StartDate != null)
+        //                                        taskEntity.StartDate = taskData.StartDate;
+        //                                    if (taskData.EndDate != null)
+        //                                        taskEntity.EndDate = taskData.EndDate;
+        //                                    taskEntity.CreatedById = LoggedUserId;
+        //                                    taskEntity.UpdatedById = LoggedUserId;
+        //                                    taskEntity.CreatedOnUtc = GetDateTime;
+        //                                    taskEntity.UpdatedOnUtc = GetDateTime;
+        //                                    _taskService.InsertProjectTask(taskEntity);
+
+        //                                    bool IsWorkboardUpdated = await UpdateProjectSwimlaneListTask(SiteId, taskEntity, LoggedUserId, GetDateTime);
+        //                                }
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                return BadRequest(new BadRequestError("No module id is found."));
+        //            }
+        //            return NoContent();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //    return ModelStateError(ModelState);
+        //}
+
         [HttpPost("copyModuleToTask")]
-        public async Task<IActionResult> CopyModuleToProjects(ProjectTaskModel model)
+        public async Task<IActionResult> CopyModuleToProjects(CopyModuleToProjectsModel model)
         {
             try
             {
@@ -2345,93 +2546,195 @@ namespace Vsky.Api.Controllers
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
-                    var moduleData = await _projectModuleService.GetProjectModuleById(model.ProjectModuleId);
-                    if (moduleData != null)
-                    {
-                        if (model.ProjectIds != null && model.ProjectIds.Count > 0)
-                        {
-                            foreach (var projectid in model.ProjectIds)
-                            {
-                                var entity = new ProjectModule();
-
-                                int NextSortOrderOfProjectModule = 0;
-                                if (!string.IsNullOrWhiteSpace(projectid) && projectid != "undefined")
-                                {
-                                    NextSortOrderOfProjectModule = await _projectModuleService.GetLastSortOrderOfProjectModules(projectid) + 1;
-                                }
-                                entity.SiteId = SiteId;
-                                entity.ProjectId = projectid;
-                                entity.SortOrder = NextSortOrderOfProjectModule;
-                                entity.ProjectModuleNumber = await _projectModuleService.GetLastProjectModuleNumber() + 1;
-                                entity.ProjectModuleStatusId = moduleData.ProjectModuleStatusId;
-                                entity.Name = moduleData.Name;
-                                entity.Description = moduleData.Description;
-                                entity.Notes = moduleData.Notes;
-                                if (moduleData.StartDate != null)
-                                    entity.StartDate = moduleData.StartDate;
-                                if (moduleData.EndDate != null)
-                                    entity.EndDate = moduleData.EndDate;
-                                entity.CreatedById = LoggedUserId;
-                                entity.UpdatedById = LoggedUserId;
-                                entity.CreatedOnUtc = GetDateTime;
-                                entity.UpdatedOnUtc = GetDateTime;
-                                _projectModuleService.InsertProjectModule(entity);
-
-                                // tasks
-                                if (model.TaskIds != null && model.TaskIds.Count > 0)
-                                {
-                                    foreach (var taskIds in model.TaskIds)
-                                    {
-                                        var taskData = await _taskService.GetById(taskIds);
-                                        if (taskData != null)
-                                        {
-                                            var taskEntity = new ProjectTask();
-
-                                            int moduleSortOrder = entity.SortOrder;
-                                            decimal NextSortOrderOfProjectTask = 0;
-                                            // Get last task sort order under this module
-                                            var CurrentModuleSortOrder = await _taskService.GetLastSortOrderOfProjectTasks(entity.Id);
-
-                                            // If no tasks found, lastTaskSortOrder will be 1.1m
-                                            if (CurrentModuleSortOrder == 1.1m)
-                                            {
-                                                NextSortOrderOfProjectTask = moduleSortOrder + 0.1m;
-                                            }
-                                            else
-                                            {
-                                                NextSortOrderOfProjectTask = Math.Round(CurrentModuleSortOrder + 0.1m, 1); // increment
-                                            }
-
-                                            taskEntity.SortOrder = NextSortOrderOfProjectTask;
-                                            taskEntity.SiteId = SiteId;
-                                            taskEntity.ProjectId = projectid;
-                                            taskEntity.ProjectModuleId = entity.Id;
-                                            taskEntity.StatusId = taskData.StatusId;
-                                            taskEntity.PriorityId = taskData.PriorityId;
-                                            taskEntity.ProjectTaskNumber = await _taskService.GetLastProjectTaskNumber() + 1;
-                                            taskEntity.Name = taskData.Name;
-                                            taskEntity.Description = taskData.Description;
-                                            if (taskData.StartDate != null)
-                                                taskEntity.StartDate = taskData.StartDate;
-                                            if (taskData.EndDate != null)
-                                                taskEntity.EndDate = taskData.EndDate;
-                                            taskEntity.CreatedById = LoggedUserId;
-                                            taskEntity.UpdatedById = LoggedUserId;
-                                            taskEntity.CreatedOnUtc = GetDateTime;
-                                            taskEntity.UpdatedOnUtc = GetDateTime;
-                                            _taskService.InsertProjectTask(taskEntity);
-
-                                            bool IsWorkboardUpdated = await UpdateProjectSwimlaneListTask(SiteId, taskEntity, LoggedUserId, GetDateTime);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else
+                    if (model == null || string.IsNullOrWhiteSpace(model.ProjectModuleId))
                     {
                         return BadRequest(new BadRequestError("No module id is found."));
                     }
+
+                    var moduleData = await _projectModuleService.GetProjectModuleById(model.ProjectModuleId);
+                    if (moduleData == null)
+                        return BadRequest(new BadRequestError("No module id is found."));
+
+                    if (model.ProjectIds != null && model.ProjectIds.Count > 0)
+                    {
+                        foreach (var projectid in model.ProjectIds)
+                        {
+                            // Create Project Module
+                            var moduleEntity = new ProjectModule();
+
+                            int NextSortOrderOfProjectModule = 0;
+                            if (!string.IsNullOrWhiteSpace(projectid) && projectid != "undefined")
+                            {
+                                NextSortOrderOfProjectModule = await _projectModuleService.GetLastSortOrderOfProjectModules(projectid) + 1;
+                            }
+
+                            moduleEntity.SiteId = SiteId;
+                            moduleEntity.ProjectId = projectid;
+                            moduleEntity.SortOrder = NextSortOrderOfProjectModule;
+                            moduleEntity.ProjectModuleNumber = await _projectModuleService.GetLastProjectModuleNumber() + 1;
+                            moduleEntity.ProjectModuleStatusId = moduleData.ProjectModuleStatusId;
+                            moduleEntity.Name = moduleData.Name;
+                            moduleEntity.Description = moduleData.Description;
+                            moduleEntity.Notes = moduleData.Notes;
+                            if (moduleData.StartDate != null)
+                                moduleEntity.StartDate = moduleData.StartDate;
+                            if (moduleData.EndDate != null)
+                                moduleEntity.EndDate = moduleData.EndDate;
+                            moduleEntity.CreatedById = LoggedUserId;
+                            moduleEntity.UpdatedById = LoggedUserId;
+                            moduleEntity.CreatedOnUtc = GetDateTime;
+                            moduleEntity.UpdatedOnUtc = GetDateTime;
+                            _projectModuleService.InsertProjectModule(moduleEntity);
+
+                            // Loop through multiple requirements
+                            if(model.SelectedTaskList)
+                            {
+                                if (model.Requirements != null && model.Requirements.Count > 0)
+                                {
+                                    foreach (var requirementModel in model.Requirements)
+                                    {
+                                        var requirementData = await _requirementService.GetRequirementById(requirementModel.RequirementId);
+                                        if (requirementData == null)
+                                            continue;
+
+                                        // Create a new requirement
+                                        Requirement requirementEntity = new Requirement();
+                                        requirementEntity.ProjectId = projectid;
+                                        requirementEntity.SiteId = SiteId;
+                                        requirementEntity.RequirementNumber = await _requirementService.GetLastRequirementNumber() + 1;
+                                        requirementEntity.ProjectModuleId = moduleEntity.Id;
+                                        requirementEntity.Title = requirementData.Title;
+                                        requirementEntity.RequirementTypeId = requirementData.RequirementTypeId;
+                                        requirementEntity.TargetLabel = requirementData.TargetLabel;
+                                        requirementEntity.SourceLabel = requirementData.SourceLabel;
+                                        requirementEntity.AreaId = requirementData.AreaId;
+                                        requirementEntity.WorkspaceId = requirementData.WorkspaceId;
+                                        requirementEntity.IdentifiedUserType = requirementData.IdentifiedUserType;
+                                        requirementEntity.IdentifiedDate = requirementData.IdentifiedDate;
+                                        requirementEntity.RequirementOwnerId = requirementData.RequirementOwnerId;
+                                        requirementEntity.CustomerOwnerId = requirementData.CustomerOwnerId;
+                                        requirementEntity.PlannedStartDate = requirementData.PlannedStartDate;
+                                        requirementEntity.PlannedEndDate = requirementData.PlannedEndDate;
+                                        requirementEntity.ActualStartDate = requirementData.ActualStartDate;
+                                        requirementEntity.ActualEndDate = requirementData.ActualEndDate;
+                                        requirementEntity.PriorityId = requirementData.PriorityId;
+                                        requirementEntity.StatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Requirement Status", "New");
+
+                                        var UserTypeId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Requirement Identifier", "Employee");
+                                        if (requirementData.IdentifiedUserType == UserTypeId)
+                                            requirementEntity.IdentifiedEmployeeId = requirementData.IdentifiedEmployeeId;
+                                        else
+                                            requirementEntity.IdentifiedCustomerId = requirementData.IdentifiedCustomerId;
+
+                                        if (requirementData.RequirementEnteredBy != null && requirementData.RequirementEnteredBy != "")
+                                            requirementEntity.RequirementEnteredBy = requirementData.RequirementEnteredBy;
+                                        else
+                                            requirementEntity.RequirementEnteredBy = null;
+
+                                        if (requirementData.ApprovalStatus != null && requirementData.ApprovalStatus != "")
+                                            requirementEntity.ApprovalStatus = requirementData.ApprovalStatus;
+                                        else
+                                            requirementEntity.ApprovalStatus = null;
+
+                                        if (!string.IsNullOrEmpty(requirementData.ShortDescription))
+                                        {
+                                            requirementEntity.ShortDescription = await _azureBlobImageServices
+                                                .ProcessHtmlAndManageImagesAsync(
+                                                    requirementData.ShortDescription,
+                                                    SiteData.Name,
+                                                    "requirements",
+                                                    requirementEntity.RequirementNumber.ToString()
+                                                );
+                                        }
+
+                                        if (!string.IsNullOrEmpty(requirementData.Scope))
+                                        {
+                                            requirementEntity.Scope = await _azureBlobImageServices
+                                                .ProcessHtmlAndManageImagesAsync(
+                                                    requirementData.Scope,
+                                                    SiteData.Name,
+                                                    "requirements",
+                                                    requirementEntity.RequirementNumber.ToString()
+                                                );
+                                        }
+
+                                        if (!string.IsNullOrEmpty(requirementData.Description))
+                                        {
+                                            requirementEntity.Description = await _azureBlobImageServices
+                                                .ProcessHtmlAndManageImagesAsync(
+                                                    requirementData.Description,
+                                                    SiteData.Name,
+                                                    "requirements",
+                                                    requirementEntity.RequirementNumber.ToString()
+                                                );
+                                        }
+
+                                        requirementEntity.CreatedById = LoggedUserId;
+                                        requirementEntity.UpdatedById = LoggedUserId;
+                                        requirementEntity.CreatedOnUtc = GetDateTime;
+                                        requirementEntity.UpdatedOnUtc = GetDateTime;
+
+                                        _requirementService.InsertRequirement(requirementEntity);
+
+                                        // Copy tasks belonging to this requirement
+                                        if (requirementModel.TaskIds != null && requirementModel.TaskIds.Count > 0)
+                                        {
+                                            foreach (var taskIds in requirementModel.TaskIds)
+                                            {
+                                                var taskData = await _taskService.GetById(taskIds);
+                                                if (taskData != null)
+                                                {
+                                                    var taskEntity = new ProjectTask();
+
+                                                    int moduleSortOrder = moduleEntity.SortOrder;
+                                                    decimal NextSortOrderOfProjectTask = 0;
+                                                    // Get last task sort order under this module
+                                                    var CurrentModuleSortOrder = await _taskService.GetLastSortOrderOfProjectTasks(moduleEntity.Id);
+
+                                                    // If no tasks found, lastTaskSortOrder will be 1.1m
+                                                    if (CurrentModuleSortOrder == 1.1m)
+                                                    {
+                                                        NextSortOrderOfProjectTask = moduleSortOrder + 0.1m;
+                                                    }
+                                                    else
+                                                    {
+                                                        NextSortOrderOfProjectTask = Math.Round(CurrentModuleSortOrder + 0.1m, 1); // increment
+                                                    }
+
+                                                    taskEntity.SortOrder = NextSortOrderOfProjectTask;
+                                                    taskEntity.SiteId = SiteId;
+                                                    taskEntity.ProjectId = projectid;
+                                                    taskEntity.ProjectModuleId = moduleEntity.Id;
+                                                    taskEntity.RequirementId = requirementEntity.Id;
+                                                    taskEntity.StatusId = taskData.StatusId;
+                                                    taskEntity.PriorityId = taskData.PriorityId;
+                                                    taskEntity.ProjectTaskNumber = await _taskService.GetLastProjectTaskNumber() + 1;
+                                                    taskEntity.Name = taskData.Name;
+                                                    taskEntity.Description = taskData.Description;
+
+                                                    if (taskData.StartDate != null)
+                                                        taskEntity.StartDate = taskData.StartDate;
+                                                    if (taskData.EndDate != null)
+                                                        taskEntity.EndDate = taskData.EndDate;
+
+                                                    taskEntity.CreatedById = LoggedUserId;
+                                                    taskEntity.UpdatedById = LoggedUserId;
+                                                    taskEntity.CreatedOnUtc = GetDateTime;
+                                                    taskEntity.UpdatedOnUtc = GetDateTime;
+                                                    _taskService.InsertProjectTask(taskEntity);
+
+                                                    bool IsWorkboardUpdated = await UpdateProjectSwimlaneListTask(SiteId, taskEntity, LoggedUserId, GetDateTime);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+                            return NoContent();
+                        }
+                    }
+                    
                     return NoContent();
                 }
             }
@@ -2441,6 +2744,9 @@ namespace Vsky.Api.Controllers
             }
             return ModelStateError(ModelState);
         }
+        #endregion
+
+        #region CopyTaskToProjects
 
         [HttpPost("copyTaskToProjects")]
         public async Task<IActionResult> CopyTaskToProjects(ProjectTaskModel model)
@@ -2457,6 +2763,10 @@ namespace Vsky.Api.Controllers
                     var moduleData = await _projectModuleService.GetProjectModuleById(model.ProjectModuleId);
                     if (moduleData == null)
                         return BadRequest(new BadRequestError("No module id is found."));
+
+                    var requirementData = await _requirementService.GetRequirementById(model.RequirementId);
+                    if (requirementData == null)
+                        return BadRequest(new BadRequestError("No requirement id is found."));
 
                     if (model.ProjectIds != null && model.ProjectIds.Count > 0)
                     {
@@ -2510,6 +2820,91 @@ namespace Vsky.Api.Controllers
                                 _projectModuleService.InsertProjectModule(entityModule);
                             }
 
+                            // Update or create the requirements
+                            var existRequirements = await _requirementService.GetRequirementByName(requirementData.Title, projectid, entityModule.Id);
+                            Requirement requirementEntity = new Requirement();
+                            //requirementEntity = existRequirements;
+
+                            if (existRequirements == null)
+                            {
+                                requirementEntity.ProjectId = projectid;
+                                requirementEntity.SiteId = SiteId;
+                                requirementEntity.RequirementNumber = await _requirementService.GetLastRequirementNumber() + 1;
+                                requirementEntity.ProjectModuleId = entityModule.Id;
+                                requirementEntity.Title = requirementData.Title;
+                                requirementEntity.RequirementTypeId = requirementData.RequirementTypeId;
+                                requirementEntity.TargetLabel = requirementData.TargetLabel;
+                                requirementEntity.SourceLabel = requirementData.SourceLabel;
+                                requirementEntity.AreaId = requirementData.AreaId;
+                                requirementEntity.WorkspaceId = requirementData.WorkspaceId;
+                                requirementEntity.IdentifiedUserType = requirementData.IdentifiedUserType;
+                                requirementEntity.IdentifiedDate = requirementData.IdentifiedDate;
+                                requirementEntity.RequirementOwnerId = requirementData.RequirementOwnerId;
+                                requirementEntity.CustomerOwnerId = requirementData.CustomerOwnerId;
+                                requirementEntity.PlannedStartDate = requirementData.PlannedStartDate;
+                                requirementEntity.PlannedEndDate = requirementData.PlannedEndDate;
+                                requirementEntity.ActualStartDate = requirementData.ActualStartDate;
+                                requirementEntity.ActualEndDate = requirementData.ActualEndDate;
+                                requirementEntity.PriorityId = requirementData.PriorityId;
+                                requirementEntity.StatusId = await _dropDownService.GetDropDownByTypeNameAndName(SiteId, "Requirement Status", "New");
+
+                                var UserTypeId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Requirement Identifier", "Employee");
+                                if (requirementData.IdentifiedUserType == UserTypeId)
+                                    requirementEntity.IdentifiedEmployeeId = requirementData.IdentifiedEmployeeId;
+                                else
+                                    requirementEntity.IdentifiedCustomerId = requirementData.IdentifiedCustomerId;
+
+                                if (requirementData.RequirementEnteredBy != null && requirementData.RequirementEnteredBy != "")
+                                    requirementEntity.RequirementEnteredBy = requirementData.RequirementEnteredBy;
+                                else
+                                    requirementEntity.RequirementEnteredBy = null;
+
+                                if (requirementData.ApprovalStatus != null && requirementData.ApprovalStatus != "")
+                                    requirementEntity.ApprovalStatus = requirementData.ApprovalStatus;
+                                else
+                                    requirementEntity.ApprovalStatus = null;
+
+                                if (!string.IsNullOrEmpty(requirementData.ShortDescription))
+                                {
+                                    requirementEntity.ShortDescription = await _azureBlobImageServices
+                                        .ProcessHtmlAndManageImagesAsync(
+                                            requirementData.ShortDescription,
+                                            SiteData.Name,
+                                            "requirements",
+                                            requirementEntity.RequirementNumber.ToString()
+                                        );
+                                }
+
+                                if (!string.IsNullOrEmpty(requirementData.Scope))
+                                {
+                                    requirementEntity.Scope = await _azureBlobImageServices
+                                        .ProcessHtmlAndManageImagesAsync(
+                                            requirementData.Scope,
+                                            SiteData.Name,
+                                            "requirements",
+                                            requirementEntity.RequirementNumber.ToString()
+                                        );
+                                }
+
+                                if (!string.IsNullOrEmpty(requirementData.Description))
+                                {
+                                    requirementEntity.Description = await _azureBlobImageServices
+                                        .ProcessHtmlAndManageImagesAsync(
+                                            requirementData.Description,
+                                            SiteData.Name,
+                                            "requirements",
+                                            requirementEntity.RequirementNumber.ToString()
+                                        );
+                                }
+
+                                requirementEntity.CreatedById = LoggedUserId;
+                                requirementEntity.UpdatedById = LoggedUserId;
+                                requirementEntity.CreatedOnUtc = GetDateTime;
+                                requirementEntity.UpdatedOnUtc = GetDateTime;
+
+                                _requirementService.InsertRequirement(requirementEntity);
+                            }
+
                             // tasks
                             if (model.TaskId != null && model.TaskId != "")
                             {
@@ -2540,15 +2935,18 @@ namespace Vsky.Api.Controllers
                                     taskEntity.SiteId = SiteId;
                                     taskEntity.ProjectId = projectid.ToString();
                                     taskEntity.ProjectModuleId = entityModule.Id;
+                                    taskEntity.RequirementId = requirementEntity.Id;
                                     taskEntity.StatusId = taskData.StatusId;
                                     taskEntity.PriorityId = taskData.PriorityId;
                                     taskEntity.ProjectTaskNumber = await _taskService.GetLastProjectTaskNumber() + 1;
                                     taskEntity.Name = taskData.Name;
                                     taskEntity.Description = taskData.Description;
+
                                     if (taskData.StartDate != null)
                                         taskEntity.StartDate = taskData.StartDate;
                                     if (taskData.EndDate != null)
                                         taskEntity.EndDate = taskData.EndDate;
+
                                     taskEntity.CreatedById = LoggedUserId;
                                     taskEntity.UpdatedById = LoggedUserId;
                                     taskEntity.CreatedOnUtc = GetDateTime;
@@ -2581,6 +2979,7 @@ namespace Vsky.Api.Controllers
             }
             return ModelStateError(ModelState);
         }
+
         #endregion
 
         #region Update Project Workboard ListTasks

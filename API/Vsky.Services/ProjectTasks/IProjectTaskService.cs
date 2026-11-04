@@ -150,6 +150,7 @@ namespace Vsky.Services.ProjectTasks
         #region GetProjectByName
         Task<ProjectTask> GetProjectTaskByName(string name, string projectId, string projectModuleId, string id = null);
         #endregion
+
         #region IsProjectTaskSortOrderExists
         Task<bool> IsProjectTaskSortOrderExists(string siteId, string ProjectId, decimal sortOrder, string moduleId, string id = null);
         #endregion
@@ -160,7 +161,11 @@ namespace Vsky.Services.ProjectTasks
 
         #region GetAllTaskByProjectModuleIdForMoveModuleAsProject
         Task<List<ProjectTask>> GetAllTaskByProjectModuleIdForMoveModuleAsProject(string projectModuleId);
-        #endregion   
+        #endregion
+
+        #region GetAllTasksByRequirementId
+        Task<List<ProjectTask>> GetAllTasksByRequirementId(string siteId, string requirementId);
+        #endregion
 
         #region InsertProjectTask
         void InsertProjectTask(ProjectTask entity);

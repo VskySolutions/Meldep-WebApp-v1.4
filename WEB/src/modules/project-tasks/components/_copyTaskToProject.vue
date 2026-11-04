@@ -70,10 +70,19 @@ import projectModule from "src/modules/project/utils/dropdowns.js";
 // Common variables
 const processing = ref(false);
 const { toDate } = useFilters();
-const props = defineProps({ id: { type: String, default: "" }, name: { type: String, default: "" }, projectModuleId: { type: String, default: "" }, isMove: { type: String, default: "" }, isCopy: { type: String, default: "" } });
+const props = defineProps({ 
+  id: { type: String, default: "" },
+  name: { type: String, default: "" },
+  projectModuleId: { type: String, default: "" },
+  isMove: { type: String, default: "" },
+  isCopy: { type: String, default: "" },
+  requirementId: { type: String, default: "" }
+});
+
 const projectTaskId = props.id;
 const taskIds = props.id;
 const projectModuleId = props.projectModuleId;
+const requirementId = props.requirementId;
 const copyOrMove = computed(() => (props.isCopy ? "Copy" : "Move"));
 const loading = ref(true);
 
@@ -86,6 +95,7 @@ const model = ref({
   projectIds: [],
   taskId: taskIds,
   projectModuleId,
+  requirementId,
   isCopyOrMove: false
 });
 

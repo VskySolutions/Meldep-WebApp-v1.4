@@ -78,9 +78,12 @@ namespace Vsky.Services.Requirements
         Task<string> GetRequirementDescriptionById(string id);
         #endregion
 
-
         #region GetRequirementByName
         Task<Requirement> GetRequirementByName(string title, string ProjectId, string ProjectModuleId = null, string id = null);
+        #endregion
+
+        #region GetRequirementsByProjectModuleId
+        Task<List<Requirement>> GetRequirementsByProjectModuleId(string siteId, string projectModuleId);
         #endregion
 
         #region GetAllRequirementDescriptionsById

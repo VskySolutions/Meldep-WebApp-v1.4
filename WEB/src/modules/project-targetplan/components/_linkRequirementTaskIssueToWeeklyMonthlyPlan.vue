@@ -210,7 +210,7 @@ const onUpdateMonth = (val) => {
     qDateProxy.value?.hide(); // Close popup
   }
 };
-console.log(model.value.type);
+
 const handleViewClick = (id) => {
   if (model.value.type === 'Project Task') {
     onProjectTaskView(id);

@@ -135,22 +135,22 @@ export function onProjectTaskFiles (id, name, projectName, moduleName) {
     .onDismiss(() => { activeRowId.value = id; });
 }
 
-export function onProjectTaskCopy (id, name, projectModuleId, isCopy, refresh) {
+export function onProjectTaskCopy (id, name, projectModuleId, requirementId, isCopy, refresh) {
   activeRowId.value = id;
   $q.dialog({
     component: copyProjectTask,
-    componentProps: { id, name, projectModuleId, isCopy }
+    componentProps: { id, name, projectModuleId, requirementId, isCopy }
   })
     .onOk(refresh)
     .onCancel(() => { activeRowId.value = id; })
     .onDismiss(() => { activeRowId.value = id; });
 }
 
-export function onProjectTaskMove (id, name, projectModuleId, isMove, refresh) {
+export function onProjectTaskMove (id, name, projectModuleId, requirementId, isMove, refresh) {
   activeRowId.value = id;
   $q.dialog({
     component: copyProjectTask,
-    componentProps: { id, name, projectModuleId, isMove }
+    componentProps: { id, name, projectModuleId, requirementId, isMove }
   })
     .onOk(refresh)
     .onCancel(() => { activeRowId.value = id; })

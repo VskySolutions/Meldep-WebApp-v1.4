@@ -1941,11 +1941,11 @@
                                                   <q-item-section avatar><q-icon name="o_assignment" size="xs" /></q-item-section>
                                                   <q-item-section>Note</q-item-section>
                                                 </q-item><q-separator />
-                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple class="" clickable @click="onProjectTaskCopy(props.row.id, props.row.name, props.row.projectModuleId, 'isCopy', refreshProjectTaskList)">
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple class="" clickable @click="onProjectTaskCopy(props.row.id, props.row.name, props.row.projectModuleId, props.row.requirementId, 'isCopy', refreshProjectTaskList)">
                                                   <q-item-section avatar><q-icon name="o_copy" size="xs" /></q-item-section>
                                                   <q-item-section>Copy</q-item-section>
                                                 </q-item>
-                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple class="" clickable @click="onProjectTaskMove(props.row.id, props.row.name, props.row.projectModuleId, 'isMove', refreshProjectTaskList)">
+                                                <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple class="" clickable @click="onProjectTaskMove(props.row.id, props.row.name, props.row.projectModuleId, props.row.requirementId, 'isMove', refreshProjectTaskList)">
                                                   <q-item-section avatar><q-icon name="o_arrow_forward" size="xs" /></q-item-section>
                                                   <q-item-section>Move</q-item-section>
                                                 </q-item>
@@ -3293,8 +3293,6 @@ const getAllRequirementsByProjectModuleId = async (props) => {
       descending,
       rowsNumber: resp.total
     };
-
-    console.log("filteredRequirementRows.value", filteredRequirementRows.value);
     searchRequirementLoader.value = false;
   } catch (error) {
     console.error("Error fetching modules:", error);
@@ -3508,7 +3506,6 @@ const getTaskListByModuleId = async (props) => {
         assignedTo: task.assignedTo,
         projectId: task.projectId,
         projectModuleId: task.projectModuleId,
-
         projectModule: task.projectModule,
 
         projectModuleEmployeeMappings:

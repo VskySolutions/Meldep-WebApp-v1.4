@@ -200,4 +200,20 @@ namespace Vsky.Api.Models
         public int TaskDurationColspan { get; set; }
         public int AfterEndDateCount { get; set; }
     }
+
+    public class CopyModuleToProjectsModel
+    {
+        public string ProjectModuleId { get; set; }
+        public List<string> ProjectIds { get; set; }
+        public bool SelectedTaskList { get; set; }
+
+        public List<CopyRequirementModel> Requirements { get; set; }
+    }
+
+    public class CopyRequirementModel
+    {
+        public string RequirementId { get; set; }
+
+        public List<string> TaskIds { get; set; }
+    }
 }

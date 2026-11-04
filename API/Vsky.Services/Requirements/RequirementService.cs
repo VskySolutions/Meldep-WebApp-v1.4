@@ -862,7 +862,6 @@ namespace Vsky.Services.Requirements
         #endregion
 
         #region GetRequirementByName
-
         public async Task<Requirement> GetRequirementByName(string title, string ProjectId, string ProjectModuleId = null, string id = null)
         {
             var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.Title.ToLower() == title.ToLower() && x.ProjectId == ProjectId);
@@ -873,7 +872,15 @@ namespace Vsky.Services.Requirements
             var item = await query.FirstOrDefaultAsync();
             return item;
         }
+        #endregion
 
+        #region GetRequirementsByProjectModuleId
+        public async Task<List<Requirement>> GetRequirementsByProjectModuleId(string siteId, string projectModuleId)
+        {
+            var query = _requirementRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == siteId && x.ProjectModuleId == projectModuleId);
+
+            return await query.ToListAsync();
+        }
         #endregion
 
         #region GetAllRequirementDescriptionsById

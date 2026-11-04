@@ -153,6 +153,7 @@ using Vsky.Services.TrainingPortals;
 using Vsky.Services.Users;
 using Vsky.Services.Website_Demo;
 using Vsky.Services.Website_Demo_Module;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Vsky.Api
 {

@@ -689,125 +689,133 @@ namespace Vsky.Api.Controllers
                     var SiteId = _globalVariable.SiteId;
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
-                    var projectOpenStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "Open");
-                    var projectInProgressStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "In progress");
 
-                    //var EmployeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
-                    var EmployeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
-                    string TimesheetId = null;
-                    //Check if the Timesheet date already exists
-                    var data = await _timesheetService.GetTimesheetByDate(SiteId, LoggedUserId, model.TimesheetDate);
-                    if (data == null)
+                    if(!IsCurrentWeek(model.TimesheetDate, GetDateTime))
                     {
-                        // Map the Timesheet model to the Timesheet entity
-                        var entity = _mapper.Map<Timesheet>(model);
-                        entity.Id = Guid.NewGuid().ToString();
-                        //Get Current User data
-                        entity.EmployeeId = EmployeeId;
-                        entity.SiteId = SiteId;
-                        entity.CreatedById = LoggedUserId;
-                        entity.CreatedOnUtc = GetDateTime;
-                        entity.UpdatedOnUtc = GetDateTime;
-                        entity.UpdatedById = LoggedUserId;
-                        _timesheetService.InsertTimesheet(entity);
-
-                        TimesheetId = entity.Id;
+                        return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
                     }
                     else
-                        TimesheetId = data.Id;
-
-                    if (model.TimesheetLineModel != null && model.TimesheetLineModel.Count() > 0)
                     {
-                        var timesheetLines = _timesheetLinesService.GetTimesheetLinesByTimesheet(TimesheetId);
-                        // Loop through each Project
-                        foreach (var timesheet in model.TimesheetLineModel)
+                        var projectOpenStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "Open");
+                        var projectInProgressStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "In progress");
+
+                        //var EmployeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                        var EmployeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+                        string TimesheetId = null;
+                        //Check if the Timesheet date already exists
+                        var data = await _timesheetService.GetTimesheetByDate(SiteId, LoggedUserId, model.TimesheetDate);
+                        if (data == null)
                         {
-                            var existingLine = timesheetLines.FirstOrDefault(x => x.Id == timesheet.Id && !x.Deleted);
-                            (string ProjectId, string ProjectModuleId) taskData = (null, null);
+                            // Map the Timesheet model to the Timesheet entity
+                            var entity = _mapper.Map<Timesheet>(model);
+                            entity.Id = Guid.NewGuid().ToString();
+                            //Get Current User data
+                            entity.EmployeeId = EmployeeId;
+                            entity.SiteId = SiteId;
+                            entity.CreatedById = LoggedUserId;
+                            entity.CreatedOnUtc = GetDateTime;
+                            entity.UpdatedOnUtc = GetDateTime;
+                            entity.UpdatedById = LoggedUserId;
+                            _timesheetService.InsertTimesheet(entity);
 
-                            if (string.IsNullOrEmpty(timesheet.ProjectId) || string.IsNullOrEmpty(timesheet.ProjectModuleId))
+                            TimesheetId = entity.Id;
+                        }
+                        else
+                            TimesheetId = data.Id;
+
+                        if (model.TimesheetLineModel != null && model.TimesheetLineModel.Count() > 0)
+                        {
+                            var timesheetLines = _timesheetLinesService.GetTimesheetLinesByTimesheet(TimesheetId);
+                            // Loop through each Project
+                            foreach (var timesheet in model.TimesheetLineModel)
                             {
-                                taskData = await _projectTaskService.GetProjectIdAndProjectModuleIdByTaskId(timesheet.ProjectTaskId);
-                            }
+                                var existingLine = timesheetLines.FirstOrDefault(x => x.Id == timesheet.Id && !x.Deleted);
+                                (string ProjectId, string ProjectModuleId) taskData = (null, null);
 
-                            string ProjectId = !string.IsNullOrEmpty(timesheet.ProjectId)
-                               ? timesheet.ProjectId
-                               : taskData.ProjectId;
-
-                            string ProjectModuleId = !string.IsNullOrEmpty(timesheet.ProjectModuleId)
-                                ? timesheet.ProjectModuleId
-                                : taskData.ProjectModuleId;
-
-                            if (existingLine == null && !timesheet.Deleted)
-                            {
-                                TimesheetLines timesheetEntity = new TimesheetLines();
-                                timesheetEntity.Id = Guid.NewGuid().ToString();
-                                //timesheetEntity.Id = timesheet.Id;
-                                timesheetEntity.MeetingUId = timesheet.MeetingUId;
-                                timesheetEntity.TimesheetId = TimesheetId;
-                                timesheetEntity.Hours = timesheet.Hours;
-                                timesheetEntity.ProjectId = ProjectId;
-                                timesheetEntity.ProjectModuleId = ProjectModuleId;
-                                timesheetEntity.ProjectTaskId = timesheet.ProjectTaskId;
-                                timesheetEntity.ProjectActivityId = timesheet.ProjectActivityId;
-
-                                timesheetEntity.Description = string.IsNullOrEmpty(timesheet.Description) ? ""
-                                            : await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
-                                            timesheet.Description,
-                                            SiteData.Name,
-                                            "timesheet",
-                                            timesheetEntity.Id);
-
-                                timesheetEntity.CreatedById = LoggedUserId;
-                                timesheetEntity.CreatedOnUtc = GetDateTime;
-                                timesheetEntity.UpdatedById = LoggedUserId;
-                                timesheetEntity.UpdatedOnUtc = GetDateTime;
-                                _timesheetLinesService.InsertTimesheetLines(timesheetEntity);
-
-                                // set timesheetLineId
-                                timesheet.Id = timesheetEntity.Id;
-                            }
-                            else if (existingLine != null && !timesheet.Deleted)
-                            {
-                                existingLine.ProjectId = ProjectId;
-                                existingLine.ProjectModuleId = ProjectModuleId;
-                                existingLine.ProjectTaskId = timesheet.ProjectTaskId;
-                                existingLine.ProjectActivityId = timesheet.ProjectActivityId;
-
-                                existingLine.Description = string.IsNullOrEmpty(timesheet.Description) ? "" : await _azureBlobImageServices
-                                                        .ProcessHtmlAndManageImagesAsync(
-                                                            timesheet.Description,
-                                                            SiteData.Name,
-                                                            "timesheet",
-                                                            existingLine.Id,
-                                                            existingLine.Description);
-
-                                existingLine.Hours = timesheet.Hours;
-                                existingLine.UpdatedById = LoggedUserId;
-                                existingLine.UpdatedOnUtc = GetDateTime;
-                                _timesheetLinesService.UpdateTimesheetLines(existingLine);
-                            }
-
-                            var projectData = await _projectService.GetById(timesheet.ProjectId);
-                            if (projectData != null)
-                            {
-                                if (projectData.ProjectStatusId == projectOpenStatusId)
+                                if (string.IsNullOrEmpty(timesheet.ProjectId) || string.IsNullOrEmpty(timesheet.ProjectModuleId))
                                 {
-                                    if (!string.IsNullOrEmpty(projectInProgressStatusId))
-                                    {
-                                        projectData.ProjectStatusId = projectInProgressStatusId;
-                                        projectData.UpdatedById = LoggedUserId;
-                                        projectData.UpdatedOnUtc = GetDateTime;
-                                        _projectService.UpdateProject(projectData);
+                                    taskData = await _projectTaskService.GetProjectIdAndProjectModuleIdByTaskId(timesheet.ProjectTaskId);
+                                }
 
-                                        //AddSiteModifiedLogs(SiteId, "Project Status", projectData.Name, timesheet.ProjectId, "In progress", "In progress", LoggedUserId, GetDateTime);
-                                        _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "Projects", projectData.Id, projectData.Name, projectData.Id, projectData.Name, "Project Status", "In progress", LoggedUserId, GetDateTime);
+                                string ProjectId = !string.IsNullOrEmpty(timesheet.ProjectId)
+                                   ? timesheet.ProjectId
+                                   : taskData.ProjectId;
+
+                                string ProjectModuleId = !string.IsNullOrEmpty(timesheet.ProjectModuleId)
+                                    ? timesheet.ProjectModuleId
+                                    : taskData.ProjectModuleId;
+
+                                if (existingLine == null && !timesheet.Deleted)
+                                {
+                                    TimesheetLines timesheetEntity = new TimesheetLines();
+                                    timesheetEntity.Id = Guid.NewGuid().ToString();
+                                    //timesheetEntity.Id = timesheet.Id;
+                                    timesheetEntity.MeetingUId = timesheet.MeetingUId;
+                                    timesheetEntity.TimesheetId = TimesheetId;
+                                    timesheetEntity.Hours = timesheet.Hours;
+                                    timesheetEntity.ProjectId = ProjectId;
+                                    timesheetEntity.ProjectModuleId = ProjectModuleId;
+                                    timesheetEntity.ProjectTaskId = timesheet.ProjectTaskId;
+                                    timesheetEntity.ProjectActivityId = timesheet.ProjectActivityId;
+
+                                    timesheetEntity.Description = string.IsNullOrEmpty(timesheet.Description) ? ""
+                                                : await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
+                                                timesheet.Description,
+                                                SiteData.Name,
+                                                "timesheet",
+                                                timesheetEntity.Id);
+
+                                    timesheetEntity.CreatedById = LoggedUserId;
+                                    timesheetEntity.CreatedOnUtc = GetDateTime;
+                                    timesheetEntity.UpdatedById = LoggedUserId;
+                                    timesheetEntity.UpdatedOnUtc = GetDateTime;
+                                    _timesheetLinesService.InsertTimesheetLines(timesheetEntity);
+
+                                    // set timesheetLineId
+                                    timesheet.Id = timesheetEntity.Id;
+                                }
+                                else if (existingLine != null && !timesheet.Deleted)
+                                {
+                                    existingLine.ProjectId = ProjectId;
+                                    existingLine.ProjectModuleId = ProjectModuleId;
+                                    existingLine.ProjectTaskId = timesheet.ProjectTaskId;
+                                    existingLine.ProjectActivityId = timesheet.ProjectActivityId;
+
+                                    existingLine.Description = string.IsNullOrEmpty(timesheet.Description) ? "" : await _azureBlobImageServices
+                                                            .ProcessHtmlAndManageImagesAsync(
+                                                                timesheet.Description,
+                                                                SiteData.Name,
+                                                                "timesheet",
+                                                                existingLine.Id,
+                                                                existingLine.Description);
+
+                                    existingLine.Hours = timesheet.Hours;
+                                    existingLine.UpdatedById = LoggedUserId;
+                                    existingLine.UpdatedOnUtc = GetDateTime;
+                                    _timesheetLinesService.UpdateTimesheetLines(existingLine);
+                                }
+
+                                var projectData = await _projectService.GetById(timesheet.ProjectId);
+                                if (projectData != null)
+                                {
+                                    if (projectData.ProjectStatusId == projectOpenStatusId)
+                                    {
+                                        if (!string.IsNullOrEmpty(projectInProgressStatusId))
+                                        {
+                                            projectData.ProjectStatusId = projectInProgressStatusId;
+                                            projectData.UpdatedById = LoggedUserId;
+                                            projectData.UpdatedOnUtc = GetDateTime;
+                                            _projectService.UpdateProject(projectData);
+
+                                            //AddSiteModifiedLogs(SiteId, "Project Status", projectData.Name, timesheet.ProjectId, "In progress", "In progress", LoggedUserId, GetDateTime);
+                                            _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "Projects", projectData.Id, projectData.Name, projectData.Id, projectData.Name, "Project Status", "In progress", LoggedUserId, GetDateTime);
+                                        }
                                     }
                                 }
                             }
                         }
+                        return Ok(new { TimesheetId, model.TimesheetLineModel });
                     }
-                    return Ok(new { TimesheetId, model.TimesheetLineModel });
                 }
                 // Return model state errors if the model state is not valid
                 return ModelStateError(ModelState);
@@ -834,151 +842,158 @@ namespace Vsky.Api.Controllers
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
-                    var projectOpenStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "Open");
-                    var projectInProgressStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "In progress");
-
-                    // Fetch the timesheet entity by its ID
-                    var entity = await _timesheetService.GetTimesheetById(id);
-                    // If no timesheet is found with the given ID, return a bad request with an error message
-                    if (entity == null)
-                        return BadRequest(new BadRequestError("No timesheet found with the specified id."));
-
-                    string TimesheetId = null;
-                    //Check if the Timesheet date already exists
-                    var timesheetData = await _timesheetService.GetTimesheetByDate(SiteId, LoggedUserId, model.TimesheetDate, id);
-                    if (timesheetData == null)
+                    if (!IsCurrentWeek(model.TimesheetDate, GetDateTime))
                     {
-                        entity.TimesheetDate = model.TimesheetDate;
-                        entity.UpdatedById = LoggedUserId;
-                        entity.UpdatedOnUtc = GetDateTime;
-                        _timesheetService.UpdateTimesheet(entity);
-
-                        TimesheetId = id;
+                        return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
                     }
                     else
                     {
-                        // Delete the plan using the dailyPlannerService
-                        _timesheetService.DeleteTimesheet(entity);
-                        TimesheetId = timesheetData.Id;
-                    }
+                        var projectOpenStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "Open");
+                        var projectInProgressStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "In progress");
 
-                    var addList = new List<TimesheetLines>();
-                    var updateList = new List<TimesheetLines>();
-                    var deleteList = new List<TimesheetLines>();
+                        // Fetch the timesheet entity by its ID
+                        var entity = await _timesheetService.GetTimesheetById(id);
+                        // If no timesheet is found with the given ID, return a bad request with an error message
+                        if (entity == null)
+                            return BadRequest(new BadRequestError("No timesheet found with the specified id."));
 
-                    if (model.TimesheetLineModel != null && model.TimesheetLineModel.Count() > 0)
-                    {
-                        // Loop through each Daily Planner Line
-                        foreach (var timesheet in model.TimesheetLineModel)
+                        string TimesheetId = null;
+                        //Check if the Timesheet date already exists
+                        var timesheetData = await _timesheetService.GetTimesheetByDate(SiteId, LoggedUserId, model.TimesheetDate, id);
+                        if (timesheetData == null)
                         {
-                            var projectData = await _projectService.GetById(timesheet.ProjectId);
-                            timesheet.TimesheetId = id;
-                            if (timesheet.Deleted)
+                            entity.TimesheetDate = model.TimesheetDate;
+                            entity.UpdatedById = LoggedUserId;
+                            entity.UpdatedOnUtc = GetDateTime;
+                            _timesheetService.UpdateTimesheet(entity);
+
+                            TimesheetId = id;
+                        }
+                        else
+                        {
+                            // Delete the plan using the dailyPlannerService
+                            _timesheetService.DeleteTimesheet(entity);
+                            TimesheetId = timesheetData.Id;
+                        }
+
+                        var addList = new List<TimesheetLines>();
+                        var updateList = new List<TimesheetLines>();
+                        var deleteList = new List<TimesheetLines>();
+
+                        if (model.TimesheetLineModel != null && model.TimesheetLineModel.Count() > 0)
+                        {
+                            // Loop through each Daily Planner Line
+                            foreach (var timesheet in model.TimesheetLineModel)
                             {
-                                var toDelete = await _timesheetLinesService.GetTimesheetLinesById(timesheet.Id);
-                                if (toDelete == null)
+                                var projectData = await _projectService.GetById(timesheet.ProjectId);
+                                timesheet.TimesheetId = id;
+                                if (timesheet.Deleted)
                                 {
-                                    continue;
-                                }
-                                toDelete.TimesheetId = timesheet.TimesheetId;
-                                deleteList.Add(toDelete);
-                            }
-                            var existingTimesheet = await _timesheetLinesService.GetTimesheetLinesById(timesheet.Id);
-                            (string ProjectId, string ProjectModuleId) taskData = (null, null);
-
-                            if (string.IsNullOrEmpty(timesheet.ProjectId) || string.IsNullOrEmpty(timesheet.ProjectModuleId))
-                            {
-                                taskData = await _projectTaskService.GetProjectIdAndProjectModuleIdByTaskId(timesheet.ProjectTaskId);
-                            }
-
-                            string ProjectId = !string.IsNullOrEmpty(timesheet.ProjectId)
-                                   ? timesheet.ProjectId
-                                   : taskData.ProjectId;
-
-                            string ProjectModuleId = !string.IsNullOrEmpty(timesheet.ProjectModuleId)
-                                ? timesheet.ProjectModuleId
-                                : taskData.ProjectModuleId;
-
-                            if (existingTimesheet == null)
-                            {
-                                var timesheetEntity = _mapper.Map<TimesheetLines>(timesheet);
-                                timesheetEntity.Id = Guid.NewGuid().ToString();
-                                timesheetEntity.TimesheetId = timesheet.TimesheetId;
-                                timesheetEntity.ProjectId = ProjectId;
-                                timesheetEntity.ProjectModuleId = ProjectModuleId;
-
-                                timesheetEntity.Description = string.IsNullOrEmpty(timesheet.Description) ? "" : await _azureBlobImageServices
-                                         .ProcessHtmlAndManageImagesAsync(
-                                             timesheet.Description,
-                                             SiteData.Name,
-                                             "timesheet",
-                                             timesheet.Id);
-
-                                timesheetEntity.CreatedById = LoggedUserId;
-                                timesheetEntity.CreatedOnUtc = GetDateTime;
-                                timesheetEntity.UpdatedById = LoggedUserId;
-                                timesheetEntity.UpdatedOnUtc = GetDateTime;
-                                addList.Add(timesheetEntity);
-
-                                timesheet.Id = timesheetEntity.Id;
-                            }
-                            else if (existingTimesheet != null && !timesheet.Deleted)
-                            {
-                                //existingTimesheet.TimesheetId = timesheet.TimesheetId;
-                                existingTimesheet.TimesheetId = TimesheetId;
-                                existingTimesheet.ProjectId = ProjectId;
-                                existingTimesheet.ProjectModuleId = ProjectModuleId;
-                                existingTimesheet.ProjectTaskId = timesheet.ProjectTaskId;
-                                existingTimesheet.ProjectActivityId = timesheet.ProjectActivityId;
-                                //existingTimesheet.Description = timesheet.Description;
-                                existingTimesheet.Hours = timesheet.Hours;
-                                existingTimesheet.ProjectActivityId = timesheet.ProjectActivityId;
-
-                                existingTimesheet.Description = string.IsNullOrEmpty(timesheet.Description) ? ""
-                                                               : await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
-                                                                timesheet.Description,
-                                                                SiteData.Name,
-                                                                "timesheet",
-                                                                timesheet.Id,
-                                                                timesheet.Description);
-
-                                existingTimesheet.Deleted = timesheet.Deleted;
-                                existingTimesheet.UpdatedOnUtc = GetDateTime;
-                                existingTimesheet.UpdatedById = LoggedUserId;
-                                updateList.Add(existingTimesheet);
-
-                                timesheet.Id = existingTimesheet.Id;
-                            }
-
-                            if (projectData != null)
-                            {
-                                if (projectData.ProjectStatusId == projectOpenStatusId)
-                                {
-                                    if (!string.IsNullOrEmpty(projectInProgressStatusId))
+                                    var toDelete = await _timesheetLinesService.GetTimesheetLinesById(timesheet.Id);
+                                    if (toDelete == null)
                                     {
-                                        projectData.ProjectStatusId = projectInProgressStatusId;
-                                        projectData.UpdatedById = LoggedUserId;
-                                        projectData.UpdatedOnUtc = GetDateTime;
-                                        _projectService.UpdateProject(projectData);
+                                        continue;
+                                    }
+                                    toDelete.TimesheetId = timesheet.TimesheetId;
+                                    deleteList.Add(toDelete);
+                                }
+                                var existingTimesheet = await _timesheetLinesService.GetTimesheetLinesById(timesheet.Id);
+                                (string ProjectId, string ProjectModuleId) taskData = (null, null);
 
-                                        //AddSiteModifiedLogs(SiteId, "Project Status", projectData.Name, timesheet.ProjectId, "In progress", "In progress", LoggedUserId, GetDateTime);
-                                        _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "Projects", projectData.Id, projectData.Name, projectData.Id, projectData.Name, "Project Status", "In progress", LoggedUserId, GetDateTime);
+                                if (string.IsNullOrEmpty(timesheet.ProjectId) || string.IsNullOrEmpty(timesheet.ProjectModuleId))
+                                {
+                                    taskData = await _projectTaskService.GetProjectIdAndProjectModuleIdByTaskId(timesheet.ProjectTaskId);
+                                }
+
+                                string ProjectId = !string.IsNullOrEmpty(timesheet.ProjectId)
+                                       ? timesheet.ProjectId
+                                       : taskData.ProjectId;
+
+                                string ProjectModuleId = !string.IsNullOrEmpty(timesheet.ProjectModuleId)
+                                    ? timesheet.ProjectModuleId
+                                    : taskData.ProjectModuleId;
+
+                                if (existingTimesheet == null)
+                                {
+                                    var timesheetEntity = _mapper.Map<TimesheetLines>(timesheet);
+                                    timesheetEntity.Id = Guid.NewGuid().ToString();
+                                    timesheetEntity.TimesheetId = timesheet.TimesheetId;
+                                    timesheetEntity.ProjectId = ProjectId;
+                                    timesheetEntity.ProjectModuleId = ProjectModuleId;
+
+                                    timesheetEntity.Description = string.IsNullOrEmpty(timesheet.Description) ? "" : await _azureBlobImageServices
+                                             .ProcessHtmlAndManageImagesAsync(
+                                                 timesheet.Description,
+                                                 SiteData.Name,
+                                                 "timesheet",
+                                                 timesheet.Id);
+
+                                    timesheetEntity.CreatedById = LoggedUserId;
+                                    timesheetEntity.CreatedOnUtc = GetDateTime;
+                                    timesheetEntity.UpdatedById = LoggedUserId;
+                                    timesheetEntity.UpdatedOnUtc = GetDateTime;
+                                    addList.Add(timesheetEntity);
+
+                                    timesheet.Id = timesheetEntity.Id;
+                                }
+                                else if (existingTimesheet != null && !timesheet.Deleted)
+                                {
+                                    //existingTimesheet.TimesheetId = timesheet.TimesheetId;
+                                    existingTimesheet.TimesheetId = TimesheetId;
+                                    existingTimesheet.ProjectId = ProjectId;
+                                    existingTimesheet.ProjectModuleId = ProjectModuleId;
+                                    existingTimesheet.ProjectTaskId = timesheet.ProjectTaskId;
+                                    existingTimesheet.ProjectActivityId = timesheet.ProjectActivityId;
+                                    //existingTimesheet.Description = timesheet.Description;
+                                    existingTimesheet.Hours = timesheet.Hours;
+                                    existingTimesheet.ProjectActivityId = timesheet.ProjectActivityId;
+
+                                    existingTimesheet.Description = string.IsNullOrEmpty(timesheet.Description) ? ""
+                                                                   : await _azureBlobImageServices.ProcessHtmlAndManageImagesAsync(
+                                                                    timesheet.Description,
+                                                                    SiteData.Name,
+                                                                    "timesheet",
+                                                                    timesheet.Id,
+                                                                    timesheet.Description);
+
+                                    existingTimesheet.Deleted = timesheet.Deleted;
+                                    existingTimesheet.UpdatedOnUtc = GetDateTime;
+                                    existingTimesheet.UpdatedById = LoggedUserId;
+                                    updateList.Add(existingTimesheet);
+
+                                    timesheet.Id = existingTimesheet.Id;
+                                }
+
+                                if (projectData != null)
+                                {
+                                    if (projectData.ProjectStatusId == projectOpenStatusId)
+                                    {
+                                        if (!string.IsNullOrEmpty(projectInProgressStatusId))
+                                        {
+                                            projectData.ProjectStatusId = projectInProgressStatusId;
+                                            projectData.UpdatedById = LoggedUserId;
+                                            projectData.UpdatedOnUtc = GetDateTime;
+                                            _projectService.UpdateProject(projectData);
+
+                                            //AddSiteModifiedLogs(SiteId, "Project Status", projectData.Name, timesheet.ProjectId, "In progress", "In progress", LoggedUserId, GetDateTime);
+                                            _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "Projects", projectData.Id, projectData.Name, projectData.Id, projectData.Name, "Project Status", "In progress", LoggedUserId, GetDateTime);
+                                        }
                                     }
                                 }
                             }
+                            if (addList.Count > 0)
+                                _timesheetLinesService.InsertTimesheetLinesList(addList);
+
+                            if (updateList.Count > 0)
+                                _timesheetLinesService.UpdateTimesheetLinesList(updateList);
+                            if (deleteList.Count > 0)
+                                _timesheetLinesService.DeleteTimesheetLinesList(deleteList);
+
                         }
-                        if (addList.Count > 0)
-                            _timesheetLinesService.InsertTimesheetLinesList(addList);
+                        _timesheetService.UpdateTimesheet(entity);
 
-                        if (updateList.Count > 0)
-                            _timesheetLinesService.UpdateTimesheetLinesList(updateList);
-                        if (deleteList.Count > 0)
-                            _timesheetLinesService.DeleteTimesheetLinesList(deleteList);
-
+                        return Ok(new { TimesheetId = TimesheetId, model.TimesheetLineModel });
                     }
-                    _timesheetService.UpdateTimesheet(entity);
-
-                    return Ok(new { TimesheetId = TimesheetId, model.TimesheetLineModel });
                 }
             }
             catch (Exception ex)
@@ -1754,6 +1769,26 @@ namespace Vsky.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        #endregion
+
+        #region private functions
+
+        #region IsCurrentWeek
+        private bool IsCurrentWeek(DateTime timesheetDate, DateTime currentDate)
+        {
+            currentDate = currentDate.Date;
+            timesheetDate = timesheetDate.Date;
+
+            // Calculate Monday of the current week
+            int daysFromMonday = ((int)currentDate.DayOfWeek + 6) % 7;
+
+            DateTime weekStart = currentDate.AddDays(-daysFromMonday);
+            DateTime weekEnd = weekStart.AddDays(6);
+
+            return timesheetDate >= weekStart && timesheetDate <= weekEnd;
+        }
+        #endregion
+
         #endregion
     }
 }

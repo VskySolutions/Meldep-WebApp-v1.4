@@ -50,6 +50,7 @@ namespace Vsky.Api.Controllers
         private readonly ITagService _tagService;
         private readonly IRequirementsPinnedService _requirementsPinnedService;
         private readonly IRequirementsColorService _requirementsColorService;
+        private readonly IProjectTaskService _taskService;
         #endregion
 
         #region Services Initializations      
@@ -69,7 +70,8 @@ namespace Vsky.Api.Controllers
             IRequirementTagService requirementTagService,
             ITagService tagService,
             IRequirementsPinnedService requirementsPinnedService,
-            IRequirementsColorService requirementsColorService
+            IRequirementsColorService requirementsColorService,
+            IProjectTaskService projectTaskService
         )
         {
             _globalVariable = globalVariable;
@@ -88,6 +90,7 @@ namespace Vsky.Api.Controllers
             _tagService = tagService;
             _requirementsPinnedService = requirementsPinnedService;
             _requirementsColorService = requirementsColorService;
+            _taskService = projectTaskService;
         }
         #endregion
 
@@ -289,6 +292,52 @@ namespace Vsky.Api.Controllers
 
                 if (result == null)
                     return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetRequirementsByProjectModuleId
+        [HttpGet("getRequirementsByProjectModuleId/{projectModuleId}")]
+        public async Task<IActionResult> GetRequirementsByProjectModuleId(string projectModuleId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(projectModuleId))
+                    return BadRequest(new BadRequestError("Project module id is required."));
+
+                var siteId = _globalVariable.SiteId;
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+
+                var requirements = await _requirementService.GetRequirementsByProjectModuleId(siteId, projectModuleId);
+
+                var result = new List<object>();
+
+                foreach (var requirement in requirements)
+                {
+                    var tasks = await _taskService.GetAllTasksByRequirementId(siteId, requirement.Id);
+
+                    result.Add(new
+                    {
+                        Id = requirement.Id,
+                        Title = requirement.Title,
+                        RequirementNumber = requirement.RequirementNumber,
+
+                        Tasks = tasks.Select(task => new
+                        {
+                            Id = task.Id,
+                            Name = task.Name,
+                            ProjectTaskNumber = task.ProjectTaskNumber,
+                            StatusId = task.StatusId,
+                            PriorityId = task.PriorityId
+                        }).ToList()
+                    });
+                }
 
                 return Ok(result);
             }

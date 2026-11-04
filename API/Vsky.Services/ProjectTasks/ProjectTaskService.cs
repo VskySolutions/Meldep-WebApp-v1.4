@@ -1609,6 +1609,15 @@ namespace Vsky.Services.ProjectTasks
         }
         #endregion
 
+        #region GetAllTasksByRequirementId
+        public async Task<List<ProjectTask>> GetAllTasksByRequirementId(string siteId, string requirementId)
+        {
+            var query = _projectTaskRepository.TableNoTracking.Where(x => !x.Deleted && x.SiteId == siteId && x.RequirementId == requirementId);
+
+            return await query.ToListAsync();
+        }
+        #endregion
+
         #region InsertProjectTask
         public void InsertProjectTask(ProjectTask entity)
         {

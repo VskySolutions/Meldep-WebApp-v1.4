@@ -77,16 +77,19 @@ import useFilters from "composables/useFilters";
 import { required, helpers } from "@vuelidate/validators";
 
 import projectModule from "src/modules/project/utils/dropdowns.js";
+import requirementService from "modules/requirement/requirement.service";
 
 import formMultiSelectDropdown from "src/components/form-inputs/_formMultiSelectDropdown.vue";
+
+const props = defineProps({ id: { type: String, default: "" }, name: { type: String, default: "" } });
 
 // Common variables
 const processing = ref(false);
 const { toDate } = useFilters();
-const props = defineProps({ id: { type: String, default: "" }, name: { type: String, default: "" } });
 const projectModuleId = props.id;
 const moduleName = props.name;
 const selectAllTasks = ref(false);
+const requirements = ref([]);
 
 // Define emits
 defineEmits([...useDialogPluginComponent.emits]);
@@ -96,8 +99,9 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginC
 const model = ref({
   projectIds: [],
   taskIds: [],
-  projectModuleId,
-  selectedTaskList: false
+  projectModuleId: projectModuleId,
+  selectedTaskList: false,
+  requirements: []
 });
 
 const projectTasks = ref([]);
@@ -158,19 +162,25 @@ const onSubmit = async () => {
       return;
     }
 
+    // Prepare requirement IDs and their associated task IDs
+    model.value.requirements = requirements.value.map(requirement => ({
+      requirementId: requirement.id,
+      taskIds: (requirement.tasks || []).map(task => task.id)
+    }));
+
     await taskService.copyModuleToProjects(model.value);
 
     notifySuccess({
-      message: "Project module & tasks copied successfully."
+      message: "Project module, requirements & tasks copied successfully."
     });
 
     onDialogOK();
 
   } catch (error) {
-    console.error("Error while copying project module and tasks:", error);
+    console.error("Error while copying module:", error);
 
     notifyError({
-      message: "An error occurred while copying project module and tasks."
+      message: "An error occurred while copying project module, requirements and tasks."
     });
   } finally {
     processing.value = false;
@@ -185,9 +195,27 @@ watch(
   { immediate: true }
 );
 
+// watch(
+//   requirements,
+//   (newRequirements) => {
+//     model.value.requirements = newRequirements
+//       .filter(requirement => requirement.isSelected)
+//       .map(requirement => ({
+//         requirementId: requirement.id,
+//         taskIds: (requirement.tasks || [])
+//           .filter(task => task.isSelected)
+//           .map(task => task.id)
+//       }));
+//   },
+//   { deep: true, immediate: true }
+// );
+
 // On page rendering
-onMounted(() => {
+onMounted(async () => {
   projectNameDropdown.load();
+
+  const response = await requirementService.getRequirementsByProjectModuleId(props.id);
+  requirements.value = response || [];
 });
 </script>
 <style>
