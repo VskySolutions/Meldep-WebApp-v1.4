@@ -146,6 +146,7 @@ using Vsky.Services.TestPlans;
 using Vsky.Services.TimeInTimeOuts;
 using Vsky.Services.TimesheetAISummarys;
 using Vsky.Services.Timesheets;
+using Vsky.Services.Analytics;
 using Vsky.Services.TimeZone;
 using Vsky.Services.TrainingPortalMappings;
 using Vsky.Services.TrainingPortals;
@@ -380,6 +381,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<IDailyPlannerService, DailyPlannerService>();
             builder.Services.AddScoped<IDailyPlannerLineService, DailyPlannerLineService>();
             builder.Services.AddScoped<ITimesheetService,TimesheetService>();
+            builder.Services.AddScoped<ITimesheetRegisterService, TimesheetRegisterService>();
             builder.Services.AddScoped<ITimesheetLinesService, TimesheetLinesService>();
             builder.Services.AddScoped<ITimesheetAISummaryService, TimesheetAISummaryService>();
             builder.Services.AddScoped<IEmployeeTypeService, EmployeeTypeService>();
