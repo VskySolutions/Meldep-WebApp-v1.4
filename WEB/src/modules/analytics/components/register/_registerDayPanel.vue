@@ -92,13 +92,22 @@
       </app-data-table>
     </template>
 
+    <!-- The same employee over the week of this day, or over the register's whole period. -->
+    <template #footer-actions>
+      <q-btn flat no-caps color="primary" icon="o_view_week" label="View week" @click="$emit('timesheet', { mode: 'week' })">
+        <q-tooltip>This employee's timesheet for the week of this day</q-tooltip>
+      </q-btn>
+      <q-btn flat no-caps color="primary" icon="o_receipt_long" label="View period" @click="$emit('timesheet', { mode: 'period' })">
+        <q-tooltip>This employee's timesheet for the selected period</q-tooltip>
+      </q-btn>
+    </template>
   </app-side-panel>
 </template>
 
 <script setup>
 // One cell of the register opened up: the state in words, the facts the rule used (expected, logged, shift,
-// cutoff, completed at) and the timesheet lines behind it. Falls back to the cell already on screen when the
-// detail call fails, so the panel is never empty.
+// cutoff, completed at) and the timesheet lines behind it in the standard data table. Falls back to the cell
+// already on screen when the detail call fails, so the panel is never empty.
 import { ref, computed, watch } from "vue";
 import AppSidePanel from "components/common/AppSidePanel.vue";
 import AppEmptyState from "components/common/AppEmptyState.vue";
@@ -112,7 +121,7 @@ const props = defineProps({
   payload: { type: Object, required: true }
 });
 
-defineEmits(["close"]);
+defineEmits(["close", "timesheet"]);
 
 const loading = ref(false);
 const loadError = ref(false);
@@ -124,26 +133,6 @@ const cell = computed(() => detail.value?.cell || props.payload.cell);
 const state = computed(() => stateOf(cell.value));
 const half = computed(() => isHalfDay(cell.value));
 const explanation = computed(() => explainCell(cell.value, day.value));
-
-// The lines as table rows (a key per row) and the standard column contract.
-const lineRows = computed(() => (detail.value?.lines || []).map((line, index) => ({ id: index + 1, ...line })));
-
-const lineColumns = [
-  { name: "project", label: "Project / Module", field: "project", align: "left", sortable: true },
-  { name: "task", label: "Task / Activity", field: "task", align: "left", sortable: true },
-  { name: "hours", label: "Hours", field: "hours", align: "right", sortable: true, format: (v) => fmtHours(v) },
-  { name: "billableHours", label: "Billable Hours", field: "billableHours", align: "right", sortable: true, format: (v) => fmtHours(v) },
-  { name: "enteredAt", label: "Entered at", field: "enteredAt", align: "left", sortable: true }
-];
-
-// All lines on one page, oldest entry first.
-const linePagination = { rowsPerPage: 0, sortBy: "enteredAt", descending: false };
-
-// Footer of the lines table: the day's hours and billable hours added up.
-const lineTotals = computed(() => (detail.value?.lines || []).reduce(
-  (sum, line) => ({ hours: sum.hours + Number(line.hours || 0), billable: sum.billable + Number(line.billableHours || 0) }),
-  { hours: 0, billable: 0 }
-));
 
 const title = computed(() => row.value?.fullName || "Employee");
 const subtitle = computed(() => `${formatDayLabel(day.value?.date)}${row.value?.employeeCode ? " · " + row.value.employeeCode : ""}`);
@@ -185,11 +174,35 @@ const facts = computed(() => {
   if (r.department) {
     list.push({ label: "Department", value: r.department });
   }
+  if (r.teamLeadName) {
+    list.push({ label: "Team lead", value: r.teamLeadName });
+  }
   if (c.state === "NotEmployed") {
     list.push({ label: "Employment", value: `${r.joiningDate ? "from " + formatAppDate(r.joiningDate) : ""}${r.releaseDate ? " to " + formatAppDate(r.releaseDate) : ""}`.trim() || "—" });
   }
   return list;
 });
+
+// The lines as table rows (a key per row) and the standard column contract.
+const lineRows = computed(() => (detail.value?.lines || []).map((line, index) => ({ id: index + 1, ...line })));
+
+const lineColumns = [
+  { name: "project", label: "Project / Module", field: "project", align: "left", sortable: true },
+  { name: "task", label: "Task / Activity", field: "task", align: "left", sortable: true },
+  { name: "hours", label: "Hours", field: "hours", align: "right", sortable: true, format: (v) => fmtHours(v) },
+  { name: "billableHours", label: "Billable Hours", field: "billableHours", align: "right", sortable: true, format: (v) => fmtHours(v) },
+  { name: "enteredAt", label: "Entered at", field: "enteredAt", align: "left", sortable: true }
+];
+
+// All lines on one page, oldest entry first. rowsNumber is cleared on purpose: with it set, QTable treats
+// the table as server-paged and never sorts locally.
+const linePagination = { rowsPerPage: 0, sortBy: "enteredAt", descending: false, rowsNumber: undefined };
+
+// Footer of the lines table: the day's hours and billable hours added up.
+const lineTotals = computed(() => (detail.value?.lines || []).reduce(
+  (sum, line) => ({ hours: sum.hours + Number(line.hours || 0), billable: sum.billable + Number(line.billableHours || 0) }),
+  { hours: 0, billable: 0 }
+));
 
 async function load () {
   const { row: r, day: d } = props.payload;

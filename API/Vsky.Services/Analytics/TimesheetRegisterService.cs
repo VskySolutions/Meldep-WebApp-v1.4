@@ -29,6 +29,7 @@ namespace Vsky.Services.Analytics
         private readonly IRepository<LeaveSchedules> _leaveScheduleRepository;
         private readonly IRepository<Timesheet> _timesheetRepository;
         private readonly IRepository<TimesheetLines> _timesheetLinesRepository;
+        private readonly IRepository<EmployeeOrgStructure> _employeeOrgStructureRepository;
         #endregion
 
         #region Ctor
@@ -37,13 +38,15 @@ namespace Vsky.Services.Analytics
             IRepository<EmployeeLeave> employeeLeaveRepository,
             IRepository<LeaveSchedules> leaveScheduleRepository,
             IRepository<Timesheet> timesheetRepository,
-            IRepository<TimesheetLines> timesheetLinesRepository)
+            IRepository<TimesheetLines> timesheetLinesRepository,
+            IRepository<EmployeeOrgStructure> employeeOrgStructureRepository)
         {
             _employeeRepository = employeeRepository;
             _employeeLeaveRepository = employeeLeaveRepository;
             _leaveScheduleRepository = leaveScheduleRepository;
             _timesheetRepository = timesheetRepository;
             _timesheetLinesRepository = timesheetLinesRepository;
+            _employeeOrgStructureRepository = employeeOrgStructureRepository;
         }
         #endregion
 
@@ -127,6 +130,27 @@ namespace Vsky.Services.Analytics
                 .ThenBy(e => e.LastName ?? string.Empty)
                 .ToList();
             var employeeIds = new HashSet<string>(employees.Select(e => e.Id));
+            var employeeIdList = employeeIds.ToList();
+
+            // 2b. Team lead of each employee: the manager on the latest org-structure row (by year, then creation).
+            var orgRows = await _employeeOrgStructureRepository.TableNoTracking
+                .Where(o => !o.Deleted && employeeIdList.Contains(o.EmployeeId))
+                .Select(o => new
+                {
+                    o.EmployeeId,
+                    o.ManagerId,
+                    o.Year,
+                    o.CreatedOnUtc,
+                    ManagerFirstName = o.Manager != null && o.Manager.Person != null ? o.Manager.Person.FirstName : null,
+                    ManagerLastName = o.Manager != null && o.Manager.Person != null ? o.Manager.Person.LastName : null
+                })
+                .ToListAsync();
+
+            var teamLeads = orgRows
+                .GroupBy(o => o.EmployeeId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderByDescending(o => o.Year).ThenByDescending(o => o.CreatedOnUtc).First());
 
             // 3. Leaves overlapping the range. Any status that is not declined/cancelled covers the day.
             var leaveQuery = _employeeLeaveRepository.TableNoTracking
@@ -262,6 +286,10 @@ namespace Vsky.Services.Analytics
                     FullName = FullName(employee),
                     Email = employee.Email,
                     Department = PeriodValue(employee.Departments, shiftAsOf),
+                    TeamLeadId = teamLeads.TryGetValue(employee.Id, out var lead) ? lead.ManagerId : null,
+                    TeamLeadName = teamLeads.TryGetValue(employee.Id, out var leadName) && leadName.ManagerId != null
+                        ? ($"{leadName.ManagerFirstName} {leadName.ManagerLastName}".Trim().Length > 0 ? $"{leadName.ManagerFirstName} {leadName.ManagerLastName}".Trim() : leadName.ManagerId)
+                        : null,
                     Shift = shift.Name,
                     ShiftAssigned = shiftAssigned,
                     ShiftSource = string.IsNullOrWhiteSpace(shiftSource) ? null : shiftSource.Trim(),
@@ -290,17 +318,36 @@ namespace Vsky.Services.Analytics
         }
         #endregion
 
-        #region GetDayDetailAsync
+        #region GetDayDetailAsync / GetEmployeeDetailAsync
         public async Task<TimesheetRegisterDayDetail> GetDayDetailAsync(string siteId, string timeZoneId, string employeeId, DateTime date, DateTime? nowUtc = null)
         {
+            var detail = await GetEmployeeDetailAsync(siteId, timeZoneId, employeeId, date.Date, date.Date, nowUtc);
+
+            return new TimesheetRegisterDayDetail
+            {
+                Employee = detail.Employee,
+                Day = detail.Days.First(),
+                Cell = detail.Employee.Cells.First(),
+                Rules = detail.Rules,
+                Lines = detail.Lines
+            };
+        }
+
+        public async Task<TimesheetRegisterEmployeeDetail> GetEmployeeDetailAsync(string siteId, string timeZoneId, string employeeId, DateTime fromDate, DateTime toDate, DateTime? nowUtc = null)
+        {
             if (string.IsNullOrWhiteSpace(employeeId)) throw new ArgumentException("Employee is required.");
+
+            var from = fromDate.Date;
+            var to = toDate.Date;
+            if (to < from) (from, to) = (to, from);
+            var toExclusive = to.AddDays(1);
 
             var register = await GetRegisterAsync(new TimesheetRegisterQuery
             {
                 SiteId = siteId,
                 TimeZoneId = timeZoneId,
-                FromDate = date.Date,
-                ToDate = date.Date,
+                FromDate = from,
+                ToDate = to,
                 EmployeeIds = new List<string> { employeeId },
                 NowUtc = nowUtc
             });
@@ -309,8 +356,6 @@ namespace Vsky.Services.Analytics
                 ?? throw new ArgumentException("The employee was not found among the active employees of this site.");
 
             var tz = ResolveTimeZone(timeZoneId);
-            var from = date.Date;
-            var toExclusive = from.AddDays(1);
 
             var lines = await _timesheetLinesRepository.TableNoTracking
                 .Where(l => !l.Deleted
@@ -319,9 +364,12 @@ namespace Vsky.Services.Analytics
                     && l.Timesheet.EmployeeId == employeeId
                     && l.Timesheet.TimesheetDate != null
                     && l.Timesheet.TimesheetDate >= from && l.Timesheet.TimesheetDate < toExclusive)
-                .OrderBy(l => l.CreatedOnUtc)
+                .OrderBy(l => l.Timesheet.TimesheetDate)
+                .ThenBy(l => l.CreatedOnUtc)
                 .Select(l => new
                 {
+                    Date = l.Timesheet.TimesheetDate.Value,
+                    Status = l.Timesheet.TimesheetStatus != null ? l.Timesheet.TimesheetStatus.DropDownValue : null,
                     Project = l.Project != null ? l.Project.Name : null,
                     ProjectModule = l.ProjectModule != null ? l.ProjectModule.Name : null,
                     Task = l.Task != null ? l.Task.Name : null,
@@ -334,14 +382,17 @@ namespace Vsky.Services.Analytics
                 })
                 .ToListAsync();
 
-            return new TimesheetRegisterDayDetail
+            return new TimesheetRegisterEmployeeDetail
             {
+                FromDate = register.FromDate,
+                ToDate = register.ToDate,
                 Employee = row,
-                Day = register.Days.First(),
-                Cell = row.Cells.First(),
+                Days = register.Days,
                 Rules = register.Rules,
                 Lines = lines.Select(l => new RegisterDayLine
                 {
+                    Date = l.Date.ToString(IsoDate, CultureInfo.InvariantCulture),
+                    TimesheetStatus = l.Status,
                     Project = l.Project,
                     ProjectModule = l.ProjectModule,
                     Task = l.Task,

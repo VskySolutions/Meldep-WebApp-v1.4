@@ -106,6 +106,30 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GetTimesheetRegisterEmployee
+        /// <summary>One employee over a period (at most a quarter): the register row, the days and every line.</summary>
+        [HttpGet("timesheet-register/employee")]
+        public async Task<IActionResult> GetTimesheetRegisterEmployee([FromQuery] string employeeId, [FromQuery] string fromDate, [FromQuery] string toDate)
+        {
+            try
+            {
+                if (!IsAdmin()) return AdminOnly();
+
+                if (string.IsNullOrWhiteSpace(employeeId) || !TryParseDate(fromDate, out var from) || !TryParseDate(toDate, out var to))
+                    return BadRequest("employeeId, fromDate and toDate (yyyy-MM-dd) are required.");
+
+                var siteId = _globalVariable.SiteId;
+                var result = await _timesheetRegisterService.GetEmployeeDetailAsync(siteId, await ResolveTimeZoneIdAsync(siteId), employeeId, from, to);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region Helpers
         private bool IsAdmin()
         {

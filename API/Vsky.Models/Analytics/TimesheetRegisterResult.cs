@@ -156,6 +156,9 @@ namespace Vsky.Models.Analytics
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Department { get; set; }
+        /// <summary>Manager on the latest org-structure row of the employee; null when there is none.</summary>
+        public string TeamLeadId { get; set; }
+        public string TeamLeadName { get; set; }
         /// <summary>Shift used for the last day of the range (resolved; the default when none is assigned).</summary>
         public string Shift { get; set; }
         public bool ShiftAssigned { get; set; }
@@ -240,6 +243,10 @@ namespace Vsky.Models.Analytics
 
     public class RegisterDayLine
     {
+        /// <summary>yyyy-MM-dd of the timesheet the line belongs to.</summary>
+        public string Date { get; set; }
+        /// <summary>Weekly approval status of that timesheet, when any.</summary>
+        public string TimesheetStatus { get; set; }
         public string Project { get; set; }
         public string ProjectModule { get; set; }
         public string Task { get; set; }
@@ -259,6 +266,17 @@ namespace Vsky.Models.Analytics
         public RegisterRow Employee { get; set; }
         public RegisterDay Day { get; set; }
         public RegisterCell Cell { get; set; }
+        public RegisterRules Rules { get; set; }
+        public List<RegisterDayLine> Lines { get; set; } = new List<RegisterDayLine>();
+    }
+
+    /// <summary>One employee over a range: the register row with its cells, the days, and every line behind them.</summary>
+    public class TimesheetRegisterEmployeeDetail
+    {
+        public string FromDate { get; set; }
+        public string ToDate { get; set; }
+        public RegisterRow Employee { get; set; }
+        public List<RegisterDay> Days { get; set; } = new List<RegisterDay>();
         public RegisterRules Rules { get; set; }
         public List<RegisterDayLine> Lines { get; set; } = new List<RegisterDayLine>();
     }

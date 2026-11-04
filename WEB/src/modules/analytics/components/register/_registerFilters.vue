@@ -62,14 +62,27 @@
       @update:model-value="set('departments', $event)"
     />
     <app-select
-      :model-value="filters.employees"
-      label="Employee"
+      :model-value="filters.teamLeads"
+      label="Team Lead"
       multiple
       use-input
-      :placeholder="filters.employees.length ? '' : 'All employees'"
-      :options="options.employees"
+      :placeholder="filters.teamLeads.length ? '' : 'All team leads'"
+      info="The manager on the employee's org-structure record. Picking leads keeps their people and the leads themselves; “No team lead (NA)” keeps employees with no lead."
+      :options="options.teamLeads"
+      class="tsr-filters__select"
+      @update:model-value="set('teamLeads', $event)"
+    />
+    <app-select
+      v-if="filters.teamLeads.length"
+      :model-value="filters.teamMembers"
+      label="Team Members"
+      multiple
+      use-input
+      :placeholder="filters.teamMembers.length ? '' : 'All members'"
+      info="Employees of the chosen team leads, and the leads themselves."
+      :options="options.teamMembers"
       class="tsr-filters__select tsr-filters__select--wide"
-      @update:model-value="set('employees', $event)"
+      @update:model-value="set('teamMembers', $event)"
     />
     <app-select
       :model-value="filters.shifts"
@@ -140,8 +153,8 @@
 <script setup>
 // The register's filters: one wrapping row of labelled controls, aligned to the top, under the title bar.
 // Everything but the period is applied in the browser to the rows already loaded, so a change shows at
-// once; the period reloads (presets at once, Custom on Apply). The From/To pickers appear only for Custom,
-// pre-filled with the range of the preset that was active.
+// once; the period reloads (presets at once, By Weeks on each Sunday picked, Custom on Apply). Team Lead
+// and Team Members come from the org structure: the members list follows the chosen leads.
 import AppSegmentedControl from "components/common/AppSegmentedControl.vue";
 import AppDateField from "components/common/AppDateField.vue";
 import AppSelect from "components/common/AppSelect.vue";
@@ -154,16 +167,16 @@ const props = defineProps({
   preset: { type: String, default: "thisWeek" },
   from: { type: String, default: "" },
   to: { type: String, default: "" },
-  // ISO Sunday that ends the week shown by the "By weeks" preset.
+  // ISO Sunday that ends the week shown by the "By Weeks" preset.
   weekEnd: { type: String, default: "" },
   loading: { type: Boolean, default: false },
   rangeError: { type: String, default: "" },
-  // { departments: [], employees: [], shifts: [], states: [], hideHolidays: false }
+  // { departments: [], teamLeads: [], teamMembers: [], shifts: [], states: [], hideHolidays: false }
   filters: { type: Object, required: true },
-  // { departments: [{label,value}], employees: [...], shifts: [...], states: [...] }
+  // { departments: [{label,value}], teamLeads: [...], teamMembers: [...], shifts: [...], states: [...] }
   options: { type: Object, required: true },
   search: { type: String, default: "" },
-  density: { type: String, default: "auto" },
+  density: { type: String, default: "hours" },
   // How many filters are active, for the Clear button.
   activeCount: { type: Number, default: 0 }
 });

@@ -15,5 +15,8 @@ namespace Vsky.Services.Analytics
 
         /// <summary>One employee on one day, with the timesheet lines behind the cell.</summary>
         Task<TimesheetRegisterDayDetail> GetDayDetailAsync(string siteId, string timeZoneId, string employeeId, DateTime date, DateTime? nowUtc = null);
+
+        /// <summary>One employee over a range (at most <see cref="TimesheetRegisterRules.MaxRangeDays"/> days): the register row, the days and every line.</summary>
+        Task<TimesheetRegisterEmployeeDetail> GetEmployeeDetailAsync(string siteId, string timeZoneId, string employeeId, DateTime fromDate, DateTime toDate, DateTime? nowUtc = null);
     }
 }

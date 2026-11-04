@@ -7,9 +7,9 @@
           <app-breadcrumbs :items="breadcrumbs" no-margin />
           <app-info-tip size="18px" color="primary" max-width="460px" anchor="bottom left" self="top left">
             Daily timesheet of every active employee for the chosen period, judged against each employee's shift
-            cutoff. Click a tile to keep only the employees it counts, a cell to open that day, and "How to use"
-            for the full guide. The arrow on the right folds the filters and totals away so the grid gets the
-            whole screen.
+            cutoff. Click a tile to keep only the employees it counts, a cell to open that day, the receipt icon
+            beside a name to open that employee's timesheet, and "How to use" for the full guide. The arrow on
+            the right folds the filters and totals away so the grid gets the whole screen.
           </app-info-tip>
           <div v-if="data" class="tsr-top__caption text-caption text-grey-7">
             {{ periodLabel }} · <b>{{ visibleRows.length }}</b>/{{ rows.length }} employees
@@ -128,13 +128,28 @@
         :hide-holidays="filters.hideHolidays"
         @cell="openDay"
         @employee="openEmployee"
+        @timesheet="openEmployeeTimesheet({ row: $event })"
       />
       <q-separator />
       <register-legend class="tsr-card__legend" />
     </q-card>
 
     <q-dialog v-model="dayOpen" position="right" full-height class="app-side-dialog">
-      <register-day-panel v-if="dayPayload" :payload="dayPayload" @close="dayOpen = false" />
+      <register-day-panel
+        v-if="dayPayload"
+        :payload="dayPayload"
+        @close="dayOpen = false"
+        @timesheet="openEmployeeTimesheet({ row: dayPayload.row, focusDate: dayPayload.day.date, mode: $event.mode })"
+      />
+    </q-dialog>
+
+    <q-dialog v-model="employeeOpen" position="right" full-height class="app-side-dialog">
+      <register-employee-panel
+        v-if="employeePayload"
+        :payload="employeePayload"
+        @close="employeeOpen = false"
+        @record="openEmployee"
+      />
     </q-dialog>
 
     <q-dialog v-model="guideOpen" position="right" full-height class="app-side-dialog">
@@ -146,8 +161,9 @@
 <script setup>
 // Timesheet Register (Analytics). Rows are active employees, columns are the days of the period, cells are
 // the verdict the API gave each employee-day. The API does the judging; this page picks the period, filters
-// the rows in the browser, sums what is on screen and opens a day or the guide. Layout: one top card
-// (title bar · filters · totals) that folds to a single bar, and the grid below it at its full height.
+// the rows in the browser, sums what is on screen and opens a day, an employee's timesheet or the guide.
+// Layout: one top card (title bar · filters · totals) that folds to a single bar, and the grid below it at
+// its full height.
 import { ref, computed, watch, onMounted } from "vue";
 import { usePreferences } from "composables/usePreferences";
 import { exportCsv } from "composables/useCsvExport";
@@ -159,6 +175,7 @@ import RegisterSummary from "modules/analytics/components/register/_registerSumm
 import RegisterGrid from "modules/analytics/components/register/_registerGrid.vue";
 import RegisterLegend from "modules/analytics/components/register/_registerLegend.vue";
 import RegisterDayPanel from "modules/analytics/components/register/_registerDayPanel.vue";
+import RegisterEmployeePanel from "modules/analytics/components/register/_registerEmployeePanel.vue";
 import RegisterGuidePanel from "modules/analytics/components/register/_registerGuidePanel.vue";
 import analyticsService from "modules/analytics/analytics.service";
 import { initEmployeeDialogs, onEmployeeView } from "src/modules/employee/utils/dialogs.js";
@@ -186,7 +203,7 @@ const today = todayIso();
 
 const preset = ref(prefs.get("preset", "thisWeek"));
 const savedCustom = prefs.get("customRange", null);
-// "By weeks": the Sunday that ends the chosen week (Monday to Sunday), remembered across visits.
+// "By Weeks": the Sunday that ends the chosen week (Monday to Sunday), remembered across visits.
 const weekEnd = ref(sundayOf(prefs.get("weekEnd", "")) || sundayOf(today));
 if (preset.value !== "custom" && preset.value !== "byWeek" && !rangeForPreset(preset.value, today)) preset.value = "thisWeek";
 const initialRange = preset.value === "custom" && savedCustom?.from && savedCustom?.to
@@ -254,14 +271,16 @@ watch(collapsed, (value) => prefs.set("topCollapsed", value));
 
 // ---- search, filters, quick tiles ---------------------------------------------------------------------
 // Filters persist per user and site like the other lists; a first visit starts clean on This Week.
-const BLANK_FILTERS = { departments: [], employees: [], shifts: [], states: [], hideHolidays: false };
+const BLANK_FILTERS = { departments: [], teamLeads: [], teamMembers: [], shifts: [], states: [], hideHolidays: false };
 const savedFilters = prefs.get("filters", null);
 const stringList = (value) => (Array.isArray(value) ? value.filter((x) => typeof x === "string") : []);
 
 const search = ref(String(prefs.get("search", "") || ""));
 const filters = ref({
   departments: stringList(savedFilters?.departments),
-  employees: stringList(savedFilters?.employees),
+  teamLeads: stringList(savedFilters?.teamLeads),
+  // "teamMembers" replaced the earlier "employees" filter; an old saved value still applies.
+  teamMembers: stringList(savedFilters?.teamLeads).length ? stringList(savedFilters?.teamMembers) : [],
   shifts: stringList(savedFilters?.shifts),
   states: stringList(savedFilters?.states),
   hideHolidays: !!(savedFilters ? savedFilters.hideHolidays : prefs.get("hideHolidays", false))
@@ -280,14 +299,22 @@ function rowHasState (row, key) {
   return row.cells.some((c) => c.state === key);
 }
 
-// Rows after search and the filter groups: what the tiles count.
+// Team-lead semantics (as the org-structure reports): an employee under one of the chosen leads, a chosen
+// lead themselves, or, when "No team lead (NA)" is chosen, an employee with no lead at all.
+function underLeads (row, leads) {
+  if (!leads.length) return true;
+  return leads.includes(row.teamLeadId || NONE) || leads.includes(row.employeeId);
+}
+
+// Rows after search and the filters: what the tiles count.
 const baseRows = computed(() => {
   const q = normalize(search.value).trim();
   const f = filters.value;
   return rows.value.filter((row) => {
     if (q && !(normalize(row.fullName).includes(q) || normalize(row.employeeCode).includes(q) || normalize(row.department).includes(q))) return false;
     if (f.departments.length && !f.departments.includes(row.department || NONE)) return false;
-    if (f.employees.length && !f.employees.includes(row.employeeId)) return false;
+    if (!underLeads(row, f.teamLeads)) return false;
+    if (f.teamMembers.length && !f.teamMembers.includes(row.employeeId)) return false;
     if (f.shifts.length && !f.shifts.includes(row.shiftAssigned ? row.shift : NONE)) return false;
     if (f.states.length && !f.states.some((s) => rowHasState(row, s))) return false;
     return true;
@@ -296,8 +323,6 @@ const baseRows = computed(() => {
 
 // Rows on screen: the tile the reader clicked narrows the base rows further.
 const visibleRows = computed(() => (quick.value ? baseRows.value.filter((row) => rowHasState(row, quick.value)) : baseRows.value));
-
-const visibleDayCount = computed(() => days.value.filter((d) => !filters.value.hideHolidays || !d.isHoliday).length);
 
 function toggleQuick (key) {
   if (key === "expected") return;
@@ -357,23 +382,53 @@ const perDay = computed(() => days.value.map((day, i) => {
 }));
 
 const uniqueSorted = (values) => [...new Set(values)].sort((a, b) => String(a).localeCompare(String(b)));
+const memberOption = (r) => ({ label: r.employeeCode ? `${r.fullName} (${r.employeeCode})` : r.fullName, value: r.employeeId });
 
 const filterOptions = computed(() => {
   const departments = uniqueSorted(rows.value.map((r) => r.department || NONE))
     .map((v) => ({ label: v === NONE ? "No department" : v, value: v }));
-  const employees = rows.value.map((r) => ({ label: r.employeeCode ? `${r.fullName} (${r.employeeCode})` : r.fullName, value: r.employeeId }));
+
+  // Team leads of the listed employees, plus "NA" for the ones who have none.
+  const leadNames = new Map();
+  for (const r of rows.value) {
+    if (r.teamLeadId) leadNames.set(r.teamLeadId, r.teamLeadName || r.teamLeadId);
+  }
+  const teamLeads = [
+    { label: "No team lead (NA)", value: NONE },
+    ...[...leadNames.entries()]
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([value, label]) => ({ label, value }))
+  ];
+
+  // Members follow the chosen leads (everyone when no lead is chosen).
+  const teamMembers = rows.value
+    .filter((r) => underLeads(r, filters.value.teamLeads))
+    .map(memberOption);
+
   const shifts = [
     ...(rules.value?.shifts || []).map((s) => ({ label: `${s.name} (${s.start}–${s.end})`, value: s.name })),
     { label: `Not assigned (judged as ${rules.value?.defaultShift || "default"})`, value: NONE }
   ];
   const states = FILTERABLE_STATES.map((k) => ({ label: STATES[k].label, value: k }));
-  return { departments, employees, shifts, states };
+  return { departments, teamLeads, teamMembers, shifts, states };
+});
+
+// Team Members only shows once a lead is chosen; a change of leads drops members no longer under them.
+watch(() => filters.value.teamLeads, (leads) => {
+  if (!filters.value.teamMembers.length) return;
+  if (!leads.length) {
+    filters.value = { ...filters.value, teamMembers: [] };
+    return;
+  }
+  const allowed = new Set(rows.value.filter((r) => underLeads(r, leads)).map((r) => r.employeeId));
+  const kept = filters.value.teamMembers.filter((id) => allowed.has(id));
+  if (kept.length !== filters.value.teamMembers.length) filters.value = { ...filters.value, teamMembers: kept };
 });
 
 // Active filters, counted for the Clear button and the folded bar (the period is not a filter).
 const activeFilterCount = computed(() => {
   const f = filters.value;
-  return f.departments.length + f.employees.length + f.shifts.length + f.states.length
+  return f.departments.length + f.teamLeads.length + f.teamMembers.length + f.shifts.length + f.states.length
     + (f.hideHolidays ? 1 : 0) + (search.value.trim() ? 1 : 0) + (quick.value ? 1 : 0);
 });
 
@@ -389,9 +444,26 @@ const density = ref(prefs.get("density", "hours"));
 watch(density, (value) => prefs.set("density", value));
 const compact = computed(() => density.value === "compact" || (density.value === "auto" && days.value.length > 14));
 
-// ---- day panel, employee record & guide ----------------------------------------------------------------
+// ---- day panel, employee timesheet, employee record & guide ------------------------------------------
 const dayOpen = ref(false);
 const dayPayload = ref(null);
+
+function openDay (payload) {
+  if (!payload?.cell || payload.cell.state === "NotEmployed") return;
+  dayPayload.value = payload;
+  dayOpen.value = true;
+}
+
+// One employee's timesheet for the register's period or for any week (from the receipt icon or the day panel).
+const employeeOpen = ref(false);
+const employeePayload = ref(null);
+
+function openEmployeeTimesheet ({ row, focusDate = null, mode = "period" }) {
+  if (!row?.employeeId) return;
+  dayOpen.value = false;
+  employeePayload.value = { row, from: range.value.from, to: range.value.to, focusDate, mode };
+  employeeOpen.value = true;
+}
 
 // The same employee view the employee list opens from its row actions.
 const activeEmployeeId = ref(null);
@@ -399,12 +471,6 @@ initEmployeeDialogs(activeEmployeeId);
 
 function openEmployee (row) {
   if (row?.employeeId) onEmployeeView(row.employeeId);
-}
-
-function openDay (payload) {
-  if (!payload?.cell || payload.cell.state === "NotEmployed") return;
-  dayPayload.value = payload;
-  dayOpen.value = true;
 }
 
 const guideOpen = ref(false);
@@ -421,6 +487,7 @@ function exportRegister () {
     { label: "Employee", value: (r) => r.fullName },
     { label: "Code", value: (r) => r.employeeCode || "" },
     { label: "Department", value: (r) => r.department || "" },
+    { label: "Team lead", value: (r) => r.teamLeadName || "" },
     { label: "Shift", value: (r) => (r.shiftAssigned ? r.shift : `${r.shift} (not assigned)`) },
     ...indexes.map((i) => ({ label: formatDayLabel(days.value[i].date), value: (r) => exportCellText(r.cells[i]) })),
     { label: "Logged hours", value: (r) => fmtHours(r.totals.loggedHours) },

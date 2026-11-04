@@ -137,7 +137,7 @@
       <h3>6. Tiles, filters and search</h3>
       <ul>
         <li>The <b>tiles</b> count employee-days in the period for the employees currently listed. Click a tile to keep only the employees it counts (for example everyone with a pending day); click it again to release. <b>No shift</b> lists the employees whose record has no shift.</li>
-        <li><b>Filters</b> (top right) narrow the rows by department, employee, shift or day state, and can hide the Sunday and holiday columns. Active filters show as chips above the grid.</li>
+        <li><b>Filters</b> sit under the title bar: Department, Team Lead and Team Members from the org structure, Shift and Day state, plus a switch to hide the Sunday and holiday columns. Team Members appears once a team lead is picked and lists their people and the leads themselves; “No team lead (NA)” keeps employees with no lead. A Clear button appears when any filter is active.</li>
         <li><b>Search</b> matches the employee's name, code or department.</li>
         <li><b>Density</b>: Hours (the default) shows the logged hours in each cell; Compact shows only the icon, which suits a whole month. Auto picks by the length of the period.</li>
       </ul>
@@ -148,6 +148,7 @@
       <ul>
         <li>Click a cell to open the <b>day panel</b>: the verdict in words, the facts it rests on (expected, logged, shift, cutoff, when the hours were complete, how late) and every timesheet line with its project, task, hours and the time it was entered.</li>
         <li>Click an <b>employee's name</b> to open their employee record, the same view the employee list offers.</li>
+        <li>The <b>receipt icon</b> beside a name, or <b>View week</b> / <b>View period</b> in the day panel, opens that employee's <b>timesheet</b>: their days for the selected period or for any week you pick by its Sunday, the totals, every line with hours and billable hours, and a CSV export.</li>
         <li><b>Export CSV</b> downloads the grid as shown: one row per employee, one column per visible day with the state and hours, and the period totals.</li>
       </ul>
     </section>

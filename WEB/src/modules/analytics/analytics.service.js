@@ -9,5 +9,10 @@ export default {
   // One employee on one day, with the timesheet lines behind the cell.
   getTimesheetRegisterDay (employeeId, date) {
     return http.get("/Analytics/timesheet-register/day", { params: { employeeId, date } }).then((response) => response.data);
+  },
+
+  // One employee over a range (at most a quarter): the register row, the days and every line.
+  getTimesheetRegisterEmployee (employeeId, fromDate, toDate) {
+    return http.get("/Analytics/timesheet-register/employee", { params: { employeeId, fromDate, toDate } }).then((response) => response.data);
   }
 };

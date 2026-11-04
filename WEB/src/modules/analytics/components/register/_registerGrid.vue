@@ -48,20 +48,36 @@
       <tbody>
         <tr v-for="(row, r) in rows" :key="row.employeeId" class="tsr-tr">
           <td class="tsr-td tsr-td--emp">
-            <div
-              class="tsr-emp tsr-emp--link"
-              role="button"
-              tabindex="0"
-              :aria-label="`Open the employee record of ${row.fullName}`"
-              @click="$emit('employee', row)"
-              @keydown.enter.prevent="$emit('employee', row)"
-            >
-              <app-avatar :name="row.fullName" :size="24" />
-              <div class="tsr-emp__text">
-                <div class="tsr-emp__name ellipsis">{{ row.fullName }}</div>
-                <div class="tsr-emp__meta ellipsis">{{ metaOf(row) }}</div>
+            <div class="tsr-emp">
+              <!-- Name opens the employee record; the icon opens the employee's timesheet. Siblings, one tooltip each. -->
+              <div
+                class="tsr-emp__link"
+                role="button"
+                tabindex="0"
+                :aria-label="`Open the employee record of ${row.fullName}`"
+                @click="$emit('employee', row)"
+                @keydown.enter.prevent="$emit('employee', row)"
+              >
+                <app-avatar :name="row.fullName" :size="24" />
+                <div class="tsr-emp__text">
+                  <div class="tsr-emp__name ellipsis">{{ row.fullName }}</div>
+                  <div class="tsr-emp__meta ellipsis">{{ metaOf(row) }}</div>
+                </div>
+                <q-tooltip :delay="300" anchor="bottom left" self="top left">Open the employee record</q-tooltip>
               </div>
-              <q-tooltip :delay="300" anchor="bottom left" self="top left">Open the employee record</q-tooltip>
+              <q-btn
+                flat
+                round
+                dense
+                size="sm"
+                color="grey-7"
+                icon="o_receipt_long"
+                class="tsr-emp__sheet"
+                :aria-label="`View the timesheet of ${row.fullName}`"
+                @click="$emit('timesheet', row)"
+              >
+                <q-tooltip :delay="200">View this employee's timesheet for the period or any week</q-tooltip>
+              </q-btn>
             </div>
           </td>
           <td class="tsr-td tsr-td--shift">
@@ -114,7 +130,7 @@
             <span v-else class="text-grey-5">–</span>
             <q-tooltip :delay="150" max-width="300px" anchor="top middle" self="bottom middle">
               <div class="tsr-tip__title">{{ formatDayLabel(days[i].date) }}</div>
-              <div class="tsr-tip__text">{{ footText(perDay[i]) }}</div>
+              <div class="tsr-tip__text">{{ footText(perDay[i], days[i]) }}</div>
             </q-tooltip>
           </td>
           <td v-for="col in TOTAL_COLUMNS" :key="col.key" :class="['tsr-td', 'tsr-td--tot', col.cls]">
@@ -165,7 +181,7 @@ const props = defineProps({
   hideHolidays: { type: Boolean, default: false }
 });
 
-defineEmits(["cell", "employee"]);
+defineEmits(["cell", "employee", "timesheet"]);
 
 const visibleIndexes = computed(() =>
   props.days.map((d, i) => i).filter((i) => !props.hideHolidays || !props.days[i].isHoliday));
@@ -285,7 +301,7 @@ function dayClass (day) {
 }
 
 function dayText (day) {
-  if (day.isHoliday) return `${day.holidayTitle || "Holiday"}. Nothing is expected on this day.`;
+  if (day.isHoliday) return day.holidayTitle || "Holiday";
   if (day.isToday) return "Today. Days are “due” until their cutoff passes.";
   if (day.isFuture) return "Not yet due.";
   return "Working day.";
@@ -317,8 +333,8 @@ function shiftText (row) {
   return `Judged as ${row.shift}${window ? ` (${window})` : ""}, the default, until a shift is set on the employee's designation record.${says}`;
 }
 
-function footText (t) {
-  if (!t || !t.expected) return "Nothing expected on this day.";
+function footText (t, day) {
+  if (!t || !t.expected) return day?.isHoliday ? (day.holidayTitle || "Holiday") : "No one was expected to fill this day.";
   return [
     `${t.expected} expected`,
     `${t.onTime} on time`,
@@ -479,22 +495,36 @@ function footText (t) {
   gap: 8px;
   min-width: 0;
 }
-.tsr-emp--link {
+.tsr-emp__link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
   cursor: pointer;
   border-radius: 6px;
   padding: 1px 4px;
   margin: -1px -4px;
 }
-.tsr-emp--link:hover .tsr-emp__name {
+.tsr-emp__link:hover .tsr-emp__name {
   color: var(--q-primary);
   text-decoration: underline;
 }
-.tsr-emp--link:focus-visible {
+.tsr-emp__link:focus-visible {
   outline: 2px solid var(--q-primary);
   outline-offset: 1px;
 }
 .tsr-emp__text {
   min-width: 0;
+  flex: 1 1 auto;
+}
+.tsr-emp__sheet {
+  flex: 0 0 auto;
+  opacity: 0.55;
+}
+.tsr-emp:hover .tsr-emp__sheet,
+.tsr-emp__sheet:focus-visible {
+  opacity: 1;
 }
 .tsr-emp__name {
   font-weight: 500;

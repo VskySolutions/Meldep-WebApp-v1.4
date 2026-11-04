@@ -58,7 +58,7 @@ export const STATES = {
     icon: "",
     glyph: "H",
     colour: "#898781",
-    description: "Sunday, or a date in the site's leave schedule (public holidays, Saturdays off). Nothing is expected."
+    description: "Sunday, or a date in the site's leave schedule (public holidays, Saturdays off)."
   },
   Future: {
     key: "Future",
@@ -217,7 +217,7 @@ export function explainCell (cell, day = null) {
     case "Leave":
       return `Full-day leave (${cell.leave?.status || "applied"}${cell.leave?.category ? ", " + cell.leave.category : ""}); nothing expected.`;
     case "Holiday":
-      return `${day?.holidayTitle || "Holiday"}; nothing expected.`;
+      return day?.holidayTitle || "Holiday";
     case "Future":
       return cell.logged > 0 ? `Not yet due; ${logged} h already entered.` : "Not yet due.";
     case "NotEmployed":
