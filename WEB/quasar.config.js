@@ -39,7 +39,8 @@ export default defineConfig((ctx) => {
       "auth.scss",
       "page.scss",
       "custom.scss",
-      "website.scss"
+      "website.scss",
+      "ui-standards.scss"
     ],
 
     extras: [
