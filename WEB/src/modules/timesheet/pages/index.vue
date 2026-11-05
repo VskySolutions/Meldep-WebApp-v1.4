@@ -337,7 +337,7 @@
                 v-for="(line) in props.row.timesheetLines"
                 :key="line.id"
                 :class="highlightedId == line.id ? 'highlight' : ''"
-                :set="(preProjectName = null, preProjectTask = null, preProjectDate = null, preProjectTaskDate = null, resetTracking())">
+                :set="(preProjectName = null, preProjectTask = null, preProjectDate = null, preProjectTaskDate = null, preRequirement = null, resetTracking())">
                 <q-td
                   v-if="!isViewer"
                   style="width: 2%;"
@@ -381,6 +381,21 @@
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('projectModule.name')" class="text-left common-q-td" >
                   {{ line.projectModule.name }}
+                </q-td>
+                <q-td v-if="selectedColumnNames.includes('task.requirement.title')" class="hoverable-cell common-q-td">
+                  <div class="row no-wrap items-center justify-between">
+                    <span
+                      v-if="preRequirement !== line.task.requirement.title || preProjectTaskDate !== props.row.timesheetDate"
+                      :set="(preRequirement = line.task.requirement.title, preProjectTaskDate = props.row.timesheetDate)"
+                      class="cursor-pointer"
+                      style="flex: 1; word-break: break-word; white-space: normal;"
+                      @click="setActiveRowIdInLocalStorage(line.id);
+                        $router.push({ path: '/requirement-center', state: { requirementId: line.task.requirement.id } })"
+                    >
+                      {{ line.task.requirement.title }}
+                      <q-tooltip>Requirement Center</q-tooltip>
+                    </span>
+                  </div>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('task.name')" class="hoverable-cell common-q-td">
                   <div class="row no-wrap items-center justify-between">
@@ -541,6 +556,7 @@ const weekFilterList = ref(["Last Week", "This Week", "Last Month", "This Month"
 const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, checkedStatus: true, type: "P", default: true },
   { name: "projectModule.name", label: "Module Name", field: "projectModule.name", align: "left", sortable: true, checkedStatus: true, type: "PM", default: true },
+  { name: "task.requirement.title", label: "Requirement", field: "task.requirement.title", align: "left", sortable: true, checkedStatus: true, type: "R", default: true },
   { name: "task.name", label: "Task", field: "task.name", align: "left", sortable: true, checkedStatus: true, type: "PT", default: true },
   { name: "projectActivity.name", label: "Project Activity", field: "projectActivity.name", align: "left", sortable: true, checkedStatus: true, type: "PA", default: true },
   { name: "description", label: "Activity Details", field: "description", align: "left", sortable: true, checkedStatus: true, type: "D", default: true },
@@ -635,6 +651,7 @@ const getTimesheets = async ({ pagination: p }) => {
           )
         })) || []
       }));
+      console.log("rows.value", rows.value);
       // pagination.value.page = page;
       // pagination.value.rowsPerPage = rowsPerPage;
       // pagination.value.sortBy = sortBy;

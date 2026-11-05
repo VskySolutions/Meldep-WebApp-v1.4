@@ -295,5 +295,35 @@ namespace Vsky.Services.Sites
             return siteId;
         }
         #endregion
+
+        #region CheckMobileVersion
+        public async Task<MobileVersionResponse> CheckMobileVersion(string siteId, string currentVersion)
+        {
+            var site = _siteRepository.GetById(siteId);
+
+            if (site == null || string.IsNullOrEmpty(site.VersionNo))
+            {
+                return new MobileVersionResponse
+                {
+                    IsUpdateAvailable = false
+                };
+            }
+
+            bool isUpdateAvailable = false;
+
+            if (Version.TryParse(currentVersion, out var installedVersion) &&
+                Version.TryParse(site.VersionNo, out var latestVersion))
+            {
+                isUpdateAvailable = latestVersion > installedVersion;
+            }
+
+            return new MobileVersionResponse
+            {
+                IsUpdateAvailable = isUpdateAvailable,
+                LatestVersion = site.VersionNo
+            };
+        }
+        #endregion
+
     }
 }

@@ -64,6 +64,10 @@ export default {
     return http.get("/Sites/timezone/dropdown/list").then(response => response.data);
   },
 
+  checkMobileVersion (currentVersion) {
+    return http.get(`/Sites/check-mobile-version/?currentVersion=${currentVersion}`).then(response => response.data);
+  },
+
   addModuleToSite (model) {
     return http.post("/modules/savesitemodules", model).then(response => response.data);
   },

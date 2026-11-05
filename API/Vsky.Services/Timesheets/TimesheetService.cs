@@ -222,6 +222,11 @@ namespace Vsky.Services.Timesheets
                     {
                         Id = mapping.Task.Id,
                         Name = mapping.Task.Name,
+                        Requirement = new Requirement
+                        {
+                            Id = mapping.Task.Requirement.Id,
+                            Title = mapping.Task.Requirement.Title
+                        }
                     },
                     ProjectActivity = new ProjectActivity
                     {

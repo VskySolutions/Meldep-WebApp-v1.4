@@ -62,4 +62,9 @@ namespace Vsky.Api.Models
     public record SiteListModel : BasePagedListModel<SiteModel>
     {
     }
+    public class MobileVersionResponse
+    {
+        public bool IsUpdateAvailable { get; set; }
+        public string LatestVersion { get; set; }
+    }
 }

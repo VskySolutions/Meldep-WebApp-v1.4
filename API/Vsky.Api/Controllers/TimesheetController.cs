@@ -186,6 +186,7 @@ namespace Vsky.Api.Controllers
                             obj2.Task = line.Task;
                             obj2.ProjectActivity = line.ProjectActivity;
                             obj2.Hours = line.Hours;
+                            obj2.Task.Requirement.Title = line.Task.Requirement.Title;
                             obj2.Description = line.Description;
                             obj.TimesheetLines.Add(obj2);
                         }
@@ -692,7 +693,12 @@ namespace Vsky.Api.Controllers
 
                     if(!IsCurrentWeek(model.TimesheetDate, GetDateTime))
                     {
-                        return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
+                        //return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
+                        return Ok(new
+                        {
+                            status = "warning",
+                            message = "You can only fill timesheets for the current week."
+                        });
                     }
                     else
                     {
@@ -844,7 +850,12 @@ namespace Vsky.Api.Controllers
 
                     if (!IsCurrentWeek(model.TimesheetDate, GetDateTime))
                     {
-                        return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
+                        //return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
+                        return Ok(new
+                        {
+                            status = "warning",
+                            message = "You can only fill timesheets for the current week."
+                        });
                     }
                     else
                     {

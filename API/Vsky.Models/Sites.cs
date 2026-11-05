@@ -16,6 +16,7 @@ public class Site : BaseEntity
     public string SiteFaviconPath { get; set; }
     public string TicketNoPrefix { get; set; }
     public string TicketGenerationEmail { get; set; }
+    public string VersionNo { get; set; }
     public DateTime CreatedOnUtc { get; set; }
     public string CreatedById { get; set; }
     public DateTime? UpdatedOnUtc { get; set; }
@@ -31,4 +32,9 @@ public class Site : BaseEntity
     public virtual Person Person { get; set; }
     public virtual Address Address { get; set; }
     public virtual ICollection<SitesRoles> SitesRoles { get; set; } = new List<SitesRoles>();
+}
+public class MobileVersionResponse
+{
+    public bool IsUpdateAvailable { get; set; }
+    public string LatestVersion { get; set; }
 }

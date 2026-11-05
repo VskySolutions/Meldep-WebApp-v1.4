@@ -713,6 +713,7 @@ namespace Vsky.Api.Controllers
                                         designation.EndDate = null;
 
                                     // Set the Updated by and Updated on properties
+                                    designation.Active = true;
                                     designation.UpdatedById = LoggedUserId;
                                     designation.UpdatedOnUtc = GetDateTime;
                                     updateList.Add(designation);
@@ -738,6 +739,7 @@ namespace Vsky.Api.Controllers
                                         data.EndDate = DateTime.ParseExact(item.DesignationEndDateStr, "MM/dd/yyyy", null);
                                     }
                                     // Set the created by and created on properties
+                                    data.Active = true;
                                     data.CreatedById = LoggedUserId;
                                     data.UpdatedById = LoggedUserId;
                                     data.CreatedOnUtc = GetDateTime;

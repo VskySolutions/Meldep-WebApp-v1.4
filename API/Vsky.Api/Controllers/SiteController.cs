@@ -1108,6 +1108,28 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region CheckMobileVersion
+        [HttpGet("check-mobile-version")]
+        public async Task<IActionResult> CheckMobileVersion(string currentVersion)
+        {
+            try
+            {
+                var siteId = _globalVariable.SiteId;
+
+                var result = await _siteService.CheckMobileVersion(
+                    siteId,
+                    currentVersion
+                );
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        #endregion
+
         #region Private methhods 
         private string GenerateTicketPrefix(string siteName)
         {

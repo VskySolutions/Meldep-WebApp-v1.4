@@ -929,8 +929,9 @@
                                 ? 'Designation End Date is required.'
                                 : editingDesgRowV$.designationEndDateStr.$errors[0]?.$message"
                               :onBlur="() => editingDesgRowV$.designationEndDateStr.$touch()"
-                              @update:model-value=" showAddButtonEndDateError = false; calculateDesignationDuration"
-                              :options="disableBeforDesignationStartDate"
+                              @update:model-value="
+                                calculateDesignationDuration
+                              "
                             />
                             <span v-else :class="props.row.deleted ? 'text-delete' : ''">{{ props.row.designationEndDateStr }} </span>
                           </q-td>
@@ -1682,78 +1683,139 @@ const editingOrgLocRowrules = {
 function calculateTypeDuration () {
   const { startDateStr, endDateStr } = editingRow.value;
 
-  if (!startDateStr) return;
-  const startDate = new Date(startDateStr);
+  if (!startDateStr) {
+    editingRow.value.duration = "0 month";
+    return;
+  }
 
   if (!endDateStr) {
     editingRow.value.duration = "0 month";
     return;
   }
 
+  // Parse dates
+  const startDate = new Date(startDateStr);
   const endDate = new Date(endDateStr);
 
-  if (isNaN(startDate) || isNaN(endDate)) {
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     editingRow.value.duration = "Invalid date";
     return;
   }
 
-  const startYear = startDate.getFullYear();
-  const startMonth = startDate.getMonth();
-  const endYear = endDate.getFullYear();
-  const endMonth = endDate.getMonth();
+  // Validate date range
+  if (endDate < startDate) {
+    editingRow.value.duration = 'Invalid date range';
+    return;
+  }
 
-  // Calculate the difference in months and years
-  let years = endYear - startYear;
-  let months = endMonth - startMonth;
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+
+  // Adjust for incomplete month
+  if (endDate.getDate() < startDate.getDate()) {
+    months--;
+  }
 
   if (months < 0) {
-    years -= 1;
+    years--;
     months += 12;
   }
 
   // Construct the duration string
-  const yearPart = years > 0 ? `${years} year` : "";
-  const monthPart = months > 0 ? `${months} month` : "";
+  const yearPart = years > 0
+    ? `${years} ${years === 1 ? 'year' : 'years'}`
+    : '';
+
+  const monthPart = months > 0
+    ? `${months} ${months === 1 ? 'month' : 'months'}`
+    : '';
 
   editingRow.value.duration =
     yearPart && monthPart ? `${yearPart}, ${monthPart}` : yearPart || monthPart || "0 month";
 }
 
+// function calculateStatusDuration () {
+//   const { statusStartDateStr, statusEndDateStr } = editingStatusRow.value;
+
+//   if (!statusStartDateStr) return;
+//   const startDate = new Date(statusStartDateStr);
+
+//   if (!statusEndDateStr) {
+//     editingStatusRow.value.duration = "0 month";
+//     return;
+//   }
+
+//   const endDate = new Date(statusEndDateStr);
+
+//   if (isNaN(startDate) || isNaN(endDate)) {
+//     editingStatusRow.value.duration = "Invalid date";
+//     return;
+//   }
+
+//   const startYear = startDate.getFullYear();
+//   const startMonth = startDate.getMonth();
+//   const endYear = endDate.getFullYear();
+//   const endMonth = endDate.getMonth();
+
+//   // Calculate the difference in months and years
+//   let years = endYear - startYear;
+//   let months = endMonth - startMonth;
+
+//   if (months < 0) {
+//     years -= 1;
+//     months += 12;
+//   }
+
+//   // Construct the duration string
+//   const yearPart = years > 0 ? `${years} year` : "";
+//   const monthPart = months > 0 ? `${months} month` : "";
+
+//   editingStatusRow.value.duration =
+//     yearPart && monthPart ? `${yearPart}, ${monthPart}` : yearPart || monthPart || "0 month";
+// }
+
 function calculateStatusDuration () {
   const { statusStartDateStr, statusEndDateStr } = editingStatusRow.value;
 
-  if (!statusStartDateStr) return;
-  const startDate = new Date(statusStartDateStr);
+  if (!statusStartDateStr) {
+    editingStatusRow.value.duration = "0 month";
+    return;
+  }
 
   if (!statusEndDateStr) {
     editingStatusRow.value.duration = "0 month";
     return;
   }
 
+  const startDate = new Date(statusStartDateStr);
   const endDate = new Date(statusEndDateStr);
 
-  if (isNaN(startDate) || isNaN(endDate)) {
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     editingStatusRow.value.duration = "Invalid date";
     return;
   }
 
-  const startYear = startDate.getFullYear();
-  const startMonth = startDate.getMonth();
-  const endYear = endDate.getFullYear();
-  const endMonth = endDate.getMonth();
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
 
-  // Calculate the difference in months and years
-  let years = endYear - startYear;
-  let months = endMonth - startMonth;
+  // Adjust for incomplete month
+  if (endDate.getDate() < startDate.getDate()) {
+    months--;
+  }
 
   if (months < 0) {
-    years -= 1;
+     years--;
     months += 12;
   }
 
   // Construct the duration string
-  const yearPart = years > 0 ? `${years} year` : "";
-  const monthPart = months > 0 ? `${months} month` : "";
+  const yearPart = years > 0
+    ? `${years} ${years === 1 ? 'year' : 'years'}`
+    : '';
+
+  const monthPart = months > 0
+    ? `${months} ${months === 1 ? 'month' : 'months'}`
+    : '';
 
   editingStatusRow.value.duration =
     yearPart && monthPart ? `${yearPart}, ${monthPart}` : yearPart || monthPart || "0 month";
@@ -1762,38 +1824,46 @@ function calculateStatusDuration () {
 function calculateDepartmentDuration () {
   const { departmentStartDateStr, departmentEndDateStr } = editingDeptRow.value;
 
-  if (!departmentStartDateStr) return;
+  if (!departmentStartDateStr) {
+    editingDeptRow.value.duration = "0 month";
+    return;
+  }
 
-  const startDate = new Date(departmentStartDateStr);
   if (!departmentEndDateStr) {
     editingDeptRow.value.duration = "0 month";
     return;
   }
 
+  const startDate = new Date(departmentStartDateStr);
   const endDate = new Date(departmentEndDateStr);
 
-  if (isNaN(startDate) || isNaN(endDate)) {
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     editingDeptRow.value.duration = "Invalid date";
     return;
   }
 
-  const startYear = startDate.getFullYear();
-  const startMonth = startDate.getMonth();
-  const endYear = endDate.getFullYear();
-  const endMonth = endDate.getMonth();
-
   // Calculate the difference in months and years
-  let years = endYear - startYear;
-  let months = endMonth - startMonth;
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+
+  // Adjust for incomplete month
+  if (endDate.getDate() < startDate.getDate()) {
+    months--;
+  }
 
   if (months < 0) {
-    years -= 1;
+    years --;
     months += 12;
   }
 
   // Construct the duration string
-  const yearPart = years > 0 ? `${years} year` : "";
-  const monthPart = months > 0 ? `${months} month` : "";
+  const yearPart = years > 0
+    ? `${years} ${years === 1 ? 'year' : 'years'}`
+    : '';
+
+  const monthPart = months > 0
+    ? `${months} ${months === 1 ? 'month' : 'months'}`
+    : '';
 
   editingDeptRow.value.duration =
     yearPart && monthPart ? `${yearPart}, ${monthPart}` : yearPart || monthPart || "0 month";
@@ -1802,79 +1872,149 @@ function calculateDepartmentDuration () {
 function calculateDesignationDuration () {
   const { designationStartDateStr, designationEndDateStr } = editingDesgRow.value;
 
-  if (!designationStartDateStr) return;
-  const startDate = new Date(designationStartDateStr);
+  if (!designationStartDateStr) {
+    editingDesgRow.value.duration = "0 month";
+    return;
+  }
 
-  // If end date is null/empty → duration = 0 month
   if (!designationEndDateStr) {
     editingDesgRow.value.duration = "0 month";
     return;
   }
 
-  const endDate = new Date(designationEndDateStr); // Use today's date if designationEndDateStr is null
+  // Parse dates
+  const startDate = new Date(designationStartDateStr);
+  const endDate = new Date(designationEndDateStr);
 
-  if (isNaN(startDate) || isNaN(endDate)) {
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     editingDesgRow.value.duration = "Invalid date";
     return;
   }
 
-  const startYear = startDate.getFullYear();
-  const startMonth = startDate.getMonth();
-  const endYear = endDate.getFullYear();
-  const endMonth = endDate.getMonth();
+  // Validate date range
+  if (endDate < startDate) {
+    editingDesgRow.value.duration = 'Invalid date range';
+    return;
+  }
 
-  // Calculate the difference in months and years
-  let years = endYear - startYear;
-  let months = endMonth - startMonth;
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+
+  // Adjust for incomplete month
+  if (endDate.getDate() < startDate.getDate()) {
+    months--;
+  }
 
   if (months < 0) {
-    years -= 1;
+    years--;
     months += 12;
   }
 
   // Construct the duration string
-  const yearPart = years > 0 ? `${years} year` : "";
-  const monthPart = months > 0 ? `${months} month` : "";
+  const yearPart = years > 0
+    ? `${years} ${years === 1 ? 'year' : 'years'}`
+    : '';
+
+  const monthPart = months > 0
+    ? `${months} ${months === 1 ? 'month' : 'months'}`
+    : '';
 
   editingDesgRow.value.duration =
     yearPart && monthPart ? `${yearPart}, ${monthPart}` : yearPart || monthPart || "0 month";
 }
 
+// function calculateDesignationDuration () {
+//   const { designationStartDateStr, designationEndDateStr } = editingDesgRow.value;
+
+//   if (!designationStartDateStr) {
+//     editingDesgRow.value.duration = "0 month";
+//     return;
+//   }
+
+//   // If end date is null/empty → duration = 0 month
+//   if (!designationEndDateStr) {
+//     editingDesgRow.value.duration = "0 month";
+//     return;
+//   }
+
+//   const startDate = new Date(designationStartDateStr);
+//   const endDate = new Date(designationEndDateStr); // Use today's date if designationEndDateStr is null
+
+//   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+//     editingDesgRow.value.duration = "Invalid date";
+//     return;
+//   }
+
+//   // Calculate the difference in months and years
+//   let years = endDate.getFullYear() - startDate.getFullYear();
+//   let months = endDate.getMonth() - startDate.getMonth();
+
+//   // Adjust for incomplete month
+//   if (endDate.getDate() < startDate.getDate()) {
+//     months--;
+//   }
+
+//   if (months < 0) {
+//     years --;
+//     months += 12;
+//   }
+
+//   // Construct the duration string
+//   const yearPart = years > 0
+//     ? `${years} ${years === 1 ? 'year' : 'years'}`
+//     : '';
+
+//   const monthPart = months > 0
+//     ? `${months} ${months === 1 ? 'month' : 'months'}`
+//     : '';
+
+//   editingDesgRow.value.duration =
+//     yearPart && monthPart ? `${yearPart}, ${monthPart}` : yearPart || monthPart || "0 month";
+// }
+
 function calculateOrgLocationDuration () {
   const { orgLocationStartDateStr, orgLocationEndDateStr } = editingOrgLocRow.value;
 
-  if (!orgLocationStartDateStr) return;
-  const startDate = new Date(orgLocationStartDateStr);
+  if (!orgLocationStartDateStr) {
+    editingOrgLocRow.value.duration = "0 month";
+    return;
+  }
 
   if (!orgLocationEndDateStr) {
     editingOrgLocRow.value.duration = "0 month";
     return;
   }
 
+  const startDate = new Date(orgLocationStartDateStr);
   const endDate = new Date(orgLocationEndDateStr);
 
-  if (isNaN(startDate) || isNaN(endDate)) {
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     editingOrgLocRow.value.duration = "Invalid date";
     return;
   }
 
-  const startYear = startDate.getFullYear();
-  const startMonth = startDate.getMonth();
-  const endYear = endDate.getFullYear();
-  const endMonth = endDate.getMonth();
-
   // Calculate the difference in months and years
-  let years = endYear - startYear;
-  let months = endMonth - startMonth;
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+
+  // Adjust for incomplete month
+  if (endDate.getDate() < startDate.getDate()) {
+    months--;
+  }
 
   if (months < 0) {
-    years -= 1;
+    years --;
     months += 12;
   }
 
   // Construct the duration string
-  const yearPart = years > 0 ? `${years} year` : "";
-  const monthPart = months > 0 ? `${months} month` : "";
+  const yearPart = years > 0
+    ? `${years} ${years === 1 ? 'year' : 'years'}`
+    : '';
+
+  const monthPart = months > 0
+    ? `${months} ${months === 1 ? 'month' : 'months'}`
+    : '';
 
   editingOrgLocRow.value.duration =
     yearPart && monthPart ? `${yearPart}, ${monthPart}` : yearPart || monthPart || "0 month";

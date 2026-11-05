@@ -159,7 +159,6 @@ const props = defineProps({
     default: ""
   }
 });
-console.log("disable", props.disable);
 
 const emit = defineEmits(["update:modelValue"]);
 

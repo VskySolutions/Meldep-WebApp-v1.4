@@ -915,6 +915,13 @@ async function onSubmit (shouldClose, buttonType) {
         timesheetLineModel: cleanedRows
       };
       const resp = await timesheetService.saveTimesheet(TimesheetId, payload);
+      if (resp.status === "warning") {        
+        notifyWarning({
+          type: "warning",
+          message: resp.message
+        });
+        return;
+    }
       TimesheetId = resp.timesheetId;
       timesheetRows.value = resp.timesheetLineModel.map(savedRow => {
         const originalRow = cleanedRows.find(r => r.id === savedRow.id);

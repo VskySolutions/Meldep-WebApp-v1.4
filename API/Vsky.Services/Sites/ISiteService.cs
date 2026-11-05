@@ -55,5 +55,9 @@ namespace Vsky.Services.Sites
         string GetVskySiteId();
         #endregion
 
+        #region
+        Task<MobileVersionResponse> CheckMobileVersion(string siteId, string currentVersion);
+        #endregion
+
     }
 }

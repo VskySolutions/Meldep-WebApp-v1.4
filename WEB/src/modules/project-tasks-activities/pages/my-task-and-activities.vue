@@ -470,9 +470,10 @@
                           <q-tooltip>View Project Module</q-tooltip>
                         </span>
                       </q-td>
-                       <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 5%;" class="text-right">
-                        <span v-if="activityProps.row.showTaskNumber">
+                       <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 5%;" class="text-right hoverable-cell">
+                        <span v-if="activityProps.row.showTaskNumber" @click="onProjectTaskView(activityProps.row.task.id, refreshProjectTaskActivityList)">
                           {{ activityProps.row.task.projectTaskNumber }}
+                          <q-tooltip>View Project Task</q-tooltip>
                         </span>
                       </q-td>
 
@@ -841,7 +842,7 @@
     v-model="showSortDialog"
     :columns="columns"
     :multi-sort="multiSort"
-    :exclude-columns="['Task No','Task Hrs','Owner','Assigned To','Color','Tags']"
+    :exclude-columns="['Week']"
     @add="addSortLevel"
     @remove="removeSortLevel"
     @apply="applyMultiSort"
@@ -1020,12 +1021,12 @@ const rows = ref([]);
 const columns = ref([
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, hidden: true },
   { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true },
-  { name: "projectTaskNumber", label: "Task No", field: "projectTaskNumber", align: "right", sortable: true },
+  { name: "task.projectTaskNumber", label: "Task No", field: "task.projectTaskNumber", align: "right", sortable: true },
   { name: "task.name", label: "Task Name", field: "task.name", align: "left", sortable: true },
   { name: "weekDates", label: "Week", field: row => row.weekDates.join(", "), align: "center", sortable: false },
   // { name: "task.status.dropDownValue", label: "Task Status", field: "task.status.dropDownValue", align: "left", sortable: true, style: "display: none", headerStyle: "display: none" },
   // { name: "name", label: "Activity Type", field: "name", align: "left", sortable: true },
-  { name: "assignedTo.person.firstname", label: "Activity Owner", field: "assignedToId.person.firstname", align: "left", sortable: true },
+  { name: "assignedTo.person.firstname", label: "Activity Owner", field: "assignedTo.person.firstname", align: "left", sortable: true },
   { name: "activityStatus.dropDownValue", label: "Activity Status", field: "activityStatus.dropDownValue", align: "left", sortable: true }
   // { name: "task.estimateTime", label: "Task Est. Hrs", field: "task.estimateTime", align: "left", sortable: true }
   // { name: "estimateHours", label: "Est. Hrs", field: "estimateHours", align: "right", sortable: true }
