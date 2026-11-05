@@ -38,6 +38,10 @@ export function flattenRecords (records) {
         estimatedRemainingTime: row.estimatedRemainingTime,
         scope: row.scope,
         estimatedTimeForCompletion: row.estimatedTimeForCompletion,
+        createdByName: record.createdByName,
+        createdOnUtc: record.createdOnUtc,
+        updatedByName: record.updatedByName,
+        updatedOnUtc: record.updatedOnUtc,
         isRecordStart: rowIndex === 0,
         recordRowCount: record.rows.length,
         showProjectModule: !sameGroup

@@ -655,7 +655,8 @@ const onSaveProjectPlan = async () => {
     const changedLines = model.value.weekDateLines.filter(
       line =>
         line.isEditActualDescription ||
-        line.isEditExpectedDescription
+        line.isEditExpectedDescription ||
+        line.deleted
     );
 
     const updatedPlanModel = {

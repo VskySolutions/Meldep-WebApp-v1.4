@@ -585,7 +585,7 @@
                 v-if="selectedColumnNames.includes('projectTaskRelatedMappings')"
                 class="common-q-td hoverable-cell"
               >
-                <span v-if="props.row.projectTaskRelatedMappings?.length">
+                <!-- <span v-if="props.row.projectTaskRelatedMappings?.length">
                   <template v-for="(item, index) in props.row.projectTaskRelatedMappings" :key="index">
                     <span class="hoverable-cell" style="cursor: pointer;" @click="onProjectTaskView(item.id)">#{{ item.projectTaskNumber }}
                       <span v-if="item.status">
@@ -595,6 +595,43 @@
                     <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">, </span>
                     <br>
                   </template>
+                </span> -->
+                <template
+                  v-for="(item, index) in props.row.projectTaskRelatedMappings"
+                  :key="index"
+                >
+                  <template v-if="isProjectTaskExpanded(props.row.id) || index < 3">
+                    <span
+                      style="cursor: pointer;"
+                      @click="onProjectTaskView(item.id)"
+                    >
+                      #{{ item.projectTaskNumber }}
+                      <span v-if="item.status">
+                        ({{ item.status.dropDownValue }})
+                      </span>
+                    </span>
+                    <span v-if="index < props.row.projectTaskRelatedMappings.length - 1">
+                      ,
+                    </span>
+                  </template>
+                </template>
+
+                <span
+                  v-if="props.row.projectTaskRelatedMappings?.length > 3 && !isProjectTaskExpanded(props.row.id)"
+                  class="text-primary cursor-pointer text-h3 text-weight-bold"
+                  @click="toggleProjectTaskExpansion(props.row.id)"
+                >
+                  ...
+                  <q-tooltip>View More</q-tooltip>
+                </span>
+
+                <span
+                  v-if="props.row.projectTaskRelatedMappings?.length > 3 && isProjectTaskExpanded(props.row.id)"
+                  class="text-primary cursor-pointer text-h3 text-weight-bold"
+                  @click="toggleProjectTaskExpansion(props.row.id)"
+                >
+                  -
+                  <q-tooltip>View Less</q-tooltip>
                 </span>
               </q-td>
               <q-td
@@ -1396,6 +1433,20 @@ const getAnswerShortDescription = (htmlText) => {
   return textarea.value
     .replace(/\s+/g, " ")
     .trim();
+};
+
+const expandedProjectTaskRows = ref([]);
+
+const isProjectTaskExpanded = (id) =>
+  expandedProjectTaskRows.value.includes(id);
+
+const toggleProjectTaskExpansion = (id) => {
+  if (isProjectTaskExpanded(id)) {
+    expandedProjectTaskRows.value =
+      expandedProjectTaskRows.value.filter(x => x !== id);
+  } else {
+    expandedProjectTaskRows.value.push(id);
+  }
 };
 
 const hasNonEditableSelectedRequirement = computed(() =>

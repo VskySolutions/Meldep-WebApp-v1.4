@@ -7,8 +7,6 @@ import { distinctRecordIds } from "./trackingList.js";
 export function onSubmitRequirementStatusTrackingDelete (record, onDeleted) {
   zwConfirmDelete(
     {
-      title: "Delete Tracking Record",
-      message: "This deletes the tracking record and all its requirement rows. Requirements and Data Mappings are not affected.",
       data: `${record.projectName} / ${record.projectModuleName} / ${record.trackingDate}`
     },
     async () => {

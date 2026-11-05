@@ -892,8 +892,8 @@ watch(activeRowId, (val) => {
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 onMounted(async () => {
   refreshInfraProjectInstancesList();
-  projectNameDropdown.load();
-  projectNameDropdownSingleSelect.load(false, true, true);
+  projectNameDropdown.load(false, false, true);
+  projectNameDropdownSingleSelect.load(false, false, true);
   instanceTypesForDropdown.load("Instance Type");
   instanceTypeDropdownSingleSelect.load("Instance Type");
   platformsForDropdown.load("Platform Name");

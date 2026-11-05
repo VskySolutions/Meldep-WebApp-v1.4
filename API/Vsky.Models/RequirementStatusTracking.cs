@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Vsky.Core;
+using System.Text.Json.Serialization;
 
 namespace Vsky.Models
 {
@@ -14,9 +15,15 @@ namespace Vsky.Models
         public DateTime TrackingDate { get; set; }
 
         public decimal? CurrentPercent { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal? TimeSpentAsOfToday { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedRemainingTime { get; set; }
         public string Scope { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedTimeForCompletion { get; set; }
 
         public string CreatedById { get; set; }
@@ -51,9 +58,15 @@ namespace Vsky.Models
         public string Id { get; set; }
         public string RequirementId { get; set; }
         public decimal? CurrentPercent { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal? TimeSpentAsOfToday { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedRemainingTime { get; set; }
         public string Scope { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedTimeForCompletion { get; set; }
     }
     #endregion
@@ -87,9 +100,15 @@ namespace Vsky.Models
         // True when the requirement was deleted or moved out of the record's module after the row was saved.
         public bool IsRequirementUnavailable { get; set; }
         public decimal? CurrentPercent { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal? TimeSpentAsOfToday { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedRemainingTime { get; set; }
         public string Scope { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedTimeForCompletion { get; set; }
         public string CreatedByName { get; set; }
         public DateTime CreatedOnUtc { get; set; }

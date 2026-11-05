@@ -103,6 +103,8 @@ namespace Vsky.Services.Timesheets
       );
         #endregion
 
+        Task<List<TimesheetLines>> GetRequirementTimeSpentByIdsAndDate(string siteId, List<string> requirementIds, DateTime trackingDate);
+
         #region InsertTimesheetLines
         void InsertTimesheetLines(TimesheetLines entity);
         #endregion

@@ -9,6 +9,11 @@ export default {
     return http.get(`/requirement-status-tracking/${recordId}`).then(response => response.data);
   },
 
+  getRequirementTimeSpentByIdsAndDate(requirementIds, trackingDate) {
+    const idsQuery = requirementIds.join(",");
+    return http.get(`/requirement-status-tracking/get-requirement-time-spent?ids=${idsQuery}&trackingDate=${(trackingDate)}`).then(response => response.data);
+  },
+
   // Whole batch in one request; there is intentionally no per-row save.
   bulkAddRequirementStatusTracking (model) {
     return http.post("/requirement-status-tracking/bulk-add", model).then(response => response.data);

@@ -10,6 +10,7 @@ using Vsky.Models;
 using Vsky.Services.Common;
 using Vsky.Services.RequirementStatusTrackings;
 using Vsky.Services.Sites;
+using Vsky.Services.Timesheets;
 
 namespace Vsky.Api.Controllers
 {
@@ -21,6 +22,7 @@ namespace Vsky.Api.Controllers
         private readonly IRequirementStatusTrackingService _requirementStatusTrackingService;
         private readonly ICommonService _commonService;
         private readonly ISiteService _siteService;
+        private readonly ITimesheetLinesService _timesheetLinesService;
         #endregion
 
         #region Services Initializations
@@ -28,13 +30,15 @@ namespace Vsky.Api.Controllers
             GlobalVariable globalVariable,
             IRequirementStatusTrackingService requirementStatusTrackingService,
             ICommonService commonService,
-            ISiteService siteService
+            ISiteService siteService,
+             ITimesheetLinesService timesheetLinesService
         )
         {
             _globalVariable = globalVariable;
             _requirementStatusTrackingService = requirementStatusTrackingService;
             _commonService = commonService;
             _siteService = siteService;
+            _timesheetLinesService = timesheetLinesService;
         }
         #endregion
 
@@ -118,6 +122,20 @@ namespace Vsky.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+        #endregion
+
+        #region GetRequirementTimeSpentByIdsAndDate
+        // Title: GetRequirementTimeSpentByIdsAndDate
+        // Description: Retrieves the total timesheet hours for the specified Requirement IDs up to the selected Tracking Date and returns the results.
+        [HttpGet("get-requirement-time-spent")]
+        public async Task<IActionResult> GetRequirementTimeSpentByIdsAndDate(string ids, DateTime trackingDate)
+        {
+            var SiteId = _globalVariable.SiteId;
+            var requirementIds = ids.Split(',').ToList();
+            
+            var result = await _timesheetLinesService.GetRequirementTimeSpentByIdsAndDate(SiteId, requirementIds, trackingDate);
+            return Ok(result);
         }
         #endregion
 

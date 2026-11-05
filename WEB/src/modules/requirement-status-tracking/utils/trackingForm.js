@@ -46,22 +46,31 @@ export function toNumberOrNull (value) {
 
 const hasAtMostTwoDecimals = (value) => Math.round(value * 100) / 100 === value;
 
-function validateHours (value, label) {
-  const number = toNumberOrNull(value);
-  if (number === null) return "";
-  if (!Number.isFinite(number)) return `${label} must be a number.`;
-  if (number < 0) return `${label} cannot be negative.`;
-  if (number > MAX_HOURS) return `${label} must not exceed ${MAX_HOURS}.`;
-  if (!hasAtMostTwoDecimals(number)) return `${label} allows at most 2 decimal places.`;
-  return "";
-}
+// function validateHours (value, label) {
+//   const number = toNumberOrNull(value);
+//   if (number === null) return "";
+//   if (!Number.isFinite(number)) return `${label} must be a number.`;
+//   if (number < 0) return `${label} cannot be negative.`;
+//   if (number > MAX_HOURS) return `${label} must not exceed ${MAX_HOURS}.`;
+//   if (!hasAtMostTwoDecimals(number)) return `${label} allows at most 2 decimal places.`;
+//   return "";
+// }
 
-function validateCompletion (value) {
-  const number = toNumberOrNull(value);
-  if (number === null) return "";
-  if (!Number.isFinite(number)) return "Completion must be a number.";
-  if (number < 0 || number > 100) return "Completion must be between 0 and 100.";
-  if (!hasAtMostTwoDecimals(number)) return "Completion allows at most 2 decimal places.";
+function validateCompletion(value) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  if (!/^\d+(\.\d{1,2})?$/.test(String(value))) {
+    return "Enter a valid percentage.";
+  }
+
+  const percentage = Number(value);
+
+  if (percentage < 0 || percentage > 100) {
+    return "Enter a value between 0 and 100.";
+  }
+
   return "";
 }
 
@@ -151,14 +160,14 @@ export function validateDraft (model, rows) {
       requirementId: row.requirementId ? "" : "Requirement is required.",
       currentPercent: validateCompletion(row.currentPercent)
     };
-    HOUR_FIELDS.forEach(field => { errors[field.key] = validateHours(row[field.key], field.label); });
+    // HOUR_FIELDS.forEach(field => { errors[field.key] = validateHours(row[field.key], field.label); });
 
     const duplicateIndex = findDuplicateRowIndex(rows, row.key, row.requirementId);
     if (duplicateIndex !== -1) errors.requirementId = `Already selected in row ${duplicateIndex + 1}.`;
 
     if (Object.values(errors).some(Boolean)) {
       rowErrors[row.key] = errors;
-      messages.push(`Row ${index + 1}: ${Object.values(errors).filter(Boolean).join(" ")}`);
+      // messages.push(`Row ${index + 1}: ${Object.values(errors).filter(Boolean).join(" ")}`);
     }
   });
 
@@ -180,10 +189,10 @@ export function buildPayload (model, rows, removedRowIds) {
       id: row.id || null,
       requirementId: row.requirementId,
       currentPercent: toNumberOrNull(row.currentPercent),
-      timeSpentAsOfToday: toNumberOrNull(row.timeSpentAsOfToday),
-      estimatedRemainingTime: toNumberOrNull(row.estimatedRemainingTime),
+      timeSpentAsOfToday: row.timeSpentAsOfToday,
+      estimatedRemainingTime: row.estimatedRemainingTime,
       scope: (row.scope || "").trim() || null,
-      estimatedTimeForCompletion: toNumberOrNull(row.estimatedTimeForCompletion)
+      estimatedTimeForCompletion: row.estimatedTimeForCompletion
     })),
     removedRowIds: model.recordId ? [...new Set(removedRowIds)] : []
   };

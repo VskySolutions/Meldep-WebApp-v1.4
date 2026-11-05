@@ -493,7 +493,7 @@
                       <!-- Week Dates -->
                       <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 5%;">
                         <div v-if="activityProps.row.weekDates?.length" class="col-9 flex justify-center TaskActivity">
-                          <span
+                          <!-- <span
                             v-for="(d, idx) in activityProps.row.weekDates"
                             :key="idx"
                             class="hoverable-cell"
@@ -503,6 +503,44 @@
                           >
                             {{ d.text }}
                             <q-tooltip>View Weekly Project Plan</q-tooltip>
+                          </span> -->
+                          <template
+                            v-for="(d, index) in activityProps.row.weekDates"
+                            :key="index"
+                          >
+                            <template v-if="isWeeklyPlanExpanded(activityProps.row.id) || index < 3">
+                              <span
+                                class="hoverable-cell"
+                                :class="{ 'current-week': d.isCurrentWeek }"
+                                style="cursor: pointer;"
+                                @click="openPlan(d, activityProps.row.id)"
+                              >
+                                {{ d.text }}
+                                <q-tooltip>View Weekly Project Plan</q-tooltip>
+                              </span>
+
+                              <span v-if="index < activityProps.row.weekDates.length - 1">
+                                ,
+                              </span>
+                            </template>
+                          </template>
+
+                          <span
+                            v-if="activityProps.row.weekDates?.length > 3 && !isWeeklyPlanExpanded(activityProps.row.id)"
+                             class="text-primary cursor-pointer text-h3 text-weight-bold"
+                            @click="toggleWeeklyPlanExpansion(activityProps.row.id)"
+                          >
+                            ...
+                            <q-tooltip>View More</q-tooltip>
+                          </span>
+
+                          <span
+                            v-if="activityProps.row.weekDates?.length > 3 && isWeeklyPlanExpanded(activityProps.row.id)"
+                            class="text-primary cursor-pointer text-h3 text-weight-bold"
+                            @click="toggleWeeklyPlanExpansion(activityProps.row.id)"
+                          >
+                            -
+                            <q-tooltip>View Less</q-tooltip>
                           </span>
                         </div>
                       </q-td>
@@ -1165,6 +1203,18 @@ const sortActivityColumn = (col, projectId) => {
   refreshProjectTaskActivityList(projectId);
 };
 
+const expandedWeeklyPlanRows = ref([]);
+const isWeeklyPlanExpanded = (id) =>
+  expandedWeeklyPlanRows.value.includes(id);
+
+const toggleWeeklyPlanExpansion = (id) => {
+  if (isWeeklyPlanExpanded(id)) {
+    expandedWeeklyPlanRows.value =
+      expandedWeeklyPlanRows.value.filter(x => x !== id);
+  } else {
+    expandedWeeklyPlanRows.value.push(id);
+  }
+};
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions (SOP Change)
 // ------------------------------------------------------------------------------------

@@ -32,13 +32,13 @@ namespace Vsky.Core
 
 
         public override decimal Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                return ConvertTimeToDecimalHours(reader.GetString());
-            }
+        {
+             return ConvertTimeToDecimalHours(reader.GetString());
+        }
 
-            public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
-            {
-                writer.WriteStringValue(ConvertDecimalHoursToTime(value));
-            }
+         public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
+         {
+              writer.WriteStringValue(ConvertDecimalHoursToTime(value));
+         }
     }
 }

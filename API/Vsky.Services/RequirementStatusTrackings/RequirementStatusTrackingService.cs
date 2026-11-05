@@ -579,15 +579,15 @@ namespace Vsky.Services.RequirementStatusTrackings
 
         private static bool HasMoreThanTwoDecimals(decimal value) => decimal.Round(value, 2) != value;
 
-        private static void ValidateHours(decimal? value, string label, int rowNumber, List<string> errors)
-        {
-            if (!value.HasValue)
-                return;
-            if (value.Value < 0 || value.Value > MaxHours)
-                errors.Add($"Row {rowNumber}: {label} must be between 0 and {MaxHours.ToString(CultureInfo.InvariantCulture)}.");
-            else if (HasMoreThanTwoDecimals(value.Value))
-                errors.Add($"Row {rowNumber}: {label} allows at most 2 decimal places.");
-        }
+        //private static void ValidateHours(decimal? value, string label, int rowNumber, List<string> errors)
+        //{
+        //    if (!value.HasValue)
+        //        return;
+        //    if (value.Value < 0 || value.Value > MaxHours)
+        //        errors.Add($"Row {rowNumber}: {label} must be between 0 and {MaxHours.ToString(CultureInfo.InvariantCulture)}.");
+        //    else if (HasMoreThanTwoDecimals(value.Value))
+        //        errors.Add($"Row {rowNumber}: {label} allows at most 2 decimal places.");
+        //}
 
         public static List<string> Validate(RequirementStatusTrackingSaveModel model, bool isCreate, out DateTime trackingDate)
         {
@@ -643,9 +643,9 @@ namespace Vsky.Services.RequirementStatusTrackings
                         errors.Add($"Row {rowNumber}: Completion % allows at most 2 decimal places.");
                 }
 
-                ValidateHours(row.TimeSpentAsOfToday, "Hours Spent", rowNumber, errors);
-                ValidateHours(row.EstimatedRemainingTime, "Estimated Remaining Hours", rowNumber, errors);
-                ValidateHours(row.EstimatedTimeForCompletion, "Additional Scope Hours", rowNumber, errors);
+                //ValidateHours(row.TimeSpentAsOfToday, "Hours Spent", rowNumber, errors);
+                //ValidateHours(row.EstimatedRemainingTime, "Estimated Remaining Hours", rowNumber, errors);
+                //ValidateHours(row.EstimatedTimeForCompletion, "Additional Scope Hours", rowNumber, errors);
             }
 
             if (rows.Any(r => r == null))

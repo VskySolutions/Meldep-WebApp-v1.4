@@ -420,7 +420,7 @@ const submitResponseLogDescription = async (responseLogDescriptionItem = null) =
   // Main Description already exists
   // New description goes to Change Log
   await requirementService.saveResponseLogDescription({
-    id: null,
+    id: isEditing ? responseLogDescriptionItem.id : null,
     requirementId: props.id,
     employeeId: user.employeeId,
     description: responseLogDescriptionValue

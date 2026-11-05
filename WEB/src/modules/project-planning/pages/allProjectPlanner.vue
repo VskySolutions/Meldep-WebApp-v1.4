@@ -1787,6 +1787,10 @@
                                                   <q-item-section avatar><q-icon name="o_edit" color="" size="xs" /></q-item-section>
                                                   <q-item-section class="">Edit</q-item-section>
                                                 </q-item>
+                                                <q-item v-if="props.row.isEditable" v-ripple clickable @click="onProjectTaskWeeklyPlanAddEdit(props.row.id, props.row.name, props.row.project.id,props.row.project.name, refreshProjectTaskList)">
+                                                  <q-item-section avatar><q-icon name="o_calendar_month" size="xs" /></q-item-section>
+                                                  <q-item-section>Add/Edit Weekly Plan</q-item-section>
+                                                </q-item>
                                                 <q-item v-if="props.row.isEditable && props.row.status != 'Close'" v-ripple clickable @click="onProjectTaskFiles(props.row.id, props.row.name, props.row.projectName, props.row.projectListName)">
                                                   <q-item-section avatar><q-icon name="o_description" size="xs" /></q-item-section>
                                                   <q-item-section>Files</q-item-section>
@@ -2615,7 +2619,8 @@ import {
   onProjectTaskCopy,
   onProjectTaskMove,
   onProjectTaskAddBulk,
-  onProjectTaskEditBulk
+  onProjectTaskEditBulk,
+  onProjectTaskWeeklyPlanAddEdit
 } from "src/modules/project-tasks/utils/dialogs.js";
 
 // Shared Project Task Activity

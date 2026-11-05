@@ -3,7 +3,7 @@
     <q-card class="project6">
       <q-card-section class="card-header with-tools">
         <div class="row items-center">
-          <div class="col-12 col-xs-3 col-sm-2 col-md-3 col-lg-4 col-xl-2">
+          <div class="col-12 col-xs-3 col-sm-2 col-md-3 col-lg-4 col-xl-3">
             <q-breadcrumbs class="text-brown text-weight-bold text-h3">
               <template #separator>
                 <q-icon size="1.5em" name="o_chevron_right" color="primary" />
@@ -21,7 +21,7 @@
               </q-chip>
             </div>
           </div>
-          <div class="col-12 col-xs-6 col-sm-8 col-md-7 col-lg-6 col-xl-7">
+          <div class="col-12 col-xs-6 col-sm-8 col-md-7 col-lg-6 col-xl-6">
             <div class="row items-center justify-end no-wrap">
               <div class="row items-center" style="flex-wrap: nowrap;">
                 <div class="search-container position-relative">
@@ -55,15 +55,39 @@
                       />
                       <div class="row items-center q-mb-sm">
                         <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                          <label class="Cutomlabel q-mt-sm fs-13">Date From</label>
+                          <label class="Cutomlabel q-mt-sm fs-13">From Date</label>
                         </div>
-                        <formDate v-model="search.fromDate" :required="false" wrapper-class="col-lg-7 col-md-7 col-sm-12 col-xs-12 q-px-sm" />
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <div class="input-group q-mx-sm w-100 h-auto">
+                            <q-input v-model="search.fromDate" fill-input dense>
+                              <template #append>
+                                <q-icon name="o_calendar_month" class="cursor-pointer">
+                                  <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
+                                    <q-date v-model="search.fromDate" mask="MM/DD/YYYY" @update:model-value="() => $refs.qDateProxy.hide()" />
+                                  </q-popup-proxy>
+                                </q-icon>
+                              </template>
+                            </q-input>
+                          </div>
+                        </div>
                       </div>
-                      <div class="row items-center q-mb-sm">
+                     <div class="row items-center q-mb-sm">
                         <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
-                          <label class="Cutomlabel q-mt-sm fs-13">Date To</label>
+                          <label class="Cutomlabel q-mt-sm fs-13">To Date</label>
                         </div>
-                        <formDate v-model="search.toDate" :required="false" wrapper-class="col-lg-7 col-md-7 col-sm-12 col-xs-12 q-px-sm" />
+                        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+                          <div class="input-group q-mx-sm w-100 h-auto">
+                            <q-input v-model="search.toDate" fill-input dense>
+                              <template #append>
+                                <q-icon name="o_calendar_month" class="cursor-pointer">
+                                  <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
+                                    <q-date v-model="search.toDate" mask="MM/DD/YYYY" @update:model-value="() => $refs.qDateProxy.hide()" />
+                                  </q-popup-proxy>
+                                </q-icon>
+                              </template>
+                            </q-input>
+                          </div>
+                        </div>
                       </div>
                       <div class="row justify-end q-gutter-sm q-mb-sm">
                         <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showFilter = false; onAdvanceSearch(); }" />
@@ -225,7 +249,7 @@
             <template #body="props">
               <q-tr
                 :props="props"
-                :class="[props.row.isRecordStart ? 'record-start' : '', highlightedId === props.row.recordId ? 'highlight' : '']"                
+                :class="[props.row.isRecordStart ? 'record-start' : '', highlightedId === props.row.recordId ? 'highlight' : '']"
                 :set="(preProjectName = null, preProjectModuleName = null)"
               >
                 <q-td v-if="!isViewer" auto-width class="text-center hidden">
@@ -285,7 +309,9 @@
                   {{ props.row.trackingDate }}
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('requirementTitle')" class="common-q-td">
-                  <span v-if="props.row.requirementNumber">#{{ props.row.requirementNumber }} </span>{{ props.row.requirementTitle }}
+                  <span v-if="props.row.requirementNumber" class="cursor-pointer"  @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.id } })">
+                    #{{ props.row.requirementNumber }} -
+                  </span>{{ props.row.requirementTitle }}
                   <q-badge v-if="props.row.isRequirementUnavailable" color="warning" class="q-ml-xs">
                     Moved or deleted
                     <q-tooltip>This requirement was deleted or moved out of the module after the row was saved.</q-tooltip>
@@ -295,10 +321,10 @@
                   {{ formatNumber(props.row.currentPercent) }}
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('timeSpentAsOfToday')" class="common-q-td text-right">
-                  {{ formatNumber(props.row.timeSpentAsOfToday) }}
+                  {{ props.row.timeSpentAsOfToday }}
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('estimatedRemainingTime')" class="common-q-td text-right">
-                  {{ formatNumber(props.row.estimatedRemainingTime) }}
+                  {{ props.row.estimatedRemainingTime }}
                 </q-td>
                 <q-td
                   v-if="selectedColumnNames.includes('scope')" class="common-q-td" style="white-space: pre-wrap;"
@@ -313,17 +339,17 @@
                       getAdditionalScope(props.row.scope)
                     }}
                     <q-tooltip>{{ props.row.scope }}</q-tooltip>
-                  </div>                    
+                  </div>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('estimatedTimeForCompletion')" class="common-q-td text-right">
-                  {{ formatNumber(props.row.estimatedTimeForCompletion) }}
+                  {{ props.row.estimatedTimeForCompletion }}
                 </q-td>
                 <!-- <q-td v-if="selectedColumnNames.includes('updatedOnUtc')" class="common-q-td">
                   {{ props.row.updatedOnUtc }}
                 </q-td>                 -->
-                <q-td v-if="selectedColumnNames.includes('createdById')">{{ props.row.createdByName }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('createdByName')"> {{ props.row.createdByName }}</q-td>
                 <q-td v-if="selectedColumnNames.includes('createdOnUtc')">{{ props.row.createdOnUtc }}</q-td>
-                <q-td v-if="selectedColumnNames.includes('updatedById')">{{ props.row.updatedByName }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('updatedByName')">{{ props.row.updatedByName }}</q-td>
                 <q-td v-if="selectedColumnNames.includes('updatedOnUtc')">{{ props.row.updatedOnUtc }}</q-td>
                 <q-td auto-width class="text-center actions">
                   <!-- Record actions sit on the record's first row so their complete-record scope is clear. -->
@@ -451,9 +477,9 @@ const columns = ref([
   { name: "estimatedRemainingTime", label: "Estimated Remaining Time Required (Hours)", field: "estimatedRemainingTime", align: "right", sortable: true, default: true },
   { name: "scope", label: "Additional Scope", field: "scope", align: "left", sortable: false, default: true },
   { name: "estimatedTimeForCompletion", label: "Estimated Time for Completion of Additional Scope (Hours)", field: "estimatedTimeForCompletion", align: "right", sortable: true, default: true },
-  { name: "createdByName", label: "Created By", field: "createdById", align: "left", sortable: true, default: false },
+  { name: "createdByName", label: "Created By", field: "createdByName", align: "left", sortable: true, default: false },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: false },
-  { name: "updatedByName", label: "Updated By", field: "updatedById", align: "left", sortable: true, default: false },
+  { name: "updatedByName", label: "Updated By", field: "updatedByName", align: "left", sortable: true, default: false },
   { name: "updatedOnUtc", label: "Updated Date", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 const sortableColumns = computed(() => columns.value.filter(col => SORTABLE_COLUMNS.includes(col.field)));
@@ -485,7 +511,6 @@ const getAllRequirementStatusTracking = async ({ pagination: p }) => {
 
   try {
     const resp = await requirementStatusTrackingService.getAllRequirementStatusTracking(payload);
-    console.log("resp", resp);
     records.value = resp?.records || [];
     loadError.value = false;
     pagination.value = { ...pagination.value, page, rowsPerPage, sortBy, descending, rowsNumber: resp?.total || 0 };
