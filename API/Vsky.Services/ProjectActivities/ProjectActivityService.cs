@@ -431,6 +431,7 @@ namespace Vsky.Services.ProjectActivities
                             !line.Deleted &&
                             line.TaskId == x.Task.Id &&
                             line.ProjectWeeklyPlanDates.PlanType.DropDownValue.ToLower() == "weekly")
+                        .OrderByDescending(line => line.ProjectWeeklyPlanDates.WeekDate)
                         .Select(line => new ProjectWeeklyPlanDatesLines
                         {
                             Id = line.Id,

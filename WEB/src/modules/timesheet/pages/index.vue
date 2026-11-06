@@ -651,7 +651,6 @@ const getTimesheets = async ({ pagination: p }) => {
           )
         })) || []
       }));
-      console.log("rows.value", rows.value);
       // pagination.value.page = page;
       // pagination.value.rowsPerPage = rowsPerPage;
       // pagination.value.sortBy = sortBy;
