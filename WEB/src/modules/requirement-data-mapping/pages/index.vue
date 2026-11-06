@@ -215,7 +215,7 @@
                     v-if="!isViewer"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
-                    @click="onEditRequirementDataMapping(props.row.requirementId, true, refreshDataMappingList)"
+                    @click="onEditRequirementDataMapping(props.row.requirementId, null, null, true, refreshDataMappingList)"
                   >
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>

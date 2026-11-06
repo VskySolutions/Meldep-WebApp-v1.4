@@ -134,7 +134,7 @@ const refreshDataMappingByRequirementId = () => {
 // ------------------------------------------------------------------------------------
 // DataTable:- Initialization Of Dialogs, Actions (SOP Change)
 // ------------------------------------------------------------------------------------
-initRequirementDataMappingDialogs();
+initRequirementDataMappingDialogs(activeRowId);
 
 // On page rendering
 onMounted(() => {

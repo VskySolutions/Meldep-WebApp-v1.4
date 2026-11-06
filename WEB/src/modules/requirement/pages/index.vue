@@ -987,7 +987,7 @@
                       <q-item
                         v-if="props.row.isEditable && props.row.requirementType.dropDownValue == 'Data Integration'"
                         v-ripple clickable
-                        @click="onEditRequirementDataMapping(props.row.id, true, refreshRequirementList)"
+                        @click="onEditRequirementDataMapping(props.row.id, props.row.projectId, props.row.projectModuleId, true, refreshRequirementList)"
                       >
                         <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
                         <q-item-section>Edit Data Mapping</q-item-section>

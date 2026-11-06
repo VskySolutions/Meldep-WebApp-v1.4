@@ -16,10 +16,9 @@
                   <div class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-4 col-md-4">
                       <formSingleSelectDropdown
-                        v-if="!isRequirementReadonly"
                         v-model="model.projectId"
                         label="Project Name"
-                        :readonly="isRequirementReadonly"
+                        :readonly="!!readonlyProject"
                         :required="true"
                         :options="projectNameDropdownSingleSelect.list.value"
                         :filter="projectNameDropdownSingleSelect.filter"
@@ -27,7 +26,7 @@
                         :error-message="modelV$.projectId.$errors?.[0]?.$message"
                         @blur="modelV$.projectId.$touch()"
                       />
-                      <div v-else>
+                      <!-- <div v-else>
                         <div class="q-mb-xs text-black"><label>Project Name</label></div>
                           <q-input
                             v-model="model.projectName"
@@ -35,15 +34,14 @@
                             autogrow
                             readonly
                           />
-                      </div>
+                      </div> -->
                     </div>
                     <div class="col-12 col-sm-4 col-md-4">
                       <formSingleSelectDropdown
-                        v-if="!isRequirementReadonly"
                         v-model="model.projectModuleId"
                         label="Project Module"
                         :disable="(model.projectId?.length || 0) === 0"
-                        :readonly="isRequirementReadonly"
+                        :readonly="!!readonlyProjectModule"
                         :required="true"
                         :options="projectModulesByProjectIdForDropdownSingleSelect.list.value"
                         :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
@@ -51,7 +49,7 @@
                         :error-message="modelV$.projectModuleId.$errors?.[0]?.$message"
                         @blur="modelV$.projectModuleId.$touch()"
                       />
-                      <div v-else>
+                      <!-- <div v-else>
                         <div class="q-mb-xs text-black"><label>Project Module</label></div>
                           <q-input
                             v-model="model.projectModuleName"
@@ -59,17 +57,16 @@
                             autogrow
                             readonly
                           />
-                      </div>
+                      </div> -->
                     </div>
                     <div class="col-12 col-sm-4 col-md-4">
                       <div class="row items-center no-wrap">
                         <div class="col">
                           <formSingleSelectDropdown
-                            v-if="!isRequirementReadonly"
                             v-model="model.requirementId"
                             label="Requirement"
                             :disable="(model.projectModuleId?.length || 0) === 0"
-                            :readonly="isRequirementReadonly"
+                            :readonly="!!readonlyRequirement"
                             :required="true"
                             :options="requirementsByProjectModuleIdForDropdown.list.value"
                             :filter="requirementsByProjectModuleIdForDropdown.filter"
@@ -77,7 +74,7 @@
                             :error-message="modelV$.requirementId.$errors?.[0]?.$message"
                             @blur="modelV$.requirementId.$touch()"
                           />
-                          <div v-else>
+                          <!-- <div v-else>
                             <div class="q-mb-xs text-black"><label>Requirement</label></div>
                               <q-input
                                 v-model="model.requirementName"
@@ -85,7 +82,7 @@
                                 autogrow
                                 readonly
                               />
-                          </div>
+                          </div> -->
                         </div>
                         <div class="col-auto q-ml-sm q-mt-md">
                           <q-btn
@@ -317,6 +314,10 @@ const rowValidations = ref([]);
 const activeRowId = ref(null);
 let requirementId = props.id;
 const isRequirementReadonly = props.isRequirementReadonly;
+
+const readonlyProject = props.isRequirementReadonly ? "readonly" : "";
+const readonlyProjectModule = props.isRequirementReadonly ? "readonly" : "";
+const readonlyRequirement= props.isRequirementReadonly ? "readonly" : "";
 
 const model = ref({
   requirementId: props.id || "",

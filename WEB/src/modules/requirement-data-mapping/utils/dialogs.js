@@ -29,11 +29,11 @@ export function onAddRequirementDataMapping (
     .onDismiss(() => { refresh(); });
 }
 
-export function onEditRequirementDataMapping (id, isRequirementReadonly, refresh) {
+export function onEditRequirementDataMapping (id, projectId, projectModuleId, isRequirementReadonly, refresh) {
   // activeRowId.value = id;
   $q.dialog({
     component: editDataMapping,
-    componentProps: { id, isRequirementReadonly }
+    componentProps: { id, projectId, projectModuleId, isRequirementReadonly }
   }).onOk(() => {
       // activeRowId.value = id;
       refresh();
@@ -42,14 +42,41 @@ export function onEditRequirementDataMapping (id, isRequirementReadonly, refresh
     .onDismiss(() => { refresh(); });
 }
 
-export function onRequirementDataMappingNoteEdit (id, source, target, isManageNotes, refreshDataMappingList) {
+// export function onRequirementDataMappingNoteEdit (id, source, target, isManageNotes, refreshDataMappingList) {
+//   activeRowId.value = id;
+//   $q.dialog({
+//     component: editDataMappingNotes,
+//     componentProps: { id, source, target, isManageNotes }
+//   }).onOk(() => {
+//     refreshDataMappingList();
+//   })
+//     .onCancel(() => { refreshDataMappingList(); activeRowId.value = null; })
+//     .onDismiss(() => { refreshDataMappingList(); activeRowId.value = null; });
+// }
+
+export function onRequirementDataMappingNoteEdit(
+  id,
+  source,
+  target,
+  isManageNotes,
+  refreshDataMappingList
+) {
   activeRowId.value = id;
+
   $q.dialog({
     component: editDataMappingNotes,
     componentProps: { id, source, target, isManageNotes }
-  }).onOk(() => {
-    refreshDataMappingList();
   })
-    .onCancel(() => { refreshDataMappingList(); activeRowId.value = null; })
-    .onDismiss(() => { refreshDataMappingList(); activeRowId.value = null; });
+    .onOk(() => {
+      refreshDataMappingList?.();
+    })
+    .onCancel(() => {
+      refreshDataMappingList?.();
+      activeRowId.value = null;
+    })
+    .onDismiss(() => {
+      refreshDataMappingList?.();
+      activeRowId.value = null;
+    });
 }
+

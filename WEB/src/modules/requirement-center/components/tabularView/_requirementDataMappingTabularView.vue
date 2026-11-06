@@ -40,10 +40,11 @@
             <q-th v-for="col in props.cols" :key="col.name" :props="props">
               {{ col.label }}
             </q-th>
+            <q-th auto-width class="text-center">Actions</q-th>
           </q-tr>
         </template>
         <template #body="props">
-          <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
+          <q-tr :props="props" :class="highlightedId == props.row.id ? 'highlight' : ''">
             <q-td style="width: 15%;">
               {{ props.row.source }}
             </q-td>
@@ -58,6 +59,19 @@
             </q-td>
             <q-td style="width: 25%;">
               {{ props.row.createdOnUtc }}
+            </q-td>
+            <q-td class="text-center actions">
+              <q-icon
+                v-if="props.row.requirementDataMappingNotes.length > 0"
+                name="o_visibility"
+                size="xs"
+                class="cursor-pointer q-mr-sm"
+                @click="onRequirementDataMappingNoteEdit(props.row.id, props.row.source, props.row.target, false,  null)"
+              >
+                <q-tooltip>
+                  View Notes
+                </q-tooltip>
+              </q-icon>
             </q-td>
           </q-tr>
         </template>
@@ -75,6 +89,11 @@ import requirementService from "src/modules/requirement/requirement.service";
 // Shared DataTable Views
 import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
+import {
+  initRequirementDataMappingDialogs,
+  onRequirementDataMappingNoteEdit
+} from "src/modules/requirement-data-mapping/utils/dialogs.js";
+
 const emit = defineEmits(['summary'])
 
 const props = defineProps({
@@ -91,6 +110,8 @@ const siteId = computed(() => authStore.user?.siteId);
 const loading = ref(true);
 const projectId = ref('');
 const projectModuleId = ref('');
+const activeRowId = ref(null);
+const highlightedId = computed(() => activeRowId.value);
 
 const pagination = ref({ sortBy: "updatedOnUtc", descending: true, rowsPerPage: 20, page: 1 });
 const columns = ref([
@@ -107,6 +128,7 @@ const getRequirementDataMapping = () => {
     rows.value = (resp.requirementDataMappingsList || []).map(item => ({
         ...item,
     }));
+
     if (rows.value.length > 0) {
       columns.value.find(x => x.name === "source").label = rows.value[0].requirement?.sourceLabel || "Source";
       columns.value.find(x => x.name === "target").label = rows.value[0].requirement?.targetLabel || "Target";
@@ -143,6 +165,11 @@ const {
     page: 1
   }
 });
+
+// ------------------------------------------------------------------------------------
+// DataTable:- Initialization Of Dialogs, Actions
+// ------------------------------------------------------------------------------------
+initRequirementDataMappingDialogs(activeRowId);
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // On load

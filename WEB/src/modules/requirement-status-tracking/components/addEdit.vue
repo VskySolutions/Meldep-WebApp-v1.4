@@ -646,7 +646,6 @@ async function onSubmit (shouldClose, buttonType) {
 
   processing.value = true;
   activeButton.value = buttonType;
-  console.log(rows.value);
   try {
     const payload = buildPayload(model.value, rows.value, removedRowIds.value);
     const saved = model.value.recordId
