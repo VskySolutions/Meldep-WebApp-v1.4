@@ -242,6 +242,11 @@
                     </q-tooltip>
                   </q-icon>
                   <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
+                  <q-icon v-if="col.tooltip" name="o_info" size="xs" class="q-mx-xs">
+                    <q-tooltip class="text-caption">
+                      {{ col.tooltip }}
+                    </q-tooltip>
+                  </q-icon>
                 </q-th>
                 <q-th auto-width class="text-center">Actions</q-th>
               </q-tr>
@@ -263,34 +268,34 @@
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('projectName')" class="common-q-td hoverable-cell">
                   <div class="row no-wrap items-center justify-between">
-                    <span
-                      v-if="preProjectName !== props.row.projectName"
-                      :set="preProjectName = props.row.projectName"
-                      class="cursor-pointer hoverable-cell"
-                      @click="onProjectView(props.row.projectId)"
-                    >
-                      {{ props.row.projectName }}
-                    </span>
-                    <div
-                      v-if="shouldShowIcons(props.row.projectName, index)"
-                      class="row items-center q-gutter-sm q-ml-sm"
-                      style="flex-shrink: 0;"
-                    >
-                      <q-icon
-                        name="o_radio_button_checked"
-                        size="xs"
+                    <template v-if="isFirstProjectRow(props.row)">
+                      <span
                         class="cursor-pointer"
-                        @click="
-                          setActiveRowIdInLocalStorage(props.row.id);
-                          $router.push({
-                            path: '/project-center',
-                            state: { projectId: props.row.projectId }
-                          })
-                        "
+                        @click="onProjectView(props.row.projectId)"
                       >
-                        <q-tooltip>Project Center</q-tooltip>
-                      </q-icon>
-                    </div>
+                        {{ props.row.projectName }}
+                      </span>
+
+                      <div
+                        class="row items-center q-gutter-sm q-ml-sm"
+                        style="flex-shrink: 0;"
+                      >
+                        <q-icon
+                          name="o_radio_button_checked"
+                          size="xs"
+                          class="cursor-pointer"
+                          @click="
+                            setActiveRowIdInLocalStorage(props.row.id);
+                            $router.push({
+                              path: '/project-center',
+                              state: { projectId: props.row.projectId }
+                            })
+                          "
+                        >
+                          <q-tooltip>Project Center</q-tooltip>
+                        </q-icon>
+                      </div>
+                    </template>
                   </div>
                 </q-td>
                 <q-td
@@ -308,10 +313,11 @@
                 <q-td v-if="selectedColumnNames.includes('trackingDate')" class="common-q-td text-center">
                   {{ props.row.trackingDate }}
                 </q-td>
-                <q-td v-if="selectedColumnNames.includes('requirementTitle')" class="common-q-td">
-                  <span v-if="props.row.requirementNumber" class="cursor-pointer"  @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.id } })">
+                <q-td v-if="selectedColumnNames.includes('requirementTitle')" class="common-q-td hoverable-cell" @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/requirement-center', state: { requirementId: props.row.requirementId } })">
+                  <span v-if="props.row.requirementNumber" >
                     #{{ props.row.requirementNumber }} -
                   </span>{{ props.row.requirementTitle }}
+                   <q-tooltip>Requirement Center</q-tooltip>
                   <q-badge v-if="props.row.isRequirementUnavailable" color="warning" class="q-ml-xs">
                     Moved or deleted
                     <q-tooltip>This requirement was deleted or moved out of the module after the row was saved.</q-tooltip>
@@ -460,6 +466,14 @@ const isViewer = user?.roles?.some(r => r?.toLowerCase() === "viewer") ?? false;
 
 const highlightedId = computed(() => { return activeRowId.value; });
 
+function setActiveRowIdInLocalStorage(id) {
+  activeRowId.value = id;
+
+  saveDataTableState({
+    activeRowId: id
+  });
+}
+
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Columns
 // ----------------------------------------------------------------------------------------------------------------
@@ -473,10 +487,10 @@ const columns = ref([
   { name: "trackingDate", label: "Date", field: "trackingDate", align: "center", sortable: true, default: true },
   { name: "requirementTitle", label: "Requirement Name", field: "requirementTitle", align: "left", sortable: true, default: true },
   { name: "currentPercent", label: "Current Completion (%)", field: "currentPercent", align: "right", sortable: true, default: true },
-  { name: "timeSpentAsOfToday", label: "Time Spent as of Now (Hours)", field: "timeSpentAsOfToday", align: "right", sortable: true, default: true },
-  { name: "estimatedRemainingTime", label: "Estimated Remaining Time Required (Hours)", field: "estimatedRemainingTime", align: "right", sortable: true, default: true },
+  { name: "timeSpentAsOfToday", label: "Time Spent (Hrs)", field: "timeSpentAsOfToday", align: "right", sortable: true, default: true, tooltip: "Time Spent as of Today(Hours)" },
+  { name: "estimatedRemainingTime", label: "Est. Remaining (Hrs)", field: "estimatedRemainingTime", align: "right", sortable: true, default: true, tooltip: "Estimated Remaining Time Required (Hours)" },
   { name: "scope", label: "Additional Scope", field: "scope", align: "left", sortable: false, default: true },
-  { name: "estimatedTimeForCompletion", label: "Estimated Time for Completion of Additional Scope (Hours)", field: "estimatedTimeForCompletion", align: "right", sortable: true, default: true },
+  { name: "estimatedTimeForCompletion", label: "Est. Completion Time (Hrs)", field: "estimatedTimeForCompletion", align: "right", sortable: true, default: true, tooltip: "Estimated Time for Completion of Additional Scope (Hours)" },
   { name: "createdByName", label: "Created By", field: "createdByName", align: "left", sortable: true, default: false },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: false },
   { name: "updatedByName", label: "Updated By", field: "updatedByName", align: "left", sortable: true, default: false },
@@ -618,13 +632,19 @@ const {
 //   shownProjects.clear(); // Clear the set before rendering rows
 // }
 
-function shouldShowIcons (projectName) {
-  if (shownProjects.has(projectName)) {
-    return false;
-  } else {
-    shownProjects.add(projectName);
-    return true;
-  }
+function isFirstProjectRow(row) {
+  const currentIndex = displayRows.value.findIndex(
+    item => item.id === row.id
+  );
+
+  if (currentIndex === -1) return false;
+
+  if (currentIndex === 0) return true;
+
+  const currentProjectId = row.projectId;
+  const previousProjectId = displayRows.value[currentIndex - 1]?.projectId;
+
+  return currentProjectId !== previousProjectId;
 }
 
 const getAdditionalScope = (htmlText) => {

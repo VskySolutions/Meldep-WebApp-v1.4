@@ -222,24 +222,12 @@
                       <span>
                         <span
                           class="cursor-pointer"
-                          @click="onRequirementView(props.row.requirement?.id)"
-                        >
-                          {{ props.row.requirement?.title }}
-                          <q-tooltip>View Requirement</q-tooltip>
-                        </span>
-                      </span>
-                      <div
-                        class="row items-center q-gutter-sm q-ml-sm"
-                        style="flex-shrink: 0;"
-                      >
-                        <q-icon
-                          name="o_radio_button_checked"
-                          size="xs" class="cursor-pointer"
                           @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.requirement?.id } })"
                         >
+                          {{ props.row.requirement?.title }}
                           <q-tooltip>Requirement Center</q-tooltip>
-                        </q-icon>
-                      </div>
+                        </span>
+                      </span>
                     </template>
                   </div>
                 </q-td>

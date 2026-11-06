@@ -399,9 +399,9 @@
                   style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
                 >
                   <div v-if="props.row.requirement?.requirementNumber">
-                    <span @click="onRequirementView(props.row.requirement?.id)">
+                    <span @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.requirement?.id } })">
                       #{{ props.row.requirement?.requirementNumber }}
-                      <q-tooltip>View Requirement</q-tooltip>
+                      <q-tooltip>Requirement Center</q-tooltip>
                     </span>
                   </div>
                 </q-td>
@@ -1041,6 +1041,13 @@ const multiSelectTaskEditableMap = ref(
 
 const highlightedId = computed(() => { return activeRowId.value; });
 
+function setActiveRowIdInLocalStorage(id) {
+  activeRowId.value = id;
+
+  saveDataTableState({
+    activeRowId: id
+  });
+}
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Get All Project Tasks
 // ----------------------------------------------------------------------------------------------------------------

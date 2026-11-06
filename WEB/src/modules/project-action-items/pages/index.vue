@@ -273,11 +273,11 @@
                 <q-td v-if="selectedColumnNames.includes('requirement.title')"
                   class="common-q-td hoverable-cell"
                   style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
-                  @click="onRequirementView(props.row.requirement?.id)"
+                  @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.requirement?.id } })"
                 >
                   <span v-if="props.row.requirement?.title">
                     {{ props.row.requirement?.title }}
-                    <q-tooltip>View Requirement</q-tooltip>
+                    <q-tooltip>Requirement Center</q-tooltip>
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('title')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" @click="onProjectActionItemsView(props.row.id)">

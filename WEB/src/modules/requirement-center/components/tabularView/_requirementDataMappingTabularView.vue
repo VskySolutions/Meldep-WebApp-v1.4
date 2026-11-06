@@ -40,7 +40,7 @@
             <q-th v-for="col in props.cols" :key="col.name" :props="props">
               {{ col.label }}
             </q-th>
-            <q-th auto-width class="text-center">Actions</q-th>
+            <q-th v-if="hasRequirementDataMappingNotes" auto-width class="text-center">Actions</q-th>
           </q-tr>
         </template>
         <template #body="props">
@@ -60,7 +60,7 @@
             <q-td style="width: 25%;">
               {{ props.row.createdOnUtc }}
             </q-td>
-            <q-td class="text-center actions">
+            <q-td v-if="props.row.requirementDataMappingNotes.length > 0" class="text-center actions">
               <q-icon
                 v-if="props.row.requirementDataMappingNotes.length > 0"
                 name="o_visibility"
@@ -121,6 +121,10 @@ const columns = ref([
   { name: "createdBy.person.fullName", label: "Created By", field: "createdBy.person.fullName", align: "left", sortable: true },
   { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true },
 ]);
+
+const hasRequirementDataMappingNotes = computed(() =>
+  rows.value.some(row => row.requirementDataMappingNotes?.length > 0)
+);
 
 const getRequirementDataMapping = () => {
   loading.value = true;

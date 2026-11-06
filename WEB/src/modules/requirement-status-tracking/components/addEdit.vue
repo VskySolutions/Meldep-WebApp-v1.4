@@ -124,6 +124,11 @@
                   <q-tr :props="headerProps" class="bg-primary text-white">
                     <q-th v-for="col in headerProps.cols" :key="col.name" class="text-start" :style="col.headerStyle">
                       {{ col.label }}<span v-if="col.name === 'requirement'" class="required">*</span>
+                      <q-icon v-if="col.tooltip" name="o_info" size="xs" class="q-mx-xs">
+                        <q-tooltip class="text-caption">
+                          {{ col.tooltip }}
+                        </q-tooltip>
+                      </q-icon>
                     </q-th>
                   </q-tr>
                 </template>
@@ -367,7 +372,7 @@ const processing = ref(false);
 const activeButton = ref("");
 const showErrors = ref(false);
 const serverErrors = ref([]);
-const { fonts, toolbar } = getEditorConfig($q);
+// const { fonts, toolbar } = getEditorConfig($q);
 
 const model = ref({
   recordId: props.recordId || "",
@@ -384,10 +389,10 @@ const isEdit = computed(() => !!model.value.recordId);
 const columns = [
   { name: "requirement", label: "Requirement", field: "requirementId", align: "left" },
   { name: "currentPercent", label: "Current Completion(%)", field: "currentPercent", align: "left" },
-  { name: "timeSpentAsOfToday", label: "Time Spent as of Today(Hours)", field: "timeSpentAsOfToday", align: "left" },
-  { name: "estimatedRemainingTime", label: "Est. Remaining Time Required(Hours)", field: "estimatedRemainingTime", align: "left" },
+  { name: "timeSpentAsOfToday", label: "Time Spent (Hrs)", field: "timeSpentAsOfToday", align: "left", tooltip: "Time Spent as of Today(Hours)" },
+  { name: "estimatedRemainingTime", label: "Est. Remaining (Hrs)", field: "estimatedRemainingTime", align: "left", tooltip: "Estimated Remaining Time Required (Hours)" },
   { name: "scope", label: "Additional Scope", field: "scope", align: "left" },
-  { name: "estimatedTimeForCompletion", label: "Est. Time for Completion of Scope(Hours)", field: "estimatedTimeForCompletion", align: "left" },
+  { name: "estimatedTimeForCompletion", label: "Est. Completion Time (Hrs)", field: "estimatedTimeForCompletion", align: "left", tooltip: "Estimated Time for Completion of Additional Scope (Hours)"},
   { name: "action", label: "Action", field: "action", align: "center" }
 ];
 
@@ -537,6 +542,7 @@ function validateHours(value) {
 
   return true;
 }
+
 // ----------------------------------------------------------------------------------------------------------------
 // Context changes (new records only; project/module are read-only when editing a saved record)
 // ----------------------------------------------------------------------------------------------------------------
@@ -666,6 +672,35 @@ async function onSubmit (shouldClose, buttonType) {
     activeButton.value = "";
   }
 }
+
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+// Rich Editor Tools: Fonts and Toolbar
+// --------------------------------------------------------------------------------------------------------------------------------------------------
+const fonts = {
+  arial: "Arial",
+  arial_black: "Arial Black",
+  comic_sans: "Comic Sans MS",
+  courier_new: "Courier New",
+  impact: "Impact",
+  lucida_grande: "Lucida Grande",
+  times_new_roman: "Times New Roman",
+  verdana: "Verdana"
+};
+
+const toolbar = [
+  [
+    {
+      label: $q.lang.editor.align,
+      icon: $q.iconSet.editor.align,
+      fixedLabel: true,
+      list: "only-icons",
+      options: ["left", "center", "right", "justify"]
+    }
+  ],
+   ['bold', 'italic', 'strike', 'underline'],
+   ['unordered', 'ordered']
+];
+
 
 // ----------------------------------------------------------------------------------------------------------------
 // On page rendering: hydrate a saved record before any lookup can touch its rows
