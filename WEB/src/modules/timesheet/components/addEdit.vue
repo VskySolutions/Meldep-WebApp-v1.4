@@ -764,6 +764,23 @@ function getProjectTaskActivityByTaskId(projectId, moduleId, taskId, row, rowInd
   }
 }
 
+// function getTimesheetAllowedDateRange(date) {
+//   const today = new Date()
+//   today.setHours(0, 0, 0, 0)
+
+//   const selectedDate = new Date(date)
+//   selectedDate.setHours(0, 0, 0, 0)
+
+//   // Calculate Monday of the current week
+//   const startDate = new Date(today)
+//   const day = startDate.getDay()
+//   const daysSinceMonday = day === 0 ? 6 : day - 1
+
+//   startDate.setDate(startDate.getDate() - daysSinceMonday)
+
+//   return selectedDate >= startDate && selectedDate <= today
+// }
+
 function getTimesheetAllowedDateRange(date) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -778,7 +795,15 @@ function getTimesheetAllowedDateRange(date) {
 
   startDate.setDate(startDate.getDate() - daysSinceMonday)
 
-  return selectedDate >= startDate && selectedDate <= today
+  // Default: only current week
+  let allowedStartDate = new Date(startDate)
+
+  // Outsource Employee: allow previous week also
+  if (authStore.user.roles?.includes('outsource-employee')) {
+    allowedStartDate.setDate(allowedStartDate.getDate() - 7)
+  }
+  // return selectedDate >= startDate && selectedDate <= today
+  return selectedDate >= allowedStartDate && selectedDate <= today
 }
 
 function getHoursMinutesText(value) {

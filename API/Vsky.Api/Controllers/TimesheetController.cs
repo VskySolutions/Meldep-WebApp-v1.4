@@ -691,17 +691,17 @@ namespace Vsky.Api.Controllers
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
-                    if(!IsCurrentWeek(model.TimesheetDate, GetDateTime))
-                    {
-                        //return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
-                        return Ok(new
-                        {
-                            status = "warning",
-                            message = "You can only fill timesheets for the current week."
-                        });
-                    }
-                    else
-                    {
+                    //if(!IsCurrentWeek(model.TimesheetDate, GetDateTime))
+                    //{
+                    //    //return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
+                    //    return Ok(new
+                    //    {
+                    //        status = "warning",
+                    //        message = "You can only fill timesheets for the current week."
+                    //    });
+                    //}
+                    //else
+                    //{
                         var projectOpenStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "Open");
                         var projectInProgressStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "In progress");
 
@@ -821,7 +821,7 @@ namespace Vsky.Api.Controllers
                             }
                         }
                         return Ok(new { TimesheetId, model.TimesheetLineModel });
-                    }
+                    //}
                 }
                 // Return model state errors if the model state is not valid
                 return ModelStateError(ModelState);
@@ -848,17 +848,17 @@ namespace Vsky.Api.Controllers
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
-                    if (!IsCurrentWeek(model.TimesheetDate, GetDateTime))
-                    {
-                        //return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
-                        return Ok(new
-                        {
-                            status = "warning",
-                            message = "You can only fill timesheets for the current week."
-                        });
-                    }
-                    else
-                    {
+                    //if (!IsCurrentWeek(model.TimesheetDate, GetDateTime))
+                    //{
+                    //    //return BadRequest(new BadRequestError("You can only fill timesheets for the current week."));
+                    //    return Ok(new
+                    //    {
+                    //        status = "warning",
+                    //        message = "You can only fill timesheets for the current week."
+                    //    });
+                    //}
+                    //else
+                    //{
                         var projectOpenStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "Open");
                         var projectInProgressStatusId = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Project Status", "In progress");
 
@@ -1004,7 +1004,7 @@ namespace Vsky.Api.Controllers
                         _timesheetService.UpdateTimesheet(entity);
 
                         return Ok(new { TimesheetId = TimesheetId, model.TimesheetLineModel });
-                    }
+                    //}
                 }
             }
             catch (Exception ex)
