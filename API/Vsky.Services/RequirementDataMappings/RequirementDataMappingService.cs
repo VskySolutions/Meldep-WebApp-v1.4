@@ -322,7 +322,8 @@ namespace Vsky.Services.RequirementDataMappings
                                 Note = n.Note,
                                 CreatedOnUtc = n.CreatedOnUtc
                             })
-                            .ToList()
+                            .ToList(),
+                    DataMappingNotesCount = x.RequirementDataMappingNotes.Where(m => !m.Deleted).Count()
                 });
 
             var mappings = await mappingQuery.OrderByDescending(x => x.CreatedOnUtc).ToListAsync();
@@ -448,6 +449,7 @@ namespace Vsky.Services.RequirementDataMappings
                     Id = t.Id,
                     Note = t.Note
                 }).ToList(),
+                DataMappingNotesCount = x.RequirementDataMappingNotes.Where(m => !m.Deleted).Count()
             });
 
             var item = await query.OrderByDescending(x => x.CreatedOnUtc).ToListAsync();

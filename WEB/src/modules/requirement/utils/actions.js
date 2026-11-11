@@ -81,11 +81,13 @@ export const onSubmitRequirementStatus = async (
   id,
   statusId,
   refreshRequirementList,
+  note = null
 ) => {
   try {
     const payload = {
       requirementIds: [id],
-      statusId
+      statusId,
+      statusNote: note
     };
 
     await requirementService.updateRequirementStatus(payload);

@@ -176,25 +176,54 @@
                           />
                         </q-td>
                         <q-td class="text-center" style="width: 10%;">
-                          <q-icon
+                          <!-- <q-icon
                             v-if="props.row.id"
                             name="o_visibility"
-                            class="cursor-pointer q-mr-sm"
+                            class="cursor-pointer q-mr-sm hidden"
                             size="xs"
                             @click="onRequirementDataMappingNoteEdit(props.row.id, props.row.source, props.row.target, false, refreshDataMappingList)"
                           >
                             <q-tooltip>
                               View Notes
                             </q-tooltip>
-                            <!-- <q-badge
-                              v-if="props.row.requirementDataMappingNotes > 0"
+                          </q-icon> -->
+                          <a
+                            v-if="props.row.id"
+                            style="position: relative;"
+                            class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"                            
+                            @click="onRequirementDataMappingNoteEdit(props.row.id, props.row.source, props.row.target, false, refreshDataMappingList)"
+                          >
+                            <q-tooltip anchor="bottom middle" self="top middle">
+                              View Notes
+                            </q-tooltip>
+                            <q-icon name="o_visibility" size="xs"/>
+                            <q-badge
+                              v-if="props.row.dataMappingNotesCount > 0"
                               style="position: absolute; right: -16px; top: -15px;"
                               color="green"
                               text-color="white"
-                              :label="props.row.requirementDataMappingNotes.length"
-                            /> -->
-                          </q-icon>
-                          <q-icon
+                              :label="props.row.dataMappingNotesCount"
+                            />
+                          </a>
+                          <a
+                            v-if="props.row.id"
+                            style="position: relative;"
+                            class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
+                            @click="onRequirementDataMappingNoteEdit(props.row.id, props.row.source, props.row.target, true, refreshDataMappingList)"
+                          >
+                            <q-tooltip anchor="bottom middle" self="top middle">
+                              Manage Notes
+                            </q-tooltip>
+                            <q-icon name="o_assignment" size="xs"/>
+                            <q-badge
+                              v-if="props.row.dataMappingNotesCount > 0"
+                              style="position: absolute; right: -16px; top: -15px;"
+                              color="green"
+                              text-color="white"
+                              :label="props.row.dataMappingNotesCount"
+                            />
+                          </a>
+                          <!-- <q-icon
                             v-if="props.row.id"
                             name="o_assignment"
                             class="cursor-pointer q-mr-sm"
@@ -204,7 +233,7 @@
                             <q-tooltip>
                               Manage Notes
                             </q-tooltip>
-                          </q-icon>
+                          </q-icon> -->
                           <q-icon
                             name="o_delete"
                             size="xs"

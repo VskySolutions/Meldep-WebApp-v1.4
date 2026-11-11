@@ -21,7 +21,7 @@ namespace Vsky.Services.SitesModifiedLog
         Task<List<SitesModifiedLogs>> GetAllSitesModifiedLogDetailsById(string SiteId, string subModuleId, string columnName);
         #endregion
 
-        void AddSiteModifiedLogs(string SiteId, string TableName, string ModuleId, string ModuleName, string SubModuleId, string SubModule, string ColumnName, string ColumnValue, string LoggedUserId, DateTime GetDateTime);
+        void AddSiteModifiedLogs(string SiteId, string TableName, string ModuleId, string ModuleName, string SubModuleId, string SubModule, string ColumnName, string ColumnValue, string LoggedUserId, DateTime GetDateTime, string note = null);
 
         #region InsertSitesModifiedLog
         void InsertSitesModifiedLog(SitesModifiedLogs entity);

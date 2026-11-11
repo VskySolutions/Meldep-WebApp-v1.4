@@ -1008,7 +1008,8 @@ namespace Vsky.Api.Controllers
                                 var requirementDetails = await _requirementService.GetRequirementDetailsById(requirementId);
 
                                 var Status = await _dropDownService.GetDropDownById(model.StatusId);
-                                _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "Requirement", entity.ProjectId, requirementDetails.Project.Name, entity.Id, entity.Title, "Requirement Status", Status.DropDownValue, LoggedUserId, GetDateTime);
+
+                                _sitesModifiedLogsService.AddSiteModifiedLogs(SiteId, "Requirement", entity.ProjectId, requirementDetails.Project.Name, entity.Id, entity.Title, "Requirement Status", Status.DropDownValue, LoggedUserId, GetDateTime, model.StatusNote);
                             }
                         }
                     }

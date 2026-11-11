@@ -18,6 +18,7 @@ namespace Vsky.Models
         public string SubModuleId { get; set; }
         public string ColumnName { get; set; }
         public string ColumnValue { get; set; }
+        public string Note { get; set; }
         public string LastModifiedBy { get; set; }
         public DateTime LastModifiedOnUtc { get; set; }
         public bool Deleted { get; set; }

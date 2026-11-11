@@ -44,7 +44,11 @@
               >
                 <template #header="props">
                   <q-tr :props="props" class="bg-primary text-white">
-                    <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}<span v-if="['projectId', 'projectModuleId', 'projectTaskId','projectActivityId','hours'].includes(col.name)" class="required">*</span></q-th>
+                    <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}
+                      <span v-if="['projectId', 'projectModuleId', 'projectTaskId','projectActivityId','hours', 'description'].includes(col.name)" class="required">
+                        *
+                      </span>
+                    </q-th>
                     <q-th auto-width class="text-center">Actions</q-th>
                   </q-tr>
                 </template>
@@ -212,14 +216,23 @@
                       </div>
                     </q-td>
                     <q-td style="white-space: normal; overflow-wrap: break-word;">
-                      <q-editor
-                        v-model="props.row.description"
-                        y:dense="$q.screen.lt.md"
-                        :toolbar="toolbar"
-                        :fonts="fonts"
-                        class="relative-position"
-                        style="width: 400px;"
-                      />
+                      <div>
+                        <q-editor
+                          v-model="props.row.description"
+                          y:dense="$q.screen.lt.md"
+                          :toolbar="toolbar"
+                          :fonts="fonts"
+                          class="relative-position"
+                          style="width: 400px;"
+                          @blur="rowValidations[props.rowIndex]?.value?.description.$touch()"
+                        />
+                      </div>
+                      <div
+                        v-if="rowValidations[props.rowIndex]?.value?.description.$error && rowValidations[props.rowIndex]?.value?.description.$dirty"
+                        class="text-negative text-caption q-mt-xs"
+                      >
+                        {{ rowValidations[props.rowIndex]?.value?.description.$errors[0]?.$message }}
+                      </div>
                     </q-td>
                     <q-td style="width: 200px; max-width: 200px;">
                       <q-input
@@ -399,6 +412,26 @@ const columns = ref([
 // ----------------------------------------------------------------------------------------------------------------
 // Validation rules
 // ----------------------------------------------------------------------------------------------------------------
+const descriptionRequired = helpers.withMessage(
+  "Activity details are required",
+  value => {
+    if (!value) return false;
+    const descriptionText = stripHtml(value);
+    const containsImage = hasImage(value);
+    return descriptionText || containsImage;
+  }
+);
+
+const stripHtml = (html) => {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+};
+
+const hasImage = (html) => {
+  if (!html) return false;
+  return /<img\s+[^>]*src=/i.test(html);
+};
+
 const rules = {
   timesheetDateStr: {
     required: helpers.withMessage(
@@ -421,6 +454,12 @@ const editingRowrules = {
   projectModuleId: { required: helpers.withMessage("Project module is Required", required) },
   projectTaskId: { required: helpers.withMessage("Project task is Required", required) },
   projectActivityId: { required: helpers.withMessage("Project activity is Required", required) },
+  description: {
+    descriptionRequired: helpers.withMessage(
+      "Activity details are required",
+      descriptionRequired
+    )
+  },
   hours: {
     required: helpers.withMessage("Hours are required.", required),
     validHours: helpers.withMessage(

@@ -324,7 +324,7 @@
                   {{ mapping.updatedOnUtc }}
                 </q-td>
                 <q-td class="text-center actions">
-                  <q-icon
+                  <!-- <q-icon
                     v-if="mapping.requirementDataMappingNotes.length > 0"
                     name="o_visibility"
                     class="cursor-pointer q-mr-sm"
@@ -333,7 +333,25 @@
                     <q-tooltip>
                       View Notes
                     </q-tooltip>
-                  </q-icon>
+                  </q-icon> -->
+                  <a
+                    v-if="mapping.requirementDataMappingNotes.length > 0"
+                    style="position: relative;"
+                    class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"                            
+                    @click="onRequirementDataMappingNoteEdit(mapping.id, mapping.source, mapping.target, false,  refreshDataMappingList)"
+                  >
+                    <q-tooltip anchor="bottom middle" self="top middle">
+                      View Notes
+                    </q-tooltip>
+                    <q-icon name="o_visibility" size="xs"/>
+                    <q-badge
+                      v-if="mapping.dataMappingNotesCount > 0"
+                      style="position: absolute; right: -16px; top: -15px;"
+                      color="green"
+                      text-color="white"
+                      :label="mapping.dataMappingNotesCount"
+                    />
+                  </a>
                 </q-td>
                 <!-- <q-td></q-td> -->
               </q-tr>

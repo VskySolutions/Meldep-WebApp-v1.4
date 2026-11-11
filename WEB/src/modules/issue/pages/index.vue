@@ -1529,22 +1529,29 @@ watch(
 // On page rendering
 // ----------------------------------------------------------------------------------------------------------------
 
-onMounted(() => {
+onMounted(async () => {
   tableRef.value.requestServerInteraction();
   activeEmployeesDropdown.load(user.siteId);
   projectNameDropdown.load();
   if (search.value.projectIds?.length > 0) projectModulesByProjectIdForDropdown.load(false, false, search.value.projectIds);
   getDropdownTypeByModuleName("SDLC");
-  issueStatusForDropdown.load("Issue Status");
   issuePriorityForDropdown.load("Issue Priority");
-  issueStatusDropdownSingleSelect.load("Issue Status");
   issueTypeForDropdown.load("Issue Type");
+  issueStatusDropdownSingleSelect.load("Issue Status");
+  
+  await issueStatusForDropdown.load("Issue Status");
+  const issueStatus = issueStatusForDropdown.getValuesByLabels(["New", "New from Test Plan"]);
+  if (issueStatus.length && !search.value.statusIds?.length) {
+    search.value.statusIds = issueStatus;
+  }
+
   if (!activeRowId.value) {
     activeRowId.value = null;
   }
   if (search.value.projectModuleIds?.length > 0) requirementsByProjectModuleIdForDropdown.load(search.value.projectModuleIds);
 
   // document.addEventListener("click", handleDocumentClick);
+  refreshIssueList();
 });
 
 </script>

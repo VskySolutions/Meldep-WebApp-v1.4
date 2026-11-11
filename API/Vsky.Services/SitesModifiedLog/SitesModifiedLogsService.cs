@@ -48,6 +48,7 @@ namespace Vsky.Services.SitesModifiedLog
                 SubModuleId = x.SubModuleId,
                 ColumnName = x.ColumnName,
                 ColumnValue = x.ColumnValue,
+                Note = x.Note,
                 LastModifiedBy = x.LastModifiedBy,
                 LastModifiedOnUtc = x.LastModifiedOnUtc,                
                 user = new ApplicationUser
@@ -88,6 +89,7 @@ namespace Vsky.Services.SitesModifiedLog
                 SubModuleId = x.SubModuleId,
                 ColumnName = x.ColumnName,
                 ColumnValue = x.ColumnValue,
+                Note = x.Note,
                 LastModifiedBy = x.LastModifiedBy,
                 LastModifiedOnUtc = x.LastModifiedOnUtc,
                 LastModifiedonUtcStr = x.LastModifiedOnUtc.ToString("MM/dd/yyyy hh:mm:ss tt"),
@@ -118,6 +120,7 @@ namespace Vsky.Services.SitesModifiedLog
                     SubModuleId = x.SubModuleId,
                     ColumnName = x.ColumnName,
                     ColumnValue = x.ColumnValue,
+                    Note = x.Note,
                     LastModifiedBy = x.LastModifiedBy,
                     LastModifiedOnUtc = x.LastModifiedOnUtc,
                     LastModifiedonUtcStr = x.LastModifiedOnUtc.ToString("MM/dd/yyyy hh:mm:ss tt"),
@@ -136,7 +139,7 @@ namespace Vsky.Services.SitesModifiedLog
 
         #endregion
 
-        public void AddSiteModifiedLogs(string SiteId, string TableName, string ModuleId, string ModuleName, string SubModuleId, string SubModule, string ColumnName, string ColumnValue, string LoggedUserId, DateTime GetDateTime)
+        public void AddSiteModifiedLogs(string SiteId, string TableName, string ModuleId, string ModuleName, string SubModuleId, string SubModule, string ColumnName, string ColumnValue, string LoggedUserId, DateTime GetDateTime, string note = null)
         {
             var siteLogs = new SitesModifiedLogs();
             siteLogs.SiteId = SiteId;
@@ -147,6 +150,12 @@ namespace Vsky.Services.SitesModifiedLog
             siteLogs.SubModule = SubModule;
             siteLogs.ColumnName = ColumnName;
             siteLogs.ColumnValue = ColumnValue;
+
+            if(!string.IsNullOrEmpty(note))
+            {
+                siteLogs.Note = note;
+            }
+
             siteLogs.LastModifiedBy = LoggedUserId;
             siteLogs.LastModifiedOnUtc = GetDateTime;
 

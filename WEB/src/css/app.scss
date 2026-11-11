@@ -799,3 +799,11 @@ background-color: inherit;
 .req-dashboard-table .q-table tbody td {
   height: 40px;
 }
+
+.clamped-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; /* Number of lines to show */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -35,6 +35,7 @@ namespace Vsky.Api.Models
         public DateTime? CloseDate { get; set; }
         public string CloseDateStr { get; set; }
         public string Notes { get; set; }
+        public string StatusNote { get; set; }
         public int EditingStatus { get; set; }
         public int RequirementNumber { get; set; }
         public DateTime? PlannedStartDate { get; set; }

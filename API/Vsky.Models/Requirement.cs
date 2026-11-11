@@ -143,6 +143,9 @@ namespace Vsky.Models
         public DateTime? UpdatedOnUtc { get; set; }
         public bool Deleted { get; set; }
 
+        [NotMapped]
+        public int DataMappingNotesCount { get; set; }
+
         public virtual Requirement Requirement { get; set; }
         public virtual Project Project { get; set; }
         public virtual ProjectModule ProjectModule { get; set; }
@@ -173,6 +176,7 @@ namespace Vsky.Models
         public string MappingId { get; set; }
         public string RequirementId { get; set; }
         public string RequirementTitle { get; set; }
+        public int DataMappingNotesCount { get; set; }
         public DateTime? UpdatedOnUtc { get; set; }
         public DateTime? CreatedOnUtc { get; set; }
         public string Source { get; set; }

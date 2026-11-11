@@ -640,6 +640,21 @@
                 :class="{ 'hoverable-cell' : props.row.isEditable }"
                 @click="activeEdit = { rowId: props.row.id, field: 'status' }"
               >
+                <!-- <quickEditSingleSelect
+                  field="status"
+                  :row-id="props.row.id"
+                  :value="props.row.status.id"
+                  :display-value="props.row.status.dropDownValue"
+                  :editable="props.row.isEditable"
+                  :options="requirementStatusDropdownSingleSelect.list.value"
+                  :active-edit="activeEdit"
+                  :show-history="true"
+                  tooltip="Status Change Log"
+                  @filter="requirementStatusDropdownSingleSelect.filter"
+                  @cancel="activeEdit = { rowId: null, field: null }"
+                  @submit="({ rowId, value }) => onSubmitRequirementStatus(rowId, value, refreshRequirementList), openStatusNoteDialog"
+                  @history="() => onSiteModifiedLog(props.row.id, props.row.status.dropDownValue, 'Requirement Status')"
+                /> -->
                 <quickEditSingleSelect
                   field="status"
                   :row-id="props.row.id"
@@ -652,7 +667,7 @@
                   tooltip="Status Change Log"
                   @filter="requirementStatusDropdownSingleSelect.filter"
                   @cancel="activeEdit = { rowId: null, field: null }"
-                  @submit="({ rowId, value }) => onSubmitRequirementStatus(rowId, value, refreshRequirementList)"
+                  @submit="openStatusNoteDialog"
                   @history="() => onSiteModifiedLog(props.row.id, props.row.status.dropDownValue, 'Requirement Status')"
                 />
               </q-td>
@@ -1062,6 +1077,52 @@
     @remove="removeSortLevel"
     @apply="applyMultiSort"
   />
+  <q-dialog v-model="showStatusNoteDialog" persistent>
+  <q-card style="width: 650px; max-width: 90vw;">
+    <q-card-section>
+      <span>Status Change Note</span>
+      <q-editor
+        v-model="statusNote"
+        :toolbar="toolbar"
+        :fonts="fonts"
+        min-height="120px"
+        class="q-mt-sm"
+        placeholder="Enter your note here..."
+      />
+    </q-card-section>
+
+    <q-card-actions align="right">
+      <!-- <q-btn
+        flat
+        label="Cancel"
+        color="grey"
+        v-close-popup
+        @click="pendingStatusChange = null"
+      /> -->
+      <q-btn
+        flat
+        label="Cancel"
+        color="grey"
+        v-close-popup
+        @click="saveRequirementStatus(false)"
+      />
+
+      <!-- <q-btn
+        flat
+        label="Skip"
+        color="primary"
+      /> -->
+
+      <q-btn
+        unelevated
+        label="Save"
+        color="primary"
+        @click="saveRequirementStatus(true)"
+      />
+    </q-card-actions>
+
+  </q-card>
+</q-dialog>
 </template>
 <script setup>
 // Import libraries
@@ -1071,6 +1132,7 @@ import { useRoute } from "vue-router";
 import { zwConfirmDelete, notifySuccess, notifyError, notifyWarning } from "assets/utils";
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
+import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
 import editProjectTask from "modules/project-tasks/components/addEdit.vue";
 import selectMultiRequirement from "modules/requirement/components/_multiRequirementQuickActions.vue";
@@ -1170,6 +1232,7 @@ const showFilter = ref(false);
 const searchLoader = ref(false);
 const showMultiSelectOptions = ref(false);
 const selectedField = ref(null);
+const { fonts, toolbar } = getEditorConfig($q);
 // const multiSelectRequirementIds = ref([]);
 // const multiSelectRequirementTitles = ref([]);
 // const multiSelectRequirementProjectMap = ref({});
@@ -1271,6 +1334,39 @@ function setActiveRowIdInLocalStorage(id) {
     activeRowId: id
   });
 }
+
+// Note for update status
+const showStatusNoteDialog = ref(false);
+const statusNote = ref("");
+const pendingStatusChange = ref(null);
+
+const openStatusNoteDialog = ({ rowId, value }) => {
+  pendingStatusChange.value = {
+    rowId,
+    value
+  };
+
+  statusNote.value = "";
+  showStatusNoteDialog.value = true;
+};
+
+const saveRequirementStatus = async (includeNote) => {
+  if (!pendingStatusChange.value) return;
+
+  const { rowId, value } = pendingStatusChange.value;
+
+  await onSubmitRequirementStatus(
+    rowId,
+    value,
+    refreshRequirementList,
+    includeNote ? statusNote.value : null
+  );
+
+  showStatusNoteDialog.value = false;
+  pendingStatusChange.value = null;
+  statusNote.value = "";
+};
+
 // Table variables
 const tableRef = ref();
 const rows = ref([]);
