@@ -20,6 +20,8 @@ namespace Vsky.Api.Controllers
     /// [Authorize]) who holds the admin, site-super-admin or system-super-admin role. The JWT carries role
     /// names as typed in AspNetRoles ("Site Super Admin"), so the check normalises them instead of relying on
     /// [Authorize(Roles = ...)]'s exact, case-sensitive match.
+    /// One region per register: "Timesheet Register" and "TimeInTimeOut-MovementRegister" (the Attendance
+    /// Register); the helpers at the end serve both.
     /// </summary>
     [Route("Analytics")]
     public class AnalyticsController : BaseController
@@ -35,6 +37,7 @@ namespace Vsky.Api.Controllers
 
         #region Fields
         private readonly ITimesheetRegisterService _timesheetRegisterService;
+        private readonly IAttendanceRegisterService _attendanceRegisterService;
         private readonly ISiteService _siteService;
         private readonly GlobalVariable _globalVariable;
         #endregion
@@ -42,14 +45,18 @@ namespace Vsky.Api.Controllers
         #region Ctor
         public AnalyticsController(
             ITimesheetRegisterService timesheetRegisterService,
+            IAttendanceRegisterService attendanceRegisterService,
             ISiteService siteService,
             GlobalVariable globalVariable)
         {
             _timesheetRegisterService = timesheetRegisterService;
+            _attendanceRegisterService = attendanceRegisterService;
             _siteService = siteService;
             _globalVariable = globalVariable;
         }
         #endregion
+
+        #region Timesheet Register
 
         #region GetTimesheetRegister
         /// <summary>Every active employee of the site against every day of the range, each day classified.</summary>
@@ -128,6 +135,95 @@ namespace Vsky.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        #endregion
+
+        #endregion
+
+        #region TimeInTimeOut-MovementRegister (Attendance Register)
+
+        #region GetAttendanceRegister
+        /// <summary>
+        /// TimeInTimeOut and the Movement Register merged: every active employee of the site against every day of
+        /// the range, each day judged (on time, late, short hours, no time-out, absent, work from home, leave,
+        /// holiday) and carrying its breaks, time adjustments and work from home.
+        /// </summary>
+        [HttpPost("attendance-register")]
+        public async Task<IActionResult> GetAttendanceRegister(AttendanceRegisterSearchModel model)
+        {
+            try
+            {
+                if (!IsAdmin()) return AdminOnly();
+
+                if (model == null || !TryParseDate(model.FromDate, out var fromDate) || !TryParseDate(model.ToDate, out var toDate))
+                    return BadRequest("From date and To date are required (yyyy-MM-dd).");
+
+                var siteId = _globalVariable.SiteId;
+                var result = await _attendanceRegisterService.GetRegisterAsync(new AttendanceRegisterQuery
+                {
+                    SiteId = siteId,
+                    TimeZoneId = await ResolveTimeZoneIdAsync(siteId),
+                    FromDate = fromDate,
+                    ToDate = toDate,
+                    EmployeeIds = model.EmployeeIds
+                });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetAttendanceRegisterDay
+        /// <summary>One employee on one day, with the time-ins and the Movement Register entries behind the cell.</summary>
+        [HttpGet("attendance-register/day")]
+        public async Task<IActionResult> GetAttendanceRegisterDay([FromQuery] string employeeId, [FromQuery] string date)
+        {
+            try
+            {
+                if (!IsAdmin()) return AdminOnly();
+
+                if (string.IsNullOrWhiteSpace(employeeId) || !TryParseDate(date, out var day))
+                    return BadRequest("employeeId and date (yyyy-MM-dd) are required.");
+
+                var siteId = _globalVariable.SiteId;
+                var result = await _attendanceRegisterService.GetDayDetailAsync(siteId, await ResolveTimeZoneIdAsync(siteId), employeeId, day);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetAttendanceRegisterEmployee
+        /// <summary>One employee over a period (at most a quarter): the register row, the days, every time-in and every Movement Register entry.</summary>
+        [HttpGet("attendance-register/employee")]
+        public async Task<IActionResult> GetAttendanceRegisterEmployee([FromQuery] string employeeId, [FromQuery] string fromDate, [FromQuery] string toDate)
+        {
+            try
+            {
+                if (!IsAdmin()) return AdminOnly();
+
+                if (string.IsNullOrWhiteSpace(employeeId) || !TryParseDate(fromDate, out var from) || !TryParseDate(toDate, out var to))
+                    return BadRequest("employeeId, fromDate and toDate (yyyy-MM-dd) are required.");
+
+                var siteId = _globalVariable.SiteId;
+                var result = await _attendanceRegisterService.GetEmployeeDetailAsync(siteId, await ResolveTimeZoneIdAsync(siteId), employeeId, from, to);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #endregion
 
         #region Helpers

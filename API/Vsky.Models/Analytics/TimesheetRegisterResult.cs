@@ -149,7 +149,11 @@ namespace Vsky.Models.Analytics
         public int LateMinutes { get; set; }
     }
 
-    public class RegisterRow
+    /// <summary>
+    /// Who a register row is about. Shared by every Analytics register (Timesheet, Attendance): each one adds
+    /// its own cells and totals.
+    /// </summary>
+    public class RegisterEmployee
     {
         public string EmployeeId { get; set; }
         public string EmployeeCode { get; set; }
@@ -166,7 +170,13 @@ namespace Vsky.Models.Analytics
         public string ShiftSource { get; set; }
         public string JoiningDate { get; set; }
         public string ReleaseDate { get; set; }
+    }
+
+    public class RegisterRow : RegisterEmployee
+    {
+        [JsonPropertyOrder(1)]
         public List<RegisterCell> Cells { get; set; } = new List<RegisterCell>();
+        [JsonPropertyOrder(2)]
         public RegisterRowTotals Totals { get; set; } = new RegisterRowTotals();
     }
 

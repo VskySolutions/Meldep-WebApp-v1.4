@@ -12,30 +12,40 @@
     <span v-if="half" class="tsr-cell__half" aria-hidden="true">½</span>
     <span v-if="text && !compact" class="tsr-cell__text">{{ text }}</span>
     <span v-if="extra && !compact" class="tsr-cell__extra">{{ extra }}</span>
-    <span v-if="cell.preFilled && cell.state !== 'Future'" class="tsr-cell__dot" aria-hidden="true" />
+    <span v-if="tags.length && !compact" class="tsr-cell__tags" aria-hidden="true">{{ tags.join("") }}</span>
+    <span v-if="dot" class="tsr-cell__dot" aria-hidden="true" />
+    <span v-if="flag" class="tsr-cell__flag" aria-hidden="true" />
   </button>
 </template>
 
 <script setup>
-// One employee-day of the register: an icon or glyph for the state, the hours when there is room, "½" under a
-// half-day leave. The explanation on hover comes from the grid's shared hover card (one for all cells), so
-// the cell itself stays as light as possible.
+// One employee-day of a register: an icon or glyph for the state, the text when there is room, "½" under a
+// half-day leave, and the markers the register's vocabulary asks for (a corner dot, a corner flag, letters).
+// The explanation on hover comes from the grid's shared hover card (one for all cells), so the cell itself
+// stays as light as possible. What a state looks like and what the text says come from the vocabulary; the
+// Timesheet Register's is the default.
 import { computed } from "vue";
-import { stateOf, cellText, cellExtra, isHalfDay } from "modules/analytics/utils/registerStates";
+import { TIMESHEET_VOCAB } from "modules/analytics/utils/registerStates";
 
 const props = defineProps({
   cell: { type: Object, required: true },
   day: { type: Object, default: null },
   row: { type: Object, default: null },
-  compact: { type: Boolean, default: false }
+  compact: { type: Boolean, default: false },
+  // What the text shows when the vocabulary offers more than one reading ("hours", "inout").
+  mode: { type: String, default: "hours" },
+  vocab: { type: Object, default: () => TIMESHEET_VOCAB }
 });
 
 defineEmits(["click"]);
 
-const state = computed(() => stateOf(props.cell));
-const half = computed(() => isHalfDay(props.cell));
-const text = computed(() => cellText(props.cell));
-const extra = computed(() => cellExtra(props.cell));
+const state = computed(() => props.vocab.stateOf(props.cell));
+const half = computed(() => props.vocab.isHalfDay(props.cell));
+const text = computed(() => props.vocab.cellText(props.cell, props.mode));
+const extra = computed(() => props.vocab.cellExtra(props.cell));
+const tags = computed(() => props.vocab.cellTags(props.cell));
+const dot = computed(() => props.vocab.cellDot(props.cell, props.compact));
+const flag = computed(() => props.vocab.cellFlag(props.cell));
 const ariaLabel = computed(() => `${props.row?.fullName || ""} ${props.day?.date || ""}: ${state.value.label}${half.value ? ", half-day leave" : ""}${text.value ? " " + text.value : ""}`.trim());
 
 const classes = computed(() => [
@@ -44,7 +54,7 @@ const classes = computed(() => [
   {
     "tsr-cell--compact": props.compact,
     "tsr-cell--half": half.value,
-    "tsr-cell--off": ["Holiday", "Future", "NotEmployed"].includes(state.value.key)
+    "tsr-cell--off": props.vocab.offStates.includes(state.value.key)
   }
 ]);
 </script>
@@ -109,6 +119,17 @@ const classes = computed(() => [
   font-size: 10px;
   color: var(--ink-500, #647a82);
 }
+/* Letters beside the text, in one small chip: what else the day carries (W, B, T on the Attendance Register). */
+.tsr-cell__tags {
+  padding: 2px 3px;
+  border-radius: 3px;
+  background: rgba(22, 38, 44, 0.07);
+  color: var(--ink-700, #3a4d54);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
 .tsr-cell__dot {
   position: absolute;
   top: 2px;
@@ -117,6 +138,17 @@ const classes = computed(() => [
   height: 5px;
   border-radius: 50%;
   background: var(--ink-500, #647a82);
+}
+/* A small amber corner, top-left: a second fact about the day that its state does not show. */
+.tsr-cell__flag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-top: 8px solid #c98a00;
+  border-right: 8px solid transparent;
+  border-top-left-radius: 5px;
 }
 /* Non-working days recede: no fill, a hatch for holidays. */
 .tsr-cell--off {

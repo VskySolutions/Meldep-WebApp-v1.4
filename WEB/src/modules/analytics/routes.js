@@ -21,13 +21,26 @@ export default [
     component: () => import("layouts/layout.vue"),
     children: [
       { path: "", redirect: "/analytics/timesheet-register" },
+
+      // #region Timesheet Register
       {
         path: "timesheet-register",
         name: "analytics-timesheet-register",
         component: () => import("modules/analytics/pages/timesheetRegister.vue"),
         meta: { requiresAuth: true, title: "Timesheet Register" },
         beforeEnter: requireAdmin
+      },
+      // #endregion Timesheet Register
+
+      // #region TimeInTimeOut-MovementRegister (Attendance Register)
+      {
+        path: "attendance-register",
+        name: "analytics-attendance-register",
+        component: () => import("modules/analytics/pages/attendanceRegister.vue"),
+        meta: { requiresAuth: true, title: "Attendance Register" },
+        beforeEnter: requireAdmin
       }
+      // #endregion TimeInTimeOut-MovementRegister (Attendance Register)
     ]
   }
 ];

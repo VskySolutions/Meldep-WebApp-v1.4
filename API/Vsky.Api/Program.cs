@@ -383,6 +383,7 @@ namespace Vsky.Api
             builder.Services.AddScoped<IDailyPlannerLineService, DailyPlannerLineService>();
             builder.Services.AddScoped<ITimesheetService,TimesheetService>();
             builder.Services.AddScoped<ITimesheetRegisterService, TimesheetRegisterService>();
+            builder.Services.AddScoped<IAttendanceRegisterService, AttendanceRegisterService>();
             builder.Services.AddScoped<ITimesheetLinesService, TimesheetLinesService>();
             builder.Services.AddScoped<ITimesheetAISummaryService, TimesheetAISummaryService>();
             builder.Services.AddScoped<IEmployeeTypeService, EmployeeTypeService>();

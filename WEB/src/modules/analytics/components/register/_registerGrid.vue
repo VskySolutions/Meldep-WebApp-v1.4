@@ -2,6 +2,7 @@
   <div
     ref="root"
     :class="['tsr-grid', { 'tsr-grid--compact': compact }]"
+    :style="gridStyle"
     @mouseover="onOver"
     @mouseleave="hideHover"
     @focusin="onOver"
@@ -35,7 +36,7 @@
               <div class="tsr-tip__text">{{ dayText(day) }}</div>
             </q-tooltip>
           </th>
-          <th v-for="col in TOTAL_COLUMNS" :key="col.key" class="tsr-th tsr-th--tot">
+          <th v-for="col in totalColumns" :key="col.key" class="tsr-th tsr-th--tot">
             <span class="tsr-abbr">{{ col.abbr }}</span>
             <q-tooltip :delay="150" max-width="320px" anchor="bottom middle" self="top middle">
               <div class="tsr-tip__title">{{ col.full }}</div>
@@ -49,7 +50,7 @@
         <tr v-for="(row, r) in rows" :key="row.employeeId" class="tsr-tr">
           <td class="tsr-td tsr-td--emp">
             <div class="tsr-emp">
-              <!-- Name opens the employee record; the icon opens the employee's timesheet. Siblings, one tooltip each. -->
+              <!-- Name opens the employee record; the icon opens the employee's detail panel. Siblings, one tooltip each. -->
               <div
                 class="tsr-emp__link"
                 role="button"
@@ -71,12 +72,12 @@
                 dense
                 size="sm"
                 color="grey-7"
-                icon="o_receipt_long"
+                :icon="vocab.sheet.icon"
                 class="tsr-emp__sheet"
-                :aria-label="`View the timesheet of ${row.fullName}`"
+                :aria-label="vocab.sheet.aria(row)"
                 @click="$emit('timesheet', row)"
               >
-                <q-tooltip :delay="200">View this employee's timesheet for the period or any week</q-tooltip>
+                <q-tooltip :delay="200">{{ vocab.sheet.tooltip }}</q-tooltip>
               </q-btn>
             </div>
           </td>
@@ -99,11 +100,24 @@
               :day="days[i]"
               :row="row"
               :compact="compact"
+              :mode="mode"
+              :vocab="vocab"
               @click="$emit('cell', { row, day: days[i], cell: row.cells[i] })"
             />
           </td>
-          <td v-for="col in TOTAL_COLUMNS" :key="col.key" :class="['tsr-td', 'tsr-td--tot', col.cls]">
-            {{ col.value(row.totals || {}) }}
+          <td v-for="col in totalColumns" :key="col.key" :class="['tsr-td', 'tsr-td--tot', col.cls]">
+            <!-- A total the vocabulary marks with an action opens what is behind it (native title: no tooltip per cell). -->
+            <button
+              v-if="col.action && col.value(row.totals || {}) !== ''"
+              type="button"
+              class="tsr-tot-link"
+              :title="col.actionHint || col.full"
+              :aria-label="`${col.full} of ${row.fullName}: ${col.value(row.totals || {})}. ${col.actionHint || ''}`"
+              @click="$emit('total', { row, column: col })"
+            >
+              {{ col.value(row.totals || {}) }}
+            </button>
+            <template v-else>{{ col.value(row.totals || {}) }}</template>
           </td>
         </tr>
       </tbody>
@@ -111,13 +125,10 @@
       <tfoot>
         <tr class="tsr-foot">
           <td class="tsr-td tsr-td--emp tsr-foot__label">
-            <span class="tsr-abbr">Complete / expected</span>
+            <span class="tsr-abbr">{{ vocab.foot.label }}</span>
             <q-tooltip :delay="150" max-width="320px" anchor="top middle" self="bottom middle">
-              <div class="tsr-tip__title">Complete / expected</div>
-              <div class="tsr-tip__text">
-                Per day: employees whose expected hours were reached (on time or late), out of those expected
-                to fill the day. Days before joining, holidays and full-day leaves are not expected.
-              </div>
+              <div class="tsr-tip__title">{{ vocab.foot.label }}</div>
+              <div class="tsr-tip__text">{{ vocab.foot.text }}</div>
             </q-tooltip>
           </td>
           <td class="tsr-td tsr-td--shift" />
@@ -126,14 +137,14 @@
             :key="days[i].date"
             :class="['tsr-td', 'tsr-td--cell', 'tsr-foot__cell', dayClass(days[i])]"
           >
-            <template v-if="perDay[i] && perDay[i].expected">{{ perDay[i].complete }}/{{ perDay[i].expected }}</template>
+            <template v-if="vocab.foot.value(perDay[i])">{{ vocab.foot.value(perDay[i]) }}</template>
             <span v-else class="text-grey-5">–</span>
             <q-tooltip :delay="150" max-width="300px" anchor="top middle" self="bottom middle">
               <div class="tsr-tip__title">{{ formatDayLabel(days[i].date) }}</div>
-              <div class="tsr-tip__text">{{ footText(perDay[i], days[i]) }}</div>
+              <div class="tsr-tip__text">{{ vocab.foot.detail(perDay[i], days[i]) }}</div>
             </q-tooltip>
           </td>
-          <td v-for="col in TOTAL_COLUMNS" :key="col.key" :class="['tsr-td', 'tsr-td--tot', col.cls]">
+          <td v-for="col in totalColumns" :key="col.key" :class="['tsr-td', 'tsr-td--tot', col.cls]">
             {{ col.value(totals) }}
           </td>
         </tr>
@@ -161,43 +172,58 @@
 <script setup>
 // The register itself: a plain table (not q-table) so the employee column and the header can stay put while
 // a month of columns scrolls, and so thousands of cells render without per-cell overhead beyond the cell
-// button. Rows are employees, columns are days, the footer counts complete days per column. Every short
-// form (OT, Dly, Par, Pnd, Hrs, S1, H, L, ½) has a tooltip with its full form; cells share one delegated
-// hover card. The grid takes its full content height (the page scrolls); only the columns scroll sideways.
+// button. Rows are employees, columns are days, the footer counts the day's result per column. Every short
+// form (the total heads, S1, H, L, ½) has a tooltip with its full form; cells share one delegated hover
+// card. The grid takes its full content height (the page scrolls); only the columns scroll sideways.
+// It serves every Analytics register: the states, the texts, the total columns, the footer and the row action
+// come from the register's vocabulary (utils/registerStates); the Timesheet Register's is the default.
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
 import AppAvatar from "components/common/AppAvatar.vue";
 import RegisterCell from "modules/analytics/components/register/_registerCell.vue";
-import { TOTAL_COLUMNS, cellHover } from "modules/analytics/utils/registerStates";
+import { TIMESHEET_VOCAB } from "modules/analytics/utils/registerStates";
 import { formatDayLabel } from "modules/analytics/composables/useDateRangePresets";
 
 const props = defineProps({
   days: { type: Array, default: () => [] },
   rows: { type: Array, default: () => [] },
-  // Per-day totals aligned with `days`: { expected, complete, onTime, delayed, partial, pending, due, leave }
+  // Per-day totals aligned with `days`, in the shape the vocabulary's footer reads.
   perDay: { type: Array, default: () => [] },
-  // The rules the API applied (shift windows and cutoffs), for the shift tooltips.
+  // The rules the API applied (shift windows and what follows from them), for the shift tooltips and the hover card.
   rules: { type: Object, default: null },
   compact: { type: Boolean, default: false },
-  hideHolidays: { type: Boolean, default: false }
+  hideHolidays: { type: Boolean, default: false },
+  // What a cell's text shows when the vocabulary offers more than one reading ("hours", "inout").
+  mode: { type: String, default: "hours" },
+  // The register's vocabulary: states, cell texts, hover card, total columns, footer and row action.
+  vocab: { type: Object, default: () => TIMESHEET_VOCAB }
 });
 
-defineEmits(["cell", "employee", "timesheet"]);
+// "total": a period total that carries an action was clicked ({ row, column }).
+defineEmits(["cell", "employee", "timesheet", "total"]);
 
 const visibleIndexes = computed(() =>
   props.days.map((d, i) => i).filter((i) => !props.hideHolidays || !props.days[i].isHoliday));
 
 const visibleDays = computed(() => visibleIndexes.value.map((i) => props.days[i]));
 
+const totalColumns = computed(() => props.vocab.totalColumns || []);
+
+// The footer's period totals: every numeric total of the rows on screen, added up.
 const totals = computed(() => {
-  const t = { loggedHours: 0, onTime: 0, delayed: 0, partial: 0, pending: 0 };
+  const t = {};
   for (const row of props.rows) {
-    t.loggedHours += Number(row.totals?.loggedHours || 0);
-    t.onTime += row.totals?.onTime || 0;
-    t.delayed += row.totals?.delayed || 0;
-    t.partial += row.totals?.partial || 0;
-    t.pending += row.totals?.pending || 0;
+    for (const [key, value] of Object.entries(row.totals || {})) {
+      const number = Number(value);
+      if (Number.isFinite(number)) t[key] = (t[key] || 0) + number;
+    }
   }
   return t;
+});
+
+// A vocabulary can ask for wider day columns (more text per cell); the compact view keeps its own width.
+const gridStyle = computed(() => {
+  const width = props.vocab.cellWidth?.[props.mode] || props.vocab.cellWidth?.hours;
+  return width ? { "--tsr-cell-width": `${width}px` } : null;
 });
 
 const root = ref(null);
@@ -241,7 +267,7 @@ onBeforeUnmount(() => {
   hideHover();
 });
 
-watch(() => [props.rows, props.days, props.compact, props.hideHolidays], () => nextTick(pinHeader));
+watch(() => [props.rows, props.days, props.compact, props.hideHolidays, props.mode], () => nextTick(pinHeader));
 
 // ---- hover card ----------------------------------------------------------------------------------------
 const hover = ref(null);
@@ -265,12 +291,12 @@ function onOver (event) {
     return;
   }
   const key = `${row.employeeId}|${day.date}`;
-  if (hover.value?.key !== key) hover.value = { key, ...cellHover(row, day, cell) };
+  if (hover.value?.key !== key) hover.value = { key, ...props.vocab.cellHover(row, day, cell, props.rules) };
 
   const rect = td.getBoundingClientRect();
   const half = CARD_WIDTH / 2 + 8;
   const x = Math.min(Math.max(rect.left + rect.width / 2, half), window.innerWidth - half);
-  const above = rect.bottom + CARD_GUESS_HEIGHT > window.innerHeight;
+  const above = rect.bottom + (props.vocab.hoverHeight || CARD_GUESS_HEIGHT) > window.innerHeight;
   hoverPos.value = { x, y: above ? rect.top - 6 : rect.bottom + 6, above };
 }
 
@@ -302,7 +328,7 @@ function dayClass (day) {
 
 function dayText (day) {
   if (day.isHoliday) return day.holidayTitle || "Holiday";
-  if (day.isToday) return "Today. Days are “due” until their cutoff passes.";
+  if (day.isToday) return props.vocab.todayText || "Today.";
   if (day.isFuture) return "Not yet due.";
   return "Working day.";
 }
@@ -327,23 +353,10 @@ function shiftFull (row) {
 
 function shiftText (row) {
   const rule = shiftRule(row.shift);
-  const window = rule ? `${rule.start}–${rule.end}${rule.endsNextDay ? " (next day)" : ""}, cutoff ${rule.cutoff}` : "";
+  const window = rule ? props.vocab.shiftWindow(rule) : "";
   if (row.shiftAssigned) return window ? `Works ${window}.` : "";
   const says = row.shiftSource ? ` The record says “${row.shiftSource}”, which is not a known shift.` : "";
   return `Judged as ${row.shift}${window ? ` (${window})` : ""}, the default, until a shift is set on the employee's designation record.${says}`;
-}
-
-function footText (t, day) {
-  if (!t || !t.expected) return day?.isHoliday ? (day.holidayTitle || "Holiday") : "No one was expected to fill this day.";
-  return [
-    `${t.expected} expected`,
-    `${t.onTime} on time`,
-    `${t.delayed} delayed`,
-    `${t.partial} partial`,
-    `${t.pending} pending`,
-    t.due ? `${t.due} due` : "",
-    t.leave ? `${t.leave} on leave` : ""
-  ].filter(Boolean).join(" · ");
 }
 </script>
 
@@ -444,7 +457,7 @@ function footText (t, day) {
 }
 .tsr-th--day,
 .tsr-td--cell {
-  min-width: 70px;
+  min-width: var(--tsr-cell-width, 70px);
 }
 .tsr-td--cell {
   padding: 2px 3px;
@@ -466,6 +479,29 @@ function footText (t, day) {
 .tsr-td--dly { color: #a66f00; }
 .tsr-td--par { color: #c2410c; }
 .tsr-td--pnd { color: #b32424; font-weight: 600; }
+/* A total that opens its details: the brand colour and a tint on hover, no underline. It fills the cell so the whole number is the target. */
+.tsr-tot-link {
+  display: block;
+  width: 100%;
+  padding: 1px 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--q-primary);
+  font: inherit;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  text-decoration: none;
+  cursor: pointer;
+}
+.tsr-tot-link:hover {
+  background: var(--brand-100, #e3f1f8);
+}
+.tsr-tot-link:focus-visible {
+  outline: 2px solid var(--q-primary);
+  outline-offset: 1px;
+}
 
 .tsr-col--holiday {
   background: #f4f6f7;

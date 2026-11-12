@@ -10,6 +10,7 @@
       <span :class="['tsr-legend__swatch', { 'tsr-legend__swatch--plain': item.plain }]">
         <q-icon v-if="item.icon" :name="item.icon" size="13px" />
         <span v-else-if="item.dot" class="tsr-legend__dot" />
+        <span v-else-if="item.flag" class="tsr-legend__flag" />
         <small v-else-if="item.small">{{ item.glyph }}</small>
         <b v-else>{{ item.glyph }}</b>
       </span>
@@ -24,41 +25,16 @@
 
 <script setup>
 // The key to the cells, in the order of the state list, each with its icon or glyph so the grid is never read
-// by colour alone. Hover an item for its full form and the one-line definition.
-import { STATES, STATE_ORDER } from "modules/analytics/utils/registerStates";
+// by colour alone. Hover an item for its full form and the one-line definition. The items (states first, then
+// the markers a cell can carry) come from the register's vocabulary; the Timesheet Register's is the default.
+import { computed } from "vue";
+import { TIMESHEET_VOCAB } from "modules/analytics/utils/registerStates";
 
-const stateItems = STATE_ORDER
-  .filter((k) => k !== "NotEmployed")
-  .map((k) => ({ key: k, label: STATES[k].label, full: STATES[k].label, icon: STATES[k].icon, glyph: STATES[k].glyph, colour: STATES[k].colour, description: STATES[k].description }));
+const props = defineProps({
+  vocab: { type: Object, default: () => TIMESHEET_VOCAB }
+});
 
-const items = [
-  ...stateItems,
-  {
-    key: "half",
-    label: "Half-day leave",
-    full: "½ · Half-day leave",
-    glyph: "½",
-    plain: true,
-    description: "A half-day leave covers the day, so 4 hours are expected instead of 8. The cell is still judged on time, delayed, partial or pending against those 4 hours."
-  },
-  {
-    key: "prefilled",
-    label: "Pre-filled",
-    full: "Pre-filled",
-    dot: true,
-    plain: true,
-    description: "The hours were entered before the day had started. Counts as on time, but worth a look."
-  },
-  {
-    key: "offday",
-    label: "Hours on an off day",
-    full: "+8 · Hours on an off day",
-    glyph: "+8",
-    small: true,
-    plain: true,
-    description: "Hours were logged on a holiday, a leave day or a future day. The day keeps its H, L or future state; the hint shows how many hours."
-  }
-];
+const items = computed(() => props.vocab.legendItems || []);
 </script>
 
 <style scoped>
@@ -104,6 +80,20 @@ const items = [
   height: 5px;
   border-radius: 50%;
   background: var(--ink-500, #647a82);
+}
+/* The amber corner a cell carries, drawn in the swatch's own top-left corner. */
+.tsr-legend__swatch {
+  position: relative;
+}
+.tsr-legend__flag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-top: 9px solid #c98a00;
+  border-right: 9px solid transparent;
+  border-top-left-radius: 5px;
 }
 .tsr-tip__title {
   font-size: 12.5px;

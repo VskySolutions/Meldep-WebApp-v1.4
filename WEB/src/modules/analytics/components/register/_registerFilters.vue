@@ -106,6 +106,20 @@
       class="tsr-filters__select"
       @update:model-value="set('states', $event)"
     />
+    <!-- Filters only one register has (the Attendance Register's "Movement"). -->
+    <app-select
+      v-for="extra in extraSelects"
+      :key="extra.key"
+      :model-value="filters[extra.key] || []"
+      :label="extra.label"
+      multiple
+      use-input
+      :placeholder="(filters[extra.key] || []).length ? '' : extra.placeholder"
+      :info="extra.info"
+      :options="options[extra.key] || []"
+      class="tsr-filters__select"
+      @update:model-value="set(extra.key, $event)"
+    />
     <app-text-field
       :model-value="search"
       label="Search"
@@ -116,11 +130,11 @@
     />
 
     <div class="tsr-filters__field">
-      <app-field-label label="Density" />
+      <app-field-label :label="densityLabel" />
       <app-segmented-control
         :model-value="density"
-        :options="densityOptions"
-        aria-label="Density"
+        :options="densityChoices"
+        :aria-label="densityLabel"
         @update:model-value="$emit('update:density', $event)"
       />
     </div>
@@ -154,7 +168,9 @@
 // The register's filters: one wrapping row of labelled controls, aligned to the top, under the title bar.
 // Everything but the period is applied in the browser to the rows already loaded, so a change shows at
 // once; the period reloads (presets at once, By Weeks on each Sunday picked, Custom on Apply). Team Lead
-// and Team Members come from the org structure: the members list follows the chosen leads.
+// and Team Members come from the org structure: the members list follows the chosen leads. Both registers use
+// it as is; a register can add selects of its own (extraSelects) and name its own cell densities.
+import { computed } from "vue";
 import AppSegmentedControl from "components/common/AppSegmentedControl.vue";
 import AppDateField from "components/common/AppDateField.vue";
 import AppSelect from "components/common/AppSelect.vue";
@@ -178,7 +194,13 @@ const props = defineProps({
   search: { type: String, default: "" },
   density: { type: String, default: "hours" },
   // How many filters are active, for the Clear button.
-  activeCount: { type: Number, default: 0 }
+  activeCount: { type: Number, default: 0 },
+  // The density choices and their label, when a register shows its cells in other ways than the default three.
+  densityOptions: { type: Array, default: null },
+  densityLabel: { type: String, default: "Density" },
+  // Extra multi-selects after "Day state": [{ key, label, placeholder, info }]. The value lives in
+  // filters[key] and the choices in options[key].
+  extraSelects: { type: Array, default: () => [] }
 });
 
 const emit = defineEmits([
@@ -188,11 +210,13 @@ const emit = defineEmits([
 
 const presetOptions = PRESETS.map((p) => ({ value: p.value, label: p.label, icon: p.icon }));
 
-const densityOptions = [
+const DEFAULT_DENSITIES = [
   { value: "auto", label: "Auto", tooltip: "Hours for up to two weeks, compact beyond" },
   { value: "hours", label: "Hours", icon: "o_view_comfy", tooltip: "Show the logged hours in every cell" },
   { value: "compact", label: "Compact", icon: "o_view_compact", tooltip: "Icons only; fits a whole month" }
 ];
+
+const densityChoices = computed(() => props.densityOptions || DEFAULT_DENSITIES);
 
 function pickDate (which, value) {
   emit(`update:${which}`, value || "");

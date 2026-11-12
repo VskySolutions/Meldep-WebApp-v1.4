@@ -13,23 +13,20 @@ using Vsky.Models.Analytics;
 namespace Vsky.Services.Analytics
 {
     /// <summary>
-    /// Builds the Timesheet Register from four set-based queries (holidays, employees with their designation and
-    /// department history, leaves, timesheet headers with the hours and entry time of each line) and classifies
-    /// every employee-day in memory with <see cref="TimesheetRegisterRules"/>. Line descriptions are never loaded
-    /// for the matrix; they come only through <see cref="GetDayDetailAsync"/>.
+    /// Builds the Timesheet Register: the shared <see cref="RegisterContext"/> (period, holidays, employees, team
+    /// leads, leaves) plus one query for the timesheet headers with the hours and entry time of each line, then
+    /// classifies every employee-day in memory with <see cref="TimesheetRegisterRules"/>. Line descriptions are
+    /// never loaded for the matrix; they come only through <see cref="GetDayDetailAsync"/>.
     /// </summary>
     public class TimesheetRegisterService : ITimesheetRegisterService
     {
-        private const string IsoDate = "yyyy-MM-dd";
-        private const string IsoMinute = "yyyy-MM-dd'T'HH:mm";
+        private const string IsoDate = RegisterContext.IsoDate;
+        private const string IsoMinute = RegisterContext.IsoMinute;
 
         #region Fields
-        private readonly IRepository<Employee> _employeeRepository;
-        private readonly IRepository<EmployeeLeave> _employeeLeaveRepository;
-        private readonly IRepository<LeaveSchedules> _leaveScheduleRepository;
+        private readonly RegisterContextLoader _contextLoader;
         private readonly IRepository<Timesheet> _timesheetRepository;
         private readonly IRepository<TimesheetLines> _timesheetLinesRepository;
-        private readonly IRepository<EmployeeOrgStructure> _employeeOrgStructureRepository;
         #endregion
 
         #region Ctor
@@ -41,12 +38,9 @@ namespace Vsky.Services.Analytics
             IRepository<TimesheetLines> timesheetLinesRepository,
             IRepository<EmployeeOrgStructure> employeeOrgStructureRepository)
         {
-            _employeeRepository = employeeRepository;
-            _employeeLeaveRepository = employeeLeaveRepository;
-            _leaveScheduleRepository = leaveScheduleRepository;
+            _contextLoader = new RegisterContextLoader(employeeRepository, employeeLeaveRepository, leaveScheduleRepository, employeeOrgStructureRepository);
             _timesheetRepository = timesheetRepository;
             _timesheetLinesRepository = timesheetLinesRepository;
-            _employeeOrgStructureRepository = employeeOrgStructureRepository;
         }
         #endregion
 
@@ -54,156 +48,26 @@ namespace Vsky.Services.Analytics
         public async Task<TimesheetRegisterResult> GetRegisterAsync(TimesheetRegisterQuery query)
         {
             if (query == null) throw new ArgumentNullException(nameof(query));
-            if (string.IsNullOrWhiteSpace(query.SiteId)) throw new ArgumentException("Site is required.");
 
-            var from = query.FromDate.Date;
-            var to = query.ToDate.Date;
-            if (to < from) (from, to) = (to, from);
-            var dayCount = (to - from).Days + 1;
-            if (dayCount > TimesheetRegisterRules.MaxRangeDays)
-                throw new ArgumentException($"The register covers at most {TimesheetRegisterRules.MaxRangeDays} days per request; narrow the date range.");
-            var toExclusive = to.AddDays(1);
+            // The period, the holidays, the employees with their team leads and the leaves: shared by every register.
+            var context = await _contextLoader.LoadAsync(query.SiteId, query.TimeZoneId, query.FromDate, query.ToDate, query.EmployeeIds, query.NowUtc);
+            var siteId = context.SiteId;
+            var from = context.From;
+            var to = context.To;
+            var toExclusive = context.ToExclusive;
+            var tz = context.TimeZone;
+            var nowLocal = context.NowLocal;
+            var today = context.Today;
+            var employees = context.Employees;
+            var employeeIds = context.EmployeeIds;
+            var leaves = context.Leaves;
+            var days = context.Days;
 
-            var tz = ResolveTimeZone(query.TimeZoneId);
-            var nowUtc = DateTime.SpecifyKind(query.NowUtc ?? DateTime.UtcNow, DateTimeKind.Utc);
-            var nowLocal = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, tz);
-            var today = nowLocal.Date;
-            var filterEmployees = query.EmployeeIds != null && query.EmployeeIds.Count > 0;
-            var siteId = query.SiteId;
-
-            // 1. Holidays of the site in the range (LeaveSchedule). Sundays are added per day by the rules.
-            var holidayRows = await _leaveScheduleRepository.TableNoTracking
-                .Where(x => !x.Deleted && x.SiteId == siteId && x.Date != null && x.Date >= from && x.Date < toExclusive)
-                .Select(x => new { x.Date, x.Title })
-                .ToListAsync();
-
-            var holidays = holidayRows
-                .GroupBy(x => x.Date.Value.Date)
-                .ToDictionary(
-                    g => g.Key,
-                    g => string.Join(", ", g.Select(h => (h.Title ?? string.Empty).Trim()).Where(t => t.Length > 0).Distinct()));
-
-            // 2. Active employees with their designation (shift) and department history. Client contacts are
-            //    stored as employees too; a department record is what marks a real employee, so rows without
-            //    one are left out.
-            var employeeQuery = _employeeRepository.TableNoTracking
-                .Where(e => !e.Deleted && e.Active && e.SiteId == siteId && e.Person != null && !e.Person.Deleted
-                    && e.EmployeeDepartment.Any(d => !d.Deleted));
-            if (filterEmployees)
-                employeeQuery = employeeQuery.Where(e => query.EmployeeIds.Contains(e.Id));
-
-            var employees = await employeeQuery
-                .Select(e => new EmployeeSnapshot
-                {
-                    Id = e.Id,
-                    EmployeeCode = e.EmployeeCode,
-                    FirstName = e.Person.FirstName,
-                    LastName = e.Person.LastName,
-                    Email = e.OfficialEmail ?? e.Person.PrimaryEmailAddress,
-                    JoiningDate = e.JoiningDate,
-                    ReleaseDate = e.ReleaseDate,
-                    Designations = e.EmployeeDesignation
-                        .Where(d => !d.Deleted)
-                        .Select(d => new PeriodSnapshot
-                        {
-                            Value = d.Shift != null ? d.Shift.DropDownValue : null,
-                            StartDate = d.StartDate,
-                            EndDate = d.EndDate,
-                            CreatedOnUtc = d.CreatedOnUtc
-                        })
-                        .ToList(),
-                    Departments = e.EmployeeDepartment
-                        .Where(d => !d.Deleted)
-                        .Select(d => new PeriodSnapshot
-                        {
-                            Value = d.Department != null ? d.Department.Name : null,
-                            StartDate = d.StartDate,
-                            EndDate = d.EndDate,
-                            CreatedOnUtc = d.CreatedOnUtc
-                        })
-                        .ToList()
-                })
-                .ToListAsync();
-
-            employees = employees
-                .OrderBy(e => e.FirstName ?? string.Empty)
-                .ThenBy(e => e.LastName ?? string.Empty)
-                .ToList();
-            var employeeIds = new HashSet<string>(employees.Select(e => e.Id));
-            var employeeIdList = employeeIds.ToList();
-
-            // 2b. Team lead of each employee: the manager on the latest org-structure row (by year, then creation).
-            var orgRows = await _employeeOrgStructureRepository.TableNoTracking
-                .Where(o => !o.Deleted && employeeIdList.Contains(o.EmployeeId))
-                .Select(o => new
-                {
-                    o.EmployeeId,
-                    o.ManagerId,
-                    o.Year,
-                    o.CreatedOnUtc,
-                    ManagerFirstName = o.Manager != null && o.Manager.Person != null ? o.Manager.Person.FirstName : null,
-                    ManagerLastName = o.Manager != null && o.Manager.Person != null ? o.Manager.Person.LastName : null
-                })
-                .ToListAsync();
-
-            var teamLeads = orgRows
-                .GroupBy(o => o.EmployeeId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.OrderByDescending(o => o.Year).ThenByDescending(o => o.CreatedOnUtc).First());
-
-            // 3. Leaves overlapping the range. Any status that is not declined/cancelled covers the day.
-            var leaveQuery = _employeeLeaveRepository.TableNoTracking
-                .Where(l => !l.Deleted && l.FromDate < toExclusive && l.ToDate >= from);
-            leaveQuery = filterEmployees
-                ? leaveQuery.Where(l => query.EmployeeIds.Contains(l.EmployeeId))
-                : leaveQuery.Where(l => l.Employee.SiteId == siteId);
-
-            var leaveRows = await leaveQuery
-                .Select(l => new
-                {
-                    l.EmployeeId,
-                    l.FromDate,
-                    l.ToDate,
-                    l.IsHalfDay,
-                    l.HalfDayType,
-                    Status = l.LeaveStatuses != null ? l.LeaveStatuses.DropDownValue : null,
-                    Category = l.LeaveCategories != null ? l.LeaveCategories.DropDownValue : null
-                })
-                .ToListAsync();
-
-            var leaves = new Dictionary<(string EmployeeId, DateTime Date), RegisterLeave>();
-            foreach (var leave in leaveRows)
-            {
-                if (!employeeIds.Contains(leave.EmployeeId) || !TimesheetRegisterRules.IsLeaveCounted(leave.Status))
-                    continue;
-
-                var kind = leave.IsHalfDay
-                    ? (string.IsNullOrWhiteSpace(leave.HalfDayType) ? "Half day" : leave.HalfDayType.Trim())
-                    : TimesheetRegisterRules.FullDayLeaveKind;
-                var start = leave.FromDate.Date < from ? from : leave.FromDate.Date;
-                var end = leave.ToDate.Date > to ? to : leave.ToDate.Date;
-
-                for (var date = start; date <= end; date = date.AddDays(1))
-                {
-                    var candidate = new RegisterLeave
-                    {
-                        Kind = kind,
-                        Status = leave.Status,
-                        Category = leave.Category,
-                        IsApproved = TimesheetRegisterRules.IsLeaveApproved(leave.Status)
-                    };
-                    var key = (leave.EmployeeId, date);
-                    if (!leaves.TryGetValue(key, out var existing) || Outranks(candidate, existing))
-                        leaves[key] = candidate;
-                }
-            }
-
-            // 4. Timesheet headers of the range with the hours and entry time of every line.
+            // Timesheet headers of the range with the hours and entry time of every line.
             var timesheetQuery = _timesheetRepository.TableNoTracking
                 .Where(t => !t.Deleted && t.SiteId == siteId && t.TimesheetDate != null && t.TimesheetDate >= from && t.TimesheetDate < toExclusive);
-            if (filterEmployees)
-                timesheetQuery = timesheetQuery.Where(t => query.EmployeeIds.Contains(t.EmployeeId));
+            if (context.FilterEmployees)
+                timesheetQuery = timesheetQuery.Where(t => context.RequestedEmployeeIds.Contains(t.EmployeeId));
 
             var timesheetRows = await timesheetQuery
                 .Select(t => new TimesheetSnapshot
@@ -239,26 +103,7 @@ namespace Vsky.Services.Analytics
                     day.Entries.Add(new RegisterEntry { Hours = line.Hours, EnteredAtLocal = ToLocal(line.CreatedOnUtc, tz) });
             }
 
-            // 5. Days, then one row per employee, classified cell by cell.
-            var days = new List<RegisterDay>(dayCount);
-            for (var date = from; date <= to; date = date.AddDays(1))
-            {
-                var weeklyOff = TimesheetRegisterRules.IsWeeklyOff(date);
-                var isHoliday = holidays.TryGetValue(date, out var title);
-                days.Add(new RegisterDay
-                {
-                    Date = date.ToString(IsoDate, CultureInfo.InvariantCulture),
-                    Day = date.ToString("ddd", CultureInfo.InvariantCulture),
-                    DayNumber = date.Day,
-                    Month = date.ToString("MMM", CultureInfo.InvariantCulture),
-                    IsWeeklyOff = weeklyOff,
-                    IsHoliday = weeklyOff || isHoliday,
-                    HolidayTitle = !string.IsNullOrEmpty(title) ? title : (weeklyOff ? "Weekly off" : (isHoliday ? "Holiday" : null)),
-                    IsToday = date == today,
-                    IsFuture = date > today
-                });
-            }
-
+            // One row per employee, classified cell by cell.
             var result = new TimesheetRegisterResult
             {
                 FromDate = from.ToString(IsoDate, CultureInfo.InvariantCulture),
@@ -272,30 +117,10 @@ namespace Vsky.Services.Analytics
             summary.Employees = employees.Count;
             summary.PerDay = days.Select(d => new RegisterDayTotal { Date = d.Date }).ToList();
 
-            var shiftAsOf = to < today ? to : today;
             foreach (var employee in employees)
             {
-                var shiftSource = PeriodValue(employee.Designations, shiftAsOf);
-                var shift = TimesheetRegisterRules.ResolveShift(shiftSource, out var shiftAssigned);
-                if (!shiftAssigned) summary.EmployeesWithoutShift++;
-
-                var row = new RegisterRow
-                {
-                    EmployeeId = employee.Id,
-                    EmployeeCode = employee.EmployeeCode,
-                    FullName = FullName(employee),
-                    Email = employee.Email,
-                    Department = PeriodValue(employee.Departments, shiftAsOf),
-                    TeamLeadId = teamLeads.TryGetValue(employee.Id, out var lead) ? lead.ManagerId : null,
-                    TeamLeadName = teamLeads.TryGetValue(employee.Id, out var leadName) && leadName.ManagerId != null
-                        ? ($"{leadName.ManagerFirstName} {leadName.ManagerLastName}".Trim().Length > 0 ? $"{leadName.ManagerFirstName} {leadName.ManagerLastName}".Trim() : leadName.ManagerId)
-                        : null,
-                    Shift = shift.Name,
-                    ShiftAssigned = shiftAssigned,
-                    ShiftSource = string.IsNullOrWhiteSpace(shiftSource) ? null : shiftSource.Trim(),
-                    JoiningDate = Iso(employee.JoiningDate),
-                    ReleaseDate = Iso(employee.ReleaseDate)
-                };
+                var row = context.NewRow<RegisterRow>(employee);
+                if (!row.ShiftAssigned) summary.EmployeesWithoutShift++;
 
                 for (var i = 0; i < days.Count; i++)
                 {
@@ -355,7 +180,7 @@ namespace Vsky.Services.Analytics
             var row = register.Rows.FirstOrDefault()
                 ?? throw new ArgumentException("The employee was not found among the active employees of this site.");
 
-            var tz = ResolveTimeZone(timeZoneId);
+            var tz = RegisterContext.ResolveTimeZone(timeZoneId);
 
             var lines = await _timesheetLinesRepository.TableNoTracking
                 .Where(l => !l.Deleted
@@ -374,7 +199,8 @@ namespace Vsky.Services.Analytics
                     ProjectModule = l.ProjectModule != null ? l.ProjectModule.Name : null,
                     Task = l.Task != null ? l.Task.Name : null,
                     Activity = l.ProjectActivity != null ? l.ProjectActivity.Name : null,
-                    l.Description,
+                    // The column is nullable in the database although the model calls it required; a bare read throws on NULL.
+                    Description = l.Description ?? string.Empty,
                     l.Hours,
                     l.BillableHours,
                     l.CreatedOnUtc,
@@ -431,8 +257,7 @@ namespace Vsky.Services.Analytics
             }
 
             // Employment bounds first: nothing is expected before joining or after release.
-            if ((employee.JoiningDate != null && date < employee.JoiningDate.Value.Date)
-                || (employee.ReleaseDate != null && date > employee.ReleaseDate.Value.Date))
+            if (!RegisterContext.IsEmployedOn(employee, date))
                 return Finish(cell, RegisterCellState.NotEmployed);
 
             // Sunday or a LeaveSchedule date (the title travels on the day column).
@@ -455,7 +280,7 @@ namespace Vsky.Services.Analytics
             }
 
             // The shift (as of that date) gives the cutoff.
-            var shift = TimesheetRegisterRules.ResolveShift(PeriodValue(employee.Designations, date), out var shiftAssigned);
+            var shift = TimesheetRegisterRules.ResolveShift(RegisterContext.PeriodValue(employee.Designations, date), out var shiftAssigned);
             cell.Shift = shift.Name;
             cell.ShiftAssigned = shiftAssigned;
             var cutoff = TimesheetRegisterRules.CutoffFor(date, shift);
@@ -530,81 +355,10 @@ namespace Vsky.Services.Analytics
             }
         }
 
-        /// <summary>A full-day leave outranks a half day; an approved leave outranks one still in the workflow.</summary>
-        private static bool Outranks(RegisterLeave candidate, RegisterLeave existing)
-        {
-            var candidateFull = candidate.Kind == TimesheetRegisterRules.FullDayLeaveKind;
-            var existingFull = existing.Kind == TimesheetRegisterRules.FullDayLeaveKind;
-            if (candidateFull != existingFull) return candidateFull;
-            return candidate.IsApproved && !existing.IsApproved;
-        }
-
-        /// <summary>
-        /// The value (shift, department) in force on a date: the row whose start/end period covers it, latest
-        /// start first; otherwise the most recent row that has a value at all.
-        /// </summary>
-        private static string PeriodValue(List<PeriodSnapshot> rows, DateTime asOf)
-        {
-            if (rows == null || rows.Count == 0) return null;
-
-            var withValue = rows.Where(r => !string.IsNullOrWhiteSpace(r.Value)).ToList();
-            if (withValue.Count == 0) return null;
-
-            var covering = withValue
-                .Where(r => (r.StartDate == null || r.StartDate.Value.Date <= asOf) && (r.EndDate == null || r.EndDate.Value.Date >= asOf))
-                .OrderByDescending(r => r.StartDate ?? DateTime.MinValue)
-                .ThenByDescending(r => r.CreatedOnUtc ?? DateTime.MinValue)
-                .FirstOrDefault();
-
-            var chosen = covering ?? withValue
-                .OrderByDescending(r => r.StartDate ?? DateTime.MinValue)
-                .ThenByDescending(r => r.CreatedOnUtc ?? DateTime.MinValue)
-                .First();
-
-            return chosen.Value;
-        }
         #endregion
 
         #region Helpers
-        private static TimeZoneInfo ResolveTimeZone(string id)
-        {
-            foreach (var candidate in new[] { id, TimesheetRegisterRules.DefaultTimeZoneId })
-            {
-                if (string.IsNullOrWhiteSpace(candidate)) continue;
-                try
-                {
-                    return TimeZoneInfo.FindSystemTimeZoneById(candidate.Trim());
-                }
-                catch (TimeZoneNotFoundException) { }
-                catch (InvalidTimeZoneException) { }
-            }
-
-            return TimeZoneInfo.Utc;
-        }
-
-        /// <summary>Entry times are stored as UTC (SiteService.GetDateTime returns UtcNow) with an unspecified kind.</summary>
-        private static DateTime ToLocal(DateTime utc, TimeZoneInfo tz)
-        {
-            try
-            {
-                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), tz);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                return utc;
-            }
-        }
-
-        private static string Iso(DateTime? date)
-        {
-            return date?.ToString(IsoDate, CultureInfo.InvariantCulture);
-        }
-
-        private static string FullName(EmployeeSnapshot employee)
-        {
-            var name = $"{employee.FirstName} {employee.LastName}".Trim();
-            return name.Length > 0 ? name : (employee.EmployeeCode ?? employee.Id);
-        }
+        private static DateTime ToLocal(DateTime utc, TimeZoneInfo tz) => RegisterContext.ToLocal(utc, tz);
 
         private static readonly Regex HtmlTag = new Regex("<[^>]+>", RegexOptions.Compiled);
         private static readonly Regex WhiteSpace = new Regex(@"\s+", RegexOptions.Compiled);
@@ -621,28 +375,7 @@ namespace Vsky.Services.Analytics
         #endregion
     }
 
-    #region Query snapshots (what the four queries project into)
-    internal sealed class EmployeeSnapshot
-    {
-        public string Id { get; set; }
-        public string EmployeeCode { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
-        public DateTime? JoiningDate { get; set; }
-        public DateTime? ReleaseDate { get; set; }
-        public List<PeriodSnapshot> Designations { get; set; } = new List<PeriodSnapshot>();
-        public List<PeriodSnapshot> Departments { get; set; } = new List<PeriodSnapshot>();
-    }
-
-    internal sealed class PeriodSnapshot
-    {
-        public string Value { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public DateTime? CreatedOnUtc { get; set; }
-    }
-
+    #region Query snapshots (what the timesheet query projects into)
     internal sealed class TimesheetSnapshot
     {
         public string EmployeeId { get; set; }
