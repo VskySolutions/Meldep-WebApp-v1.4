@@ -324,7 +324,19 @@
                     </div>
                     <div class="row q-col-gutter-x-md q-mb-md">
                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                        <div v-if="model.id">
+                          <label class="q-mb-xs text-black">Planned Start Date</label>
+                          <q-input
+                            v-model="model.plannedStartDateStr"
+                            outlined
+                            stack-label
+                            hide-bottom-space
+                            :dense="true"
+                            :readonly="true"
+                          />
+                        </div>
                         <formDate
+                          v-else
                           v-model="model.plannedStartDateStr"
                           label="Planned Start Date"
                           :required="false"
@@ -332,7 +344,19 @@
                         />
                       </div>
                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                        <div v-if="model.id">
+                          <label class="q-mb-xs text-black">Planned End Date</label>
+                          <q-input
+                            v-model="model.plannedEndDateStr"
+                            outlined
+                            stack-label
+                            hide-bottom-space
+                            :dense="true"
+                            :readonly="true"
+                          />
+                        </div>
                         <formDate
+                          v-else
                           v-model="model.plannedEndDateStr"
                           label="Planned End Date"
                           :required="false"
@@ -341,7 +365,19 @@
                         />
                       </div>
                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                        <div v-if="model.id">
+                          <label class="q-mb-xs text-black">Actual Start Date</label>
+                          <q-input
+                            v-model="model.actualStartDateStr"
+                            outlined
+                            stack-label
+                            hide-bottom-space
+                            :dense="true"
+                            :readonly="true"
+                          />
+                        </div>
                         <formDate
+                          v-else
                           v-model="model.actualStartDateStr"
                           label="Actual Start Date"
                           :required="false"
@@ -351,7 +387,19 @@
                     </div>
                     <div class="row q-col-gutter-x-md q-mb-md">
                       <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+                        <div v-if="model.id">
+                          <label class="q-mb-xs text-black">Actual End Date</label>
+                          <q-input
+                            v-model="model.actualEndDateStr"
+                            outlined
+                            stack-label
+                            hide-bottom-space
+                            :dense="true"
+                            :readonly="true"
+                          />
+                        </div>
                         <formDate
+                          v-else
                           v-model="model.actualEndDateStr"
                           label="Actual End Date"
                           :required="false"

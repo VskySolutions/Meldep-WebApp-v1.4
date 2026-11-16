@@ -143,9 +143,9 @@ namespace Vsky.Api.Controllers
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
-                    var exists = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByTitle(SiteId, model.ProjectId, model.Title);
+                    var exists = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByTitle(SiteId, model.ProjectId, model.RequirementId, model.Title);
                     if (exists != null)
-                        return BadRequest(new BadRequestError("Project question already exists"));
+                        return BadRequest(new BadRequestError("Question already exists, try with another."));
 
                     var questionAnswerId = Guid.NewGuid().ToString();
                     var entity = new ProjectQuestionsAnswers
@@ -259,7 +259,7 @@ namespace Vsky.Api.Controllers
                         return BadRequest(new BadRequestError("No project questions answer found with the specified id."));
 
                     //Check if the project questions answer already exists
-                    var exists = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByTitle(SiteId, model.ProjectId, model.Title, id);
+                    var exists = await _projectQuestionsAnswerService.GetProjectQuestionsAnswerByTitle(SiteId, model.ProjectId, model.RequirementId, model.Title, id);
                     if (exists != null)
                         return BadRequest(new BadRequestError("Question already exists, try with another."));
 

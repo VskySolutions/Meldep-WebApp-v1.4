@@ -73,7 +73,7 @@
         <div v-if="model.names.length === 1" class="row full-width q-mb-md">
           <div class="col-12 col-sm-12 col-md-12 col-lg-12">
             <div class="q-mb-xs text-black">
-              <label>Weekly/Monthly Plan Short Description</label>
+              <label>Weekly/Monthly Plan Short Description<span class="required">*</span></label>
             </div>
             <div class="form-group">
               <q-editor
@@ -81,8 +81,15 @@
                 :dense="$q.screen.lt.md"
                 :toolbar="toolbar"
                 :fonts="fonts"
+                @blur="v$.description.$touch()"
               />
             </div>
+              <div
+                v-if="v$.description.$error"
+                class="text-negative text-caption q-mt-xs"
+              >
+                {{ v$.description.$errors[0]?.$message }}
+              </div>
           </div>
         </div>
         <div class="row full-width flex justify-center q-px-sm">
@@ -95,10 +102,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useQuasar, date } from "quasar";
 import { notifySuccess } from "assets/utils";
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
+import { helpers } from "@vuelidate/validators";
+import useVuelidate from "@vuelidate/core";
 
 import projectService from "modules/project/projects.service";
 
@@ -186,6 +195,35 @@ const dateErrorMessage = ref("");
 // Regex to match MM/DD/YYYY format
 const validDateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
 
+// ----------------------------------------------------------------------------------------------------------------
+// Requirement Info - Validation Rules
+// ----------------------------------------------------------------------------------------------------------------
+const descriptionRequired = helpers.withMessage(
+  "Description is required",
+  value => {
+    if (!value) return false;
+    const descriptionText = stripHtml(value);
+    const containsImage = hasImage(value);
+    return descriptionText || containsImage;
+  }
+);
+
+const stripHtml = (html) => {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+};
+
+const hasImage = (html) => {
+  if (!html) return false;
+  return /<img\s+[^>]*src=/i.test(html);
+};
+
+const rules = computed(() => ({
+  description: { descriptionRequired }
+}));
+
+const v$ = useVuelidate(rules, model);
+
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 // Project Monthly Date
 // --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -232,7 +270,12 @@ const {
 // On Save: Link Requirement/Task/Issue
 // --------------------------------------------------------------------------------------------------------------------------------------------------
 
-const OnSave = () => {
+const OnSave = async () => {
+  const isValid = await v$.value.$validate();
+  if (!isValid) {
+    return;
+  }
+
   const title = `Link ${model.value.type} To ${showWeeklyMonthlyCalendar.value ? "Monthly" : "Weekly"} Plan`;
   // show a warning message advising the user to create a task first before linking
   const message = props.hasTaskLink > 0
@@ -294,6 +337,7 @@ watch(
       !newModelValue?.type ||
       !newModelValue?.ids ||
       newModelValue?.ids.length === 0 ||
+      !stripHtml(newModelValue?.description) && !hasImage(newModelValue?.description) ||
       dateError.value;
 
     disableActionButton.value = hasMissingData;
