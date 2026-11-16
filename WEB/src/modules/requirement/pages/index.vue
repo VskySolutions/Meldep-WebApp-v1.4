@@ -1003,16 +1003,16 @@
                         v-ripple clickable
                         @click="onEditRequirementDataMapping(props.row.id, props.row.projectId, props.row.projectModuleId, true, refreshRequirementList)"
                       >
-                        <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
+                        <q-item-section avatar><q-icon name="o_account_tree" size="xs" /></q-item-section>
                         <q-item-section>Edit Data Mapping</q-item-section>
                       </q-item>
                       <q-item
                         v-if="props.row.isEditable"
                         v-ripple clickable
                         class=""
-                        @click="onEditRequirementStatusTracking(null, props.row.projectId, props.row.projectModuleId, props.row.id, null, null, refreshRequirementList)"
+                        @click="onEditRequirementStatusTracking(props.row.projectId, props.row.projectModuleId, props.row.id, refreshRequirementList)"
                       >
-                        <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
+                        <q-item-section avatar><q-icon name="o_track_changes" size="xs" /></q-item-section>
                         <q-item-section>Edit Status Tracking</q-item-section>
                       </q-item>
                       <q-item v-if="props.row.isEditable">
