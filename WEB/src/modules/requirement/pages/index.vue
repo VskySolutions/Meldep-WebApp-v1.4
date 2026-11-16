@@ -666,7 +666,7 @@
                   tooltip="Status Change Log"
                   @filter="requirementStatusDropdownSingleSelect.filter"
                   @cancel="activeEdit = { rowId: null, field: null }"
-                  @submit="openStatusNoteDialog"
+                  @submit="({ rowId, value }) => openUpdateNoteDialog({rowId, value, field: 'status', label: 'Requirement Status'})"
                   @history="() => onSiteModifiedLog(props.row.id, props.row.status.dropDownValue, 'Requirement Status')"
                 />
               </q-td>
@@ -861,27 +861,73 @@
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('plannedStartDate')"
-                class="common-q-td text-center"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : props.row.isEditable }"
+                @click="activeEdit = { rowId: props.row.id, field: 'plannedStartDate' }"
               >
-                  {{ props.row.plannedStartDate }}
+                <quickEditDate
+                  :row-id="props.row.id"
+                  :model-value="props.row.plannedStartDateStr"
+                  :editable="props.row.isEditable"
+                  :show-history="true"
+                  changeDateTooltip="Change Planned Start Date"
+                  changeLogTooltip="Planned Start Date Change Log"
+                  @submit="({ rowId, value }) => openUpdateNoteDialog({rowId, value, field: 'plannedStartDate', label: 'Planned Start Date'})"
+                  @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Planned Start Date')"
+                />
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('plannedEndDate')"
-                class="common-q-td text-center"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : props.row.isEditable }"
+                @click="activeEdit = { rowId: props.row.id, field: 'plannedEndDate' }"
               >
-                  {{ props.row.plannedEndDate }}
+                <quickEditDate
+                  :row-id="props.row.id"
+                  :model-value="props.row.plannedEndDateStr"
+                  :editable="props.row.isEditable"
+                  :show-history="true"
+                  :date-options="disableBeforeStartDate(props.row.plannedStartDateStr)"
+                  changeDateTooltip="Change Planned End Date"
+                  changeLogTooltip="Planned End Date Change Log"
+                  @submit="({ rowId, value }) => openUpdateNoteDialog({rowId, value, field: 'plannedEndDate', label: 'Planned End Date'})"
+                  @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Planned End Date')"
+                />
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('actualStartDate')"
-                class="common-q-td text-center"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : props.row.isEditable }"
+                @click="activeEdit = { rowId: props.row.id, field: 'actualStartDate' }"
               >
-                  {{ props.row.actualStartDate }}
+                <quickEditDate
+                  :row-id="props.row.id"
+                  :model-value="props.row.actualStartDateStr"
+                  :editable="props.row.isEditable"
+                  :show-history="true"
+                  changeDateTooltip="Change Actual Start Date"
+                  changeLogTooltip="Actual Start Date Change Log"
+                  @submit="({ rowId, value }) => openUpdateNoteDialog({rowId, value, field: 'actualStartDate', label: 'Actual Start Date'})"
+                  @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Actual Start Date')"
+                />
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('actualEndDate')"
-                class="common-q-td text-center"
+                class="common-q-td"
+                :class="{ 'hoverable-cell' : props.row.isEditable }"
+                @click="activeEdit = { rowId: props.row.id, field: 'actualEndDate' }"
               >
-                  {{ props.row.actualEndDate }}
+                <quickEditDate
+                  :row-id="props.row.id"
+                  :model-value="props.row.actualEndDateStr"
+                  :editable="props.row.isEditable"
+                  :show-history="true"
+                  :date-options="disableBeforeStartDate(props.row.actualStartDateStr)"
+                  changeDateTooltip="Change Actual End Date"
+                  changeLogTooltip="Actual End Date Change Log"
+                  @submit="({ rowId, value }) => openUpdateNoteDialog({rowId, value, field: 'actualEndDate', label: 'Actual End Date'})"
+                  @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Actual End Date')"
+                />
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('confirmedBy.person.firstName')"
@@ -1085,52 +1131,51 @@
     @remove="removeSortLevel"
     @apply="applyMultiSort"
   />
-  <q-dialog v-model="showStatusNoteDialog" persistent>
-  <q-card style="width: 650px; max-width: 90vw;">
-    <q-card-section>
-      <span>Status Change Note</span>
-      <q-editor
-        v-model="statusNote"
-        :toolbar="toolbar"
-        :fonts="fonts"
-        min-height="120px"
-        class="q-mt-sm"
-        placeholder="Enter your note here..."
-      />
-    </q-card-section>
+  <q-dialog v-model="showStatusNoteDialog" persistent @hide="handleNoteDialogClose">
+    <q-card style="width: 650px; max-width: 90vw;">
+      <q-card-section>
+        <!-- <span>Status Change Note</span> -->
+        <span>{{ noteDialogTitle }}</span>
+        <q-editor
+          v-model="statusNote"
+          :toolbar="toolbar"
+          :fonts="fonts"
+          min-height="120px"
+          class="q-mt-sm"
+          placeholder="Enter your note here..."
+        />
+      </q-card-section>
 
-    <q-card-actions align="right">
-      <!-- <q-btn
-        flat
-        label="Cancel"
-        color="grey"
-        v-close-popup
-        @click="pendingStatusChange = null"
-      /> -->
-      <q-btn
-        flat
-        label="Cancel"
-        color="grey"
-        v-close-popup
-        @click="saveRequirementStatus(false)"
-      />
-
-      <!-- <q-btn
-        flat
-        label="Skip"
-        color="primary"
-      /> -->
-
-      <q-btn
-        unelevated
-        label="Save"
-        color="primary"
-        @click="saveRequirementStatus(true)"
-      />
-    </q-card-actions>
-
-  </q-card>
-</q-dialog>
+      <q-card-actions align="right">
+        <!-- <q-btn
+          flat
+          label="Cancel"
+          color="grey"
+          v-close-popup
+          @click="saveRequirementStatus(false)"
+        />
+        <q-btn
+          unelevated
+          label="Save"
+          color="primary"
+          @click="saveRequirementStatus(true)"
+        /> -->
+        <q-btn
+          flat
+          label="Cancel"
+          color="grey"
+          v-close-popup
+          @click="savePendingUpdate(false)"
+        />
+        <q-btn
+          unelevated
+          label="Save"
+          color="primary"
+          @click="savePendingUpdate(true)"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 <script setup>
 // Import libraries
@@ -1141,6 +1186,7 @@ import { zwConfirmDelete, notifySuccess, notifyError, notifyWarning } from "asse
 import { useAuthStore } from "stores/auth";
 import useFilters from "composables/useFilters";
 import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
+import { parse } from "date-fns"; // Standard TimeZone Conversion
 
 import editProjectTask from "modules/project-tasks/components/addEdit.vue";
 import selectMultiRequirement from "modules/requirement/components/_multiRequirementQuickActions.vue";
@@ -1156,6 +1202,7 @@ import quickEditSingleSelect from "src/components/dataTable/_quickEditSingleSele
 import multiColumnSortingDialog from "src/components/dataTable/_multiColumnSortingDialog.vue";
 import columnVisibilityMenu from "src/components/dataTable/_columnVisibilityMenu.vue";
 import manageDropdownOptions from "src/components/dataTable/_manageDropdownOptions.vue";
+import quickEditDate from "src/components/dataTable/_quickEditDate.vue";
 
 // SOP Change :- Shared Inputs
 import multiSelectDropdown from "src/components/form-inputs/_multiSelectDropdown.vue";
@@ -1235,7 +1282,8 @@ import {
   onSubmitRequirementTags,
   onSubmitRequirementStatus,
   onSubmitRequirementPriority,
-  onSubmitRequirementDelete
+  onSubmitRequirementDelete,
+  onSubmitRequirementDate
 } from "src/modules/requirement/utils/actions.js";
 
 // Common variables
@@ -1349,35 +1397,95 @@ function setActiveRowIdInLocalStorage(id) {
 }
 
 // Note for update status
+// const showStatusNoteDialog = ref(false);
+// const statusNote = ref("");
+// const pendingStatusChange = ref(null);
+
+// const openStatusNoteDialog = ({ rowId, value }) => {
+//   pendingStatusChange.value = {
+//     rowId,
+//     value
+//   };
+
+//   statusNote.value = "";
+//   showStatusNoteDialog.value = true;
+// };
+
+// const saveRequirementStatus = async (includeNote) => {
+//   if (!pendingStatusChange.value) return;
+
+//   const { rowId, value } = pendingStatusChange.value;
+
+//   await onSubmitRequirementStatus(
+//     rowId,
+//     value,
+//     refreshRequirementList,
+//     includeNote ? statusNote.value : null
+//   );
+
+//   showStatusNoteDialog.value = false;
+//   pendingStatusChange.value = null;
+//   statusNote.value = "";
+// };
+
 const showStatusNoteDialog = ref(false);
 const statusNote = ref("");
-const pendingStatusChange = ref(null);
+const pendingUpdate = ref(null);
+let isSavingPendingUpdate = false;
 
-const openStatusNoteDialog = ({ rowId, value }) => {
-  pendingStatusChange.value = {
+const noteDialogTitle = computed(() =>
+  `${pendingUpdate.value?.label || "Update"} Note`
+);
+
+const openUpdateNoteDialog  = ({ rowId, value, field, label }) => {
+  pendingUpdate.value = {
     rowId,
-    value
+    value,
+    field,
+    label
   };
 
   statusNote.value = "";
   showStatusNoteDialog.value = true;
 };
 
-const saveRequirementStatus = async (includeNote) => {
-  if (!pendingStatusChange.value) return;
+// Save common update
+const savePendingUpdate = async (includeNote = true) => {
+  if (!pendingUpdate.value || isSavingPendingUpdate) return;
 
-  const { rowId, value } = pendingStatusChange.value;
+  isSavingPendingUpdate = true;
 
-  await onSubmitRequirementStatus(
-    rowId,
-    value,
-    refreshRequirementList,
-    includeNote ? statusNote.value : null
-  );
+  const { rowId, value, field } = pendingUpdate.value;
+  const note = includeNote ? (statusNote.value || null) : null;
+
+  if (field === "status") {
+    await onSubmitRequirementStatus(
+      rowId,
+      value,
+      refreshRequirementList,
+      note
+    );
+  }
+  else {
+    // await onSubmitPlannedStartDate(
+    //   rowId,
+    //   value,
+    //   note,
+    //   refreshRequirementList
+    // );
+    await onSubmitRequirementDate(
+      rowId,
+      value,
+      field,
+      note,
+      refreshRequirementList
+    );
+  }
 
   showStatusNoteDialog.value = false;
-  pendingStatusChange.value = null;
+  pendingUpdate.value = null;
   statusNote.value = "";
+  isSavingPendingUpdate = false;
 };
 
 // Table variables
@@ -1463,22 +1571,6 @@ const getAllRequirement = async ({ pagination: p }) => {
     const storedRequirementIds = getStoredSelectedRequirementIds();
     const resp = await requirementService.getAllRequirement(payload);
 
-    // rows.value = resp.data.map(requirement => {
-    //   return {
-    //     ...requirement,
-    //     checkboxStatus: storedRequirementIds.includes(requirement.id),
-    //     isNotes: requirement.project?.currentUserNotes ?? false,
-    //     isEditable: requirement.project?.currentUserManage,
-
-    //     requirementTags:
-    //       requirement.requirementTags?.map(tag => ({
-    //         text: tag.tags.name,
-    //         value: tag.tags.id,
-    //         color: tag.tags.color,
-    //         bgColor: tag.tags.bgColor
-    //       })) ?? []
-    //   };
-    // });
     rows.value = resp.data.map(requirement => {
       const isEditable =
         requirement.project?.currentUserManage ?? false;
@@ -1494,6 +1586,18 @@ const getAllRequirement = async ({ pagination: p }) => {
         checkboxStatus: storedRequirementIds.includes(requirement.id),
         isNotes: requirement.project?.currentUserNotes ?? false,
         isEditable,
+        plannedStartDateStr: requirement.plannedStartDate
+          ? toDate(requirement.plannedStartDate)
+          : null,
+        plannedEndDateStr: requirement.plannedEndDate
+          ? toDate(requirement.plannedEndDate)
+          : null,
+        actualStartDateStr: requirement.actualStartDate
+          ? toDate(requirement.actualStartDate)
+          : null,
+        actualEndDateStr: requirement.actualEndDate
+          ? toDate(requirement.actualEndDate)
+          : null,
 
         requirementTags:
           requirement.requirementTags?.map(tag => ({
@@ -1580,6 +1684,26 @@ const refreshRequirementList = () => {
 
 const refreshRequirementTagDropdown = () => {
   requirementTagsDropdown.load();
+};
+
+const disableBeforeStartDate = (startDateStr) => {
+  if (!startDateStr) return () => true;
+
+  // Convert MM/dd/yyyy string to Date
+  const start = parse(startDateStr, "MM/dd/yyyy", new Date());
+
+  return (date) => {
+    // If incoming date is yyyy/MM/dd
+    const currentDate = parse(date, "yyyy/MM/dd", new Date());
+
+    return currentDate >= start;
+  };
+};
+
+const handleNoteDialogClose = () => {
+  if (pendingUpdate.value && !isSavingPendingUpdate) {
+    savePendingUpdate(false);
+  }
 };
 
 const sortColumn = (col) => {

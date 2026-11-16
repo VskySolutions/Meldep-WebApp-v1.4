@@ -138,4 +138,21 @@ namespace Vsky.Api.Models
         public string Source { get; set; }
         public string Target { get; set; }
     }
+
+    public class UpdateDatesAndNoteModel
+    {
+        public string RequirementId { get; set; }
+        public string PlannedStartDateStr { get; set; }
+        public string PlannedStartDateNote { get; set; }
+
+        public string PlannedEndDateStr { get; set; }
+        public string PlannedEndDateNote { get; set; }
+
+        public string ActualStartDateStr { get; set; }
+        public string ActualStartDateNote { get; set; }
+
+        public string ActualEndDateStr { get; set; }
+        public string ActualEndDateNote { get; set; }
+    }
+
 }

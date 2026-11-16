@@ -77,6 +77,25 @@ export default {
     return http.put("/requirement/requirementDescription", model).then(response => response.data);
   },
 
+  updateRequirementDates(model) {
+    const payload = { ...model };
+
+    const dateFields = [
+      "plannedStartDateStr",
+      "plannedEndDateStr",
+      "actualStartDateStr",
+      "actualEndDateStr"
+    ];
+
+    dateFields.forEach(field => {
+      if (payload[field]) {
+        payload[field] = payload[field].replace(/\//g, "-");
+      }
+    });
+
+    return http.put("/requirement/update-dates", payload).then(response => response.data);
+  },
+
   deleteRequirement (id) {
     return http.delete(`/requirement/${id}`).then(response => response.data);
   },

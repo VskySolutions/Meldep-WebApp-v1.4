@@ -1210,6 +1210,141 @@ namespace Vsky.Api.Controllers
         }
 
         #endregion
+   
+        #region UpdateRequirementDates
+
+        [HttpPut("update-dates")]
+        public async Task<IActionResult> UpdateRequirementDates([FromBody] UpdateDatesAndNoteModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var LoggedUserId = User.GetLoggedInUserId<string>();
+                    var SiteId = _globalVariable.SiteId;
+                    var SiteData = await _siteService.GetById(SiteId);
+                    var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                    var entity = await _requirementService.GetRequirementById(model.RequirementId);
+
+                    if (entity == null)
+                        return BadRequest(new BadRequestError("No requirement found with the specified id."));
+
+                    string dateField = null;
+                    string dateValue = null;
+                    string note = null;
+                    string logValue = null;
+
+                    if (!string.IsNullOrEmpty(model.PlannedStartDateStr))
+                    {
+                        dateField = "Planned Start Date";
+                        dateValue = model.PlannedStartDateStr;
+                        note = model.PlannedStartDateNote;
+                        logValue = "PlannedStartDate";
+                    }
+                    else if (!string.IsNullOrEmpty(model.PlannedEndDateStr))
+                    {
+                        dateField = "Planned End Date";
+                        dateValue = model.PlannedEndDateStr;
+                        note = model.PlannedEndDateNote;
+                        logValue = "PlannedEndDate";
+                    }
+                    else if (!string.IsNullOrEmpty(model.ActualStartDateStr))
+                    {
+                        dateField = "Actual Start Date";
+                        dateValue = model.ActualStartDateStr;
+                        note = model.ActualStartDateNote;
+                        logValue = "ActualStartDate";
+                    }
+                    else if (!string.IsNullOrEmpty(model.ActualEndDateStr))
+                    {
+                        dateField = "Actual End Date";
+                        dateValue = model.ActualEndDateStr;
+                        note = model.ActualEndDateNote;
+                        logValue = "ActualEndDate";
+                    }
+
+                    if (dateValue == null)
+                        return BadRequest("Please provide a date to update.");
+
+                    var formattedDate = dateValue.Replace("-", "/");
+
+                    if (!DateTime.TryParseExact(
+                        formattedDate,
+                        "MM/dd/yyyy",
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None,
+                        out DateTime updatedDate))
+                    {
+                        return BadRequest("Invalid date format.");
+                    }
+
+                    DateTime? existingDate = logValue switch
+                    {
+                        "PlannedStartDate" => entity.PlannedStartDate,
+                        "PlannedEndDate" => entity.PlannedEndDate,
+                        "ActualStartDate" => entity.ActualStartDate,
+                        "ActualEndDate" => entity.ActualEndDate,
+                        _ => null
+                    };
+
+                    bool isDateChanged = existingDate?.Date != updatedDate.Date;
+
+                    switch (logValue)
+                    {
+                        case "PlannedStartDate":
+                            entity.PlannedStartDate = updatedDate;
+                            break;
+
+                        case "PlannedEndDate":
+                            entity.PlannedEndDate = updatedDate;
+                            break;
+
+                        case "ActualStartDate":
+                            entity.ActualStartDate = updatedDate;
+                            break;
+
+                        case "ActualEndDate":
+                            entity.ActualEndDate = updatedDate;
+                            break;
+                    }
+
+                    entity.UpdatedById = LoggedUserId;
+                    entity.UpdatedOnUtc = GetDateTime;
+
+                    _requirementService.UpdateRequirement(entity);
+
+                    if (isDateChanged)
+                    {
+                        var requirementDetails = await _requirementService.GetRequirementDetailsById(model.RequirementId);
+
+                        _sitesModifiedLogsService.AddSiteModifiedLogs(
+                            SiteId,
+                            "Requirement",
+                            entity.ProjectId,
+                            requirementDetails.Project.Name,
+                            entity.Id,
+                            entity.Title,
+                            dateField,
+                            formattedDate,
+                            LoggedUserId,
+                            GetDateTime,
+                            note
+                        );
+                    }
+
+                    return NoContent();
+                }
+
+                return ModelStateError(ModelState);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        #endregion
 
         #region AddEditRequirementChangeLogDescription
         [HttpPost("requirement-change-log/add-edit-description")]

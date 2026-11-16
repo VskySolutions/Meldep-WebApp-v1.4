@@ -137,6 +137,167 @@ export const onSubmitRequirementPriority = async (id, priorityId, refreshRequire
   }
 };
 
+// -------------------------------------------------------------
+// Update Planned start date
+// -------------------------------------------------------------
+
+// export const onSubmitPlannedStartDate = async (
+//   requirementId,
+//   plannedStartDateStr,
+//   note = null,
+//   refreshRequirementList
+// ) => {
+//   activeRowId.value = requirementId;
+//   try {
+//     const payload = {
+//       requirementId,
+//       plannedStartDateStr,
+//       plannedStartDateNote: note
+//     };
+
+//     await requirementService.updateRequirementDates(payload);
+
+//     notifySuccess({ message: "Planned start date is saved successfully." });
+//     refreshRequirementList();
+//   } catch (error) {
+//     sendError("Error updating planned start date", error);
+//   }
+// };
+
+export const onSubmitRequirementDate = async (
+  requirementId,
+  dateStr,
+  field,
+  note = null,
+  refreshRequirementList
+) => {
+  activeRowId.value = requirementId;
+
+  try {
+    const payload = {
+      requirementId,
+      plannedStartDateStr: null,
+      plannedStartDateNote: null,
+      plannedEndDateStr: null,
+      plannedEndDateNote: null,
+      actualStartDateStr: null,
+      actualStartDateNote: null,
+      actualEndDateStr: null,
+      actualEndDateNote: null
+    };
+
+    switch (field) {
+      case "plannedStartDate":
+        payload.plannedStartDateStr = dateStr;
+        payload.plannedStartDateNote = note;
+        break;
+
+      case "plannedEndDate":
+        payload.plannedEndDateStr = dateStr;
+        payload.plannedEndDateNote = note;
+        break;
+
+      case "actualStartDate":
+        payload.actualStartDateStr = dateStr;
+        payload.actualStartDateNote = note;
+        break;
+
+      case "actualEndDate":
+        payload.actualEndDateStr = dateStr;
+        payload.actualEndDateNote = note;
+        break;
+
+      default:
+        throw new Error("Invalid requirement date field.");
+    }
+
+    await requirementService.updateRequirementDates(payload);
+
+    notifySuccess({
+      message: `${getDateFieldLabel(field)} is saved successfully.`
+    });
+
+    refreshRequirementList();
+
+  } catch (error) {
+    sendError(`Error updating ${getDateFieldLabel(field)}`, error);
+  }
+};
+
+const getDateFieldLabel = (field) => {
+  const labels = {
+    plannedStartDate: "Planned start date",
+    plannedEndDate: "Planned end date",
+    actualStartDate: "Actual start date",
+    actualEndDate: "Actual end date"
+  };
+
+  return labels[field] || "Requirement date";
+};
+
+// -------------------------------------------------------------
+// Update Planned End date
+// -------------------------------------------------------------
+
+// export const onSubmitPlannedEndDate = async (
+//   requirementId,
+//   plannedEndDateStr,
+//   note = null,
+//   refreshRequirementList
+// ) => {
+//   activeRowId.value = requirementId;
+//   try {
+//     await requirementService.updateRequirementDates(payload);
+
+//     notifySuccess({ message: "Planned end date is saved successfully." });
+//     refreshRequirementList();
+//   } catch (error) {
+//     sendError("Error updating planned end date", error);
+//   }
+// };
+
+// -------------------------------------------------------------
+// Actual start date
+// -------------------------------------------------------------
+
+// export const onSubmitActualStartDate = async (
+//   requirementId,
+//   actualStartDateStr,
+//   note = null,
+//   refreshRequirementList
+// ) => {
+//   activeRowId.value = requirementId;
+//   try {
+//     await requirementService.updateRequirementDates(payload);
+
+//     notifySuccess({ message: "Actual start date is saved successfully." });
+//     refreshRequirementList();
+//   } catch (error) {
+//     sendError("Error updating actual start date", error);
+//   }
+// };
+
+// -------------------------------------------------------------
+// Update Planned End date
+// -------------------------------------------------------------
+
+// export const onSubmitActualEndDate = async (
+//   requirementId,
+//   actualEndDateStr,
+//   note = null,
+//   refreshRequirementList
+// ) => {
+//   activeRowId.value = requirementId;
+//   try {
+//     await requirementService.updateRequirementDates(payload);
+
+//     notifySuccess({ message: "Actual end date is saved successfully." });
+//     refreshRequirementList();
+//   } catch (error) {
+//     sendError("Error updating actual end date", error);
+//   }
+// };
+
 // Delete Requirement
 export const onSubmitRequirementDelete = async (
   id,
