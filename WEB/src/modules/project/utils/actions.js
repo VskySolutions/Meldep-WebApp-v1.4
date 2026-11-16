@@ -1,5 +1,5 @@
 import { useQuasar } from "quasar";
-import { notifySuccess, notifyError, zwConfirmDelete } from "assets/utils";
+import { notifySuccess, notifyError, zwConfirmDelete, zwConfirm } from "assets/utils";
 import projectService from "modules/project/projects.service";
 
 let $q;
@@ -134,9 +134,63 @@ export const onSubmitProjectArchiveUnArchiveToggle = (
 };
 
 // Update Project Status
-export const onSubmitProjectStatus = async (id, statusId, refreshProjectList) => {
+// export const onSubmitProjectStatus = async (id, statusId, statusName, refreshProjectList) => {
+//   debugger;
+//   try {
+//      if (statusName === "Cancelled") {
+//       $q.dialog({
+//         title: "Confirmation",
+//         message: "Are you sure you want to cancel this project?",
+//         ok: { label: "Yes", color: "primary" },
+//         cancel: { label: "No", color: "negative" },
+//         persistent: true
+//       }).onOk(async () => {
+//         // Update the project status only after user confirms.
+//         await projectService.updateProjectStatus(id, statusId);
+//       });
+
+//       return;
+//     }
+
+//     activeRowId.value = id;
+//     await projectService.updateProjectStatus(id, statusId);
+
+//     notifySuccess({ message: "Project status is saved successfully." });
+//     refreshProjectList();
+//   } catch (error) {
+//     sendError("Error updating project status", error);
+//   } finally {
+//     activeRowId.value = null;
+//   }
+// };
+
+export const onSubmitProjectStatus = async (id, statusId, statusName, refreshProjectList) => {
+  try {
+    if (statusName === "Cancelled") {
+      $q.dialog({
+        title: "Confirmation",
+        message: "Are you sure you want to cancel this project?",
+        ok: { label: "Yes", color: "primary" },
+        cancel: { label: "No", color: "negative" },
+        persistent: true
+      }).onOk(async () => {
+        await updateProjectStatus(id, statusId, refreshProjectList);
+      });
+
+      return;
+    }
+
+    await updateProjectStatus(id, statusId, refreshProjectList);
+
+  } catch (error) {
+    sendError("Error updating project status", error);
+  }
+};
+
+const updateProjectStatus = async (id, statusId, refreshProjectList) => {
   try {
     activeRowId.value = id;
+
     await projectService.updateProjectStatus(id, statusId);
 
     notifySuccess({ message: "Project status is saved successfully." });

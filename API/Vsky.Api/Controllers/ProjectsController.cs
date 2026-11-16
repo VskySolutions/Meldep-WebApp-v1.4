@@ -2798,6 +2798,7 @@ namespace Vsky.Api.Controllers
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
+                
                 string ProjectWeeklyPlanDateId = await _projectWeeklyDatesService.CheckIfProjectWeeklyPlanIsCreated(model.ProjectId, model.PlanTypeId, model.Date);
 
                 var newWeekDatemodel = new ProjectWeeklyPlanDates();
@@ -2805,6 +2806,30 @@ namespace Vsky.Api.Controllers
                 if (string.IsNullOrEmpty(ProjectWeeklyPlanDateId))
                 {
                     var ProjectWeeklyPlan = await _projectWeeklyService.GetByProjectId(SiteId, model.ProjectId);
+
+                    // Add or Update Project Weekly Plan
+                    if (ProjectWeeklyPlan != null)
+                    {
+                        ProjectWeeklyPlan.UpdatedById = LoggedUserId;
+                        ProjectWeeklyPlan.UpdatedOnUtc = GetDateTime;
+
+                        _projectWeeklyService.UpdateProjectWeeklyPlan(ProjectWeeklyPlan);
+                    }
+                    else
+                    {
+                        ProjectWeeklyPlan = new ProjectWeeklyPlan
+                        {
+                            SiteId = SiteId,
+                            ProjectId = model.ProjectId,
+                            CreatedById = LoggedUserId,
+                            CreatedOnUtc = GetDateTime,
+                            UpdatedById = LoggedUserId,
+                            UpdatedOnUtc = GetDateTime
+                        };
+
+                        _projectWeeklyService.InsertProjectWeeklyPlan(ProjectWeeklyPlan);
+                    }
+
 
                     newWeekDatemodel.ProjectWeeklyPlanId = ProjectWeeklyPlan.Id;
                     newWeekDatemodel.WeekDate = model.Date;

@@ -43,7 +43,7 @@ export function onProjectAdd (refresh, refreshProjectNameDropdown) {
     .onDismiss(() => { });
 }
 
-export function onProjectEdit (id, isCharter = false, refresh, refreshProjectNameDropdown) {
+export function onProjectEdit (id, isCharter = false, refresh, refreshProjectNameDropdown, refreshActivityOwnerDropdown) {
   activeRowId.value = id;
   $q.dialog({
     component: editProject,
@@ -51,6 +51,7 @@ export function onProjectEdit (id, isCharter = false, refresh, refreshProjectNam
   }).onOk(() => {
     refresh?.();
     refreshProjectNameDropdown?.();
+    refreshActivityOwnerDropdown?.();
   })
     .onCancel(() => { })
     .onDismiss(() => { });

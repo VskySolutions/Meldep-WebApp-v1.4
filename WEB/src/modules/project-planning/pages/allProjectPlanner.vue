@@ -460,14 +460,14 @@
                                     <q-item-section avatar><q-icon name="o_visibility" color="" size="xs" /></q-item-section>
                                     <q-item-section class="">View Project</q-item-section>
                                   </q-item>
-                                  <q-item v-if="props.row.isEditable" v-ripple clickable class="" @click.stop="onProjectEdit(props.row.id, false, refreshProjectList, refreshProjectNameDropdown)">
+                                  <q-item v-if="props.row.isEditable" v-ripple clickable class="" @click.stop="onProjectEdit(props.row.id, false, refreshProjectList, refreshProjectNameDropdown, refreshActivityOwnerDropdown)">
                                     <q-item-section avatar><q-icon name="o_edit" color="" size="xs" /></q-item-section>
                                     <q-item-section class="">Edit</q-item-section>
                                   </q-item>
                                   <q-item
                                     v-if="props.row.isEditable"
                                     v-ripple clickable
-                                    @click="onProjectEdit(props.row.id, true)"
+                                    @click="onProjectEdit(props.row.id, true, null, null, refreshActivityOwnerDropdown)"
                                   >
                                     <q-item-section avatar><q-icon name="o_groups" size="xs" /></q-item-section>
                                     <q-item-section>Charter</q-item-section>
@@ -616,7 +616,7 @@
                                     <q-item-section avatar>
                                       <q-icon :name="props.row.isPinned ? 'o_close' : 'o_push_pin'" size="xs" />
                                     </q-item-section>
-                                    <q-item-section>{{ props.row.isPinned ? "Un Pin" : "Pin" }}</q-item-section>
+                                    <q-item-section>{{ props.row.isPinned ? "Unpin" : "Pin" }}</q-item-section>
                                   </q-item>
                                   <q-item v-if="props.row.isEditable" v-ripple class="" clickable @click="onSubmitProjectArchiveUnArchiveToggle(props.row)">
                                     <q-item-section avatar>
@@ -2918,6 +2918,10 @@ const refreshProjectNameDropdown = () => {
 
 const refreshProjectTaskTagsDropdown = () => {
   projectTaskTagsDropdown.load();
+};
+
+const refreshActivityOwnerDropdown = async () => {
+  projectCharterEmployeesWithWeeklyPlanHoursForDropdown.load(selectedProjectId.value);
 };
 
 // Search records as per parameters

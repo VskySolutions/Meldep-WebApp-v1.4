@@ -516,8 +516,7 @@
                 @click="onProjectModuleView(props.row.projectModule.id)"
               >
                 <span
-                 v-if="preProjectModuleName !== props.row.projectModule.name"
-                 :set="preProjectModuleName = props.row.projectModule.name"
+                  v-if="isFirstProjectModuleRow(props.row)"
                 >
                   {{ props.row.projectModule.name }}
                 </span>
@@ -1007,6 +1006,15 @@
                         <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
                         <q-item-section>Edit Data Mapping</q-item-section>
                       </q-item>
+                      <q-item
+                        v-if="props.row.isEditable"
+                        v-ripple clickable
+                        class=""
+                        @click="onEditRequirementStatusTracking(null, props.row.projectId, props.row.projectModuleId, props.row.id, null, null, refreshRequirementList)"
+                      >
+                        <q-item-section avatar><q-icon name="o_add" size="xs" /></q-item-section>
+                        <q-item-section>Edit Status Tracking</q-item-section>
+                      </q-item>
                       <q-item v-if="props.row.isEditable">
                         <q-item-section avatar>
                         <q-icon v-if="props.row.requirementColor" name="o_circle" :style="`border-radius:50%;color:${props.row.requirementColor}; background-color:${props.row.requirementColor};`" size="xs" />
@@ -1194,6 +1202,11 @@ import {
   initRequirementDataMappingDialogs,
   onEditRequirementDataMapping
 } from "src/modules/requirement-data-mapping/utils/dialogs.js";
+
+import {
+  initRequirementStatusTrackingDialogs,
+  onEditRequirementStatusTracking
+} from "src/modules/requirement-status-tracking/utils/dialogs.js";
 
 // Shared Common Dialogs
 import {
@@ -1687,6 +1700,26 @@ function isFirstProjectRow(row) {
   return currentProjectId !== previousProjectId;
 }
 
+function isFirstProjectModuleRow(row) {
+  const currentIndex = rows.value.findIndex(
+    item => item.id === row.id
+  );
+
+  if (currentIndex === -1) {
+    return false;
+  }
+
+  if (currentIndex === 0) {
+    return true;
+  }
+
+  const currentProjectModuleId = row.projectModule?.id;
+  const previousProjectModuleId =
+    rows.value[currentIndex - 1]?.projectModule?.id;
+
+  return currentProjectModuleId !== previousProjectModuleId;
+}
+
 const onSelectCheckbox = (projectId, projectName, requirementId, requirementNumber, requirementTitle, requirementShortDescription, flag, isEditable) => {
   if (flag === true) {
     if (!multiSelectRequirementIds.value.includes(requirementId)) {
@@ -2108,6 +2141,7 @@ initSiteDialogs(activeRowId);
 initRequirementActions(activeRowId);
 initProjectModuleDialogs(activeRowId);
 initRequirementDataMappingDialogs();
+initRequirementStatusTrackingDialogs();
 
 // ----------------------------------------------------------------------------------------------------------------
 // Advance Filter:- Initialization Of All DropDowns

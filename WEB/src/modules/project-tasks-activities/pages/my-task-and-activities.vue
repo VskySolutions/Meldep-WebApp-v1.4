@@ -450,6 +450,7 @@
                           <q-tooltip v-else>Set Inactive?</q-tooltip>
                         </div>
                         <q-checkbox
+                          v-if="activityProps.row.assignedToId === user?.employeeId"
                           v-model="activityProps.row.checkboxStatus"
                           @update:model-value="onSelectCheckbox(
                             activityProps.row.id,

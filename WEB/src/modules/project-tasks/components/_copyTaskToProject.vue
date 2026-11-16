@@ -19,7 +19,6 @@
                   :error="v$.projectIds.$error"
                   :error-message="v$.projectIds.$errors[0]?.$message"
                   :onBlur="() => v$.projectIds.$touch()"
-                  popup-content-class="customPopupContentClass"
                 />
               </div>
               <div v-if="model.projectIds.length > 0">
@@ -70,7 +69,7 @@ import projectModule from "src/modules/project/utils/dropdowns.js";
 // Common variables
 const processing = ref(false);
 const { toDate } = useFilters();
-const props = defineProps({ 
+const props = defineProps({
   id: { type: String, default: "" },
   name: { type: String, default: "" },
   projectModuleId: { type: String, default: "" },

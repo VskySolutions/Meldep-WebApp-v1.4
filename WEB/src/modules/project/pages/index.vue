@@ -615,7 +615,10 @@
                     tooltip="Status Change Log"
                     @popup-show="handlePopupShow(props.row.projectStatus.dropDownValue)"
                     @cancel="activeEdit = { rowId: null, field: null }"
-                    @submit="({ rowId, value }) => onSubmitProjectStatus(rowId, value, refreshProjectList)"
+                    @submit="({ rowId, value }) => {
+  const selectedStatus = projectStatusList.find(x => x.value === value)?.text;
+  onSubmitProjectStatus(rowId, value, selectedStatus, refreshProjectList);
+}"
                     @history="() => onSiteModifiedLog(props.row.id, props.row.name, 'Project Status')"
                   />
                 </q-td>
@@ -932,7 +935,7 @@
                         <q-item
                           v-if="props.row.isEditable && !props.row.isArchived"
                           v-ripple clickable
-                          @click="setActiveRowIdInLocalStorage(props.row.id); onProjectEdit(props.row.id, false, refreshProjectList, refreshProjectNameDropdown)"
+                          @click="setActiveRowIdInLocalStorage(props.row.id); onProjectEdit(props.row.id, false, refreshProjectList, refreshProjectNameDropdown, null)"
                         >
                           <q-item-section avatar><q-icon name="o_edit" size="xs" /></q-item-section>
                           <q-item-section>Edit</q-item-section>
@@ -940,7 +943,7 @@
                         <q-item
                           v-if="(props.row.isEditable || pMRole) && !search.isTemplate && !props.row.isArchived"
                           v-ripple clickable
-                          @click="setActiveRowIdInLocalStorage(props.row.id); onProjectEdit(props.row.id, true, refreshProjectList)"
+                          @click="setActiveRowIdInLocalStorage(props.row.id); onProjectEdit(props.row.id, true, refreshProjectList, null, null)"
                         >
                           <q-item-section avatar><q-icon name="o_groups" size="xs" /></q-item-section>
                           <q-item-section>Charter</q-item-section>
@@ -1507,6 +1510,7 @@ const lsSorts = sorts.value || null;
 const highlightedId = computed(() => {
   return activeRowId.value;
 });
+
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- List -> Custom functions & Calculate Column Totals (SOP Change)
 // ----------------------------------------------------------------------------------------------------------------

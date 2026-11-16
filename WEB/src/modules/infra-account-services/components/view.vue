@@ -371,7 +371,7 @@ async function removeProject (project) {
 // On page rendering
 onMounted(() => {
   getInfraAccountServicesInDetailById();
-  projectNameDropdownSingleSelect.load(false, true, true);
+  projectNameDropdownSingleSelect.load(false, false, true);
 });
 
 </script>

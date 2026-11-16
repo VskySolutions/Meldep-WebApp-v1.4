@@ -110,18 +110,22 @@
                   </div>
                   <q-table
                     ref="tableRef"
+                    v-model:pagination="pagination"
+                    bordered
                     class="no-shadow"
-                    virtual-scroll bordered
+                    virtual-scroll
                     :loading="loading"
                     :rows="DataMappingRows"
                     :columns="DataMappingColumns"
-                    row-key="id" separator="cell"
+                    :sort-method="dataMappingSort"
+                    row-key="id"
+                    separator="cell"
                     binary-state-sort
                     :rows-per-page-options="[20, 50, 100, 200, 500]"
                   >
                     <template #header="props">
                       <q-tr :props="props" class="bg-primary text-white">
-                        <q-th v-for="col in props.cols" :key="col.name" class="text-start">
+                        <q-th v-for="col in props.cols" :key="col.name" :props="props" class="text-start">
                           {{ col.label }}
                           <span v-if="['source', 'target', 'integrationDirection.dropdown'].includes(col.name)" class="required">*</span>
                         </q-th>
@@ -190,7 +194,7 @@
                           <a
                             v-if="props.row.id"
                             style="position: relative;"
-                            class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"                            
+                            class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
                             @click="onRequirementDataMappingNoteEdit(props.row.id, props.row.source, props.row.target, false, refreshDataMappingList)"
                           >
                             <q-tooltip anchor="bottom middle" self="top middle">
@@ -357,12 +361,47 @@ const model = ref({
   requirementName: ""
 });
 
+const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1 });
 // Data Mapping
 const DataMappingColumns = ref([
-  { name: "source", label: "Source", field: "source", align: "left", sortable: false },
-  { name: "target", label: "Target", field: "target", align: "left" },
-  { name: "integrationDirection.dropdown", label: "Integration Direction", field: "integrationDirection.dropdown", align: "left" }
+  { name: "source", label: "Source", field: "source", align: "left", sortable: true },
+  { name: "target", label: "Target", field: "target", align: "left", sortable: true },
+  { name: "integrationDirection.dropdown", label: "Integration Direction", field: "integrationDirection.dropdown", align: "left", sortable: true}
 ]);
+
+const dataMappingSort = (rows, sortBy, descending) => {
+  const column = DataMappingColumns.value.find(col => col.name === sortBy);
+
+  if (!column) return rows;
+
+  const getValue = row => {
+    if (typeof column.field === "function") {
+      return column.field(row);
+    }
+
+    return column.field.split(".").reduce((obj, key) => obj?.[key], row);
+  };
+
+  // Newly added rows should not be sorted
+  const newRows = rows.filter(row => row.flag === "Add");
+
+  // Sort only previously existing rows
+  const existingRows = rows.filter(row => row.flag !== "Add");
+
+  existingRows.sort((a, b) => {
+    const valueA = String(getValue(a) ?? "");
+    const valueB = String(getValue(b) ?? "");
+
+    const result = valueA.localeCompare(valueB, undefined, {
+      numeric: true,
+      sensitivity: "base"
+    });
+
+    return descending ? -result : result;
+  });
+
+  return [...newRows, ...existingRows];
+};
 
 const highlightedId = computed(() => { return activeRowId.value; });
 
@@ -441,7 +480,8 @@ const onAdd = () => {
     integrationDirectionId: null,
     note: "",
     deleted: false,
-    notes: []
+    notes: [],
+    flag: "Add"
   });
 };
 
@@ -489,12 +529,19 @@ const rowRules = {
 };
 
 const getRowValidation = (row) => {
-  const index = DataMappingRows.value.findIndex(
-    item => item.id === row.id
-  );
+  const index = DataMappingRows.value.indexOf(row);
 
   return rowValidations.value[index]?.value;
 };
+
+
+// const getRowValidation = (row) => {
+//   const index = DataMappingRows.value.findIndex(
+//     item => item.id === row.id
+//   );
+
+//   return rowValidations.value[index]?.value;
+// };
 
 const modelRules = {
   requirementId: { required: helpers.withMessage("Requirement is required", required) },

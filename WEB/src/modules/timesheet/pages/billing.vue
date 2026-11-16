@@ -181,11 +181,11 @@
               :key="col.name"
             >
               {{ col.label }}
-              <!-- Sort icon only --> 
+              <!-- Sort icon only -->
               <q-icon
-                v-if="col.sortable" 
-                :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' " 
-                size="16px" 
+                v-if="col.sortable"
+                :name=" pagination.sortBy === col.name ? (pagination.descending ? 'o_arrow_downward' : 'o_arrow_upward') : 'o_unfold_more' "
+                size="16px"
                 class="cursor-pointer q-ml-sm"
                 @click.stop="sortColumn(col)"
               >
@@ -310,9 +310,16 @@ const showFilter = ref(false);
 const searchLoader = ref(false);
 
 // Get the current year
-const currentYear = new Date().getFullYear();
-const defaultFromDate = format(new Date(currentYear, 0, 1), "MM/dd/yyyy");
-const defaultToDate = format(new Date(currentYear, 11, 31), "MM/dd/yyyy");
+const today = new Date();
+const defaultFromDate = format(
+  new Date(today.getFullYear(), today.getMonth(), 1),
+  "MM/dd/yyyy"
+);
+
+const defaultToDate = format(
+  new Date(today.getFullYear(), today.getMonth() + 1, 0),
+  "MM/dd/yyyy"
+);
 
 // local storage values
 const localStorageKey = "Billing Timesheet";
@@ -356,10 +363,10 @@ const sortColumn = (col) => {
     pagination.value.descending = !pagination.value.descending;
   }
   else {
-    // New column → ascending 
+    // New column → ascending
       pagination.value.sortBy = col.name;
       pagination.value.descending = false;
-  } 
+  }
   refreshBillableTimesheetList();
 };
 

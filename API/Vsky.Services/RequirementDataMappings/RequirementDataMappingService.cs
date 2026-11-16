@@ -400,7 +400,7 @@ namespace Vsky.Services.RequirementDataMappings
         {
             var query = _requirementDataMappingRepository.TableNoTracking.Where(x => !x.Deleted && x.RequirementId == requirementId);
 
-            query = query.Select(x => new RequirementDataMapping
+            query = query.OrderByDescending(x => x.CreatedOnUtc).Select(x => new RequirementDataMapping
             {
                 Id = x.Id,
                 ProjectId = x.ProjectId,

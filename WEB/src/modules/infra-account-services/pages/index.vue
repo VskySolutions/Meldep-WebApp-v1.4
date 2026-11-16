@@ -1270,7 +1270,7 @@ onMounted(() => {
   ownershipTypesForDropdown.load("Ownership Type");
   paymentTermsForDropdown.load("Payment Term");
 
-  projectNameDropdown.load(false, true, true);
+  projectNameDropdown.load(false, false, true);
   infraWalletTypeDropdownSingleSelect.load("Wallet Type");
   infraAccountServiceForDropdownSingleSelect.load();
   if (tableRef.value) {
