@@ -357,9 +357,7 @@
                 <q-td v-if="selectedColumnNames.includes('createdOnUtc')">{{ props.row.createdOnUtc }}</q-td>
                 <q-td v-if="selectedColumnNames.includes('updatedByName')">{{ props.row.updatedByName }}</q-td>
                 <q-td v-if="selectedColumnNames.includes('updatedOnUtc')">{{ props.row.updatedOnUtc }}</q-td>
-                <q-td auto-width class="text-center actions">
-                  <!-- Record actions sit on the record's first row so their complete-record scope is clear. -->
-                  <template v-if="props.row.isRecordStart">
+                <q-td  v-if="props.row.isRecordStart" auto-width class="text-center actions tracking-actions-cell">
                     <q-icon
                       :name="isViewer ? 'o_visibility' : 'o_edit'"
                       class="cursor-pointer q-mr-sm"
@@ -376,7 +374,6 @@
                     >
                       <q-tooltip>Delete tracking record</q-tooltip>
                     </q-icon>
-                  </template>
                 </q-td>
               </q-tr>
               <q-separator />
@@ -484,7 +481,7 @@ const records = ref([]);
 const columns = ref([
   { name: "projectName", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "projectModuleName", label: "Module Name", field: "projectModule.name", align: "left", sortable: true, default: true },
-  { name: "trackingDate", label: "Date", field: "trackingDate", align: "center", sortable: true, default: true },
+  { name: "trackingDate", label: "Tracking Date", field: "trackingDate", align: "center", sortable: true, default: true },
   { name: "requirementTitle", label: "Requirement Name", field: "requirementTitle", align: "left", sortable: true, default: true },
   { name: "currentPercent", label: "Current Completion (%)", field: "currentPercent", align: "right", sortable: true, default: true },
   { name: "timeSpentAsOfToday", label: "Time Spent (Hrs)", field: "timeSpentAsOfToday", align: "right", sortable: true, default: true, tooltip: "Time Spent as of Today(Hours)" },
@@ -647,6 +644,25 @@ function isFirstProjectRow(row) {
   return currentProjectId !== previousProjectId;
 }
 
+const groupedTrackingRecords = computed(() => {
+  const groups = {}
+
+  displayRows.value.forEach(item => {
+    const key = `${item.projectId}_${item.projectModuleId}_${item.trackingDate}`
+
+    if (!groups[key]) groups[key] = []
+    groups[key].push(item)
+  })
+
+  return Object.values(groups).flatMap(group =>
+    group.map((item, index) => ({
+      ...item,
+      isRecordStart: index === 0,
+      recordRowCount: group.length
+    }))
+  )
+})
+
 const getAdditionalScope = (htmlText) => {
   if (!htmlText) return "";
 
@@ -715,7 +731,7 @@ const clearSelection = () => {
 
 const onEditRecord = (row) => {
   activeRowId.value = row.recordId;
-  onEditRequirementStatusTracking(row.recordId, isViewer, refreshList);
+  onEditRequirementStatusTracking(row.recordId, row.projectId, row.projectModuleId, row.trackingDate, isViewer, refreshList);
 };
 
 const onDeleteRecord = (row) => {

@@ -11,8 +11,16 @@ namespace Vsky.Services.RequirementStatusTrackings
         Task<RequirementStatusTrackingResult> GetAllRecords(string siteId, string loggedUserId, string employeeId, RequirementStatusTrackingFilter filter);
         #endregion
 
+        #region
+        Task<List<CommonDropDown>> GetAvailableRequirementsForStatusTracking(string projectId, string projectModuleId);
+        #endregion
+
         #region GetRequirementStatusTrackingRecordById
         Task<RequirementStatusTrackingRecord> GetRecordById(string siteId, string loggedUserId, string employeeId, string recordId);
+        #endregion
+
+        #region GetRequirementStatusTrackingByRequirementId
+        Task<List<RequirementStatusTracking>> GetRequirementStatusTrackingByRequirementId(string requirementId);
         #endregion
 
         #region SaveRequirementStatusTrackingRecord

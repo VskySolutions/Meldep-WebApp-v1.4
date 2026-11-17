@@ -2,105 +2,82 @@
   <q-dialog ref="dialogRef" class="customDialog PlannerDialog" persistent position="right" @hide="onDialogHide">
     <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
-        <div class="text-h2 text-white">{{ model.recordId ? "Edit" : "Add" }} Requirement Status Tracking</div>
+        <div class="text-h2 text-white">{{ props.requirementId ? "Edit" : "Add" }} Requirement Status Tracking</div>
         <q-btn icon="o_close" class="close" color="white" flat round dense @click="onDialogCancel">
-          <q-tooltip>Close without saving</q-tooltip>
+          <q-tooltip>Close</q-tooltip>
         </q-btn>
       </q-card-section>
       <q-separator />
       <q-form ref="formRef" greedy @submit.prevent.stop>
         <div class="q-pa-md cardTable">
-          <q-inner-loading :showing="loading" />
           <div class="q-gutter-y-md">
-            <q-banner v-if="readonly" dense rounded class="bg-grey-2 text-grey-9">
-              <template #avatar><q-icon name="o_lock" /></template>
-              You have view-only access to this tracking record.
-            </q-banner>
-            <q-banner v-if="recordLoadError" dense rounded class="bg-red-1 text-negative">
-              <template #avatar><q-icon name="o_error_outline" /></template>
-              The tracking record could not be loaded, so it cannot be edited. Close the form and try again.
-            </q-banner>
-            <q-banner v-if="serverErrors.length" dense rounded class="bg-red-1 text-negative">
-              <template #avatar><q-icon name="o_error_outline" /></template>
-              <div>Nothing was saved. Please fix the following and save again:</div>
-              <ul class="q-my-xs q-pl-md">
-                <li v-for="(message, index) in serverErrors" :key="index">{{ message }}</li>
-              </ul>
-            </q-banner>
             <fieldset>
               <legend>Tracking Info</legend>
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12 col-sm-4 col-md-4">
                   <formSingleSelectDropdown
-                    v-if="!isEdit"
-                    :model-value="model.projectId"
+                    v-model="model.projectId"
                     label="Project Name"
                     wrapper-class=""
-                    :readonly="readonly"
+                    :readonly="!!readonlyProject"
                     :options="projectNameDropdownSingleSelect.list.value"
                     :filter="projectNameDropdownSingleSelect.filter"
                     :error="showErrors && !!validation.header.projectId"
                     :error-message="validation.header.projectId"
                     @update:model-value="onProjectChange"
                   />
-                  <div v-else>
-                    <label class="label q-mb-xs text-black">Project Name<span class="required">*</span></label>
-                    <q-input :model-value="model.projectName" outlined dense readonly hide-bottom-space />
-                  </div>
                 </div>
                 <div class="col-12 col-sm-4 col-md-4">
                   <formSingleSelectDropdown
-                    v-if="!isEdit"
-                    :model-value="model.projectModuleId"
+                    v-model="model.projectModuleId"
                     label="Project Module"
                     wrapper-class=""
-                    :disable="!model.projectId"
-                    :readonly="readonly"
+                    :disable="(model.projectId?.length || 0) === 0"
+                    :readonly="!!readonlyProjectModule"
                     :options="projectModulesByProjectIdForDropdownSingleSelect.list.value"
                     :filter="projectModulesByProjectIdForDropdownSingleSelect.filter"
                     :error="showErrors && !!validation.header.projectModuleId"
                     :error-message="validation.header.projectModuleId"
-                    @update:model-value="onModuleChange"
                   />
-                  <div v-else>
-                    <label class="label q-mb-xs text-black">Project Module<span class="required">*</span></label>
-                    <q-input :model-value="model.projectModuleName" outlined dense readonly hide-bottom-space />
+                </div>
+                <div class="col-12 col-sm-4 col-md-4">
+                  <div class="row items-center no-wrap">
+                    <div class="col">
+                      <formSingleSelectDropdown
+                        v-model="model.requirementId"
+                        label="Requirement"
+                        :disable="(model.projectModuleId?.length || 0) === 0"
+                        :readonly="!!readonlyRequirement"
+                        :required="true"
+                        :options="requirementsByProjectModuleIdForDropdown.list.value"
+                        :filter="requirementsByProjectModuleIdForDropdown.filter"
+                      />
+                    </div>
+                    <div class="col-auto q-ml-sm q-mt-md">
+                      <q-btn
+                        v-if="model.requirementId"
+                        flat
+                        round
+                        dense
+                        color="primary"
+                        icon="o_visibility"
+                        size="sm"
+                        @click="onRequirementView(model.requirementId)"
+                      >
+                        <q-tooltip>View Requirement</q-tooltip>
+                      </q-btn>
+                    </div>
                   </div>
                 </div>
-                <formDate
-                  v-model="model.trackingDate"
-                  label="Date"
-                  wrapper-class="col-12 col-sm-4 col-md-4"
-                  :readonly="readonly"
-                  :error="showErrors && !!validation.header.trackingDate"
-                  :error-message="validation.header.trackingDate"
-                   @update:model-value="getRequirementTimeSpentByIdsAndDate(model.trackingDate)"
-                />
               </div>
-
-              <q-banner v-if="requirementLoadState === 'loading'" dense rounded class="bg-grey-2 q-mb-sm">
-                <template #avatar><q-spinner color="primary" size="sm" /></template>
-                Loading the module's requirements…
-              </q-banner>
-              <q-banner v-else-if="requirementLoadState === 'error'" dense rounded class="bg-red-1 text-negative q-mb-sm">
-                <template #avatar><q-icon name="o_error_outline" /></template>
-                The module's requirements could not be loaded.
-                <template #action>
-                  <q-btn flat dense no-caps color="negative" label="Retry" @click="loadRequirements(!isEdit && rows.length === 0)" />
-                </template>
-              </q-banner>
-              <q-banner v-else-if="requirementLoadState === 'empty'" dense rounded class="bg-orange-1 text-orange-10 q-mb-sm">
-                <template #avatar><q-icon name="o_info" /></template>
-                No requirements are assigned to this project module.
-              </q-banner>
-
-              <div v-if="!readonly" class="row justify-end q-mb-sm">
+              <div class="row justify-end q-mb-sm">
                 <q-btn
                   color="primary"
                   icon="o_add"
                   label="Add"
                   no-caps
-                  :disable="!model.projectModuleId || requirementLoadState === 'loading'"
+                  class="hidden"
+                  :disable="!model.projectModuleId"
                   @click="onAddLine"
                 >
                   <q-tooltip v-if="!model.projectModuleId">Select a project module first</q-tooltip>
@@ -112,7 +89,7 @@
                 v-model:pagination="pagination"
                 virtual-scroll
                 bordered
-                row-key="key"
+                row-key="id"
                 class="no-shadow"
                 :loading="loading"
                 :rows="rows"
@@ -123,7 +100,7 @@
                 <template #header="headerProps">
                   <q-tr :props="headerProps" class="bg-primary text-white">
                     <q-th v-for="col in headerProps.cols" :key="col.name" class="text-start" :style="col.headerStyle">
-                      {{ col.label }}<span v-if="col.name === 'requirement'" class="required">*</span>
+                      {{ col.label }}<span v-if="col.name === 'trackingDate'" class="required">*</span>
                       <q-icon v-if="col.tooltip" name="o_info" size="xs" class="q-mx-xs">
                         <q-tooltip class="text-caption">
                           {{ col.tooltip }}
@@ -134,32 +111,22 @@
                 </template>
                 <template #body="bodyProps">
                   <q-tr :props="bodyProps">
-                    <q-td key="requirement" :props="bodyProps" style="width: 300px; max-width: 300px;">
-                      <formSingleSelectDropdown
-                        :model-value="bodyProps.row.requirementId"
-                        wrapper-class=""
-                        :is-clearable="false"
-                        :readonly="readonly"
-                        :options="rowRequirementOptions(bodyProps.row)"
-                        :option-disable="opt => opt.disable"
-                        :filter="rowRequirementFilter(bodyProps.row)"
-                        :error="showErrors && !!rowError(bodyProps.row, 'requirementId')"
-                        :error-message="rowError(bodyProps.row, 'requirementId')"
-                        @update:model-value="value => onRowRequirementChange(bodyProps.row, value)"
+                    <q-td key="trackingDate" :props="bodyProps" style="width: 150px; max-width: 150px;">
+                      <formDate
+                        v-model="bodyProps.row.trackingDate"
+                        wrapper-class="col-12 col-sm-4 col-md-4"
+                        :error="showErrors && !!rowError(bodyProps.row, 'trackingDate')"
+                        :error-message="rowError(bodyProps.row, 'trackingDate')"
+                        @update:model-value="getRequirementTimeSpentByIdsAndDate(model.trackingDate)"
                       />
-                      <q-badge v-if="bodyProps.row.isRequirementUnavailable" color="warning" class="q-mt-xs">
-                        Moved or deleted
-                        <q-tooltip>This requirement was deleted or moved out of the module after the row was saved. It can be kept unchanged or removed.</q-tooltip>
-                      </q-badge>
                     </q-td>
-                    <q-td key="currentPercent" style="width: 100px; max-width: 100px;">
+                    <q-td key="currentPercent" style="width: 90px; max-width: 90px;">
                       <q-input
                         v-model.number="bodyProps.row.currentPercent"
                         type="text"
                         inputmode="decimal"
                         outlined dense hide-bottom-space
                         aria-label="Current Completion (%)"
-                        :readonly="readonly"
                         :error="showErrors && !!rowError(bodyProps.row, 'currentPercent')"
                         :error-message="rowError(bodyProps.row, 'currentPercent')"
                       />
@@ -175,7 +142,6 @@
                         mask="##:##"
                         @blur="formatHoursValue(bodyProps.row, 'timeSpentAsOfToday')"
                         :rules="[validateHours]"
-                        :readonly="readonly"
                         :error="showErrors && !!rowError(bodyProps.row, 'timeSpentAsOfToday')"
                         :error-message="rowError(bodyProps.row, 'timeSpentAsOfToday')"
                       >
@@ -203,7 +169,6 @@
                         mask="##:##"
                         @blur="formatHoursValue(bodyProps.row, 'estimatedRemainingTime')"
                         :rules="[validateHours]"
-                        :readonly="readonly"
                         :error="showErrors && !!rowError(bodyProps.row, 'estimatedRemainingTime')"
                         :error-message="rowError(bodyProps.row, 'estimatedRemainingTime')"
                       >
@@ -220,16 +185,17 @@
                         </template>
                       </q-input>
                     </q-td>
-                    <q-td key="scope" :props="bodyProps" style="width: 430px; max-width: 430px;">
-                      <!-- <q-input
-                        v-model="bodyProps.row.scope"
-                        type="textarea" autogrow
-                        outlined dense hide-bottom-space
-                        aria-label="Additional Scope"
-                        :readonly="readonly"
-                      /> -->
+                    <q-td key="scope" :props="bodyProps" style="width: 350px; max-width: 350px;">
                       <q-editor
                         v-model="bodyProps.row.scope"
+                        :dense="$q.screen.lt.md"
+                        :toolbar="toolbar"
+                        :fonts="fonts"
+                      />
+                    </q-td>
+                     <q-td key="roadblock" :props="bodyProps" style="width: 350px; max-width: 350px;">
+                      <q-editor
+                        v-model="bodyProps.row.roadblock"
                         :dense="$q.screen.lt.md"
                         :toolbar="toolbar"
                         :fonts="fonts"
@@ -246,7 +212,6 @@
                         mask="##:##"
                         @blur="formatHoursValue(bodyProps.row, 'estimatedTimeForCompletion')"
                         :rules="[validateHours]"
-                        :readonly="readonly"
                         :error="showErrors && !!rowError(bodyProps.row, 'estimatedTimeForCompletion')"
                         :error-message="rowError(bodyProps.row, 'estimatedTimeForCompletion')"
                       >
@@ -265,7 +230,6 @@
                     </q-td>
                     <q-td key="action" :props="bodyProps" class="text-center" style="width: 50px; max-width: 50px;">
                       <q-btn
-                        v-if="!readonly"
                         flat round dense
                         icon="o_delete"
                         color="negative"
@@ -284,9 +248,8 @@
                 </template>
               </q-table>
 
-              <div align="center" class="q-gutter-sm justify-center q-mt-sm">
+              <div align="center" class="stickyFooter q-gutter-sm justify-center q-mt-sm">
                 <q-btn color="grey-4" push outline label="Close" type="button" class="text-grey-9 actionBtn" no-caps @click="onDialogCancel" />
-                <template v-if="!readonly">
                   <q-btn
                     color="primary"
                     push
@@ -297,7 +260,7 @@
                     style="width: 160px !important;"
                     no-caps
                     :loading="processing && activeButton === 'continue'"
-                    :disable="processing || loading || recordLoadError"
+                    :disable="processing"
                     @click="onSubmit(false, 'continue')"
                   />
                   <q-btn
@@ -309,10 +272,9 @@
                     class="actionBtn"
                     no-caps
                     :loading="processing && activeButton === 'close'"
-                    :disable="processing || loading || recordLoadError"
+                    :disable="processing"
                     @click="onSubmit(true, 'close')"
                   />
-                </template>
               </div>
             </fieldset>
           </div>
@@ -325,25 +287,17 @@
 <script setup>
 // Import libraries
 import { useDialogPluginComponent, useQuasar } from "quasar";
-import { ref, computed, onMounted } from "vue";
-import { notifySuccess, notifyError, notifyWarning } from "assets/utils";
+import { ref, computed, onMounted, watch } from "vue";
+import { notifySuccess, notifyError } from "assets/utils";
 
 import requirementStatusTrackingService from "../requirementStatusTracking.service";
-import requirementService from "src/modules/requirement/requirement.service";
-
-import { getEditorConfig } from "src/composables/form-inputs/useEditorSettings.js";
 
 import {
   createRow,
-  rowsFromRequirements,
   rowsFromRecord,
-  dedupeOptions,
-  rowHasEnteredValues,
-  findDuplicateRowIndex,
   validateDraft,
   buildPayload,
   parseServerErrors,
-  fromApiDate
 } from "../utils/trackingForm.js";
 
 // SOP Change :- Shared Inputs
@@ -352,17 +306,28 @@ import formDate from "src/components/form-inputs/_formDate.vue";
 
 // SOP Change :- Shared Dropdowns
 import projectModule from "src/modules/project/utils/dropdowns.js";
+import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 import projectModuleOfProjectModule from "src/modules/project-modules/utils/dropdowns.js";
+
+import {
+  initRequirementDialogs,
+  onRequirementView
+} from "src/modules/requirement/utils/dialogs.js";
 
 defineEmits([...useDialogPluginComponent.emits]);
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const props = defineProps({
-  recordId: { type: String, default: "" },
-  readonly: { type: Boolean, default: false },
+  projectId: { type: String, default: "" },
+  projectModuleId: { type: String, default: "" },
+  requirementId: { type: String, default: "" },
   // Called after every successful batch save (including Save and Continue) so the list can refresh.
   onSaved: { type: Function, default: null }
 });
+
+const readonlyProject = props.projectId ? "readonly" : "";
+const readonlyProjectModule = props.projectModuleId ? "readonly" : "";
+const readonlyRequirement= props.requirementId ? "readonly" : "";
 
 // Common variables
 const $q = useQuasar();
@@ -371,83 +336,93 @@ const recordLoadError = ref(false);
 const processing = ref(false);
 const activeButton = ref("");
 const showErrors = ref(false);
+const activeRowId = ref(null);
 const serverErrors = ref([]);
 // const { fonts, toolbar } = getEditorConfig($q);
 
 const model = ref({
   recordId: props.recordId || "",
-  projectId: "",
-  projectName: "",
-  projectModuleId: "",
+  projectId: props.projectId || "",
+  projectModuleId: props.projectModuleId || "",
   projectModuleName: "",
-  trackingDate: ""
+  requirementId: props.requirementId || "",
 });
+
 const rows = ref([]);
 const removedRowIds = ref([]);
-const isEdit = computed(() => !!model.value.recordId);
-
+const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1 });
 const columns = [
-  { name: "requirement", label: "Requirement", field: "requirementId", align: "left" },
+  { name: "trackingDate", label: "Tracking Date", field: "trackingDate", align: "left" },
   { name: "currentPercent", label: "Current Completion(%)", field: "currentPercent", align: "left" },
   { name: "timeSpentAsOfToday", label: "Time Spent (Hrs)", field: "timeSpentAsOfToday", align: "left", tooltip: "Time Spent as of Today(Hours)" },
   { name: "estimatedRemainingTime", label: "Est. Remaining (Hrs)", field: "estimatedRemainingTime", align: "left", tooltip: "Estimated Remaining Time Required (Hours)" },
-  { name: "scope", label: "Additional Scope", field: "scope", align: "left" },
+  { name: "scope", label: "Current Status", field: "scope", align: "left" },
+  { name: "roadblock", label: "Roadblock", field: "roadblock", align: "left" },
   { name: "estimatedTimeForCompletion", label: "Est. Completion Time (Hrs)", field: "estimatedTimeForCompletion", align: "left", tooltip: "Estimated Time for Completion of Additional Scope (Hours)"},
   { name: "action", label: "Action", field: "action", align: "center" }
 ];
 
 // ------------------------------------------------------------------------------------
+// DataTable:- Initialization Of Dialogs, Actions (SOP Change)
+// ------------------------------------------------------------------------------------
+initRequirementDialogs(activeRowId);
+
+// ------------------------------------------------------------------------------------
 // Advance Filter :- All Dropdowns (SOP Change)
 // ------------------------------------------------------------------------------------
 const { projectNameDropdownSingleSelect } = projectModule();
+const { requirementsByProjectModuleIdForDropdown } = requirementModule();
 const { projectModulesByProjectIdForDropdownSingleSelect } = projectModuleOfProjectModule();
-
-// Requirements of the selected module (all types; no Data Mapping rows needed).
-const requirementOptions = ref([]);
-const requirementLoadState = ref("idle"); // idle | loading | loaded | empty | error
-let requirementRequestSeq = 0;
-let moduleRequestSeq = 0;
 
 const validation = computed(() => validateDraft(model.value, rows.value));
 const rowError = (row, field) => validation.value.rows[row.key]?.[field] || "";
 
-// ----------------------------------------------------------------------------------------------------------------
-// Lookups
-// ----------------------------------------------------------------------------------------------------------------
-
-async function loadModules (projectId) {
-  const seq = ++moduleRequestSeq;
-  projectModulesByProjectIdForDropdownSingleSelect.list.value = [];
-  await projectModulesByProjectIdForDropdownSingleSelect.load(false, false, projectId);
-  // A newer project selection won the race; reload for it so the module list matches.
-  if (seq !== moduleRequestSeq) return;
-  if (model.value.projectId && model.value.projectId !== projectId) await loadModules(model.value.projectId);
-}
-
-// populateRows is only true for a new record whose context the user just chose; saved rows are never regenerated.
-async function loadRequirements (populateRows) {
-  const { projectId, projectModuleId } = model.value;
-  const seq = ++requirementRequestSeq;
-  if (!projectId || !projectModuleId) {
-    requirementOptions.value = [];
-    requirementLoadState.value = "idle";
-    return;
-  }
-
-  requirementLoadState.value = "loading";
+const getRequirementStatusTrackingByRequirementId = async (requirementId) => {
   try {
-    const resp = await requirementService.getAllRequirementListForDropdown(projectModuleId, projectId);
-    if (seq !== requirementRequestSeq) return; // stale response for an earlier selection
+    loading.value = true;
+    recordLoadError.value = false;
 
-    const items = Array.isArray(resp) ? resp : (resp?.data || []);
-    requirementOptions.value = dedupeOptions(items.map(item => ({ text: item.text, value: item.value })));
-    requirementLoadState.value = requirementOptions.value.length ? "loaded" : "empty";
-    if (populateRows) rows.value = rowsFromRequirements(requirementOptions.value);
+    const resp =
+      await requirementStatusTrackingService.getRequirementStatusTrackingByRequirementId(
+        requirementId
+      );
+
+    const trackingRecords =
+      resp?.requirementStatusTrackingRecordsList || [];
+
+    if (trackingRecords.length > 0) {
+      const record = trackingRecords[0];
+
+      // Populate project and module details
+      model.value = {
+        ...model.value,
+        recordId: record.id || "",
+        projectId: record.projectId || "",
+        projectModuleId: record.projectModuleId || "",
+        requirementId: record.requirementId || ""
+      };
+
+      rows.value = trackingRecords.map(item => ({
+        id: item.id || null,
+        trackingId: item.id || null,
+        trackingDate: item.trackingDate,
+        currentPercent: item.currentPercent ?? null,
+        timeSpentAsOfToday: item.timeSpentAsOfToday ?? null,
+        estimatedRemainingTime: item.estimatedRemainingTime ?? null,
+        scope: item.scope ?? "",
+        roadblock: item.roadblock ?? "",
+        estimatedTimeForCompletion: item.estimatedTimeForCompletion ?? null,
+        isRequirementUnavailable: false
+      }));
+      rows.value.unshift(createRow());
+    }
   } catch (error) {
-    // The http interceptor already shows the server error notification.
-    if (seq === requirementRequestSeq) requirementLoadState.value = "error";
+    console.error("Error loading requirement status tracking:", error);
+    recordLoadError.value = true;
+  } finally {
+    loading.value = false;
   }
-}
+};
 
 const getRequirementTimeSpentByIdsAndDate = (date) => {
   if (!date) return;
@@ -523,7 +498,7 @@ function formatHoursValue(row, field) {
 function validateHours(value) {
   const strValue = String(value ?? "").trim();
 
-  if (!strValue) return "Hours are required.";
+  if (!strValue) return true;
   if (/^\d{1,2}:?$/.test(strValue)) {
     return true;
   }
@@ -536,88 +511,8 @@ function validateHours(value) {
   const minutes = Number(match[2]);
 
   if (minutes > 59) return "Minutes can't exceed 59.";
-  if (hours === 0 && minutes === 0) {
-    return "Hours must be greater than 00:00.";
-  }
 
   return true;
-}
-
-// ----------------------------------------------------------------------------------------------------------------
-// Context changes (new records only; project/module are read-only when editing a saved record)
-// ----------------------------------------------------------------------------------------------------------------
-
-function confirmDiscardRows () {
-  if (!rows.value.some(rowHasEnteredValues)) return Promise.resolve(true);
-  return new Promise(resolve => {
-    $q.dialog({
-      title: "Replace requirement rows?",
-      message: "Changing the project or module reloads the requirement rows. Values entered in the current rows will be discarded.",
-      cancel: { label: "Keep current rows", flat: true, noCaps: true },
-      ok: { label: "Replace rows", color: "primary", noCaps: true },
-      persistent: true
-    }).onOk(() => resolve(true)).onCancel(() => resolve(false));
-  });
-}
-
-async function onProjectChange (projectId) {
-  if ((projectId || "") === model.value.projectId) return;
-  if (!(await confirmDiscardRows())) return;
-
-  model.value.projectId = projectId || "";
-  model.value.projectModuleId = "";
-  rows.value = [];
-  requirementOptions.value = [];
-  requirementRequestSeq++;
-  requirementLoadState.value = "idle";
-  if (projectId) await loadModules(projectId);
-  else projectModulesByProjectIdForDropdownSingleSelect.list.value = [];
-}
-
-async function onModuleChange (projectModuleId) {
-  if ((projectModuleId || "") === model.value.projectModuleId) return;
-  if (!(await confirmDiscardRows())) return;
-
-  model.value.projectModuleId = projectModuleId || "";
-  rows.value = [];
-  await loadRequirements(true);
-}
-
-// ----------------------------------------------------------------------------------------------------------------
-// Rows
-// ----------------------------------------------------------------------------------------------------------------
-
-const rowFilters = ref({});
-
-function rowRequirementFilter (row) {
-  return (val, update) => update(() => { rowFilters.value[row.key] = (val || "").toLowerCase(); });
-}
-
-function rowRequirementOptions (row) {
-  const usedByOthers = new Set(rows.value.filter(r => r.key !== row.key).map(r => r.requirementId));
-  const options = requirementOptions.value.map(option => ({ ...option, disable: usedByOthers.has(option.value) }));
-  // Keep a saved requirement that is no longer in the module so its label still renders.
-  if (row.requirementId && !options.some(option => option.value === row.requirementId)) {
-    options.unshift({ text: row.requirementTitle || row.requirementId, value: row.requirementId, disable: false });
-  }
-  const needle = rowFilters.value[row.key];
-  return needle ? options.filter(option => option.value === row.requirementId || option.text?.toLowerCase().includes(needle)) : options;
-}
-
-function onRowRequirementChange (row, requirementId) {
-  const duplicateIndex = findDuplicateRowIndex(rows.value, row.key, requirementId);
-  if (duplicateIndex !== -1) {
-    notifyWarning({ message: `This requirement is already selected in row ${duplicateIndex + 1}. Each requirement can be tracked only once per record.` });
-    return;
-  }
-  const option = requirementOptions.value.find(o => o.value === requirementId);
-  row.requirementId = requirementId || "";
-  row.requirementTitle = option?.text || "";
-  row.isRequirementUnavailable = false;
-}
-
-function onAddLine () {
-  rows.value.push(createRow(null, true));
 }
 
 // Removal is staged: persisted rows are only deleted by the next successful batch save.
@@ -632,16 +527,13 @@ function onRemoveRow (row) {
 
 function applySavedRecord (record) {
   model.value.recordId = record.recordId;
-  model.value.projectName = record.projectName || model.value.projectName;
-  model.value.projectModuleName = record.projectModuleName || model.value.projectModuleName;
-  model.value.trackingDate = fromApiDate(record.trackingDate);
   rows.value = rowsFromRecord(record);
   removedRowIds.value = [];
   showErrors.value = false;
 }
 
 async function onSubmit (shouldClose, buttonType) {
-  if (processing.value || props.readonly) return;
+  if (processing.value) return;
 
   showErrors.value = true;
   serverErrors.value = [];
@@ -662,6 +554,7 @@ async function onSubmit (shouldClose, buttonType) {
     if (saved?.recordId) applySavedRecord(saved);
 
     notifySuccess({ message: "Requirement status tracking is saved successfully." });
+    await getRequirementStatusTrackingByRequirementId(model.value.requirementId);
     props.onSaved?.();
     if (shouldClose) onDialogOK();
   } catch (error) {
@@ -706,29 +599,70 @@ const toolbar = [
 // On page rendering: hydrate a saved record before any lookup can touch its rows
 // ----------------------------------------------------------------------------------------------------------------
 
+
+watch(() => props.requirementId, (newValue, oldValue) => {
+  if (newValue) {
+    getRequirementStatusTrackingByRequirementId(props.requirementId);
+  }
+}, { immediate: true });
+
+watch(
+  () => model.value.requirementId,
+  (newId, oldId) => {
+    if (newId && newId !== oldId) {
+      getRequirementStatusTrackingByRequirementId(newId);
+    } else if (!newId) {
+      rows.value = [];
+    }
+  }
+);
+
+watch(
+  () => model.value.requirementId,
+  (newId) => {
+    activeRowId.value = newId || null;
+  },
+  { immediate: true }
+);
+
+watch(
+  () => model.value.projectId,
+  (projectId) => {
+    if ((projectId?.length || 0) > 0) {
+      projectModulesByProjectIdForDropdownSingleSelect.load(
+        false,
+        false,
+        projectId
+      );
+    } else {
+      model.value.projectModuleId = null;
+      projectModulesByProjectIdForDropdownSingleSelect.list.value = [];
+      requirementsByProjectModuleIdForDropdown.list.value = [];
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => model.value.projectModuleId,
+  (projectModuleId) => {
+    if ((projectModuleId?.length || 0) > 0 && (model.value.projectId?.length || 0) > 0) {
+      requirementsByProjectModuleIdForDropdown.load(
+        projectModuleId,
+        model.value.projectId
+      );
+    } else {
+      model.value.requirementId = "";
+      requirementsByProjectModuleIdForDropdown.list.value = [];
+    }
+  },
+  { immediate: true }
+);
+
+
 onMounted(async () => {
   projectNameDropdownSingleSelect.load();
-  if (!props.recordId) return;
-
-  loading.value = true;
-  try {
-    const record = await requirementStatusTrackingService.getRequirementStatusTrackingById(props.recordId);
-    model.value = {
-      recordId: record.recordId,
-      projectId: record.projectId,
-      projectName: record.projectName,
-      projectModuleId: record.projectModuleId,
-      projectModuleName: record.projectModuleName,
-      trackingDate: fromApiDate(record.trackingDate)
-    };
-    rows.value = rowsFromRecord(record);
-    // Options only (for Add New Line and labels); saved rows are kept as loaded.
-    await loadRequirements(false);
-  } catch (error) {
-    recordLoadError.value = true;
-  } finally {
-    loading.value = false;
-  }
+  rows.value.unshift(createRow());
 });
 </script>
 

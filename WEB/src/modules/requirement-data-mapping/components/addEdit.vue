@@ -366,7 +366,7 @@ const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1
 const DataMappingColumns = ref([
   { name: "source", label: "Source", field: "source", align: "left", sortable: true },
   { name: "target", label: "Target", field: "target", align: "left", sortable: true },
-  { name: "integrationDirection.dropdown", label: "Integration Direction", field: "integrationDirection.dropdown", align: "left", sortable: true}
+  { name: "integrationDirection.dropdown", label: "Integration Direction", field: "integrationDirection.dropdown", align: "left", sortable: true, }
 ]);
 
 const dataMappingSort = (rows, sortBy, descending) => {

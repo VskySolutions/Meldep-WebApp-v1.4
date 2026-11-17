@@ -15,9 +15,13 @@ export function onAddRequirementStatusTracking (refresh) {
   });
 }
 
-export function onEditRequirementStatusTracking (recordId, readonly, refresh) {
+export function onEditRequirementStatusTracking (projectId, projectModuleId, requirementId, refresh) {
   $q.dialog({
     component: addEditRequirementStatusTracking,
-    componentProps: { recordId, readonly: !!readonly, onSaved: refresh }
-  });
+    componentProps: { projectId, projectModuleId, requirementId, onSaved: refresh }
+  }).onOk(() => {
+      refresh();
+    })
+    .onCancel(() => { refresh(); })
+    .onDismiss(() => { refresh(); });
 }

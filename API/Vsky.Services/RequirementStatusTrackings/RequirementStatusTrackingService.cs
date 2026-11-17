@@ -133,6 +133,7 @@ namespace Vsky.Services.RequirementStatusTrackings
                 TimeSpentAsOfToday = x.TimeSpentAsOfToday,
                 EstimatedRemainingTime = x.EstimatedRemainingTime,
                 Scope = x.Scope,
+                Roadblock = x.Roadblock,
                 EstimatedTimeForCompletion = x.EstimatedTimeForCompletion,
                 CreatedByName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
                 CreatedOnUtc = x.CreatedOnUtc,
@@ -269,23 +270,55 @@ namespace Vsky.Services.RequirementStatusTrackings
                     x.Requirement.Title.ToLower().Contains(search) ||
                     x.Project.Name.ToLower().Contains(search) ||
                     x.ProjectModule.Name.ToLower().Contains(search) ||
-                    x.Scope.ToLower().Contains(search));
+                    x.Scope.ToLower().Contains(search) ||
+                    x.Roadblock.ToLower().Contains(search) );
             }
 
             var matchingRecordIds = matching.Select(x => x.Id).Distinct();
             var recordQuery = GroupRecords(rows.Where(x => matchingRecordIds.Contains(x.Id))).OrderBy(ordering);
 
-            // Paging is by complete record, then every row of the paged records is loaded.
+            //Paging is by complete record, then every row of the paged records is loaded.
             var paged = new PagedList<RecordKey>(recordQuery, Math.Max(filter.Page, 1), filter.PageSize);
             var pagedIds = paged.Select(k => k.RecordId).ToList();
             var pagedRows = await ProjectRows(rows.Where(x => pagedIds.Contains(x.Id))).ToListAsync();
 
             result.List = new RequirementStatusTrackingRecordList
             {
-                Records = paged.Select(k => ToRecord(k, pagedRows.Where(r => r.RecordId == k.RecordId))).ToList(),
+
+               // RequirementStatusTrackingRecordsList = paged.Select(k => ToRecord(k, pagedRows.Where(r => r.RecordId == k.RecordId))).ToList(),
                 Total = paged.TotalCount
             };
+
+
             return result;
+        }
+        #endregion
+
+        #region GetAvailableRequirementsForStatusTracking
+        public async Task<List<CommonDropDown>> GetAvailableRequirementsForStatusTracking(string projectId, string projectModuleId)
+        {
+            var addedRequirementIds = await _trackingRepository.TableNoTracking
+                .Where(x => !x.Deleted &&
+                            x.ProjectId == projectId &&
+                            x.ProjectModuleId == projectModuleId)
+                .Select(x => x.RequirementId)
+                .Distinct()
+                .ToListAsync();
+
+            var requirements = await _requirementRepository.TableNoTracking
+                      .Where(x => !x.Deleted &&
+                                  x.ProjectId == projectId &&
+                                  x.ProjectModuleId == projectModuleId &&
+                                  !addedRequirementIds.Contains(x.Id))
+                      .OrderBy(x => x.Title.Replace(" ", ""))
+                      .Select(x => new CommonDropDown
+                      {
+                          Text = x.Title,
+                          Value = x.Id
+                      })
+                      .ToListAsync();
+
+            return requirements;
         }
         #endregion
 
@@ -306,6 +339,45 @@ namespace Vsky.Services.RequirementStatusTrackings
             return ToRecord(key, await ProjectRows(rows).ToListAsync());
         }
         #endregion
+
+        public async Task<List<RequirementStatusTracking>> GetRequirementStatusTrackingByRequirementId(string requirementId)
+        {
+            var records = await _trackingRepository.TableNoTracking
+                .Where(x => !x.Deleted && x.RequirementId == requirementId)
+                .OrderByDescending(x => x.CreatedOnUtc)
+                .Select(x => new RequirementStatusTracking
+                {
+                    Id = x.Id,
+                    RequirementId = x.RequirementId,
+                    CurrentPercent = x.CurrentPercent,
+                    TimeSpentAsOfToday = x.TimeSpentAsOfToday,
+                    EstimatedRemainingTime = x.EstimatedRemainingTime,
+                    Scope = x.Scope,
+                    Roadblock = x.Roadblock,
+                    EstimatedTimeForCompletion = x.EstimatedTimeForCompletion,
+                    ProjectId = x.ProjectId,
+                    ProjectModuleId = x.ProjectModuleId,
+                    TrackingDate = x.TrackingDate,
+                    Project = new Project
+                    {
+                        Id = x.Project.Id,
+                        Name = x.Project.Name
+                    },
+                    ProjectModule = new ProjectModule
+                    {
+                        Id = x.ProjectModule.Id,
+                        Name = x.ProjectModule.Name
+                    },
+                    Requirement = new Requirement
+                    {
+                        Id = x.Requirement.Id,
+                        Title = x.Requirement.Title
+                    }
+                })
+                .ToListAsync();
+
+            return records;
+        }
 
         #region SaveRequirementStatusTrackingRecord
         public async Task<RequirementStatusTrackingResult> SaveRecord(string siteId, string loggedUserId, string employeeId, RequirementStatusTrackingSaveModel model, bool isCreate, DateTime now)
@@ -396,28 +468,28 @@ namespace Vsky.Services.RequirementStatusTrackings
             if (result.Errors.Any())
                 return result;
 
-            var requirementIds = model.Rows.Select(r => r.RequirementId).Distinct().ToList();
-            var requirements = await _requirementRepository.TableNoTracking
-                .Where(r => requirementIds.Contains(r.Id) && r.SiteId == siteId)
-                .Select(r => new { r.Id, r.ProjectId, r.ProjectModuleId, r.Deleted })
-                .ToListAsync();
+            //var requirementIds = model.Rows.Select(r => r.RequirementId).Distinct().ToList();
+            //var requirements = await _requirementRepository.TableNoTracking
+            //    .Where(r => requirementIds.Contains(r.Id) && r.SiteId == siteId)
+            //    .Select(r => new { r.Id, r.ProjectId, r.ProjectModuleId, r.Deleted })
+            //    .ToListAsync();
 
-            for (var i = 0; i < model.Rows.Count; i++)
-            {
-                var row = model.Rows[i];
+            //for (var i = 0; i < model.Rows.Count; i++)
+            //{
+            //    var row = model.Rows[i];
 
-                // A saved row whose requirement later moved or was deleted may be kept unchanged in the same module.
-                var keepsSavedRequirement = !string.IsNullOrWhiteSpace(row.Id)
-                    && existingById.TryGetValue(row.Id, out var saved)
-                    && string.Equals(saved.RequirementId, row.RequirementId, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(saved.ProjectModuleId, model.ProjectModuleId, StringComparison.OrdinalIgnoreCase);
-                if (keepsSavedRequirement)
-                    continue;
+            //    // A saved row whose requirement later moved or was deleted may be kept unchanged in the same module.
+            //    var keepsSavedRequirement = !string.IsNullOrWhiteSpace(row.Id)
+            //        && existingById.TryGetValue(row.Id, out var saved)
+            //        && string.Equals(saved.RequirementId, row.RequirementId, StringComparison.OrdinalIgnoreCase)
+            //        && string.Equals(saved.ProjectModuleId, model.ProjectModuleId, StringComparison.OrdinalIgnoreCase);
+            //    if (keepsSavedRequirement)
+            //        continue;
 
-                var requirement = requirements.FirstOrDefault(r => string.Equals(r.Id, row.RequirementId, StringComparison.OrdinalIgnoreCase));
-                if (requirement == null || requirement.Deleted || requirement.ProjectId != model.ProjectId || requirement.ProjectModuleId != model.ProjectModuleId)
-                    result.Errors.Add($"Row {i + 1}: Requirement does not belong to the selected project module.");
-            }
+            //    var requirement = requirements.FirstOrDefault(r => string.Equals(r.Id, row.RequirementId, StringComparison.OrdinalIgnoreCase));
+            //    if (requirement == null || requirement.Deleted || requirement.ProjectId != model.ProjectId || requirement.ProjectModuleId != model.ProjectModuleId)
+            //        result.Errors.Add($"Row {i + 1}: Requirement does not belong to the selected project module.");
+            //}
 
             if (result.Errors.Any())
                 return result;
@@ -451,12 +523,13 @@ namespace Vsky.Services.RequirementStatusTrackings
                 // Context is repeated on every row of the record, so it is rewritten on each kept row.
                 entity.ProjectId = model.ProjectId;
                 entity.ProjectModuleId = model.ProjectModuleId;
-                entity.TrackingDate = trackingDate;
-                entity.RequirementId = row.RequirementId;
+                entity.TrackingDate = row.TrackingDate;
+                entity.RequirementId = model.RequirementId;
                 entity.CurrentPercent = row.CurrentPercent;
                 entity.TimeSpentAsOfToday = row.TimeSpentAsOfToday;
                 entity.EstimatedRemainingTime = row.EstimatedRemainingTime;
                 entity.Scope = string.IsNullOrWhiteSpace(row.Scope) ? null : row.Scope;
+                entity.Roadblock = string.IsNullOrWhiteSpace(row.Roadblock) ? null : row.Roadblock;
                 entity.EstimatedTimeForCompletion = row.EstimatedTimeForCompletion;
                 entity.UpdatedById = loggedUserId;
                 entity.UpdatedOnUtc = now;
@@ -490,13 +563,13 @@ namespace Vsky.Services.RequirementStatusTrackings
                 }
             }
 
-            // Return every row kept by this save (not only the record row) so the form keeps all row ids.
-            var keptIds = inserts.Concat(updates.Where(x => !x.Deleted)).Select(x => x.Id).Distinct().ToList();
-            var keyRecordId = keptIds.Contains(recordId, StringComparer.OrdinalIgnoreCase) ? recordId : keptIds.FirstOrDefault();
-            var readable = ReadableRows(siteId, AccessibleProjectIds(siteId, loggedUserId, employeeId, isAdmin, false));
-            var key = await GroupRecords(readable.Where(x => x.Id == keyRecordId)).FirstOrDefaultAsync();
-            if (key != null)
-                result.Record = ToRecord(key, await ProjectRows(readable.Where(x => keptIds.Contains(x.Id))).ToListAsync());
+            //// Return every row kept by this save (not only the record row) so the form keeps all row ids.
+            //var keptIds = inserts.Concat(updates.Where(x => !x.Deleted)).Select(x => x.Id).Distinct().ToList();
+            //var keyRecordId = keptIds.Contains(recordId, StringComparer.OrdinalIgnoreCase) ? recordId : keptIds.FirstOrDefault();
+            //var readable = ReadableRows(siteId, AccessibleProjectIds(siteId, loggedUserId, employeeId, isAdmin, false));
+            //var key = await GroupRecords(readable.Where(x => x.Id == keyRecordId)).FirstOrDefaultAsync();
+            //if (key != null)
+            //    result.Record = ToRecord(key, await ProjectRows(readable.Where(x => keptIds.Contains(x.Id))).ToListAsync());
             return result;
         }
         #endregion
@@ -579,16 +652,6 @@ namespace Vsky.Services.RequirementStatusTrackings
 
         private static bool HasMoreThanTwoDecimals(decimal value) => decimal.Round(value, 2) != value;
 
-        //private static void ValidateHours(decimal? value, string label, int rowNumber, List<string> errors)
-        //{
-        //    if (!value.HasValue)
-        //        return;
-        //    if (value.Value < 0 || value.Value > MaxHours)
-        //        errors.Add($"Row {rowNumber}: {label} must be between 0 and {MaxHours.ToString(CultureInfo.InvariantCulture)}.");
-        //    else if (HasMoreThanTwoDecimals(value.Value))
-        //        errors.Add($"Row {rowNumber}: {label} allows at most 2 decimal places.");
-        //}
-
         public static List<string> Validate(RequirementStatusTrackingSaveModel model, bool isCreate, out DateTime trackingDate)
         {
             var errors = new List<string>();
@@ -608,10 +671,8 @@ namespace Vsky.Services.RequirementStatusTrackings
                 errors.Add("Project Name is required.");
             if (string.IsNullOrWhiteSpace(model.ProjectModuleId))
                 errors.Add("Project Module is required.");
-            if (string.IsNullOrWhiteSpace(model.TrackingDate))
-                errors.Add("Date is required.");
-            else if (!TryParseDate(model.TrackingDate, out trackingDate))
-                errors.Add("Date must be a valid calendar date (yyyy-MM-dd).");
+            if (string.IsNullOrWhiteSpace(model.RequirementId))
+                errors.Add("Requirement is required.");
 
             var rows = model.Rows ?? new List<RequirementStatusTrackingRowSaveModel>();
             model.Rows = rows;
@@ -632,9 +693,6 @@ namespace Vsky.Services.RequirementStatusTrackings
                     continue;
                 }
 
-                if (string.IsNullOrWhiteSpace(row.RequirementId))
-                    errors.Add($"Row {rowNumber}: Requirement is required.");
-
                 if (row.CurrentPercent.HasValue)
                 {
                     if (row.CurrentPercent.Value < 0 || row.CurrentPercent.Value > 100)
@@ -650,15 +708,6 @@ namespace Vsky.Services.RequirementStatusTrackings
 
             if (rows.Any(r => r == null))
                 return errors;
-
-            foreach (var group in rows
-                .Select((row, index) => new { row.RequirementId, RowNumber = index + 1 })
-                .Where(x => !string.IsNullOrWhiteSpace(x.RequirementId))
-                .GroupBy(x => x.RequirementId, StringComparer.OrdinalIgnoreCase)
-                .Where(g => g.Count() > 1))
-            {
-                errors.Add($"Rows {string.Join(", ", group.Select(x => x.RowNumber))}: the same requirement is selected more than once.");
-            }
 
             foreach (var group in rows
                 .Select((row, index) => new { row.Id, RowNumber = index + 1 })

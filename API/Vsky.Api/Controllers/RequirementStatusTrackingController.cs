@@ -104,6 +104,15 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        #region GetAvailableRequirementsForStatusTracking
+        [HttpGet("available-requirements")]
+        public async Task<IActionResult> GetAvailableRequirementsForStatusTracking(string projectId, string projectModuleId)
+        {
+            var result = await _requirementStatusTrackingService.GetAvailableRequirementsForStatusTracking(projectId, projectModuleId);
+            return Ok(result);
+        }
+        #endregion
+
         #region GetRequirementStatusTrackingRecordById
         [HttpGet("{id}")]
         public async Task<IActionResult> GetRecordById(string id)
@@ -117,6 +126,30 @@ namespace Vsky.Api.Controllers
                     return NotFound(new NotFoundError("No tracking record found with the specified id."));
 
                 return Ok(record);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region GetRequirementStatusTrackingByRequirementId
+        [HttpGet("get-requirement-status-tracking-by-requirementId")]
+        public async Task<IActionResult> GetRequirementStatusTrackingByRequirementId(string requirementId = null)
+        {
+            try
+            {
+                var (siteId, loggedUserId, employeeId) = GetRequestContext();
+
+                var records = await _requirementStatusTrackingService.GetRequirementStatusTrackingByRequirementId(requirementId);
+                var model = new RequirementStatusTrackingRecordList
+                {
+                    RequirementStatusTrackingRecordsList = records,
+                    Total = records.Count
+                };
+
+                return Ok(model);
             }
             catch (Exception ex)
             {

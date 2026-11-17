@@ -1,6 +1,3 @@
-// Pure helpers for the Requirement Status Tracking list (no Vue/Quasar imports so they can be tested in isolation).
-import { toApiDate, fromApiDate } from "./trackingForm.js";
-
 // Record-level sort keys accepted by the API allowlist; requirement-row columns are not sortable.
 export const SORTABLE_COLUMNS = ["project.name", "projectModule.name", "trackingDate", "createdOnUtc", "updatedOnUtc"];
 

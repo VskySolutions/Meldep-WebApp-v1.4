@@ -22,6 +22,7 @@ namespace Vsky.Models
         [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedRemainingTime { get; set; }
         public string Scope { get; set; }
+        public string Roadblock { get; set; }
 
         [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedTimeForCompletion { get; set; }
@@ -46,8 +47,7 @@ namespace Vsky.Models
         public string RecordId { get; set; }
         public string ProjectId { get; set; }
         public string ProjectModuleId { get; set; }
-        // Calendar date in yyyy-MM-dd; kept as text so no timezone conversion can shift it.
-        public string TrackingDate { get; set; }
+        public string RequirementId { get; set; }
         public List<RequirementStatusTrackingRowSaveModel> Rows { get; set; } = new();
         // Persisted row ids staged for removal in the form.
         public List<string> RemovedRowIds { get; set; } = new();
@@ -56,7 +56,7 @@ namespace Vsky.Models
     public class RequirementStatusTrackingRowSaveModel
     {
         public string Id { get; set; }
-        public string RequirementId { get; set; }
+        public DateTime TrackingDate { get; set; }
         public decimal? CurrentPercent { get; set; }
 
         [JsonConverter(typeof(HoursConverter))]
@@ -65,6 +65,7 @@ namespace Vsky.Models
         [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedRemainingTime { get; set; }
         public string Scope { get; set; }
+        public string Roadblock { get; set; }
 
         [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedTimeForCompletion { get; set; }
@@ -107,6 +108,7 @@ namespace Vsky.Models
         [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedRemainingTime { get; set; }
         public string Scope { get; set; }
+        public string Roadblock { get; set; }
 
         [JsonConverter(typeof(HoursConverter))]
         public decimal? EstimatedTimeForCompletion { get; set; }
@@ -118,8 +120,7 @@ namespace Vsky.Models
 
     public class RequirementStatusTrackingRecordList
     {
-        public List<RequirementStatusTrackingRecord> Records { get; set; } = new();
-        // Count of complete matching records, not requirement rows.
+        public virtual ICollection<RequirementStatusTracking> RequirementStatusTrackingRecordsList { get; set; } = new List<RequirementStatusTracking>();
         public int Total { get; set; }
     }
 
