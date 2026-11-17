@@ -51,6 +51,8 @@ import 'src/css/custom.scss'
 
 import 'src/css/website.scss'
 
+import 'src/css/ui-standards.scss'
+
 
 import createQuasarApp from './app.js'
 import quasarUserOptions from './quasar-user-options.js'
@@ -166,13 +168,17 @@ createQuasarApp(createApp, quasarUserOptions)
       
       import('boot/interceptors'),
       
-      import('boot/auth'),
+      import('boot/permissions'),
+      
+      import('boot/sanitize'),
       
       import('boot/title'),
       
       import('boot/components'),
       
-      import('boot/i18n')
+      import('boot/i18n'),
+      
+      import('boot/apexcharts')
       
     ]).then(bootFiles => {
       const boot = mapFn(bootFiles).filter(entry => typeof entry === 'function')
