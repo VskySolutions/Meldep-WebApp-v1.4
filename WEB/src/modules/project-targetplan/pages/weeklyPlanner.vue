@@ -40,6 +40,7 @@
                     <singleSelectDropdown
                       v-model="search.sortByFilter"
                       label="Sort By Filter"
+                      class="hidden"
                       :options="planSortByFilterDropdownSingleSelect.list.value"
                       :filter="planSortByFilterDropdownSingleSelect.filter"
                     />
