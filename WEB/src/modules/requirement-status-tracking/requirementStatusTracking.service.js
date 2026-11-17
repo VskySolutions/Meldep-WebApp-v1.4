@@ -9,9 +9,8 @@ export default {
     return http.get(`/requirement-status-tracking/${recordId}`).then(response => response.data);
   },
 
-  getRequirementTimeSpentByIdsAndDate(requirementIds, trackingDate) {
-    const idsQuery = requirementIds.join(",");
-    return http.get(`/requirement-status-tracking/get-requirement-time-spent?ids=${idsQuery}&trackingDate=${(trackingDate)}`).then(response => response.data);
+  getRequirementTimeSpentByRequirementIdAndDate(requirementId, trackingDate) {
+    return http.get(`/requirement-status-tracking/get-requirement-time-spent?requirementId=${requirementId}&trackingDate=${(trackingDate)}`).then(response => response.data);
   },
 
   getRequirementStatusTrackingByRequirementId(requirementId) {

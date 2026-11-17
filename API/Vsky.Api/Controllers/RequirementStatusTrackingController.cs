@@ -165,16 +165,14 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
-        #region GetRequirementTimeSpentByIdsAndDate
-        // Title: GetRequirementTimeSpentByIdsAndDate
+        #region GetRequirementTimeSpentByRequirementIdAndDate
+        // Title: GetRequirementTimeSpentByRequirementIdAndDate
         // Description: Retrieves the total timesheet hours for the specified Requirement IDs up to the selected Tracking Date and returns the results.
         [HttpGet("get-requirement-time-spent")]
-        public async Task<IActionResult> GetRequirementTimeSpentByIdsAndDate(string ids, DateTime trackingDate)
+        public async Task<IActionResult> GetRequirementTimeSpentByRequirementIdAndDate(string requirementId, DateTime trackingDate)
         {
             var SiteId = _globalVariable.SiteId;
-            var requirementIds = ids.Split(',').ToList();
-            
-            var result = await _timesheetLinesService.GetRequirementTimeSpentByIdsAndDate(SiteId, requirementIds, trackingDate);
+            var result = await _timesheetLinesService.GetRequirementTimeSpentByRequirementIdAndDate(SiteId, requirementId, trackingDate);
             return Ok(result);
         }
         #endregion

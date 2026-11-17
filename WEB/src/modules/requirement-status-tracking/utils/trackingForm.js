@@ -1,6 +1,7 @@
 // Pure helpers for the Requirement Status Tracking Add/Edit form (no Vue/Quasar imports so they can be tested in isolation).
 // Limits mirror the API validator: completion decimal(5,2) in [0,100], hours decimal(10,2) >= 0, at most 2 decimals.
 import { format } from "date-fns";
+import { isDate } from "validators/zw_validators.js";
 
 export const MAX_HOURS = 99999999.99;
 
@@ -10,6 +11,8 @@ export const HOUR_FIELDS = [
   { key: "estimatedTimeForCompletion", label: "Estimated Time for Completion of Additional Scope (Hours)" }
 ];
 
+let rowSeq = 0;
+const newRowKey = () => `new-${++rowSeq}`;
 // ----------------------------------------------------------------------------------------------------------------
 // Numbers: blank stays null (not 0); anything non-finite is reported as invalid.
 // ----------------------------------------------------------------------------------------------------------------
@@ -44,6 +47,7 @@ function validateCompletion(value) {
 
 export function createRow () {
   return {
+    key: newRowKey(),
     id: "",
     trackingDate: format(new Date(), "MM/dd/yyyy"),
     currentPercent: null,
@@ -102,7 +106,11 @@ export function validateDraft (model, rows) {
 
   rows.forEach((row, index) => {
     const errors = {
-      trackingDate: row.trackingDate ? "" : "Tracking Date is required.",
+      trackingDate: !row.trackingDate
+        ? "Tracking Date is required."
+        : !isDate(row.trackingDate)
+          ? "Date is invalid."
+          : "",
       currentPercent: validateCompletion(row.currentPercent)
     };
     if (Object.values(errors).some(Boolean)) {

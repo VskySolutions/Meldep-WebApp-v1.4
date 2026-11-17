@@ -89,7 +89,7 @@
                 v-model:pagination="pagination"
                 virtual-scroll
                 bordered
-                row-key="id"
+                row-key="key"
                 class="no-shadow"
                 :loading="loading"
                 :rows="rows"
@@ -115,9 +115,10 @@
                       <formDate
                         v-model="bodyProps.row.trackingDate"
                         wrapper-class="col-12 col-sm-4 col-md-4"
+                        :date-options="getDateOptions(bodyProps.row)"
                         :error="showErrors && !!rowError(bodyProps.row, 'trackingDate')"
                         :error-message="rowError(bodyProps.row, 'trackingDate')"
-                        @update:model-value="getRequirementTimeSpentByIdsAndDate(model.trackingDate)"
+                        @update:model-value="getRequirementTimeSpentByRequirementIdAndDate(bodyProps.row)"
                       />
                     </q-td>
                     <q-td key="currentPercent" style="width: 90px; max-width: 90px;">
@@ -289,6 +290,8 @@
 import { useDialogPluginComponent, useQuasar } from "quasar";
 import { ref, computed, onMounted, watch } from "vue";
 import { notifySuccess, notifyError } from "assets/utils";
+import { isDate } from "validators/zw_validators.js";
+import { format } from "date-fns";
 
 import requirementStatusTrackingService from "../requirementStatusTracking.service";
 
@@ -341,7 +344,7 @@ const serverErrors = ref([]);
 // const { fonts, toolbar } = getEditorConfig($q);
 
 const model = ref({
-  recordId: props.recordId || "",
+  recordId: "",
   projectId: props.projectId || "",
   projectModuleId: props.projectModuleId || "",
   projectModuleName: "",
@@ -403,6 +406,7 @@ const getRequirementStatusTrackingByRequirementId = async (requirementId) => {
       };
 
       rows.value = trackingRecords.map(item => ({
+        key: item.id ? item.id : newRowKey(),
         id: item.id || null,
         trackingId: item.id || null,
         trackingDate: item.trackingDate,
@@ -414,7 +418,14 @@ const getRequirementStatusTrackingByRequirementId = async (requirementId) => {
         estimatedTimeForCompletion: item.estimatedTimeForCompletion ?? null,
         isRequirementUnavailable: false
       }));
-      rows.value.unshift(createRow());
+      showErrors.value = false;
+      const today = format(new Date(), "MM/dd/yyyy");
+      rows.value.unshift({
+        ...createRow(),
+        trackingDate: rows.value.some(row => row.trackingDate === today)
+          ? ""
+          : today
+      });
     }
   } catch (error) {
     console.error("Error loading requirement status tracking:", error);
@@ -424,36 +435,36 @@ const getRequirementStatusTrackingByRequirementId = async (requirementId) => {
   }
 };
 
-const getRequirementTimeSpentByIdsAndDate = (date) => {
-  if (!date) return;
+const getRequirementTimeSpentByRequirementIdAndDate = (row) => {
+  if (
+    !row.trackingDate ||
+    !model.value.requirementId ||
+    !isDate(row.trackingDate)
+  ) return;
 
-  model.value.trackingDate = date;
+    // Prevent duplicate API calls for the same tracking date.
+  if (row.lastRequestedTrackingDate === row.trackingDate) return;
 
-  const requirementIds = [
-    ...new Set(
-      rows.value
-        .filter(row => row.requirementId)
-        .map(row => row.requirementId)
-    )
-  ];
-
-  if (!requirementIds.length) return;
+  row.lastRequestedTrackingDate = row.trackingDate;
 
   requirementStatusTrackingService
-    .getRequirementTimeSpentByIdsAndDate(requirementIds, date)
+    .getRequirementTimeSpentByRequirementIdAndDate(
+      model.value.requirementId,
+      row.trackingDate
+    )
     .then(resp => {
-      rows.value.forEach(row => {
-        if (!row.requirementId) return;
+    if (resp == null || Number(resp) === 0) {
+      row.timeSpentAsOfToday = "";
+      return;
+    }
 
-        const requirement = resp.find(
-          x => x.task?.requirementId === row.requirementId
-        );
+    const totalMinutes = Math.round(Number(resp) * 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
 
-        if (requirement) {
-          row.timeSpentAsOfToday = requirement.hours;
-       }
-      });
-    });
+    row.timeSpentAsOfToday =
+      `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  });
 };
 
 function getHoursMinutesText(value) {
@@ -515,9 +526,23 @@ function validateHours(value) {
   return true;
 }
 
+function getDateOptions(currentRow) {
+  const existingDates = rows.value
+    .filter(row => row.key !== currentRow.key && row.trackingDate)
+    .map(row => {
+      // Convert MM/DD/YYYY to YYYY/MM/DD for QDate.
+      const [month, day, year] = row.trackingDate.split("/");
+      return `${year}/${month}/${day}`;
+    });
+
+  return date => !existingDates.includes(date);
+}
+
 // Removal is staged: persisted rows are only deleted by the next successful batch save.
-function onRemoveRow (row) {
-  if (row.id) removedRowIds.value.push(row.id);
+function onRemoveRow(row) {
+  if (row.id && !row.deleted) {
+    removedRowIds.value.push(row.id);
+  }
   rows.value = rows.value.filter(r => r.key !== row.key);
 }
 
@@ -538,7 +563,7 @@ async function onSubmit (shouldClose, buttonType) {
   showErrors.value = true;
   serverErrors.value = [];
   if (!validation.value.isValid) {
-    notifyError({ message: validation.value.messages[0] || "Please fill the required fields before saving." });
+    // notifyError({ message: validation.value.messages[0] || "Please fill the required fields before saving." });
     return;
   }
 
@@ -552,7 +577,7 @@ async function onSubmit (shouldClose, buttonType) {
 
     // Keep the returned record/row ids so the next save updates this record instead of creating another.
     if (saved?.recordId) applySavedRecord(saved);
-
+    removedRowIds.value = [];
     notifySuccess({ message: "Requirement status tracking is saved successfully." });
     await getRequirementStatusTrackingByRequirementId(model.value.requirementId);
     props.onSaved?.();

@@ -829,26 +829,19 @@ namespace Vsky.Services.Timesheets
         }
         #endregion
 
-        #region GetRequirementTimeSpentByIdsAndDate
-        // Title: GetRequirementTimeSpentByIdsAndDate
+        #region GetRequirementTimeSpentByRequirementIdAndDate
+        // Title: GetRequirementTimeSpentByRequirementIdAndDate
         // Description: This method retrieves the total timesheet hours for the specified Requirement IDs up to the selected Tracking Date.
-        public async Task<List<TimesheetLines>> GetRequirementTimeSpentByIdsAndDate(string siteId, List<string> requirementIds, DateTime trackingDate)
+        public async Task<decimal> GetRequirementTimeSpentByRequirementIdAndDate(string siteId, string requirementId, DateTime trackingDate)
         {
-            var query = _timesheetLinesRepository.TableNoTracking.Where(x => !x.Deleted && x.Timesheet.SiteId == siteId && requirementIds.Contains(x.Task.RequirementId) && x.Timesheet.TimesheetDate == trackingDate.Date);
+            var totalHours = await _timesheetLinesRepository.TableNoTracking
+                .Where(x => !x.Deleted
+                    && x.Timesheet.SiteId == siteId
+                    && x.Task.RequirementId == requirementId
+                    && x.Timesheet.TimesheetDate == trackingDate.Date)
+                .SumAsync(x => (decimal?)x.Hours) ?? 0;
 
-            var list = await query
-                .GroupBy(x => x.Task.RequirementId)
-                .Select(g => new TimesheetLines
-                {
-                    Task = new ProjectTask
-                    {
-                        RequirementId = g.Key
-                    },
-                    Hours = g.Sum(x => x.Hours)
-                })
-                .ToListAsync();
-
-            return list;
+            return totalHours;
         }
         #endregion
 
