@@ -189,8 +189,44 @@ namespace Vsky.Services.RequirementStatusTrackings
             };
         }
 
+        // Allowlisted requirement-group sort keys for the list page (client key -> GroupKey property).
+        private static readonly Dictionary<string, string> GroupSortColumns = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["trackingDate"] = nameof(GroupKey.LatestTrackingDate),
+            ["project.name"] = nameof(GroupKey.ProjectName),
+            ["projectName"] = nameof(GroupKey.ProjectName),
+            ["projectModule.name"] = nameof(GroupKey.ProjectModuleName),
+            ["projectModuleName"] = nameof(GroupKey.ProjectModuleName),
+            ["requirementTitle"] = nameof(GroupKey.RequirementTitle),
+            ["requirementNumber"] = nameof(GroupKey.RequirementNumber),
+            ["createdOnUtc"] = nameof(GroupKey.CreatedOnUtc),
+            ["updatedOnUtc"] = nameof(GroupKey.UpdatedOnUtc)
+        };
+
+        private class GroupKey
+        {
+            public string RequirementId { get; set; }
+            public string ProjectId { get; set; }
+            public string ProjectName { get; set; }
+            public string ProjectModuleId { get; set; }
+            public string ProjectModuleName { get; set; }
+            public int RequirementNumber { get; set; }
+            public string RequirementTitle { get; set; }
+            public bool IsRequirementUnavailable { get; set; }
+            public DateTime LatestTrackingDate { get; set; }
+            public DateTime CreatedOnUtc { get; set; }
+            public DateTime UpdatedOnUtc { get; set; }
+            public int RowCount { get; set; }
+        }
+
         // Builds an ordered, allowlisted Dynamic LINQ ordering; RecordId is the final tie-break so paging is stable.
         private static string BuildOrdering(RequirementStatusTrackingFilter filter, List<string> errors)
+        {
+            return BuildOrdering(filter, errors, SortColumns, $"{nameof(RecordKey.UpdatedOnUtc)} desc", new[] { nameof(RecordKey.RecordId) });
+        }
+
+        private static string BuildOrdering(RequirementStatusTrackingFilter filter, List<string> errors,
+            Dictionary<string, string> SortColumns, string defaultOrdering, string[] tieBreakers)
         {
             var parts = new List<string>();
 
@@ -221,9 +257,9 @@ namespace Vsky.Services.RequirementStatusTrackings
             }
 
             if (!parts.Any())
-                parts.Add($"{nameof(RecordKey.UpdatedOnUtc)} desc");
+                parts.Add(defaultOrdering);
 
-            parts.Add($"{nameof(RecordKey.RecordId)} asc");
+            parts.AddRange(tieBreakers.Select(t => $"{t} asc"));
             return string.Join(", ", parts);
         }
         #endregion
@@ -244,7 +280,8 @@ namespace Vsky.Services.RequirementStatusTrackings
             if (hasFrom && hasTo && result.Errors.Count == 0 && fromDate > toDate)
                 result.Errors.Add("From Date cannot be after To Date.");
 
-            var ordering = BuildOrdering(filter, result.Errors);
+            var groupOrdering = BuildOrdering(filter, result.Errors, GroupSortColumns, $"{nameof(GroupKey.UpdatedOnUtc)} desc",
+                new[] { nameof(GroupKey.RequirementId), nameof(GroupKey.ProjectModuleId) });
             if (result.Errors.Any())
                 return result;
 
@@ -259,10 +296,17 @@ namespace Vsky.Services.RequirementStatusTrackings
                 matching = matching.Where(x => filter.ProjectModuleIds.Contains(x.ProjectModuleId));
             if (filter.RequirementIds != null && filter.RequirementIds.Any())
                 matching = matching.Where(x => filter.RequirementIds.Contains(x.RequirementId));
+            // Tracking Date range, both ends inclusive by calendar day (a stored time part never excludes a row).
             if (hasFrom)
-                matching = matching.Where(x => x.TrackingDate >= fromDate);
+            {
+                var fromDay = fromDate.Date;
+                matching = matching.Where(x => x.TrackingDate >= fromDay);
+            }
             if (hasTo)
-                matching = matching.Where(x => x.TrackingDate <= toDate);
+            {
+                var dayAfterTo = toDate.Date.AddDays(1);
+                matching = matching.Where(x => x.TrackingDate < dayAfterTo);
+            }
             if (!string.IsNullOrWhiteSpace(filter.SearchText))
             {
                 var search = filter.SearchText.Trim().ToLower();
@@ -274,21 +318,93 @@ namespace Vsky.Services.RequirementStatusTrackings
                     x.Roadblock.ToLower().Contains(search) );
             }
 
-            var matchingRecordIds = matching.Select(x => x.Id).Distinct();
-            var recordQuery = GroupRecords(rows.Where(x => matchingRecordIds.Contains(x.Id))).OrderBy(ordering);
+            // Group the matching tracking rows under their requirement (within its project/module), page by
+            // requirement group, then load the rows of the paged groups (newest tracking date first).
+            var groupQuery = matching
+                .GroupBy(x => new
+                {
+                    x.RequirementId,
+                    x.ProjectId,
+                    ProjectName = x.Project.Name,
+                    x.ProjectModuleId,
+                    ProjectModuleName = x.ProjectModule.Name,
+                    x.Requirement.RequirementNumber,
+                    RequirementTitle = x.Requirement.Title,
+                    IsRequirementUnavailable = x.Requirement.Deleted || x.Requirement.ProjectModuleId != x.ProjectModuleId
+                })
+                .Select(g => new GroupKey
+                {
+                    RequirementId = g.Key.RequirementId,
+                    ProjectId = g.Key.ProjectId,
+                    ProjectName = g.Key.ProjectName,
+                    ProjectModuleId = g.Key.ProjectModuleId,
+                    ProjectModuleName = g.Key.ProjectModuleName,
+                    RequirementNumber = g.Key.RequirementNumber,
+                    RequirementTitle = g.Key.RequirementTitle,
+                    IsRequirementUnavailable = g.Key.IsRequirementUnavailable,
+                    LatestTrackingDate = g.Max(r => r.TrackingDate),
+                    CreatedOnUtc = g.Min(r => r.CreatedOnUtc),
+                    UpdatedOnUtc = g.Max(r => r.UpdatedOnUtc ?? r.CreatedOnUtc),
+                    RowCount = g.Count()
+                })
+                .OrderBy(groupOrdering);
 
-            //Paging is by complete record, then every row of the paged records is loaded.
-            var paged = new PagedList<RecordKey>(recordQuery, Math.Max(filter.Page, 1), filter.PageSize);
-            var pagedIds = paged.Select(k => k.RecordId).ToList();
-            var pagedRows = await ProjectRows(rows.Where(x => pagedIds.Contains(x.Id))).ToListAsync();
+            var paged = new PagedList<GroupKey>(groupQuery, Math.Max(filter.Page, 1), filter.PageSize);
+            var pagedRequirementIds = paged.Select(k => k.RequirementId).Distinct().ToList();
+            var pagedModuleIds = paged.Select(k => k.ProjectModuleId).Distinct().ToList();
+
+            var pagedRows = await matching
+                .Where(x => pagedRequirementIds.Contains(x.RequirementId) && pagedModuleIds.Contains(x.ProjectModuleId))
+                .Select(x => new
+                {
+                    x.RequirementId,
+                    x.ProjectModuleId,
+                    Row = new RequirementStatusTrackingGroupRow
+                    {
+                        Id = x.Id,
+                        CurrentPercent = x.CurrentPercent,
+                        TimeSpentAsOfToday = x.TimeSpentAsOfToday,
+                        EstimatedRemainingTime = x.EstimatedRemainingTime,
+                        Scope = x.Scope,
+                        Roadblock = x.Roadblock,
+                        EstimatedTimeForCompletion = x.EstimatedTimeForCompletion,
+                        CreatedByName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                        CreatedOnUtc = x.CreatedOnUtc,
+                        UpdatedByName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
+                        UpdatedOnUtc = x.UpdatedOnUtc
+                    },
+                    x.TrackingDate
+                })
+                .ToListAsync();
 
             result.List = new RequirementStatusTrackingRecordList
             {
-
-               // RequirementStatusTrackingRecordsList = paged.Select(k => ToRecord(k, pagedRows.Where(r => r.RecordId == k.RecordId))).ToList(),
+                Requirements = paged.Select(k => new RequirementStatusTrackingGroup
+                {
+                    RequirementId = k.RequirementId,
+                    RequirementNumber = k.RequirementNumber,
+                    RequirementTitle = k.RequirementTitle,
+                    IsRequirementUnavailable = k.IsRequirementUnavailable,
+                    ProjectId = k.ProjectId,
+                    ProjectName = k.ProjectName,
+                    ProjectModuleId = k.ProjectModuleId,
+                    ProjectModuleName = k.ProjectModuleName,
+                    LatestTrackingDate = k.LatestTrackingDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    RowCount = k.RowCount,
+                    Rows = pagedRows
+                        .Where(r => r.RequirementId == k.RequirementId && r.ProjectModuleId == k.ProjectModuleId)
+                        .OrderByDescending(r => r.TrackingDate)
+                        .ThenByDescending(r => r.Row.CreatedOnUtc)
+                        .ThenBy(r => r.Row.Id)
+                        .Select(r =>
+                        {
+                            r.Row.TrackingDate = r.TrackingDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                            return r.Row;
+                        })
+                        .ToList()
+                }).ToList(),
                 Total = paged.TotalCount
             };
-
 
             return result;
         }
@@ -419,6 +535,14 @@ namespace Vsky.Services.RequirementStatusTrackings
                         result.Errors.Add("You do not have permission to change this tracking record.");
                         return result;
                     }
+                }
+
+                // Edit by requirement: only the selected requirement's tracking records may be updated or removed;
+                // a row id of another requirement must never be rewritten onto this one.
+                if (existing.Any(x => !string.Equals(x.RequirementId, model.RequirementId, StringComparison.OrdinalIgnoreCase)))
+                {
+                    result.Errors.Add("Only tracking records of the selected requirement can be updated.");
+                    return result;
                 }
             }
 

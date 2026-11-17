@@ -39,6 +39,7 @@
                         :options="projectNameDropdown.list.value"
                         :filter="projectNameDropdown.filter"
                       />
+                      <!-- Dependent filters: modules of the selected projects; requirements of the selected projects and modules -->
                       <multiSelectDropdown
                         v-model="search.projectModuleIds"
                         label="Project Module"
@@ -59,11 +60,11 @@
                         </div>
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
                           <div class="input-group q-mx-sm w-100 h-auto">
-                            <q-input v-model="search.fromDate" fill-input dense>
+                            <q-input v-model="search.fromDate" fill-input dense clearable placeholder="MM/DD/YYYY" :error="!!fromDateError" :error-message="fromDateError" hide-bottom-space>
                               <template #append>
                                 <q-icon name="o_calendar_month" class="cursor-pointer">
-                                  <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                                    <q-date v-model="search.fromDate" mask="MM/DD/YYYY" @update:model-value="() => $refs.qDateProxy.hide()" />
+                                  <q-popup-proxy ref="fromDateProxy" transition-show="scale" transition-hide="scale">
+                                    <q-date v-model="search.fromDate" mask="MM/DD/YYYY" :options="fromDateOptions" @update:model-value="() => fromDateProxy?.hide()" />
                                   </q-popup-proxy>
                                 </q-icon>
                               </template>
@@ -77,11 +78,11 @@
                         </div>
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
                           <div class="input-group q-mx-sm w-100 h-auto">
-                            <q-input v-model="search.toDate" fill-input dense>
+                            <q-input v-model="search.toDate" fill-input dense clearable placeholder="MM/DD/YYYY" :error="!!toDateError" :error-message="toDateError" hide-bottom-space>
                               <template #append>
                                 <q-icon name="o_calendar_month" class="cursor-pointer">
-                                  <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                                    <q-date v-model="search.toDate" mask="MM/DD/YYYY" @update:model-value="() => $refs.qDateProxy.hide()" />
+                                  <q-popup-proxy ref="toDateProxy" transition-show="scale" transition-hide="scale">
+                                    <q-date v-model="search.toDate" mask="MM/DD/YYYY" :options="toDateOptions" @update:model-value="() => toDateProxy?.hide()" />
                                   </q-popup-proxy>
                                 </q-icon>
                               </template>
@@ -90,7 +91,7 @@
                         </div>
                       </div>
                       <div class="row justify-end q-gutter-sm q-mb-sm">
-                        <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps @click="() => { showFilter = false; onAdvanceSearch(); }" />
+                        <q-btn style="width: 20%;" outline color="primary" label="Search" class="btnRounded" no-caps :disable="!!fromDateError || !!toDateError" @click="() => { showFilter = false; onAdvanceSearch(); }" />
                         <q-btn style="width: 20%;" outline color="grey-4" label="Clear" class="text-grey-9 btnRounded" no-caps @click="onAdvanceClear" />
                         <q-btn style="width: 20%;" outline color="negative" label="Close" class="btnRounded" no-caps @click="() => { showFilter = false; }" />
                       </div>
@@ -196,6 +197,7 @@
             separator="cell"
             binary-state-sort
             no-data-label="No data available"
+            rows-per-page-label="Requirements per page:"
             :rows-per-page-options="[20, 50, 100, 200, 500]"
             @request="getAllRequirementStatusTracking"
           >
@@ -206,20 +208,6 @@
             </template>
             <template #header="props">
               <q-tr :props="props" class="bg-primary text-white">
-                <q-th v-if="!isViewer" auto-width class="text-center hidden">
-                  <q-btn
-                    v-if="selectedRecordIds.length > 0"
-                    icon="o_restart_alt"
-                    flat
-                    dense
-                    no-caps
-                    color="white"
-                    size="sm"
-                    @click.stop="clearSelection"
-                  >
-                    <q-tooltip>Unselect All Tracking Records</q-tooltip>
-                  </q-btn>
-                </q-th>
                 <q-th
                   v-for="col in props.cols"
                   :key="col.name"
@@ -238,7 +226,7 @@
                     @click.stop="sortColumn(col)"
                   >
                     <q-tooltip>
-                      {{ pagination.sortBy === col.name ? (pagination.descending ? 'Sort Ascending' : 'Sort Descending') : 'Sort' }}
+                      {{ pagination.sortBy === col.name ? (pagination.descending ? 'Sort Ascending' : 'Sort Descending') : 'Sort' }} requirements
                     </q-tooltip>
                   </q-icon>
                   <div class="resize-handle" @mousedown="(e) => startResize(e, col.name)" />
@@ -252,76 +240,53 @@
               </q-tr>
             </template>
             <template #body="props">
-              <q-tr
-                :props="props"
-                :class="[props.row.isRecordStart ? 'record-start' : '', highlightedId === props.row.recordId ? 'highlight' : '']"
-                :set="(preProjectName = null, preProjectModuleName = null)"
-              >
-                <q-td v-if="!isViewer" auto-width class="text-center hidden">
-                  <!-- Every row of a record shares one checkbox state: selection is by complete record. -->
-                  <q-checkbox
-                    dense
-                    :model-value="selectedRecordIds.includes(props.row.recordId)"
-                    :aria-label="`Select tracking record ${props.row.projectName} / ${props.row.projectModuleName} / ${props.row.trackingDate}`"
-                    @update:model-value="onToggleRecord(props.row.recordId)"
-                  />
-                </q-td>
-                <q-td v-if="selectedColumnNames.includes('projectName')" class="common-q-td hoverable-cell">
-                  <div class="row no-wrap items-center justify-between">
-                    <template v-if="isFirstProjectRow(props.row)">
-                      <span
-                        class="cursor-pointer"
-                        @click="onProjectView(props.row.projectId)"
-                      >
-                        {{ props.row.projectName }}
-                      </span>
-
-                      <div
-                        class="row items-center q-gutter-sm q-ml-sm"
-                        style="flex-shrink: 0;"
-                      >
-                        <q-icon
-                          name="o_radio_button_checked"
-                          size="xs"
-                          class="cursor-pointer"
-                          @click="
-                            setActiveRowIdInLocalStorage(props.row.id);
-                            $router.push({
-                              path: '/project-center',
-                              state: { projectId: props.row.projectId }
-                            })
-                          "
-                        >
-                          <q-tooltip>Project Center</q-tooltip>
-                        </q-icon>
-                      </div>
-                    </template>
+              <!-- Requirement group header: the tracking records below belong to this requirement -->
+              <q-tr v-if="props.row.isGroup" :props="props" class="requirement-group-row">
+                <q-td :colspan="props.cols.length" class="requirement-group-cell">
+                  <div class="row items-center no-wrap q-gutter-x-sm">
+                    <q-icon name="o_assignment" size="xs" color="primary" />
+                    <span
+                      class="text-weight-bold cursor-pointer"
+                      @click="setActiveRowIdInLocalStorage(props.row.key); $router.push({ path: '/requirement-center', state: { requirementId: props.row.requirementId } })"
+                    >
+                      <span v-if="props.row.requirementNumber">#{{ props.row.requirementNumber }} - </span>{{ props.row.requirementTitle }}
+                      <q-tooltip>Requirement Center</q-tooltip>
+                    </span>
+                    <q-badge v-if="props.row.isRequirementUnavailable" color="warning">
+                      Moved or deleted
+                      <q-tooltip>This requirement was deleted or moved out of the module after the rows were saved.</q-tooltip>
+                    </q-badge>
+                    <span class="text-caption text-grey-8">
+                      <span class="cursor-pointer" @click="onProjectView(props.row.projectId)">{{ props.row.projectName }}<q-tooltip>View Project</q-tooltip></span>
+                      /
+                      <span class="cursor-pointer" @click="onProjectModuleView(props.row.projectModuleId)">{{ props.row.projectModuleName }}<q-tooltip>View Module</q-tooltip></span>
+                    </span>
+                    <q-badge color="grey-7" outline>{{ props.row.rowCount }} tracking record(s)</q-badge>
                   </div>
                 </q-td>
-                <q-td
-                  v-if="selectedColumnNames.includes('projectModuleName')"
-                  class="common-q-td hoverable-cell"
-                  @click="onProjectModuleView(props.row.projectModuleId)"
-                >
-                  <span
-                  v-if="preProjectModuleName !== props.row.projectModuleName"
-                  :set="preProjectModuleName = props.row.projectModuleName"
+                <q-td auto-width class="text-center actions requirement-group-cell">
+                  <q-icon
+                    :name="isViewer ? 'o_visibility' : 'o_edit'"
+                    class="cursor-pointer q-mr-sm"
+                    @click="onEditGroup(props.row)"
                   >
-                    {{ props.row.projectModuleName }}
-                  </span>
+                    <q-tooltip>{{ isViewer ? "View" : "Edit" }} all tracking records of this requirement</q-tooltip>
+                  </q-icon>
+                  <q-icon v-can
+                    v-if="!isViewer"
+                    name="o_delete_outline"
+                    class="cursor-pointer"
+                    color="negative"
+                    @click="onDeleteGroup(props.row)"
+                  >
+                    <q-tooltip>Delete all tracking records of this requirement</q-tooltip>
+                  </q-icon>
                 </q-td>
+              </q-tr>
+              <!-- Tracking record of the requirement above -->
+              <q-tr v-else :props="props" :class="highlightedId === props.row.id ? 'highlight' : ''">
                 <q-td v-if="selectedColumnNames.includes('trackingDate')" class="common-q-td text-center">
                   {{ props.row.trackingDate }}
-                </q-td>
-                <q-td v-if="selectedColumnNames.includes('requirementTitle')" class="common-q-td hoverable-cell" @click="setActiveRowIdInLocalStorage(props.row.id); $router.push({ path: '/requirement-center', state: { requirementId: props.row.requirementId } })">
-                  <span v-if="props.row.requirementNumber" >
-                    #{{ props.row.requirementNumber }} -
-                  </span>{{ props.row.requirementTitle }}
-                   <q-tooltip>Requirement Center</q-tooltip>
-                  <q-badge v-if="props.row.isRequirementUnavailable" color="warning" class="q-ml-xs">
-                    Moved or deleted
-                    <q-tooltip>This requirement was deleted or moved out of the module after the row was saved.</q-tooltip>
-                  </q-badge>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('currentPercent')" class="common-q-td text-right">
                   {{ formatNumber(props.row.currentPercent) }}
@@ -333,57 +298,43 @@
                   {{ props.row.estimatedRemainingTime }}
                 </q-td>
                 <q-td
-                  v-if="selectedColumnNames.includes('scope')" class="common-q-td" style="white-space: pre-wrap;"
-                  :style="{
-                      width: (resizeWidths?.scope || 120) + 'px',
-                      minWidth: '80px',
-                      maxWidth: (resizeWidths?.scope || 120) + 'px'
-                    }"
+                  v-if="selectedColumnNames.includes('scope')"
+                  class="common-q-td"
+                  :style="{ width: (resizeWidths?.scope || 200) + 'px', minWidth: '80px', maxWidth: (resizeWidths?.scope || 200) + 'px' }"
                 >
                   <div class="content-ellipsis">
-                    {{
-                      getAdditionalScope(props.row.scope)
-                    }}
-                    <q-tooltip>{{ props.row.scope }}</q-tooltip>
+                    {{ htmlToText(props.row.scope) }}
+                    <q-tooltip v-if="htmlToText(props.row.scope)" max-width="500px">{{ htmlToText(props.row.scope) }}</q-tooltip>
+                  </div>
+                </q-td>
+                <q-td
+                  v-if="selectedColumnNames.includes('roadblock')"
+                  class="common-q-td"
+                  :style="{ width: (resizeWidths?.roadblock || 200) + 'px', minWidth: '80px', maxWidth: (resizeWidths?.roadblock || 200) + 'px' }"
+                >
+                  <div class="content-ellipsis">
+                    {{ htmlToText(props.row.roadblock) }}
+                    <q-tooltip v-if="htmlToText(props.row.roadblock)" max-width="500px">{{ htmlToText(props.row.roadblock) }}</q-tooltip>
                   </div>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('estimatedTimeForCompletion')" class="common-q-td text-right">
                   {{ props.row.estimatedTimeForCompletion }}
                 </q-td>
-                <!-- <q-td v-if="selectedColumnNames.includes('updatedOnUtc')" class="common-q-td">
-                  {{ props.row.updatedOnUtc }}
-                </q-td>                 -->
-                <q-td v-if="selectedColumnNames.includes('createdByName')"> {{ props.row.createdByName }}</q-td>
-                <q-td v-if="selectedColumnNames.includes('createdOnUtc')">{{ props.row.createdOnUtc }}</q-td>
-                <q-td v-if="selectedColumnNames.includes('updatedByName')">{{ props.row.updatedByName }}</q-td>
-                <q-td v-if="selectedColumnNames.includes('updatedOnUtc')">{{ props.row.updatedOnUtc }}</q-td>
-                <q-td  v-if="props.row.isRecordStart" auto-width class="text-center actions tracking-actions-cell">
-                    <q-icon
-                      :name="isViewer ? 'o_visibility' : 'o_edit'"
-                      class="cursor-pointer q-mr-sm"
-                      @click="onEditRecord(props.row)"
-                    >
-                      <q-tooltip>{{ isViewer ? "View" : "Edit" }} tracking record ({{ props.row.recordRowCount }} requirement row(s))</q-tooltip>
-                    </q-icon>
-                    <q-icon v-can
-                      v-if="!isViewer"
-                      name="o_delete_outline"
-                      class="cursor-pointer"
-                      color="negative"
-                      @click="onDeleteRecord(props.row)"
-                    >
-                      <q-tooltip>Delete tracking record</q-tooltip>
-                    </q-icon>
-                </q-td>
+                <q-td v-if="selectedColumnNames.includes('createdByName')" class="common-q-td">{{ props.row.createdByName }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('createdOnUtc')" class="common-q-td">{{ props.row.createdOnUtc }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('updatedByName')" class="common-q-td">{{ props.row.updatedByName }}</q-td>
+                <q-td v-if="selectedColumnNames.includes('updatedOnUtc')" class="common-q-td">{{ props.row.updatedOnUtc }}</q-td>
+                <!-- Actions are on the requirement row above (Edit opens all of the requirement's records). -->
+                <q-td auto-width class="text-center actions" />
               </q-tr>
-              <q-separator />
+              <q-seperator />
             </template>
           </q-table>
         </div>
       </div>
     </q-card>
   </q-page>
-  <!-- Multi-Column Level Sorting (record-level columns only) -->
+  <!-- Multi-Column Level Sorting (requirement-group level) -->
   <multiColumnSortingDialog
     v-model="showSortDialog"
     :columns="sortableColumns"
@@ -400,7 +351,7 @@ import { useAuthStore } from "stores/auth";
 import { notifyError } from "assets/utils";
 
 import requirementStatusTrackingService from "../requirementStatusTracking.service";
-import { flattenRecords, toggleRecordSelection, buildListPayload, formatNumber, SORTABLE_COLUMNS } from "../utils/trackingList.js";
+import { groupRequirementRows, toggleRecordSelection, buildListPayload, formatNumber, htmlToText, keepAvailable, dateRangeErrors, toApiDate, SORT_OPTIONS } from "../utils/trackingList.js";
 
 // Shared Dropdowns
 import projectModule from "src/modules/project/utils/dropdowns.js";
@@ -429,7 +380,7 @@ import {
 } from "src/modules/requirement-status-tracking/utils/dialogs.js";
 
 import {
-  onSubmitRequirementStatusTrackingDelete,
+  onSubmitRequirementStatusTrackingDeleteForRequirement,
   onSubmitRequirementStatusTrackingBulkDelete
 } from "src/modules/requirement-status-tracking/utils/actions.js";
 
@@ -476,28 +427,28 @@ function setActiveRowIdInLocalStorage(id) {
 // ----------------------------------------------------------------------------------------------------------------
 
 const tableRef = ref();
+// Requirement groups from the API, each with its tracking records (newest tracking date first).
 const records = ref([]);
-// Sortable columns use the API's record-level sort keys as both name and field (multi-sort uses field).
+// Columns of a tracking record; the Requirement Title is shown on the group header row above its records.
+// Sorting orders requirement groups: Tracking Date = latest tracking date, Created/Updated Date = group's earliest/latest.
 const columns = ref([
-  { name: "projectName", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
-  { name: "projectModuleName", label: "Module Name", field: "projectModule.name", align: "left", sortable: true, default: true },
   { name: "trackingDate", label: "Tracking Date", field: "trackingDate", align: "center", sortable: true, default: true },
-  { name: "requirementTitle", label: "Requirement Name", field: "requirementTitle", align: "left", sortable: true, default: true },
-  { name: "currentPercent", label: "Current Completion (%)", field: "currentPercent", align: "right", sortable: true, default: true },
-  { name: "timeSpentAsOfToday", label: "Time Spent (Hrs)", field: "timeSpentAsOfToday", align: "right", sortable: true, default: true, tooltip: "Time Spent as of Today(Hours)" },
-  { name: "estimatedRemainingTime", label: "Est. Remaining (Hrs)", field: "estimatedRemainingTime", align: "right", sortable: true, default: true, tooltip: "Estimated Remaining Time Required (Hours)" },
-  { name: "scope", label: "Additional Scope", field: "scope", align: "left", sortable: false, default: true },
-  { name: "estimatedTimeForCompletion", label: "Est. Completion Time (Hrs)", field: "estimatedTimeForCompletion", align: "right", sortable: true, default: true, tooltip: "Estimated Time for Completion of Additional Scope (Hours)" },
-  { name: "createdByName", label: "Created By", field: "createdByName", align: "left", sortable: true, default: false },
-  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: false },
-  { name: "updatedByName", label: "Updated By", field: "updatedByName", align: "left", sortable: true, default: false },
-  { name: "updatedOnUtc", label: "Updated Date", field: "updatedOnUtc", align: "left", sortable: true, default: false }
+  { name: "currentPercent", label: "Current Completion (%)", field: "currentPercent", align: "right", sortable: false, default: true },
+  { name: "timeSpentAsOfToday", label: "Time Spent (Hrs)", field: "timeSpentAsOfToday", align: "right", sortable: false, default: true, tooltip: "Time Spent as of Today (Hours)" },
+  { name: "estimatedRemainingTime", label: "Est. Remaining (Hrs)", field: "estimatedRemainingTime", align: "right", sortable: false, default: true, tooltip: "Estimated Remaining Time Required (Hours)" },
+  { name: "scope", label: "Scope", field: "scope", align: "left", sortable: false, default: true, tooltip: "Additional Scope" },
+  { name: "roadblock", label: "Roadblock", field: "roadblock", align: "left", sortable: false, default: true },
+  { name: "estimatedTimeForCompletion", label: "Est. Completion Time (Hrs)", field: "estimatedTimeForCompletion", align: "right", sortable: false, default: true, tooltip: "Estimated Time for Completion of Additional Scope (Hours)" },
+  { name: "createdByName", label: "Created By", field: "createdByName", align: "left", sortable: false, default: true },
+  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: true },
+  { name: "updatedByName", label: "Updated By", field: "updatedByName", align: "left", sortable: false, default: true },
+  { name: "updatedOnUtc", label: "Updated Date", field: "updatedOnUtc", align: "left", sortable: true, default: true }
 ]);
-const sortableColumns = computed(() => columns.value.filter(col => SORTABLE_COLUMNS.includes(col.field)));
+// Multi-sort dialog: requirement-group sort keys (incl. Requirement Title, Project, Module).
+const sortableColumns = SORT_OPTIONS;
 
-// Grouping is computed after the server's final sort/filter/page order, never by re-sorting.
-// The table renders one row per requirement row; records carry their requirement values only inside `rows`.
-const displayRows = computed(() => flattenRecords(records.value));
+// Header row per requirement + its tracking records, in the server's final sort/filter/page order.
+const displayRows = computed(() => groupRequirementRows(records.value));
 
 // ----------------------------------------------------------------------------------------------------------------
 // DataTable:- Get All Tracking Records (paged by complete record)
@@ -522,7 +473,7 @@ const getAllRequirementStatusTracking = async ({ pagination: p }) => {
 
   try {
     const resp = await requirementStatusTrackingService.getAllRequirementStatusTracking(payload);
-    records.value = resp?.records || [];
+    records.value = resp?.requirements || [];
     loadError.value = false;
     pagination.value = { ...pagination.value, page, rowsPerPage, sortBy, descending, rowsNumber: resp?.total || 0 };
   } catch (err) {
@@ -547,7 +498,8 @@ const {
   saveColumnsState
 } = useSiteTableState({
   // Tracking-specific key so column/sort/width settings never mix with Requirement, Issue or Data Mapping lists.
-  storageKey: "requirement-status-tracking-Index",
+  // New key for the requirement-grouped layout so saved column/sort settings of the old layout don't hide columns.
+  storageKey: "requirement-status-tracking-grouped-Index",
   siteId: user?.siteId,
 
   defaultSearch: {
@@ -729,15 +681,17 @@ const clearSelection = () => {
   showMultiActions.value = false;
 };
 
-const onEditRecord = (row) => {
-  activeRowId.value = row.recordId;
-  onEditRequirementStatusTracking(row.recordId, row.projectId, row.projectModuleId, row.trackingDate, isViewer, refreshList);
+// Edit opens the requirement's tracking form (all its tracking dates), as the Requirement list does.
+const onEditGroup = (group) => {
+  activeRowId.value = group.key;
+  onEditRequirementStatusTracking(group.projectId, group.projectModuleId, group.requirementId, refreshList);
 };
 
-const onDeleteRecord = (row) => {
-  activeRowId.value = row.recordId;
-  onSubmitRequirementStatusTrackingDelete(row, (deleted) => {
-    if (deleted) selectedRecordIds.value = selectedRecordIds.value.filter(id => id !== row.recordId);
+// Delete removes all tracking records of the requirement (individual records are removed inside Edit).
+const onDeleteGroup = (group) => {
+  activeRowId.value = group.key;
+  onSubmitRequirementStatusTrackingDeleteForRequirement(group, (deleted) => {
+    if (deleted) selectedRecordIds.value = [];
     refreshList();
   });
 };
@@ -778,21 +732,24 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.projectIds, projectNameDropdown.list, "Project Name"),
   ...mapFilterToLabel(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list, "Project Module"),
   ...mapFilterToLabel(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list, "Requirement"),
-  ...(search.value.fromDate ? { "Date From": search.value.fromDate } : {}),
-  ...(search.value.toDate ? { "Date To": search.value.toDate } : {})
+  ...(search.value.fromDate ? { "From Date": search.value.fromDate } : {}),
+  ...(search.value.toDate ? { "To Date": search.value.toDate } : {})
 }));
 
 function onClearFilters (key) {
   if (key === "Project Name") {
+    // Dependent filters belong to the selected projects, so they are cleared too.
     search.value.projectIds = [];
+    search.value.projectModuleIds = [];
+    search.value.requirementIds = [];
   } else if (key === "Project Module") {
     search.value.projectModuleIds = [];
     search.value.requirementIds = [];
   } else if (key === "Requirement") {
     search.value.requirementIds = [];
-  } else if (key === "Date From") {
+  } else if (key === "From Date") {
     search.value.fromDate = "";
-  } else if (key === "Date To") {
+  } else if (key === "To Date") {
     search.value.toDate = "";
   }
   reloadFromFirstPage();
@@ -819,26 +776,47 @@ watch(() => search.value.searchText, () => {
   reloadFromFirstPage();
 });
 
-watch(() => search.value.projectIds, async (newValue, oldValue) => {
-  if (newValue === oldValue) return;
-  if (!newValue?.length) {
+// Project Module options follow the selected projects; module selections that no longer belong to a selected
+// project are dropped (selections that still apply are kept). Stale responses are ignored.
+let moduleLoadSeq = 0;
+watch(() => [...(search.value.projectIds || [])], async (projectIds) => {
+  const seq = ++moduleLoadSeq;
+  if (!projectIds.length) {
+    projectModulesByProjectIdForDropdown.list.value = [];
     search.value.projectModuleIds = [];
     return;
   }
-  const isInitialLoad = !oldValue;
-  await projectModulesByProjectIdForDropdown.load(false, false, newValue);
-  // Clear modules only when the project was changed by the user.
-  if (!isInitialLoad) search.value.projectModuleIds = [];
+  await projectModulesByProjectIdForDropdown.load(false, false, projectIds);
+  if (seq !== moduleLoadSeq) return;
+  search.value.projectModuleIds = keepAvailable(search.value.projectModuleIds, projectModulesByProjectIdForDropdown.list.value);
 }, { immediate: true });
 
-// Requirement options follow the selected modules (all requirement types).
-watch(() => [...(search.value.projectModuleIds || [])], async (newValue) => {
-  if (newValue.length === 0) {
+// Requirement options follow the selected projects AND project modules (all requirement types); requirement
+// selections outside them are dropped.
+let requirementLoadSeq = 0;
+watch(() => [...(search.value.projectModuleIds || []), "|", ...(search.value.projectIds || [])], async () => {
+  const seq = ++requirementLoadSeq;
+  const moduleIds = search.value.projectModuleIds || [];
+  if (!moduleIds.length) {
+    requirementsByProjectModuleIdForDropdown.list.value = [];
     search.value.requirementIds = [];
     return;
   }
-  await requirementsByProjectModuleIdForDropdown.load(newValue);
+  await requirementsByProjectModuleIdForDropdown.load(moduleIds.join(","), (search.value.projectIds || []).join(","));
+  if (seq !== requirementLoadSeq) return;
+  search.value.requirementIds = keepAvailable(search.value.requirementIds, requirementsByProjectModuleIdForDropdown.list.value);
 }, { immediate: true });
+
+// ----------------------------------------------------------------------------------------------------------------
+// Advance Filter:- From Date / To Date (Tracking Date range, both inclusive)
+// ----------------------------------------------------------------------------------------------------------------
+const fromDateProxy = ref(null);
+const toDateProxy = ref(null);
+const fromDateError = computed(() => dateRangeErrors(search.value.fromDate, search.value.toDate).fromDate);
+const toDateError = computed(() => dateRangeErrors(search.value.fromDate, search.value.toDate).toDate);
+// Calendar options: From Date cannot be after To Date and vice versa (q-date passes YYYY/MM/DD).
+const fromDateOptions = (date) => !toApiDate(search.value.toDate) || date.replace(/\//g, "-") <= toApiDate(search.value.toDate);
+const toDateOptions = (date) => !toApiDate(search.value.fromDate) || date.replace(/\//g, "-") >= toApiDate(search.value.fromDate);
 
 // ----------------------------------------------------------------------------------------------------------------
 // On page load
@@ -859,6 +837,10 @@ onMounted(() => {
 .content-cell {
   overflow: hidden;
   white-space: nowrap;
+}
+.requirement-group-cell {
+  background: #dbf2ff;
+  border-top: 2px solid var(--q-primary);
 }
 .content-ellipsis {
   display: block;

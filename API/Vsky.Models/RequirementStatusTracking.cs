@@ -121,7 +121,49 @@ namespace Vsky.Models
     public class RequirementStatusTrackingRecordList
     {
         public virtual ICollection<RequirementStatusTracking> RequirementStatusTrackingRecordsList { get; set; } = new List<RequirementStatusTracking>();
+
+        // List page: tracking rows grouped under their requirement (paged by requirement group).
+        public List<RequirementStatusTrackingGroup> Requirements { get; set; } = new();
         public int Total { get; set; }
+    }
+
+    // One requirement (within its project/module) and its tracking rows, newest tracking date first.
+    public class RequirementStatusTrackingGroup
+    {
+        public string RequirementId { get; set; }
+        public int RequirementNumber { get; set; }
+        public string RequirementTitle { get; set; }
+        // True when the requirement was deleted or moved out of the tracked module after the rows were saved.
+        public bool IsRequirementUnavailable { get; set; }
+        public string ProjectId { get; set; }
+        public string ProjectName { get; set; }
+        public string ProjectModuleId { get; set; }
+        public string ProjectModuleName { get; set; }
+        public string LatestTrackingDate { get; set; }
+        public int RowCount { get; set; }
+        public List<RequirementStatusTrackingGroupRow> Rows { get; set; } = new();
+    }
+
+    public class RequirementStatusTrackingGroupRow
+    {
+        public string Id { get; set; }
+        public string TrackingDate { get; set; } // yyyy-MM-dd
+        public decimal? CurrentPercent { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
+        public decimal? TimeSpentAsOfToday { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
+        public decimal? EstimatedRemainingTime { get; set; }
+        public string Scope { get; set; }
+        public string Roadblock { get; set; }
+
+        [JsonConverter(typeof(HoursConverter))]
+        public decimal? EstimatedTimeForCompletion { get; set; }
+        public string CreatedByName { get; set; }
+        public DateTime CreatedOnUtc { get; set; }
+        public string UpdatedByName { get; set; }
+        public DateTime? UpdatedOnUtc { get; set; }
     }
 
     public class RequirementStatusTrackingFilter
