@@ -46,6 +46,21 @@ export default {
   },
   deleteTestCase (id) {
     return http.delete(`/test-case/${id}`).then(response => response.data);
+  },
+
+  // Excel import (backend generates/parses/validates/persists; see TestCaseController import/*)
+  downloadImportTemplate () {
+    return http.get("/test-case/import/template", { responseType: "blob" }).then(response => response.data);
+  },
+
+  previewImport (file) {
+    const formData = new FormData();
+    formData.append("File", file);
+    return http.post("/test-case/import/preview", formData, { headers: { "Content-Type": "multipart/form-data" } }).then(response => response.data);
+  },
+
+  confirmImport (rows) {
+    return http.post("/test-case/import/confirm", { rows }).then(response => response.data);
   }
 
   // getAllProjectModuleListForDropdown (projectId) {

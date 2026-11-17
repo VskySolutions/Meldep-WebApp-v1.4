@@ -2,6 +2,7 @@ import { useQuasar } from "quasar";
 import { ref, nextTick } from "vue";
 import { notifySuccess, notifyError, zwConfirmDelete } from "assets/utils";
 import testcasesService from "modules/test-case/testCase.service";
+import { downloadBlob, describeDownloadError } from "composables/excelImport/downloadBlob.js";
 
 let $q;
 let activeRowId;
@@ -88,6 +89,22 @@ const withRowLoader = async (
     notifyError({ message: errorMessage });
   } finally {
     updatingRow.value[field] = null;
+  }
+};
+
+// Download the backend-generated Excel import template (can take a few seconds on large sites)
+export const templateDownloading = ref(false);
+
+export const onTestCaseTemplateDownload = async () => {
+  if (templateDownloading.value) return;
+  templateDownloading.value = true;
+  try {
+    const blob = await testcasesService.downloadImportTemplate();
+    downloadBlob(blob, "TestCaseImportTemplate.xlsx");
+  } catch (error) {
+    sendError(await describeDownloadError(error, "Unable to download the Excel template."), error);
+  } finally {
+    templateDownloading.value = false;
   }
 };
 

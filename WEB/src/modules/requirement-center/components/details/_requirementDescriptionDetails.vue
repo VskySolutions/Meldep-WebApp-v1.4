@@ -1,6 +1,6 @@
 <template>
   <q-card flat bordered class="dashboard-card" style="border: 0.5px solid #1b75ab;">
-    <div class="col scroll q-px-sm" style="overflow-y: auto; flex-grow: 1; height: 64vh; display: flex; flex-direction: column-reverse;">
+    <div class="col scroll q-px-sm" style="overflow-y: auto; flex-grow: 1; height: 64vh; display: flex; flex-direction: column;">
       <q-timeline color="secondary">
         <q-timeline-entry
           v-for="(responseLogDescription, index) in allResponseLogDescriptions"

@@ -172,6 +172,28 @@
                   class="text-primary btnRounded"
                   @click="onTestCaseAdd(refreshTestCaseList)"
                 />
+                <!-- Excel Import: template download + upload/preview/confirm dialog -->
+                <q-btn
+                  v-if="!isViewer"
+                  icon="o_download"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  :loading="templateDownloading"
+                  @click="onTestCaseTemplateDownload()"
+                >
+                  <q-tooltip>Download Excel Template</q-tooltip>
+                </q-btn>
+                <q-btn
+                  v-if="!isViewer"
+                  icon="o_upload_file"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="onTestCaseImport(refreshTestCaseList)"
+                >
+                  <q-tooltip>Import Excel</q-tooltip>
+                </q-btn>
                 <q-btn
                   v-if="role === 'admin' && !isViewer"
                   icon="o_playlist_add"
@@ -503,7 +525,8 @@ import {
   onTestCaseAdd,
   onTestCaseEdit,
   onTestCaseReleaseHistory,
-  onTestCaseStatusChangeLog
+  onTestCaseStatusChangeLog,
+  onTestCaseImport
 } from "src/modules/test-case/utils/dialogs.js";
 
 import {
@@ -527,7 +550,9 @@ import {
   initTestCaseActions,
   onSubmitTestCaseStatus,
   onSubmitTestCaseDelete,
-  updatingRow
+  updatingRow,
+  onTestCaseTemplateDownload,
+  templateDownloading
 } from "src/modules/test-case/utils/actions.js";
 
 // Common variables

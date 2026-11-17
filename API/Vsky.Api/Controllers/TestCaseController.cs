@@ -8,6 +8,7 @@ using Microsoft.PowerBI.Api.Models;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
 using Vsky.Api.Models;
+using Vsky.Api.Services.TestCases;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
@@ -39,6 +40,8 @@ namespace Vsky.Api.Controllers
         private readonly ITestCaseExecutionLogExecutionLogService _testCaseExecutionLogExecutionLogService;
         private readonly ISitesModifiedLogsService _sitesModifiedLogsService;
         private readonly IDropDownService _dropDownService;
+        private readonly ApplicationDbContext _db;
+        private readonly ITestCaseImportService _testCaseImportService;
 
         #endregion
 
@@ -54,8 +57,12 @@ namespace Vsky.Api.Controllers
             IProjectReleaseTrackingReqPlanTaskIssueMappingService projectReleaseTrackingReqPlanTaskIssueMappingService,
             ITestCaseExecutionLogExecutionLogService testCaseExecutionLogExecutionLogService,
             ISitesModifiedLogsService sitesModifiedLogsService,
-            IDropDownService dropDownService)
+            IDropDownService dropDownService,
+            ApplicationDbContext db,
+            ITestCaseImportService testCaseImportService)
         {
+            _db = db;
+            _testCaseImportService = testCaseImportService;
             _globalVariable = globalVariable;
             _mapper = mapper;
             _testCaseService = testCaseService;
@@ -265,119 +272,7 @@ namespace Vsky.Api.Controllers
                     if (testCaseExists != null)
                         return BadRequest(new BadRequestError("The test case already exists"));
 
-                    string TestCaseId = null;
-                    var entity = _mapper.Map<TestCase>(model);
-
-                    if (model.TestedDateStr != "" && model.TestedDateStr != null)
-                        entity.TestedDate = DateTime.ParseExact(model.TestedDateStr, "MM/dd/yyyy", null);
-
-                    if (!string.IsNullOrWhiteSpace(model.EmployeeId))
-                    {
-                        entity.EmployeeId = model.EmployeeId;
-                    }
-                    entity.TestCaseNumber = await _testCaseService.GetLastTestCaseNumber() + 1;
-                    entity.SiteId = SiteId;
-
-                    entity.Description = await _azureBlobImageServices
-                           .ProcessHtmlAndManageImagesAsync(
-                               model.Description,
-                               SiteData.Name,
-                               "test-case",
-                               entity.TestCaseNumber.ToString()
-                           );
-
-                    entity.Steps = await _azureBlobImageServices
-                        .ProcessHtmlAndManageImagesAsync(
-                            model.Steps,
-                            SiteData.Name,
-                            "test-case",
-                            entity.TestCaseNumber.ToString()
-                        );
-
-                    entity.ExpectedResult = await _azureBlobImageServices
-                        .ProcessHtmlAndManageImagesAsync(
-                            model.ExpectedResult,
-                            SiteData.Name,
-                            "test-case",
-                            entity.TestCaseNumber.ToString()
-                        );
-
-                    entity.ActualResult = await _azureBlobImageServices
-                        .ProcessHtmlAndManageImagesAsync(
-                            model.ActualResult,
-                            SiteData.Name,
-                            "test-case",
-                            entity.TestCaseNumber.ToString()
-                        );
-
-
-                    entity.RequirementId =
-                        !string.IsNullOrWhiteSpace(model.RequirementId) &&
-                        model.RequirementId != "undefined" &&
-                        model.RequirementId != "null"
-                            ? model.RequirementId
-                            : null;
-
-                    entity.CreatedById = LoggedUserId;
-                    entity.UpdatedById = LoggedUserId;
-                    entity.CreatedOnUtc = GetDateTime;
-                    entity.UpdatedOnUtc = GetDateTime;
-                    _testCaseService.InsertTestCase(entity);
-
-                    TestCaseId = entity.Id;
-
-                    var testcasestatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Test Case Status", "Fail");
-
-                    if (model.StatusId == testcasestatus)
-                    {
-                        //var EmployeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
-                        var EmployeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
-                        var newstatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Status", "New from Test Plan");
-                        var medium = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Priority", "Medium");
-                        var bug = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Type", "Bug");
-                        var exists = await _issueService.GetIssueByName(SiteId, model.Name, model.ProjectId);
-                        if (exists == null)
-                        {
-                            var issue = new Issue();
-                            issue.IssueNumber = await _issueService.GetLastIssueNumber() + 1;
-                            issue.SiteId = SiteId;
-                            issue.TestCaseId = TestCaseId;
-                            issue.ProjectId = model.ProjectId;
-                            issue.ProjectModuleId = model.ProjectModuleId;
-
-                            issue.RequirementId =
-                                !string.IsNullOrWhiteSpace(model.RequirementId) &&
-                                model.RequirementId != "undefined" &&
-                                model.RequirementId != "null"
-                                    ? model.RequirementId
-                                    : null;
-                            issue.Name = model.Name;
-                            issue.PriorityId = medium;
-                            issue.StatusId = newstatus;
-                            issue.EmployeeId = model.EmployeeId;
-                            issue.TypeId = bug;
-                            issue.ReportedById = EmployeeId;
-                            issue.AreaId = model.AreaId;
-                            issue.WorkspaceId = model.WorkspaceId;
-
-                            if (!string.IsNullOrEmpty(model.Description))
-                            {
-                                issue.Description = await _azureBlobImageServices
-                                    .ProcessHtmlAndManageImagesAsync(
-                                        model.Description,
-                                        SiteData.Name,
-                                        "test-case",
-                                        issue.IssueNumber.ToString()
-                                    );
-                            }
-
-                            issue.CreatedById = LoggedUserId;
-                            issue.UpdatedById = LoggedUserId;
-                            issue.CreatedOnUtc = GetDateTime;
-                            issue.UpdatedOnUtc = GetDateTime;
-                            _issueService.InsertIssue(issue);
-                        }
-                    }
+                    var (entity, _) = await CreateTestCaseEntity(model, LoggedUserId, SiteId, SiteData, GetDateTime);
                     return Ok(entity);
                 }
                 // Return model state errors if the model state is not valid
@@ -387,6 +282,287 @@ namespace Vsky.Api.Controllers
             {
                 return BadRequest(SafeErrorMessage(ex));
             }
+        }
+        #endregion
+
+        #region CreateTestCaseEntity
+        // Title: CreateTestCaseEntity
+        // Description: Shared manual base-case creation (mapping, tested date, numbering, rich-content image
+        // processing, requirement normalization, attribution, insert) followed by the existing Fail rule: when
+        // the status is Fail and no active issue matches site/project/case-insensitive name, create a
+        // Bug / Medium / New from Test Plan issue linked to the saved case. Used by CreateTestCase and by Excel
+        // import confirmation. Returns the created issue (null when none was created).
+        private async Task<(TestCase Entity, Issue CreatedIssue)> CreateTestCaseEntity(TestCaseModel model, string LoggedUserId, string SiteId, Site SiteData, DateTime GetDateTime)
+        {
+            Issue createdIssue = null;
+            string TestCaseId = null;
+            var entity = _mapper.Map<TestCase>(model);
+
+            if (model.TestedDateStr != "" && model.TestedDateStr != null)
+                entity.TestedDate = DateTime.ParseExact(model.TestedDateStr, "MM/dd/yyyy", null);
+
+            if (!string.IsNullOrWhiteSpace(model.EmployeeId))
+            {
+                entity.EmployeeId = model.EmployeeId;
+            }
+            entity.TestCaseNumber = await _testCaseService.GetLastTestCaseNumber() + 1;
+            entity.SiteId = SiteId;
+
+            entity.Description = await _azureBlobImageServices
+                   .ProcessHtmlAndManageImagesAsync(
+                       model.Description,
+                       SiteData.Name,
+                       "test-case",
+                       entity.TestCaseNumber.ToString()
+                   );
+
+            entity.Steps = await _azureBlobImageServices
+                .ProcessHtmlAndManageImagesAsync(
+                    model.Steps,
+                    SiteData.Name,
+                    "test-case",
+                    entity.TestCaseNumber.ToString()
+                );
+
+            entity.ExpectedResult = await _azureBlobImageServices
+                .ProcessHtmlAndManageImagesAsync(
+                    model.ExpectedResult,
+                    SiteData.Name,
+                    "test-case",
+                    entity.TestCaseNumber.ToString()
+                );
+
+            entity.ActualResult = await _azureBlobImageServices
+                .ProcessHtmlAndManageImagesAsync(
+                    model.ActualResult,
+                    SiteData.Name,
+                    "test-case",
+                    entity.TestCaseNumber.ToString()
+                );
+
+
+            entity.RequirementId =
+                !string.IsNullOrWhiteSpace(model.RequirementId) &&
+                model.RequirementId != "undefined" &&
+                model.RequirementId != "null"
+                    ? model.RequirementId
+                    : null;
+
+            entity.CreatedById = LoggedUserId;
+            entity.UpdatedById = LoggedUserId;
+            entity.CreatedOnUtc = GetDateTime;
+            entity.UpdatedOnUtc = GetDateTime;
+            _testCaseService.InsertTestCase(entity);
+
+            TestCaseId = entity.Id;
+
+            var testcasestatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Test Case Status", "Fail");
+
+            if (model.StatusId == testcasestatus)
+            {
+                //var EmployeeId = _commonService.GetEmployeeIdByUserId(SiteId, LoggedUserId);
+                var EmployeeId = _commonService.GetEmployeeIdByUserIdAndEmail(SiteId, LoggedUserId);
+                var newstatus = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Status", "New from Test Plan");
+                var medium = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Priority", "Medium");
+                var bug = _commonService.GetDrownValueIdByTypeandValue(SiteId, "Issue Type", "Bug");
+                var exists = await _issueService.GetIssueByName(SiteId, model.Name, model.ProjectId);
+                if (exists == null)
+                {
+                    var issue = new Issue();
+                    issue.IssueNumber = await _issueService.GetLastIssueNumber() + 1;
+                    issue.SiteId = SiteId;
+                    issue.TestCaseId = TestCaseId;
+                    issue.ProjectId = model.ProjectId;
+                    issue.ProjectModuleId = model.ProjectModuleId;
+
+                    issue.RequirementId =
+                        !string.IsNullOrWhiteSpace(model.RequirementId) &&
+                        model.RequirementId != "undefined" &&
+                        model.RequirementId != "null"
+                            ? model.RequirementId
+                            : null;
+                    issue.Name = model.Name;
+                    issue.PriorityId = medium;
+                    issue.StatusId = newstatus;
+                    issue.EmployeeId = model.EmployeeId;
+                    issue.TypeId = bug;
+                    issue.ReportedById = EmployeeId;
+                    issue.AreaId = model.AreaId;
+                    issue.WorkspaceId = model.WorkspaceId;
+
+                    if (!string.IsNullOrEmpty(model.Description))
+                    {
+                        issue.Description = await _azureBlobImageServices
+                            .ProcessHtmlAndManageImagesAsync(
+                                model.Description,
+                                SiteData.Name,
+                                "test-case",
+                                issue.IssueNumber.ToString()
+                            );
+                    }
+
+                    issue.CreatedById = LoggedUserId;
+                    issue.UpdatedById = LoggedUserId;
+                    issue.CreatedOnUtc = GetDateTime;
+                    issue.UpdatedOnUtc = GetDateTime;
+                    _issueService.InsertIssue(issue);
+                    createdIssue = issue;
+                }
+            }
+            return (entity, createdIssue);
+        }
+        #endregion
+
+        #region DownloadImportTemplate
+        // Title: DownloadImportTemplate
+        // Description: Generates the Test Case Excel import template (15 editable form fields) with dropdowns
+        // and option/ID guidance scoped to the current site and user. No writes.
+        [HttpGet("import/template")]
+        public async Task<IActionResult> DownloadImportTemplate()
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var bytes = await _testCaseImportService.BuildTemplateAsync(SiteId, LoggedUserId);
+                return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "TestCaseImportTemplate.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region PreviewImport
+        // Title: PreviewImport
+        // Description: Parses an uploaded workbook in memory and returns canonical rows, labels, errors, counts and
+        // the predicted Fail-issue outcome. Never writes cases/issues, allocates numbers or processes images.
+        [HttpPost("import/preview")]
+        [RequestSizeLimit(TestCaseImportField.MaxFileSizeBytes + 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = TestCaseImportField.MaxFileSizeBytes + 1024 * 1024)]
+        public async Task<IActionResult> PreviewImport([FromForm] TestCaseImportUploadModel model)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+
+                var parsed = _testCaseImportService.ParseWorkbook(model?.File);
+                if (parsed.FileErrors.Any())
+                    return Ok(new TestCaseImportPreviewModel { FileErrors = parsed.FileErrors, CanConfirm = false });
+
+                return Ok(await _testCaseImportService.ValidateAsync(parsed.Rows, SiteId, LoggedUserId, parsed.CellErrors));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region ConfirmImport
+        // Title: ConfirmImport
+        // Description: Revalidates the whole submitted batch (client flags ignored). Any invalid row rejects the
+        // batch with no writes. A valid batch is created through CreateTestCaseEntity (incl. the manual Fail-issue
+        // rule) inside one database transaction; any failure rolls back all cases and issues and reports 0.
+        [HttpPost("import/confirm")]
+        public async Task<IActionResult> ConfirmImport(TestCaseImportConfirmModel model)
+        {
+            var LoggedUserId = User.GetLoggedInUserId<string>();
+            var SiteId = _globalVariable.SiteId;
+
+            TestCaseImportPreviewModel validation;
+            try
+            {
+                validation = await _testCaseImportService.ValidateAsync(model?.Rows, SiteId, LoggedUserId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+            if (!validation.CanConfirm)
+            {
+                return BadRequest(new TestCaseImportResultModel
+                {
+                    Success = false,
+                    Message = "Import failed. No test cases were imported. Please correct the errors and try again.",
+                    Validation = validation
+                });
+            }
+
+            var created = new List<TestCaseImportCreatedItem>();
+            try
+            {
+                var SiteData = await _siteService.GetById(SiteId);
+                var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                await using var transaction = await _db.Database.BeginTransactionAsync();
+                try
+                {
+                    foreach (var row in validation.Rows.OrderBy(r => r.RowNumber))
+                    {
+                        // Only allowlisted, revalidated fields; site/number/audit/release data are server-owned.
+                        var caseModel = new TestCaseModel
+                        {
+                            ProjectId = row.ProjectId,
+                            PlanId = row.PlanId,
+                            ProjectModuleId = row.ProjectModuleId,
+                            RequirementId = row.RequirementId,
+                            Name = row.Name,
+                            AreaId = row.AreaId,
+                            WorkspaceId = row.WorkspaceId,
+                            StatusId = row.StatusId,
+                            EmployeeId = row.EmployeeId,
+                            TestedBy = row.TestedBy,
+                            TestedDateStr = row.TestedDate,
+                            Description = _testCaseImportService.ToRichTextHtml(row.Description),
+                            Steps = _testCaseImportService.ToRichTextHtml(row.Steps),
+                            ExpectedResult = _testCaseImportService.ToRichTextHtml(row.ExpectedResult),
+                            ActualResult = _testCaseImportService.ToRichTextHtml(row.ActualResult)
+                        };
+
+                        var (entity, issue) = await CreateTestCaseEntity(caseModel, LoggedUserId, SiteId, SiteData, GetDateTime);
+                        created.Add(new TestCaseImportCreatedItem
+                        {
+                            RowNumber = row.RowNumber,
+                            Id = entity.Id,
+                            TestCaseNumber = entity.TestCaseNumber,
+                            Name = entity.Name,
+                            IssueCreated = issue != null,
+                            IssueNumber = issue?.IssueNumber
+                        });
+                    }
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new TestCaseImportResultModel
+                {
+                    Success = false,
+                    Message = $"Import failed. No test cases were imported. {ex.Message}",
+                    Validation = validation
+                });
+            }
+
+            var issuesCreated = created.Count(c => c.IssueCreated);
+            return Ok(new TestCaseImportResultModel
+            {
+                Success = true,
+                ImportedCount = created.Count,
+                IssuesCreated = issuesCreated,
+                Message = $"{created.Count} test case(s) imported successfully." + (issuesCreated > 0 ? $" {issuesCreated} issue(s) created for failed test cases." : ""),
+                Created = created,
+                Validation = validation
+            });
         }
         #endregion
 

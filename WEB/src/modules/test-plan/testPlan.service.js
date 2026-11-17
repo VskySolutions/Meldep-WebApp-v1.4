@@ -31,6 +31,21 @@ export default {
 
   getAllTestPlanListForDropdown (projectId) {
     return http.get(`/test-plan/dropdown/list?ProjectId=${projectId}`).then(response => response.data);
+  },
+
+  // Excel import (backend generates/parses/validates/persists; see TestPlanController import/*)
+  downloadImportTemplate () {
+    return http.get("/test-plan/import/template", { responseType: "blob" }).then(response => response.data);
+  },
+
+  previewImport (file) {
+    const formData = new FormData();
+    formData.append("File", file);
+    return http.post("/test-plan/import/preview", formData, { headers: { "Content-Type": "multipart/form-data" } }).then(response => response.data);
+  },
+
+  confirmImport (rows) {
+    return http.post("/test-plan/import/confirm", { rows }).then(response => response.data);
   }
 
   // getAllModuleListByProject (projectId) {

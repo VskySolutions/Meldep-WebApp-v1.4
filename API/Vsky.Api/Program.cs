@@ -493,7 +493,9 @@ namespace Vsky.Api
             builder.Services.AddScoped<ILeaveScheduleService, LeaveScheduleService>();
             builder.Services.AddScoped<INoteService, NoteService>();
             builder.Services.AddScoped<ITestPlanService, TestPlanService>();
+            builder.Services.AddScoped<Vsky.Api.Services.TestPlans.ITestPlanImportService, Vsky.Api.Services.TestPlans.TestPlanImportService>();
             builder.Services.AddScoped<ITestCaseService, TestCaseService>();
+            builder.Services.AddScoped<Vsky.Api.Services.TestCases.ITestCaseImportService, Vsky.Api.Services.TestCases.TestCaseImportService>();
             builder.Services.AddScoped<ITestCaseExecutionLogExecutionLogService, TestCaseExecutionLogExecutionLogService>();
             builder.Services.AddScoped<IIssueService, IssueService>();
             builder.Services.AddScoped<IImageMigrationService, ImageMigrationService>();

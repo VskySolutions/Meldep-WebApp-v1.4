@@ -4,6 +4,10 @@ import viewTestCase from "modules/test-case/components/view.vue";
 import viewTestCaseReleaseHistory from "modules/test-case/components/viewTestCaseReleaseHistory.vue";
 import testCaseStatusLog from "modules/test-case/components/_testCaseStatusLog.vue";
 import siteStatusLog from "modules/sites/components/_siteModifiedLogs.vue";
+import excelImportDialog from "src/components/excel-import/_excelImportDialog.vue";
+import testCaseService from "modules/test-case/testCase.service";
+import { TEST_CASE_IMPORT_CONFIG } from "modules/test-case/utils/importFlow.js";
+import { onTestCaseTemplateDownload } from "modules/test-case/utils/actions.js";
 
 let $q;
 let activeRowId;
@@ -37,6 +41,22 @@ export function onTestCaseAdd (refresh) {
   $q.dialog({
     component: addEditTestCase,
     componentProps: {}
+  }).onOk(() => {
+    refresh();
+  })
+    .onCancel(() => { })
+    .onDismiss(() => { });
+}
+
+// Excel import: list refreshes only after a confirmed successful import (dialog OK).
+export function onTestCaseImport (refresh) {
+  $q.dialog({
+    component: excelImportDialog,
+    componentProps: {
+      config: TEST_CASE_IMPORT_CONFIG,
+      service: testCaseService,
+      downloadTemplate: onTestCaseTemplateDownload
+    }
   }).onOk(() => {
     refresh();
   })

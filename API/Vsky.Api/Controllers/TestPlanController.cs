@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
 using Vsky.Api.Models;
+using Vsky.Api.Services.TestPlans;
 using Vsky.Data;
 using Vsky.Models;
 using Vsky.Services.AzureBlobImage;
@@ -40,6 +41,7 @@ namespace Vsky.Api.Controllers
         private readonly ApplicationDbContext _db;
         private readonly ICommonService _commonService;
         private readonly IAzureBlobImageServices _azureBlobImageServices;
+        private readonly ITestPlanImportService _testPlanImportService;
         #endregion
 
         #region Services Initializations      
@@ -50,9 +52,11 @@ namespace Vsky.Api.Controllers
             ISiteService siteService,
             ApplicationDbContext db,
             ICommonService commonService,
-            IAzureBlobImageServices azureBlobImageServices
+            IAzureBlobImageServices azureBlobImageServices,
+            ITestPlanImportService testPlanImportService
             )
         {
+            _testPlanImportService = testPlanImportService;
             _globalVariable = globalVariable;
             _mapper = mapper;
             _testPlanService = testPlanService;
@@ -199,28 +203,7 @@ namespace Vsky.Api.Controllers
                     if (exists != null)
                         return BadRequest(new BadRequestError("The test plan already exists"));
 
-                    // Map the TestPlan model to the TestPlan entity
-                    var entity = _mapper.Map<TestPlan>(model);
-                    entity.TestPlanNumber = await _testPlanService.GetLastTestPlanNumber() + 1;
-
-                    if (!string.IsNullOrEmpty(model.Description))
-                    {
-                        entity.Description = await _azureBlobImageServices
-                            .ProcessHtmlAndManageImagesAsync(
-                                model.Description,
-                                SiteData.Name,
-                                "test-plan",
-                                entity.TestPlanNumber.ToString()
-                            );
-                    }
-
-                    // Set the created by and created on properties
-                    entity.SiteId = SiteId;
-                    entity.CreatedById = LoggedUserId;
-                    entity.UpdatedById = LoggedUserId;
-                    entity.CreatedOnUtc = GetDateTime;
-                    entity.UpdatedOnUtc = GetDateTime;
-                    _testPlanService.InsertTestPlan(entity);
+                    var entity = await CreateTestPlanEntity(model, LoggedUserId, SiteId, SiteData, GetDateTime);
 
                     return Ok(entity);
                 }
@@ -320,6 +303,187 @@ namespace Vsky.Api.Controllers
             {
                 return BadRequest(SafeErrorMessage(ex));
             }
+        }
+        #endregion
+
+        #region CreateTestPlanEntity
+        // Title: CreateTestPlanEntity
+        // Description: Shared manual-creation logic (mapping, plan numbering, description image processing,
+        // site ownership and audit stamping, insert). Used by CreateTestPlan and by Excel import confirmation
+        // so imported plans are persisted exactly like manually created ones.
+        private async Task<TestPlan> CreateTestPlanEntity(TestPlanModel model, string LoggedUserId, string SiteId, Site SiteData, DateTime GetDateTime)
+        {
+            // Map the TestPlan model to the TestPlan entity
+            var entity = _mapper.Map<TestPlan>(model);
+            entity.TestPlanNumber = await _testPlanService.GetLastTestPlanNumber() + 1;
+
+            if (!string.IsNullOrEmpty(model.Description))
+            {
+                entity.Description = await _azureBlobImageServices
+                    .ProcessHtmlAndManageImagesAsync(
+                        model.Description,
+                        SiteData.Name,
+                        "test-plan",
+                        entity.TestPlanNumber.ToString()
+                    );
+            }
+
+            // Set the created by and created on properties
+            entity.SiteId = SiteId;
+            entity.CreatedById = LoggedUserId;
+            entity.UpdatedById = LoggedUserId;
+            entity.CreatedOnUtc = GetDateTime;
+            entity.UpdatedOnUtc = GetDateTime;
+            _testPlanService.InsertTestPlan(entity);
+
+            return entity;
+        }
+        #endregion
+
+        #region DownloadImportTemplate
+        // Title: DownloadImportTemplate
+        // Description: Generates the Test Plan Excel import template (editable form fields only) with
+        // ID/label guidance sheets scoped to the current site and user. No writes.
+        [HttpGet("import/template")]
+        public async Task<IActionResult> DownloadImportTemplate()
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+                var bytes = await _testPlanImportService.BuildTemplateAsync(SiteId, LoggedUserId);
+                return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "TestPlanImportTemplate.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region PreviewImport
+        // Title: PreviewImport
+        // Description: Parses an uploaded workbook in memory and returns canonical rows, resolved labels,
+        // row/field errors and counts. Never inserts, updates, allocates numbers or processes images.
+        [HttpPost("import/preview")]
+        [RequestSizeLimit(TestPlanImportField.MaxFileSizeBytes + 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = TestPlanImportField.MaxFileSizeBytes + 1024 * 1024)]
+        public async Task<IActionResult> PreviewImport([FromForm] TestPlanImportUploadModel model)
+        {
+            try
+            {
+                var LoggedUserId = User.GetLoggedInUserId<string>();
+                var SiteId = _globalVariable.SiteId;
+
+                var parsed = _testPlanImportService.ParseWorkbook(model?.File);
+                if (parsed.FileErrors.Any())
+                {
+                    return Ok(new TestPlanImportPreviewModel { FileErrors = parsed.FileErrors, CanConfirm = false });
+                }
+
+                var preview = await _testPlanImportService.ValidateAsync(parsed.Rows, SiteId, LoggedUserId, parsed.CellErrors);
+                return Ok(preview);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region ConfirmImport
+        // Title: ConfirmImport
+        // Description: Revalidates the whole submitted batch against the current site/user context (client
+        // validity flags are ignored). Any invalid row rejects the batch with no writes. A valid batch is
+        // created through CreateTestPlanEntity inside one database transaction; on any failure the
+        // transaction is rolled back and no imported plans are reported.
+        [HttpPost("import/confirm")]
+        public async Task<IActionResult> ConfirmImport(TestPlanImportConfirmModel model)
+        {
+            var LoggedUserId = User.GetLoggedInUserId<string>();
+            var SiteId = _globalVariable.SiteId;
+
+            TestPlanImportPreviewModel validation;
+            try
+            {
+                validation = await _testPlanImportService.ValidateAsync(model?.Rows, SiteId, LoggedUserId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+            if (!validation.CanConfirm)
+            {
+                return BadRequest(new TestPlanImportResultModel
+                {
+                    Success = false,
+                    ImportedCount = 0,
+                    Message = "Import failed. No test plans were imported. Please correct the errors and try again.",
+                    Validation = validation
+                });
+            }
+
+            var created = new List<TestPlanImportCreatedItem>();
+            try
+            {
+                var SiteData = await _siteService.GetById(SiteId);
+                var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
+
+                await using var transaction = await _db.Database.BeginTransactionAsync();
+                try
+                {
+                    foreach (var row in validation.Rows.OrderBy(r => r.RowNumber))
+                    {
+                        // Only allowlisted, revalidated fields; site/number/audit are server-owned.
+                        var planModel = new TestPlanModel
+                        {
+                            ProjectId = row.ProjectId,
+                            Name = row.Name,
+                            AreaId = row.AreaId,
+                            WorkspaceId = row.WorkspaceId,
+                            PlanMakerId = row.PlanMakerId,
+                            PlanReviewerId = row.PlanReviewerId,
+                            Description = _testPlanImportService.ToDescriptionHtml(row.Description)
+                        };
+
+                        var entity = await CreateTestPlanEntity(planModel, LoggedUserId, SiteId, SiteData, GetDateTime);
+                        created.Add(new TestPlanImportCreatedItem
+                        {
+                            RowNumber = row.RowNumber,
+                            Id = entity.Id,
+                            TestPlanNumber = entity.TestPlanNumber,
+                            Name = entity.Name
+                        });
+                    }
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new TestPlanImportResultModel
+                {
+                    Success = false,
+                    ImportedCount = 0,
+                    Message = $"Import failed. No test plans were imported. {ex.Message}",
+                    Validation = validation
+                });
+            }
+
+            return Ok(new TestPlanImportResultModel
+            {
+                Success = true,
+                ImportedCount = created.Count,
+                Message = $"{created.Count} test plan(s) imported successfully.",
+                Created = created,
+                Validation = validation
+            });
         }
         #endregion
     }

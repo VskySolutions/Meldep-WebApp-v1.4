@@ -107,6 +107,28 @@
                   class="text-primary btnRounded"
                   @click="onTestPlanAdd(refreshTestPlanList)"
                 />
+                <!-- Excel Import: template download + upload/preview/confirm dialog -->
+                <q-btn
+                  v-if="!isViewer"
+                  icon="o_download"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  :loading="templateDownloading"
+                  @click="onTestPlanTemplateDownload()"
+                >
+                  <q-tooltip>Download Excel Template</q-tooltip>
+                </q-btn>
+                <q-btn
+                  v-if="!isViewer"
+                  icon="o_upload_file"
+                  outline
+                  no-caps
+                  class="text-primary btnRounded q-ml-xs"
+                  @click="onTestPlanImport(refreshTestPlanList)"
+                >
+                  <q-tooltip>Import Excel</q-tooltip>
+                </q-btn>
                 <q-btn
                   v-if="role === 'admin' && !isViewer"
                   icon="o_playlist_add"
@@ -369,7 +391,8 @@ import {
   initTestPlanDialogs,
   onTestPlanView,
   onTestPlanAdd,
-  onTestPlanEdit
+  onTestPlanEdit,
+  onTestPlanImport
 } from "src/modules/test-plan/utils/dialogs.js";
 
 // Shared Project Dialogs
@@ -381,7 +404,9 @@ import {
 // Shared Test Plan Actions
 import {
   initTestPlanActions,
-  onSubmitTestPlanDelete
+  onSubmitTestPlanDelete,
+  onTestPlanTemplateDownload,
+  templateDownloading
 } from "src/modules/test-plan/utils/actions.js";
 
 // Common variables
