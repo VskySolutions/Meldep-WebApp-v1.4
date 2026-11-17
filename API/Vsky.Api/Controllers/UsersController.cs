@@ -370,7 +370,7 @@ namespace Vsky.Api.Controllers
                 if (ModelState.IsValid)
                 {
                     var LoggedUserId = User.GetLoggedInUserId<string>();
-                    var SiteId = _globalVariable.SiteId;
+                    var SiteId = (!string.IsNullOrWhiteSpace(model.SiteId)) ? model.SiteId : _globalVariable.SiteId;
                     if (!await adminAccess.CanManageUserAsync(LoggedUserId, id, SiteId))
                         return AdminDenied.Result();
 

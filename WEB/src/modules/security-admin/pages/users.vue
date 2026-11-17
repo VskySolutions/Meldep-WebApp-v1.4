@@ -26,7 +26,7 @@
       </template>
       <template #body-cell-actions="props">
         <q-td :props="props" auto-width>
-          <q-btn flat round dense icon="o_badge" aria-label="Edit roles" @click="rolesUser = props.row"><q-tooltip>Edit roles</q-tooltip></q-btn>
+          <q-btn flat round dense icon="o_badge" aria-label="Assign Roles" @click="rolesUser = props.row"><q-tooltip>Assign Roles</q-tooltip></q-btn>
           <q-btn flat round dense icon="o_tune" aria-label="Individual permissions" :to="{ path: '/security-admin/permissions', query: { type: 'user', id: props.row.userId } }"><q-tooltip>Individual permissions</q-tooltip></q-btn>
           <q-btn flat round dense icon="o_verified_user" aria-label="Effective permissions" :to="{ path: '/security-admin/effective', query: { userId: props.row.userId } }"><q-tooltip>Effective permissions</q-tooltip></q-btn>
         </q-td>

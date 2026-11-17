@@ -26,17 +26,21 @@ namespace Vsky.Api.Authorization
         private readonly GlobalVariable _globalVariable;
         private readonly SecurityAuthorizationOptions _options;
         private readonly AuthorizationAuditLog _auditLog;
+        private readonly AdminAccess _adminAccess;
 
         public AuthorizationEnforcementFilter(
             IPermissionService permissionService,
             GlobalVariable globalVariable,
             IOptions<SecurityAuthorizationOptions> options,
-            AuthorizationAuditLog auditLog)
+            AuthorizationAuditLog auditLog,
+            AdminAccess adminAccess)
         {
             _permissionService = permissionService;
             _globalVariable = globalVariable;
             _options = options.Value;
             _auditLog = auditLog;
+            _adminAccess = adminAccess;
+
         }
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -91,6 +95,10 @@ namespace Vsky.Api.Authorization
                 return;
 
             var userId = context.HttpContext.User.GetLoggedInUserId<string>();
+            if (await _adminAccess.IsSystemAdminAsync(userId))
+            {
+                return;
+            }
             var snapshot = await _permissionService.GetSnapshotAsync(userId, _globalVariable.SiteId);
 
             if (policy.Tier == null)

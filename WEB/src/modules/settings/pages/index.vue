@@ -30,7 +30,7 @@
               </div>
             </q-card>
             <q-card
-              v-if="permissions.isSiteAdmin"
+              v-if="permissions.isSiteAdmin && !roles.includes('system-super-admin')"
               class="col-xs-12 col-sm-6 col-md-4 col-lg-2 text-center q-ml-xl q-my-md q-py-md custom-card cursor-pointer"
               @click="$router.push('/security-admin')"
             >

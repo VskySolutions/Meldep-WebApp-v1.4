@@ -64,9 +64,29 @@ namespace Vsky.Services.Authorization
             return HighestRank(roleNames);
         }
 
+        //public async Task<bool> IsSystemAdminAsync(string userId)
+        //{
+        //    //return await GetRankAsync(userId, null) == SystemSuperAdminRank;
+
+        //    return await (
+        //        from userRole in _db.UserRoles
+        //        join role in _db.Roles on userRole.RoleId equals role.Id
+        //        where userRole.UserId == userId
+        //              && !role.Deleted
+        //              && role.NormalizedName == SystemSuperAdmin
+        //        select userRole.UserId
+        //    ).AnyAsync();
+        //}
         public async Task<bool> IsSystemAdminAsync(string userId)
         {
-            return await GetRankAsync(userId, null) == SystemSuperAdminRank;
+            return await (
+                from userRole in _db.UserRoles
+                join role in _db.Roles on userRole.RoleId equals role.Id
+                where userRole.UserId == userId
+                      && !role.Deleted
+                      && role.NormalizedName == SystemSuperAdmin
+                select userRole.UserId
+            ).AnyAsync();
         }
 
         /// <summary>
