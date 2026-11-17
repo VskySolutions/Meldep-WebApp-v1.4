@@ -29,6 +29,7 @@ using static Vsky.Api.Models.EmployeeModel;
 namespace Vsky.Api.Controllers
 {
     [Route("test-plan")]
+    [RequireMenu(MenuLinks.TestPlan + "|" + MenuLinks.TestCase)]
     public class TestPlanController : BaseController
     {
         #region Define Services      
@@ -66,6 +67,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All TestPlans
         // Description: This endpoint fetches a list of test plans based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllTestPlans(TestPlanSearchModel searchModel)
         {
             try
@@ -104,7 +106,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -113,6 +115,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllTestPlansListForDropdown
         // Description: This endpoint retrieves the details of a specific test plan based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllTestPlansListForDropdown(string ProjectId = null)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -127,6 +130,8 @@ namespace Vsky.Api.Controllers
         //Title: GetTestPlanById
         //Description: This endpoint retrieves the details of a specific test plan based on its unique identifier(ID). 
         [HttpGet("{id}")]
+        [RecordScope(typeof(Vsky.Models.TestPlan))]
+        [SiteOwned(typeof(Vsky.Models.TestPlan))]
         public async Task<IActionResult> GetTestPlanById(string id)
         {
             try
@@ -143,7 +148,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -152,6 +157,8 @@ namespace Vsky.Api.Controllers
         // Title: GetTestPlanDetailsById
         // Description: This endpoint retrieves the details of a specific test plan based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [RecordScope(typeof(Vsky.Models.TestPlan))]
+        [SiteOwned(typeof(Vsky.Models.TestPlan))]
         public async Task<IActionResult> GetTestPlanDetailsById(string id)
         {
             try
@@ -168,7 +175,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -222,7 +229,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -231,6 +238,8 @@ namespace Vsky.Api.Controllers
         // Title: UpdateTestPlan
         // Description: This endpoint updates an existing test plan by its ID. 
         [HttpPut("{id}")]
+        [RecordScope(typeof(Vsky.Models.TestPlan))]
+        [SiteOwned(typeof(Vsky.Models.TestPlan))]
         public async Task<IActionResult> UpdateTestPlan(string id, TestPlanModel model)
         {
             try
@@ -281,7 +290,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -290,6 +299,8 @@ namespace Vsky.Api.Controllers
         // Title: DeleteTestPlanById
         // Description: This endpoint deletes a test plan based on the provided testplan ID. It first retrieves the testplan entity by ID, checks if it exists, and if so, deletes the testplan. If the testplan is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [RecordScope(typeof(Vsky.Models.TestPlan))]
+        [SiteOwned(typeof(Vsky.Models.TestPlan))]
         public async Task<IActionResult> DeleteTestPlan(string id)
         {
             try
@@ -307,7 +318,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

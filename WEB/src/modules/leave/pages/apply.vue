@@ -164,7 +164,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Apply Leave"
@@ -290,13 +290,13 @@
               <q-chip v-if="props.row.leaveStatuses.dropDownValue == 'Decline'" label="Decline" name="o_done" class="rounded q-px-lg" color="red-5" text-color="black" />
             </q-td>
             <q-td style="width: 16%;">
-              <p v-html="stripHTML(truncate(props.row.reason, 50))" />
+              <p v-safe-html="stripHTML(truncate(props.row.reason, 50))" />
             </q-td>
             <q-td auto-width class="text-center actions" style="width: 10%;">
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" @click="onLeaveView(props.row.id, 'applyLeave', refreshEmployeeLeaveList)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon v-if="props.row.leaveStatuses.dropDownValue == 'Applied'" name="o_delete_outline" class="cursor-pointer" color="negative" @click="onDelete(props.row)">
+              <q-icon v-can v-if="props.row.leaveStatuses.dropDownValue == 'Applied'" name="o_delete_outline" class="cursor-pointer" color="negative" @click="onDelete(props.row)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

@@ -607,10 +607,11 @@ namespace Vsky.Services.TestCases
         #endregion
 
         #region GetStatusChangeLog
-        public async Task<List<TestCaseStatusChangeLogDto>> GetStatusChangeLog(string mappingId)
+        public async Task<List<TestCaseStatusChangeLogDto>> GetStatusChangeLog(string mappingId, string siteId)
         {
             return await _testCaseExecutionLogRepository.TableNoTracking
-                .Where(x => x.ProjectReleaseTracking_ReqPlanTaskIssueMappingId == mappingId)
+                .Where(x => x.ProjectReleaseTracking_ReqPlanTaskIssueMappingId == mappingId
+                            && x.ProjectReleaseTracking_ReqPlanTaskIssueMapping.TestCase.SiteId == siteId)
                 .OrderByDescending(x => x.CreatedOnUtc)
                 .Select(x => new TestCaseStatusChangeLogDto
                 {

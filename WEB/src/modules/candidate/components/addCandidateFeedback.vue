@@ -121,7 +121,7 @@
                           {{ props.row.candidateQuestions.dropDownValue }}
                         </q-td>
                         <q-td style="width: 30%; white-space: break-spaces;" @click="showComment(props.row.answer, true)">
-                          <div class="clamped-text" v-html="removeLeadingSpaces(props.row.answer)" />
+                          <div class="clamped-text" v-safe-html="removeLeadingSpaces(props.row.answer)" />
                         </q-td>
                         <q-td style="width: 5%;" class="text-center actions">
                           <q-icon
@@ -161,7 +161,7 @@
         </div>
       </q-card-section>
       <q-card-section class="q-pt-sm RichTextEditor">
-        <div v-html="currentComment" />
+        <div v-safe-html="currentComment" />
       </q-card-section>
       <q-card-actions align="right" class="bg-white text-teal">
         <q-btn

@@ -20,6 +20,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("company")] 
+    [RequireMenu(MenuLinks.Company + "|" + MenuLinks.CompanyContacts + "|" + MenuLinks.Customer)]
     public class CompanyController : BaseController
     {
         #region Services Initialization
@@ -59,6 +60,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllCompanies
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllCompanies(CompanySearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -77,6 +79,7 @@ namespace Vsky.Api.Controllers
 
         #region GetCompanyById
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Company))]
         public async Task<IActionResult> GetCompanyById(string id)
         {
             var entity = await _companyService.GetById(id);
@@ -219,6 +222,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -226,6 +230,7 @@ namespace Vsky.Api.Controllers
 
         #region UpdateCompany
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Company))]
         public async Task<IActionResult> UpdateCompany(string id, CompanyModel model)
         {
             try
@@ -387,6 +392,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -436,13 +442,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region DeleteCompany
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Company))]
         public async Task<IActionResult> DeleteCompany(string id)
         {
             var entity = await _companyService.GetById(id);
@@ -457,6 +464,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllCompanyListForDropdown
         [HttpGet("dropdownlist")]
+        [SiteMember]
         public async Task<IActionResult> GetAllCompanyListForDropdown()
         {
             try
@@ -469,13 +477,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllCompanyListForDropdown
         [HttpGet("primaryemployeedropdownlist")]
+        [SiteMember]
         public async Task<IActionResult> GetAllPrimaryEmployeeListForDropdown()
         {
             try
@@ -488,13 +497,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllCompanyListForDropdown
         [HttpGet("client/dropdownlist")]
+        [SiteMember]
         public async Task<IActionResult> GetAllClientListForDropdown()
         {
             try
@@ -507,7 +517,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

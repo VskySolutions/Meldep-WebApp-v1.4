@@ -75,7 +75,7 @@
           <q-td style="width:35%;">
             <div
               class="description-content"
-              v-html="props.row.description || '-'"
+              v-safe-html="props.row.description || '-'"
             />
           </q-td>
 

@@ -36,7 +36,7 @@
                   <div
                     class="note-wrapper RichTextEditor"
                   >
-                    <span class="text-black note-text" v-html="answer.description" />
+                    <span class="text-black note-text" v-safe-html="answer.description" />
                   </div>
               </div>
             </q-timeline-entry>

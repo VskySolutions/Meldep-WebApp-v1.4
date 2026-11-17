@@ -22,6 +22,7 @@ using Vsky.Services.TestCases;
 namespace Vsky.Api.Controllers
 {
     [Route("test-case")]
+    [RequireMenu(MenuLinks.TestCase)]
     public class TestCaseController : BaseController
     {
 
@@ -73,6 +74,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All TestCases
         // Description: This endpoint fetches a list of test cases based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllTestCases(TestCaseSearchModel searchModel)
         {
             try
@@ -115,7 +117,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -124,6 +126,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllTestCasesListForDropdown
         // Description: This endpoint retrieves the details of a specific test case based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllTestCasesListForDropdown()
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -138,6 +141,8 @@ namespace Vsky.Api.Controllers
         //Title: GetTestCaseById
         //Description: This endpoint retrieves the details of a specific test case based on its unique identifier(ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.TestCase))]
+        [RecordScope(typeof(Vsky.Models.TestCase))]
         public async Task<IActionResult> GetTestCaseById(string id)
         {
             try
@@ -154,7 +159,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -163,6 +168,8 @@ namespace Vsky.Api.Controllers
         // Title: GetTestCaseDetailsById
         // Description: This endpoint retrieves the details of a specific test case based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.TestCase))]
+        [RecordScope(typeof(Vsky.Models.TestCase))]
         public async Task<IActionResult> GetTestCaseDetailsById(string id)
         {
             try
@@ -179,7 +186,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -188,6 +195,8 @@ namespace Vsky.Api.Controllers
         // Title: GetReleaseWiseTestCaseHistory
         // Description: This endpoint retrieves the details of a specific test case based on its unique identifier (ID). 
         [HttpGet("history/{id}")]
+        [SiteOwned(typeof(Vsky.Models.TestCase))]
+        [RecordScope(typeof(Vsky.Models.TestCase))]
         public async Task<IActionResult> GetReleaseWiseTestCaseHistory(string id)
         {
             try
@@ -204,13 +213,16 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetReleaseWiseTestCaseHistory
         [HttpPost("history-by-testCaseIds")]
+        [ReadAccess]
+        [RequireMenu(MenuLinks.TestCase + "|" + MenuLinks.ProjectRelease)]
+        [SiteOwned(typeof(Vsky.Models.TestCase), Field = "TestCaseIds")]
         public async Task<IActionResult> GetReleaseWiseTestCaseHistoryByTestCaseIds([FromBody] ReleaseHistoryRequest request)
         {
             var result = await _projectReleaseTrackingReqPlanTaskIssueMappingService
@@ -227,7 +239,7 @@ namespace Vsky.Api.Controllers
         [HttpGet("change-log")]
         public async Task<IActionResult> GetStatusChangeLog(string mappingId)
         {
-            return Ok(await _testCaseService.GetStatusChangeLog(mappingId));
+            return Ok(await _testCaseService.GetStatusChangeLog(mappingId, _globalVariable.SiteId));
         }
         #endregion
 
@@ -235,6 +247,9 @@ namespace Vsky.Api.Controllers
         // Title: CreateTestCase
         // Description: This endpoint handles the creation of a new test case. It maps the test case model to the test case entity, sets the creation details, and inserts the test case into the database. 
         [HttpPost]
+        [SiteOwned(typeof(Vsky.Models.Project), Field = "ProjectId")]
+        [SiteOwned(typeof(Vsky.Models.TestPlan), Field = "PlanId")]
+        [SiteOwned(typeof(Vsky.Models.ProjectModule), Field = "ProjectModuleId")]
         public async Task<IActionResult> CreateTestCase(TestCaseModel model)
         {
             try
@@ -370,7 +385,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -379,6 +394,11 @@ namespace Vsky.Api.Controllers
         // Title: UpdateTestCase
         // Description: This endpoint updates an existing test case by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.TestCase))]
+        [RecordScope(typeof(Vsky.Models.TestCase))]
+        [SiteOwned(typeof(Vsky.Models.Project), Field = "ProjectId")]
+        [SiteOwned(typeof(Vsky.Models.TestPlan), Field = "PlanId")]
+        [SiteOwned(typeof(Vsky.Models.ProjectModule), Field = "ProjectModuleId")]
         public async Task<IActionResult> UpdateTestCase(string id, TestCaseModel model)
         {
             try
@@ -545,13 +565,15 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region UpdateTestCaseStatus
         [HttpPut("updateTestCaseStatus/{id}/{statusId}/{mappingId}")]
+        [SiteOwned(typeof(Vsky.Models.TestCase))]
+        [RecordScope(typeof(Vsky.Models.TestCase))]
         public async Task<IActionResult> UpdateTestCaseStatus(string id, string statusId, string mappingId)
         {
             try
@@ -667,7 +689,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -676,6 +698,8 @@ namespace Vsky.Api.Controllers
         // Title: DeleteTestCaseById
         // Description: This endpoint deletes a test case based on the provided testcase ID. It first retrieves the testcase entity by ID, checks if it exists, and if so, deletes the testcase. If the testcase is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.TestCase))]
+        [RecordScope(typeof(Vsky.Models.TestCase))]
         public async Task<IActionResult> DeleteTestCase(string id)
         {
             try
@@ -693,7 +717,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

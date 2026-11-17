@@ -43,7 +43,7 @@
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12">
                 <div>Lead Note</div>
-                <div class="text-black RichTextEditor" v-html="model.leadNote ? model.leadNote : '-'"></div>
+                <div class="text-black RichTextEditor" v-safe-html="model.leadNote ? model.leadNote : '-'"></div>
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">

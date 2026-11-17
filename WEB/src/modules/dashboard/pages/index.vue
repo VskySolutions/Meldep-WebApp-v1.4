@@ -245,7 +245,7 @@
                       <q-tr v-for="(line) in props.row.dailyPlannerLines" :key="line.id">
                         <q-td class="text-end">{{ props.row.dailyPlannerDate }}</q-td>
                         <q-td style="white-space: normal; overflow-wrap: break-word; width: 30%; max-width: 30%">{{ line.project.name }}</q-td>
-                        <q-td class="RichTextEditor" style="white-space: normal; overflow: auto; width: 50px; max-width: 50px; word-wrap: break-word;"><div v-html="line.description" /></q-td>
+                        <q-td class="RichTextEditor" style="white-space: normal; overflow: auto; width: 50px; max-width: 50px; word-wrap: break-word;"><div v-safe-html="line.description" /></q-td>
                       </q-tr>
                     </template>
                   </q-table>
@@ -289,7 +289,7 @@
                           </template>
                         </q-td>
                         <q-td class="hidden" style="white-space: normal; overflow: auto; width: 50px; max-width: 50px; word-wrap: break-word;">
-                          <div class="RichTextEditor" v-html="line.description" />
+                          <div class="RichTextEditor" v-safe-html="line.description" />
                         </q-td>
                         <q-td v-if="getTotalHoursByProject(props.row.timesheetLines).length > 1 && index === 0" :rowspan="getTotalHoursByProject(props.row.timesheetLines).length" class="text-center">
                           <b>{{ getTotalHoursAllProjects(props.row.timesheetLines) }}</b>
@@ -515,7 +515,7 @@
                                 class="q-ml-xs"
                               >
                                 <q-tooltip v-if="props.row.activityNameDescription" class="text-wrap break-words" max-width="300px">
-                                  <div v-html="props.row.activityNameDescription" />
+                                  <div v-safe-html="props.row.activityNameDescription" />
                                 </q-tooltip>
                               </q-icon>
                             </q-td>
@@ -617,7 +617,7 @@
                     <q-tr v-for="(line) in props.row.projectEmployeeMappings" :key="line.id">
                       <q-td class="text-end">{{ props.row.name }}</q-td>
                       <q-td style="white-space: normal; overflow-wrap: break-word; width: 30%; max-width: 30%">{{ line.employee.person.fullName }}</q-td>
-                      <q-td class="" style="white-space: normal; overflow: auto; width: 50px; max-width: 50px; word-wrap: break-word;"><div v-html="line.employeeRoleDropdown.dropDownValue"></div></q-td>
+                      <q-td class="" style="white-space: normal; overflow: auto; width: 50px; max-width: 50px; word-wrap: break-word;"><div v-safe-html="line.employeeRoleDropdown.dropDownValue"></div></q-td>
                     </q-tr>
                   </template>
                 </q-table>
@@ -667,8 +667,8 @@
                         </div>
                         <!-- <div class="q-mb-xs"><strong>No. of Leave:</strong> {{ leave.noofLeaves }} </div> -->
                         <div class="q-mb-xs"><strong>Status:</strong> {{ leave.leaveStatuses.dropDownValue === 'Sent to Approver' ? 'Waiting for Approval' : leave.leaveStatuses.dropDownValue }} </div>
-                        <div class="q-mb-xs RichTextEditor"><strong>Reason:</strong> <span class="fs-13" style="font-family: Poppins, sans-serif !important;" v-html="stripHTML(truncate(leave.reason, 100))" /></div>
-                        <div v-if="leave.hrNote" class="q-mb-xs RichTextEditor"><strong>HR Note:</strong> <span class="fs-13" style="font-family: Poppins, sans-serif !important;" v-html="stripHTML(truncate(leave.hrNote, 100))" /></div>
+                        <div class="q-mb-xs RichTextEditor"><strong>Reason:</strong> <span class="fs-13" style="font-family: Poppins, sans-serif !important;" v-safe-html="stripHTML(truncate(leave.reason, 100))" /></div>
+                        <div v-if="leave.hrNote" class="q-mb-xs RichTextEditor"><strong>HR Note:</strong> <span class="fs-13" style="font-family: Poppins, sans-serif !important;" v-safe-html="stripHTML(truncate(leave.hrNote, 100))" /></div>
                       </q-card-section>
                     </q-card>
                   </div>
@@ -782,7 +782,7 @@
               </div>
 
               <div class="row justify-end q-py-xs q-gutter-xs flex">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   label="Break"
                   class="bg-indigo-11 text-dark q-ml-sm"
@@ -793,7 +793,7 @@
                     Add Break
                   </q-tooltip>
                 </q-btn>
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   label="Time Adjustment"
                   class="bg-purple-3 text-dark"
@@ -804,7 +804,7 @@
                     Add Time Adjustment
                   </q-tooltip>
                 </q-btn>
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   label="WFH"
                   class="bg-cyan-3 text-dark"
@@ -882,7 +882,7 @@
                           <span v-if="line.siteModifiedLogCount > 0" class="q-ml-xs text-caption text-weight-bold"> Edited</span>
                         </div>
                       </div>
-                      <q-icon
+                      <q-icon v-can
                         v-if="line.employeeId === storedUser.employeeId"
                         name="o_edit"
                         class="actions cursor-pointer q-ml-sm"

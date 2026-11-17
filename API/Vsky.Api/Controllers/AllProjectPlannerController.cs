@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace Vsky.Api.Controllers
 {
     [Route("all-project-planner")]
+    [RequireMenu(MenuLinks.AllProjectPlanner)]
     public class AllProjectPlannerController : BaseController
     {
         #region Define Services
@@ -43,6 +44,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllVWCustomerList
         [HttpPost("get-all-vw-customer-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllVWCustomerList(VW_CustomerSearchModel model)
         {
             try
@@ -92,7 +94,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(ex.Message + ":-" + ex.InnerException);
+                return Ok(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -100,6 +102,7 @@ namespace Vsky.Api.Controllers
         #region GetAllProjectsPlannerList
         // Title: GetAllProjectsPlannerList
         [HttpPost("get-all-project-planner-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectsPlannerList(AllProjectPlannerSearchModel searchModel)
         {
             try
@@ -159,7 +162,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -167,6 +170,7 @@ namespace Vsky.Api.Controllers
         #region v
         // Title: GetAllRequirementPlannerList
         [HttpPost("get-all-requirement-planner-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllRequirementPlannerList(RequirementSearchModel searchModel)
         {
             try
@@ -208,7 +212,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -216,6 +220,7 @@ namespace Vsky.Api.Controllers
         #region GetAllProjectsModulesPlannerList
         // Title: GetAllProjectsModulesPlannerList
         [HttpPost("get-all-project-module-planner-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectsModulesPlannerList(ProjectModuleSearchModel searchModel)
         {
             try
@@ -251,7 +256,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -259,6 +264,7 @@ namespace Vsky.Api.Controllers
         #region GetAllProjectsTaskPlannerList
         // Title: GetAllProjectsTaskPlannerList
         [HttpPost("get-all-project-task-planner-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectsTaskPlannerList(ProjectTaskSearchModel searchModel)
         {
             try
@@ -312,7 +318,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -320,6 +326,7 @@ namespace Vsky.Api.Controllers
         #region GetAllProjectsActivityPlannerList
         // Title: GetAllProjectsActivityPlannerList
         [HttpPost("get-all-project-activity-planner-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectsActivityPlannerList(ProjectActivitySearchModel searchModel)
         {
             try
@@ -368,7 +375,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

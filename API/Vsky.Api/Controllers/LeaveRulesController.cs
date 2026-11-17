@@ -24,6 +24,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("leaveRules")]
+    [RequireMenu(MenuLinks.LeaveRules)]
     public class LeaveRulesController : BaseController
     {
 
@@ -64,6 +65,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All LeaveRules
         // Description: This endpoint fetches a list of LeaveRules based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllLeaveRules(LeaveRulesSearchModel searchModel)
         {
             try
@@ -83,7 +85,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -92,6 +94,7 @@ namespace Vsky.Api.Controllers
         //Title: GetLeaveRulesDetailsById
         //Description: This endpoint retrieves the details of a specific LeaveRules based on its unique identifier(ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.LeaveRules))]
         public async Task<IActionResult> GetLeaveRulesDetailsById(string id)
         {
             try
@@ -108,7 +111,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -191,7 +194,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -200,6 +203,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateLeaveRule
         // Description: This endpoint updates an existing leaverule by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.LeaveRules))]
         public async Task<IActionResult> UpdateLeaveRule(string id, LeaveRulesModel model)
         {
             try
@@ -298,7 +302,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -377,7 +381,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -386,6 +390,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteLeaveRuleById
         // Description: This endpoint deletes a LeaveRules based on the provided LeaveRules ID. It first retrieves the LeaveRules entity by ID, checks if it exists, and if so, deletes the LeaveRules. If the LeaveRules is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.LeaveRules))]
         public async Task<IActionResult> DeleteLeaveRule(string id)
         {
             try
@@ -403,7 +408,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

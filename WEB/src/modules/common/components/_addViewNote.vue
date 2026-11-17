@@ -106,7 +106,7 @@
                 <q-td style="width: 20%;">{{ props.row.user?.person?.firstName }} {{ props.row.user?.person?.lastName }}</q-td>
                 <q-td v-if="showNoteType" style="width: 10%;">{{ props.row.noteType?.dropDownValue }}</q-td>
                 <q-td style="white-space: break-spaces;" @click="showComment(props.row.note)">
-                  <div class="clamped-text RichTextEditor" v-html="removeLeadingSpaces(props.row.note)" />
+                  <div class="clamped-text RichTextEditor" v-safe-html="removeLeadingSpaces(props.row.note)" />
                 </q-td>
                 <q-td v-if="isShow" auto-width class="text-center actions">
                   <q-icon
@@ -144,7 +144,7 @@
         <div class="text-h2 text-weight-medium text-white">{{ label || 'Note Summary' }}</div>
       </q-card-section>
       <q-card-section class="q-pt-sm">
-        <div class="RichTextEditor" v-html="currentComment" />
+        <div class="RichTextEditor" v-safe-html="currentComment" />
       </q-card-section>
       <q-card-actions align="right" class="bg-white text-teal">
         <q-btn

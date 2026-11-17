@@ -70,7 +70,7 @@
                 }"
                 @click="user.username === note.user?.userName && isShow && startEditing(note)"
               >
-                <span class="text-black note-text" v-html="note.note" />
+                <span class="text-black note-text" v-safe-html="note.note" />
                 <q-tooltip v-if="user.username === note.user?.userName && isShow">
                   Click to edit
                 </q-tooltip>

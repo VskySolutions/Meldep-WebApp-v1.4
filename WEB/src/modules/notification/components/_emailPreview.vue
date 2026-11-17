@@ -16,7 +16,7 @@
 
       <!-- Email Body -->
       <q-card-section class="q-pa-none RichTextEditor">
-        <div class="q-pa-none RichTextEditor" v-html="previewHtml"></div>
+        <div class="q-pa-none RichTextEditor" v-safe-html="previewHtml"></div>
       </q-card-section>
     </q-card>
   </q-dialog>

@@ -102,6 +102,45 @@ namespace Vsky.Services.SitesModule
                       })
                       .ToListAsync();
         }
+        // Same result as above, except a group or individual grant can add or hide a menu. The
+        // override returns null for a link with no such grant, which keeps the role's answer.
+        public async Task<IList<CustomSiteModule>> GetSiteActiveModulesMenus(string siteId, string[] roleId, Func<string, bool?> visibilityOverride)
+        {
+            var modules = await _sitesModuleRepository.TableNoTracking
+                .Where(siteModule => !siteModule.Deleted && siteModule.SiteId == siteId)
+                .OrderBy(siteModule => siteModule.SortOrder)
+                .Select(siteModule => new
+                {
+                    siteModule.Modules.Name,
+                    Menus = siteModule.SitesModulesMenus
+                        .Where(siteModuleMenu => !siteModuleMenu.Deleted && siteModuleMenu.ModulesMenus.Active)
+                        .OrderBy(siteModuleMenu => siteModuleMenu.SortOrder)
+                        .Select(siteModuleMenu => new
+                        {
+                            Menu = new CustomSiteModule.CustomSiteModuleMenu
+                            {
+                                DisplayName = siteModuleMenu.ModulesMenus.DisplayName,
+                                Link = siteModuleMenu.ModulesMenus.Link,
+                                Icon = siteModuleMenu.ModulesMenus.Icon,
+                                SetAsLanding = siteModuleMenu.SetAsLanding,
+                                OpenInNewTab = siteModuleMenu.ModulesMenus.OpenInNewTab
+                            },
+                            RoleShows = siteModuleMenu.SitesModulesMenusPermissions.Any(permission =>
+                                roleId.Contains(permission.SiteRoleId) && !permission.Deleted && permission.IsShowMenu)
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return modules.Select(module => new CustomSiteModule
+            {
+                Name = module.Name,
+                CustomSiteModuleMenuList = module.Menus
+                    .Where(x => visibilityOverride(x.Menu.Link) ?? x.RoleShows)
+                    .Select(x => x.Menu)
+                    .ToList()
+            }).ToList();
+        }
         #endregion
 
         #region InsertSiteModule

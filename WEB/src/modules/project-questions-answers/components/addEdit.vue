@@ -178,7 +178,7 @@
                       <span
                         v-else :class="props.row.deleted ? 'text-delete RichTextEditor' : 'RichTextEditor'"
                         style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 350px;"
-                        v-html="props.row.description"
+                        v-safe-html="props.row.description"
                       />
                       <div
                         v-if="

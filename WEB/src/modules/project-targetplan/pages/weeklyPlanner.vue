@@ -116,7 +116,7 @@
                 </q-menu>
               </div>
               <div class="q-ml-sm">
-                <q-btn
+                <q-btn v-can
                   v-if="isFullAccess && !isViewer"
                   icon="o_add"
                   outline
@@ -453,7 +453,7 @@
                         </div>
                         <hr>
                         <div class="planDateActions">
-                          <q-btn
+                          <q-btn v-can
                             v-if="isFullAccess && !planDate.isApproved"
                             :disable="!(projectWeeklyPlanDateLineHovered === planDate.id)"
                             icon="o_add"
@@ -668,7 +668,7 @@
                             <div class="col-12 position-relative">
                               <div
                                 class="plan-desc q-mt-md RichTextEditor"
-                                v-html="
+                                v-safe-html="
                                   // line.expectedDescription?.length === 0 || line.expectedDescription === ' ' || line.expectedDescription === '<br>' ?
                                   !line.expectedDescription ||
                                     !line.expectedDescription.trim() ||
@@ -777,7 +777,7 @@
                         </template>
                         <template v-else>
                           <div class="position-relative">
-                            <div v-if="line.actualDescription?.length > 0" class="plan-desc q-mt-md RichTextEditor" v-html="line.actualDescription" />
+                            <div v-if="line.actualDescription?.length > 0" class="plan-desc q-mt-md RichTextEditor" v-safe-html="line.actualDescription" />
                             <q-tooltip v-if="line.actualDescription?.length > 0 && line.actualDescription !== '<br>' && isFullAccess && !planDate.isCompleted">Double click to edit</q-tooltip>
                             <div v-if="(line.actualDescription?.length === 0 || line.actualDescription === '<br>')" class="fs-12 text-red">No Description Available</div>
                             <q-icon
@@ -823,7 +823,7 @@
                     <td class="text-center">
                       {{ planDate.weekDate }}
                       <div style="min-height: 26px;">
-                        <q-btn
+                        <q-btn v-can
                           v-if="isFullAccess"
                           :disable="!(projectWeeklyPlanDateLineHovered === planDate.id)"
                           icon="o_add"

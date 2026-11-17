@@ -19,6 +19,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("account")]
+    [SiteMember]
     public class AccountController : BaseController
     {
         #region Define Services
@@ -56,6 +57,7 @@ namespace Vsky.Api.Controllers
         // Title: Change Password
         // Description: This endpoint allows users to securely update their existing password to a new one.
         [HttpPost("change-password")]
+        [AuthenticatedOnly]
         public async Task<IActionResult> ChangePassword(ChangePasswordModel model)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -86,6 +88,7 @@ namespace Vsky.Api.Controllers
 
         #region Get Person Profile
         [HttpGet("profile")]
+        [AuthenticatedOnly]
         public async Task<IActionResult> GetPerson()
         {
             try
@@ -110,7 +113,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -231,7 +234,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

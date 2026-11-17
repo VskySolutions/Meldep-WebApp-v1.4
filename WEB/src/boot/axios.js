@@ -20,14 +20,45 @@ const http2 = axios.create({
   }
 });
 
+// This tab's user and site, held in memory. LocalStorage is shared by every tab, so reading the
+// site from it per request would let a switch in one tab silently redirect another tab's writes.
+let pinnedUser = null;
+let reloadTimer = null;
+
+export function pinUser (user) {
+  pinnedUser = user || null;
+}
+
+function watchOtherTabs () {
+  window.addEventListener("storage", (event) => {
+    // key is null when another tab calls LocalStorage.clear()
+    if (event.key !== null && event.key !== "user" && event.key !== "token") return;
+
+    // Login clears and then rewrites storage, so wait for the final state before comparing.
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+      const storedUser = LocalStorage.getItem("user");
+      const sessionEnded = !LocalStorage.getItem("token");
+      const userChanged = storedUser?.userId !== pinnedUser?.userId;
+      const siteChanged = storedUser?.siteId !== pinnedUser?.siteId;
+
+      if (sessionEnded || userChanged || siteChanged) {
+        window.location.reload();
+      }
+    }, 200);
+  });
+}
+
 export default boot(({ app }) => {
+  pinUser(LocalStorage.getItem("user"));
+  watchOtherTabs();
 
   // Request interceptor
   http.interceptors.request.use(
     (config) => {
 
       const token = LocalStorage.getItem("token");
-      const user = LocalStorage.getItem("user");
+      const user = pinnedUser;
 
       // Authorization
       if (token) {

@@ -26,7 +26,7 @@
                 </span>
                 <span v-else>Dropdown Type</span>
               </div>
-              <q-btn
+              <q-btn v-can
                 v-if="dropdownTypes.length && dropdownTypes[0].groupName"
                 color="primary"
                 icon="o_add"
@@ -198,7 +198,7 @@
                     />
                   </div>
                   <div class="col-1 text-center">
-                    <q-icon
+                    <q-icon v-can
                       name="o_delete"
                       color="negative"
                       size="sm"
@@ -220,7 +220,7 @@
                   Dropdown Values : <span class="text-primary"> {{ selectedType.type }}</span>
                 </span>
               </div>
-              <q-btn
+              <q-btn v-can
                 v-if="selectedType.type"
                 color="primary"
                 icon="o_add"
@@ -335,7 +335,7 @@
                       class="q-mr-xs"
                     >
                       <q-tooltip v-if="dropdown.description" class="text-wrap break-words q-pa-sm" max-width="300px">
-                        <div v-html="dropdown.description" />
+                        <div v-safe-html="dropdown.description" />
                       </q-tooltip>
                     </q-icon>
                   </div>
@@ -397,7 +397,7 @@
                     />
                   </div>
                   <div class="col-1 text-center">
-                    <q-icon
+                    <q-icon v-can
                       name="o_delete"
                       color="negative"
                       size="sm"

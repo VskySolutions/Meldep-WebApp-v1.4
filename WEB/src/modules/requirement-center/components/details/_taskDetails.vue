@@ -278,7 +278,7 @@
 
           <div
             class="RichTextEditor"
-            v-html="model.description || '-'"
+            v-safe-html="model.description || '-'"
           />
         </div>
       </q-tab-panel>
@@ -314,12 +314,12 @@
                   class="q-ml-xs"
                 >
                   <q-tooltip v-if="props.row.activityNameDescription" class="text-wrap break-words q-pa-sm" max-width="300px">
-                    <div v-html="props.row.activityNameDescription" />
+                    <div v-safe-html="props.row.activityNameDescription" />
                   </q-tooltip>
                 </q-icon>
               </q-td>
               <!-- <q-td style="width: 10%;" class="text-right">{{ props.row.estimateHours }}</q-td> -->
-              <q-td class="RichTextEditor"><div style="display: block; max-width: 500px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" v-html="props.row.description" /></q-td>
+              <q-td class="RichTextEditor"><div style="display: block; max-width: 500px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" v-safe-html="props.row.description" /></q-td>
             </q-tr>
             <q-tr class="hidden" v-if="props.pageIndex === projectActivities.length - 1">
               <q-td colspan="2" class="text-right font-bold"><b>Total Hours:</b></q-td>

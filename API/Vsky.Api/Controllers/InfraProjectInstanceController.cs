@@ -15,6 +15,7 @@ using Microsoft.PowerBI.Api.Models;
 namespace Vsky.Api.Controllers
 {
     [Route("infra-project-instance")]
+    [RequireMenu(MenuLinks.InfraProjectInstance)]
     public class InfraProjectInstanceController : BaseController
     {
         #region Define Services
@@ -52,6 +53,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllInfraProjectInstanceForList
         // Description: This endpoint retrieves the list of infra project instance.
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllInfraProjectInstanceForList(InfraProjectInstanceSearchModel searchModel)
         {
             try
@@ -81,7 +83,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -90,6 +92,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllInfraProjectInstanceListForDropdown
         // Description: This endpoint retrieves the list of Infra Account for dropdown. 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllInfraProjectInstanceListForDropdown(string projectId = null)
         {
             try
@@ -101,7 +104,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -110,6 +113,7 @@ namespace Vsky.Api.Controllers
         // Title: GetInfraProjectInstanceInDetailById
         // Description: This endpoint retrieves the details of a specific infra project instance based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.InfraProjectInstance))]
         public async Task<IActionResult> GetInfraProjectInstanceInDetailById(string id)
         {
             try
@@ -122,7 +126,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -143,7 +147,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -206,7 +210,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
             return ModelStateError(ModelState);
         }
@@ -358,7 +362,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + " :- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -393,7 +397,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -402,6 +406,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteInfraProjectInstance
         // Description: This endpoint deletes a infra project instance based on the provided infra project instance ID. It first retrieves the infra project instance entity by ID, checks if it exists, and if so, deletes the infra project instance. If the infra project instance is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.InfraProjectInstance))]
         public async Task<IActionResult> DeleteInfraProjectInstance(string id)
         {
             try
@@ -417,7 +422,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -40,7 +40,7 @@
                     <span v-if="note.noteType?.dropDownValue">
                       <span>{{ note.noteType?.dropDownValue }} - </span>
                     </span>
-                    <span class="text-black note-text" v-html="note.note" />
+                    <span class="text-black note-text" v-safe-html="note.note" />
                   </div>
               </div>
             </q-timeline-entry>

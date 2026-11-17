@@ -145,7 +145,7 @@
         >
           <div
             class="RichTextEditor"
-            v-html="model.description || '-'"
+            v-safe-html="model.description || '-'"
           />
         </q-card>
       </q-tab-panel>
@@ -159,7 +159,7 @@
         >
           <div
             class="RichTextEditor"
-            v-html="model.steps || '-'"
+            v-safe-html="model.steps || '-'"
           />
         </q-card>
       </q-tab-panel>
@@ -173,7 +173,7 @@
         >
           <div
             class="RichTextEditor"
-            v-html="model.expectedResult || '-'"
+            v-safe-html="model.expectedResult || '-'"
           />
         </q-card>
       </q-tab-panel>
@@ -187,7 +187,7 @@
         >
           <div
             class="RichTextEditor"
-            v-html="model.actualResult || '-'"
+            v-safe-html="model.actualResult || '-'"
           />
         </q-card>
       </q-tab-panel>
@@ -251,7 +251,7 @@
 
               <div
                 class="RichTextEditor"
-                v-html="testPlanModel.description || '-'"
+                v-safe-html="testPlanModel.description || '-'"
               />
             </div>
           </div>

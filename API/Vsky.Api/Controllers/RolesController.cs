@@ -24,7 +24,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Vsky.Api.Controllers
 {
     [Route("roles")]
-    [AllowAnonymous]
+    [RequireMenu(MenuLinks.SiteRoles + "|" + MenuLinks.MasterRoles + "|" + MenuLinks.Sites)]
     public class RolesController : BaseController
     {
         #region Fields
@@ -77,6 +77,7 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllSiteRoles(SitesRolesSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -122,6 +123,7 @@ namespace Vsky.Api.Controllers
 
 
         [HttpPost]
+        [RequireSystemAdmin]
         public async Task<IActionResult> CreateMasterRole(RoleModel model)
         {
            
@@ -156,6 +158,7 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [RequireSystemAdmin]
         public async Task<IActionResult> UpdateMasterRole(string id, RoleModel model)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -180,6 +183,7 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequireSystemAdmin]
         public async Task<IActionResult> DeleteMasterRole(string id)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();

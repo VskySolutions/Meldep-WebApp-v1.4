@@ -91,7 +91,7 @@
               </div>
               <div class="col-12 col-md-12">
                 <div class="form-group">
-                  <p class="text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
+                  <p class="text-black RichTextEditor" v-safe-html="model.description ? model.description : '-'" />
                 </div>
               </div>
             </div>

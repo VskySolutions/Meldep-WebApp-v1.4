@@ -19,6 +19,7 @@ using static Dapper.SqlMapper;
 namespace Vsky.Api.Controllers
 {
     [Route("infra-account-services")]
+    [RequireMenu(MenuLinks.InfraAccountServices)]
     public class InfraAccountServicesServicesController : BaseController
     {
         #region Define Services
@@ -59,6 +60,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllInfraAccountServicesList
         // Description: This endpoint retrieves the list of infra account.
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllInfraAccountServicesList(InfraAccountServicesSearchModel searchModel)
         {
             try
@@ -90,7 +92,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -99,6 +101,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllInfraServiceListForDropdown
         // Description: This endpoint retrieves the list of Infra Account Services based on siteid. 
         [HttpGet("dropdown/list/{accountId}")]
+        [SiteMember]
         public async Task<IActionResult> GetAllInfraServiceListForDropdown(string accountId)
         {
             try
@@ -110,7 +113,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -132,7 +135,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -252,7 +255,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -365,7 +368,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -408,7 +411,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -447,7 +450,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -471,7 +474,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -495,7 +498,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -585,7 +588,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 

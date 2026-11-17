@@ -7,7 +7,7 @@
           <q-btn class="bg-grey-3 text-grey-10 q-mr-md btnRounded" label="Search" flat type="button" no-caps @click="advanceSearch">
             <q-icon :name="advanceSearchEnable ? 'o_filter_alt_off' : 'o_filter_alt'" />
           </q-btn>
-          <q-btn icon="o_add" outline label="Add Employee" no-caps class="text-primary btnRounded" @click="onAdd" />
+          <q-btn v-can icon="o_add" outline label="Add Employee" no-caps class="text-primary btnRounded" @click="onAdd" />
         </div>
       </q-card-section>
       <q-separator />
@@ -59,10 +59,10 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" @click="onView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" @click="onEdit(props.row.id)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" @click="onEdit(props.row.id)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" @click="onDelete(props.row)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" @click="onDelete(props.row)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

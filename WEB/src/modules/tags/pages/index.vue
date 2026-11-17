@@ -73,7 +73,7 @@
                 </div>
               </div>
               <div class="q-ml-sm">
-                <q-btn icon="o_add" outline label="Add Tag" no-caps class="text-primary btnRounded" @click="onAdd" />
+                <q-btn v-can icon="o_add" outline label="Add Tag" no-caps class="text-primary btnRounded" @click="onAdd" />
                 <q-btn icon="o_chevron_left" outline label="Back To List" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.push('/Settings')" />
               </div>
             </div>
@@ -173,14 +173,14 @@
               </q-input>
             </q-td>
             <q-td style="width: 2%;" class="text-center actions">
-              <q-icon
+              <q-icon v-can
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
                 @click="onEdit(props.row.id)"
               >
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_delete_outline"
                 class="cursor-pointer"
                 color="negative"

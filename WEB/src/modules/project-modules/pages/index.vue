@@ -68,7 +68,7 @@
                 </q-menu>
               </div>
               <div class="q-ml-sm">
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline

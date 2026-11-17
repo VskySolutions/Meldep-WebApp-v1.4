@@ -19,7 +19,7 @@
                 <legend>Activity Details</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="text-black RichTextEditor">
-                    <span v-html="model.description || '-'"></span>
+                    <span v-safe-html="model.description || '-'"></span>
                   </div>
                 </div>
               </fieldset>
@@ -61,7 +61,7 @@
                         class="q-ml-xs"
                       >
                         <q-tooltip v-if="model.activityNameDescription" class="text-wrap break-words q-pa-sm" max-width="300px">
-                          <div v-html="model.activityNameDescription" />
+                          <div v-safe-html="model.activityNameDescription" />
                         </q-tooltip>
                       </q-icon>
                     </div>

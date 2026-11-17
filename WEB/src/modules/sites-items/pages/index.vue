@@ -110,7 +110,7 @@
                 </div>
               </div>
               <div class="row q-gutter-sm justify-end">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Add Site Item"
@@ -170,10 +170,10 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onSiteItemView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onSiteItemEdit(props.row.id)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onSiteItemEdit(props.row.id)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSiteItemDelete(props.row)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSiteItemDelete(props.row)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

@@ -15,6 +15,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("drop-downs")]
+    [RequireMenu(MenuLinks.Dropdowns + "|" + MenuLinks.DropdownTypes)]
     public class DropDownsController : BaseController
     {
         #region Define Services
@@ -48,6 +49,8 @@ namespace Vsky.Api.Controllers
         // Title: Get All DropDowns
         // Description: This endpoint fetches a list of DropDowns based on the provided search criteria such as dropdown type, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
+        [SiteMember]
         public IActionResult GetAllDropDowns(DropDownSearchModel searchModel)
         {
             try
@@ -67,7 +70,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -76,6 +79,7 @@ namespace Vsky.Api.Controllers
         // Title: GetDropDownById
         // Description: This endpoint retrieves the details of a specific Dropdown value based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [SiteMember]
         public async Task<IActionResult> GetDropDownById(string id)
         {
             var entity = await _dropDownService.GetDropDownById(id);
@@ -87,6 +91,7 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpGet("GetByTypeNameandName/{TypeName}/{Name}")]
+        [SiteMember]
         public async Task<IActionResult> GetDropDownIdByTypeNameAndName(string TypeName, string Name)
         {
             if (string.IsNullOrEmpty(TypeName) || string.IsNullOrEmpty(Name))
@@ -146,7 +151,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

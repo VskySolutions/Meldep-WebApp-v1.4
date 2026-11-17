@@ -150,7 +150,7 @@
                 :selected-field="selectedField"
               />
               <div class="flex items-center no-wrap">
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline
@@ -384,7 +384,7 @@
                       <q-tooltip>View Customer</q-tooltip>
                     </span>
                     <div v-if="props.row.isEditable" class="row items-center q-gutter-sm q-ml-sm" style="flex-shrink: 0;">
-                      <q-icon
+                      <q-icon v-can
                         v-if="props.row.showCustomerName && !search.isTemplate"
                         name="o_edit"
                         size="xs"

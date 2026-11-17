@@ -12,6 +12,7 @@ using Vsky.Services.ProjectUserMappings;
 namespace Vsky.Api.Controllers
 {
     [Route("project-users")]
+    [RequireMenu(MenuLinks.ProjectSecurity)]
     public class ProjectUserMappingController : BaseController
     {
         #region Define Services
@@ -39,6 +40,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Projects For User Permission
         // Description: This endpoint fetches a list of projects based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectsForUserPermission(ProjectSearchModel searchModel)
         {
             try
@@ -61,7 +63,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -71,7 +71,7 @@
                 </q-menu>
               </div>
               <div>
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   no-caps
@@ -350,7 +350,7 @@
                   <q-icon v-if="!props.row.isNew" name="o_add_task" class="cursor-pointer q-mr-sm" size="xs" @click="onFTPView(props.row.id, true, refreshFTPList)">
                     <q-tooltip>Assign Project Instance</q-tooltip>
                   </q-icon>
-                  <!-- <q-icon
+                  <!-- <q-icon v-can
                     v-if="!props.row.isNew && editingRowId !== props.row.id"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
@@ -369,7 +369,7 @@
                   >
                     <q-tooltip>Save</q-tooltip>
                   </q-icon> -->
-                  <q-icon
+                  <q-icon v-can
                     v-if="!props.row.isNew && editingRowId !== props.row.id"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
@@ -429,7 +429,7 @@
                     :on-save-api="handleWalletDetailSave"
                     @success="refreshFTPList"
                   />
-                  <q-icon
+                  <q-icon v-can
                     name="o_delete_outline"
                     size="xs"
                     class="cursor-pointer"

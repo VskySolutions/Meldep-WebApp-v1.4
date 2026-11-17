@@ -19,7 +19,7 @@
           >
               <div
                 class="text-black note-text"
-                v-html="responseLogDescription.note || ''"/>
+                v-safe-html="responseLogDescription.note || ''"/>
               <q-separator v-if="showDescriptionInfo" class="q-my-sm" />
           </div>
         </div>

@@ -18,7 +18,7 @@
              <!-- NOTE BODY -->
             <div class="fs-14 note-row">
               <div class="note-wrapper RichTextEditor">
-                <span class="text-black note-text" v-html="note.note" />
+                <span class="text-black note-text" v-safe-html="note.note" />
               </div>
             </div>
           </q-timeline-entry>

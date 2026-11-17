@@ -40,6 +40,7 @@ using Vsky.Services.Users;
 namespace Vsky.Api.Controllers
 {
     [Route("help-desk")]
+    [SiteMember]
     public class HelpDeskController : BaseController
     {
         #region Define Services
@@ -125,6 +126,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All HelpDesk
         // Description: This endpoint fetches a list of HelpDesk based on the provided search criteria such as title, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllHelpDesks(HelpDeskSearchModel searchModel)
         {
             try
@@ -179,7 +181,7 @@ namespace Vsky.Api.Controllers
             catch (Exception ex)
             {
                 _loggerService.Error("Error fetching helpdesk list", ex);
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -199,7 +201,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -216,7 +218,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -237,7 +239,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -258,7 +260,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -267,6 +269,8 @@ namespace Vsky.Api.Controllers
         // Title: GetHelpDeskDetailsById
         // Description: This endpoint retrieves the details of a specific helpdesk based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.HelpDesk)]
+        [SiteOwned(typeof(Vsky.Models.HelpDesk))]
         public async Task<IActionResult> GetHelpDeskDetailsById(string id)
         {
             try
@@ -311,7 +315,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -443,7 +447,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -691,15 +695,16 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                _loggerService.Error("Email Send Failed", ex, null);
+                _loggerService.Error("Help desk creation failed", ex, null);
 
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region Twilio Client Email Replies
         [AllowAnonymous]
+        [ServiceKey]
         [HttpPost("email-replies")]
         public async Task<IActionResult> TwilioClientEmailReplies()
         {
@@ -722,7 +727,7 @@ namespace Vsky.Api.Controllers
             catch (Exception ex)
             {
                 _loggerService.Error("Ticket Replies Failed", ex, null);
-                return StatusCode(500, new { error = ex.Message });
+                return StatusCode(500, new { error = SafeErrorMessage(ex) });
             }
         }
         #endregion
@@ -871,7 +876,7 @@ namespace Vsky.Api.Controllers
             catch (Exception ex)
             {
                 _loggerService.Error("Error while fetching helpdesk email replies", ex);
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1129,7 +1134,7 @@ namespace Vsky.Api.Controllers
             catch (Exception ex)
             {
                 _loggerService.Error("Help Desk-> Email Replies-> Failed", ex, null);
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1163,7 +1168,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1228,7 +1233,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1248,7 +1253,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1268,7 +1273,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1288,7 +1293,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1308,7 +1313,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1328,7 +1333,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1363,7 +1368,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1384,7 +1389,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1405,13 +1410,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region Microsoft PowerMate Integration Webhooks
         [AllowAnonymous]
+        [ServiceKey]
         [HttpPost("createTicketFromEmail")]
         public async Task<IActionResult> createTicketFromEmailAsync([FromBody] EmailTicketDto model)
         {
@@ -1630,11 +1636,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception Ex)
             {
-                return BadRequest(Ex.Message + ":- " + Ex.InnerException);
+                return BadRequest(SafeErrorMessage(Ex));
             }
         }
 
         [AllowAnonymous]
+        [ServiceKey]
         [HttpGet("getSiteIdFromTicketGenerationEmail")]
         public async Task<IActionResult> createTicketFromEmailAsync([FromQuery] string Email)
         {
@@ -1654,6 +1661,8 @@ namespace Vsky.Api.Controllers
         // Title: DeleteHelpDeskById
         // Description: This endpoint deletes a HelpDesk based on the provided HelpDesk ID. It first retrieves the HelpDesk entity by ID, checks if it exists, and if so, deletes the HelpDesk. If the HelpDesk is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.HelpDesk)]
+        [SiteOwned(typeof(Vsky.Models.HelpDesk))]
         public async Task<IActionResult> DeleteHelpDesk(string id)
         {
             try
@@ -1672,7 +1681,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

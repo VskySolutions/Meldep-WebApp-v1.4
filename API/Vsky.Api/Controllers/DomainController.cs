@@ -20,6 +20,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("domain")]
+    [RequireMenu(MenuLinks.Domain)]
     public class DomainController : BaseController
     {
         #region Services Initialization
@@ -52,6 +53,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllDomains
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllDomains(DomainSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -69,6 +71,7 @@ namespace Vsky.Api.Controllers
 
         #region GetDomainById
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Domain))]
         public async Task<IActionResult> GetDomainById(string id)
         {
             var entity = await _domainService.GetDomainDetailsById(id);
@@ -129,6 +132,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -136,6 +140,7 @@ namespace Vsky.Api.Controllers
 
         #region UpdateDomain
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Domain))]
         public async Task<IActionResult> UpdateDomain(string id, DomainModel model)
         {
             try
@@ -268,6 +273,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -275,6 +281,7 @@ namespace Vsky.Api.Controllers
 
         #region DeleteDomain
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Domain))]
         public async Task<IActionResult> DeleteDomain(string id)
         {
             try
@@ -289,7 +296,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

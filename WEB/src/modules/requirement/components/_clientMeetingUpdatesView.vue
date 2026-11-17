@@ -73,7 +73,7 @@
               :class="{ 'cursor-pointer': !props.isRequirementCenter && storedUser === note.user?.userName }"
               @click="!props.isRequirementCenter && startEditing(note)"
             >
-              <span class="text-black note-text" v-html="note.note" />
+              <span class="text-black note-text" v-safe-html="note.note" />
               <q-tooltip v-if="!props.isRequirementCenter && storedUser === note.user?.userName">
                 Click to edit
               </q-tooltip>
@@ -108,7 +108,7 @@
           >
               <div
                 class="text-black note-text"
-                v-html="responseLogDescription.note || ''"/>
+                v-safe-html="responseLogDescription.note || ''"/>
               <q-separator v-if="showDescriptionInfo" class="q-my-sm" />
           </div>
         </div> -->

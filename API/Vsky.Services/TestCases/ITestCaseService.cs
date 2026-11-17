@@ -83,7 +83,7 @@ namespace Vsky.Services.TestCases
         #endregion
 
         #region GetStatusChangeLog
-        Task<List<TestCaseStatusChangeLogDto>> GetStatusChangeLog(string mappingId);
+        Task<List<TestCaseStatusChangeLogDto>> GetStatusChangeLog(string mappingId, string siteId);
         #endregion
 
         #region GetTestCaseDetailsById

@@ -587,7 +587,7 @@
                             <span
                               v-else :class="props.row.deleted ? 'text-delete' : ''"
                               style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
-                              v-html="props.row.note"
+                              v-safe-html="props.row.note"
                             />
                           </q-td>
                           <q-td auto-width class="text-center">

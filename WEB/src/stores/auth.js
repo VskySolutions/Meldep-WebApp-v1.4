@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 import { LocalStorage } from "quasar";
-import { http } from "boot/axios";
+import { http, pinUser } from "boot/axios";
 import authService from "modules/auth/auth.service";
+import { usePermissionStore } from "stores/permissions";
 
 // Maps an auth/user API response to the user object stored in state & LocalStorage
 function mapUser(resp) {
@@ -49,6 +50,7 @@ export const useAuthStore = defineStore("auth", {
 
           LocalStorage.set("token", token);
           LocalStorage.set("user", user);
+          pinUser(user);
 
           return resp;
         }
@@ -77,6 +79,7 @@ export const useAuthStore = defineStore("auth", {
 
           LocalStorage.set("token", token);
           LocalStorage.set("user", user);
+          pinUser(user);
 
           return resp;
         }
@@ -102,20 +105,22 @@ export const useAuthStore = defineStore("auth", {
               msalInstance.clearCache(account);
             });
             msalInstance.clearCache();
+
+            // Clear the session first: logoutRedirect leaves the page, so code after it may not run
+            LocalStorage.clear();
+            this.token = null;
+            this.user = null;
+            this.session = null;
+            pinUser(null);
+
+            // Remove authorization header
+            delete http.defaults.headers.common.Authorization;
+
             // // Perform logout using redirect
             await msalInstance.logoutRedirect({
               postLogoutRedirectUri: process.env.MS_Logout_BASE_URL // Ensure this matches your MSAL config
             });
             await msalInstance.logout();
-
-            // Clear local storage and reset user/session data
-            LocalStorage.clear();
-            this.token = null;
-            this.user = null;
-            this.session = null;
-
-            // Remove authorization header
-            delete http.defaults.headers.common.Authorization;
 
             // Resolve the promise to indicate successful logout
             resolve();
@@ -131,6 +136,8 @@ export const useAuthStore = defineStore("auth", {
       LocalStorage.clear();
       this.token = null;
       this.user = null;
+      pinUser(null);
+      usePermissionStore(this.$pinia).reset();
       delete http.defaults.headers.common.Authorization;
     },
 
@@ -140,6 +147,7 @@ export const useAuthStore = defineStore("auth", {
         ...payload
       };
       LocalStorage.set("user", this.user);
+      pinUser(this.user);
     },
 
     // 🔹 NEW FUNCTION: Store JWT Token from URL
@@ -160,6 +168,7 @@ export const useAuthStore = defineStore("auth", {
         const resp = await authService.getUserByToken(token);
         if (resp.status === 401 || resp.status === 400) {
           console.error("Unauthorized access. Redirecting to login.");
+          this.logout();
           window.location.href = "/auth/login";
           return;
         }
@@ -171,8 +180,12 @@ export const useAuthStore = defineStore("auth", {
 
         LocalStorage.set("token", token);
         LocalStorage.set("user", user);
+        pinUser(user);
       } catch (error) {
         console.error("Error fetching user:", error);
+
+        // The token was stored before it was checked, so don't keep it after a failure
+        this.logout();
 
         if (error.response && (error.response.status === 401 || error.response.status === 400)) {
           console.error("Unauthorized access. Redirecting to login.");
@@ -193,6 +206,19 @@ export const useAuthStore = defineStore("auth", {
       };
       this.user = updatedUser;
       LocalStorage.set("user", updatedUser);
+      pinUser(updatedUser);
+    },
+
+    // The server validates the target site and updates the last-used site in one step.
+    async switchSite(siteId) {
+      const { data } = await http.post("/authorization/switch-site", { siteId });
+
+      this.changeTenant(data.siteId, data.timeZone, data.name, data.landingPage, data.roles, data.isFileUploadOrExternal);
+
+      // last_route belongs to the previous site and may not be available in this one
+      localStorage.setItem("last_route", data.landingPage || "/dashboard");
+
+      return data;
     }
   }
 });

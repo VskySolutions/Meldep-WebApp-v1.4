@@ -28,6 +28,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace Vsky.Api.Controllers
 {
     [Route("expense-vendor")]
+    [RequireMenu(MenuLinks.Vendors)]
     public class ExpenseVendorBankAccountsController : BaseController
     {
         #region Define Services
@@ -73,6 +74,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All ExpenseVendors
         // Description: This endpoint fetches a list of ExpenseVendor based on the provided search criteria such as title, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllExpenseVendors(ExpenseVendorsSearchModel searchModel)
         {
             try
@@ -93,7 +95,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion       
@@ -102,6 +104,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllExpenseVendorListForDropdown
         // Description: This endpoint retrieves the list of vendors. 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllExpenseVendorListForDropdown(bool isOwnerName)
         {
             try
@@ -114,7 +117,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -123,6 +126,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllVendorsAccountListForDropdown
         // Description: This endpoint retrieves the list of Accounts. 
         [HttpGet("accountsdropdown/list/{VendorId}")]
+        [SiteMember]
         public async Task<IActionResult> GetAllVendorsAccountListForDropdown(string VendorId = null)
         {
             try
@@ -135,7 +139,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -144,6 +148,7 @@ namespace Vsky.Api.Controllers
         // Title: GetExpenseVendorsDetailsById
         // Description: This endpoint retrieves the details of a specific ExpenseVendor based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.ExpenseVendors))]
         public async Task<IActionResult> GetExpenseVendorsDetailsById(string id)
         {
             try
@@ -171,7 +176,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -252,7 +257,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -261,6 +266,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateExpenseVendor
         // Description: This endpoint updates an existing ExpenseVendor by its ID. It validates the ExpenseVendor model, checks for duplicate ExpenseVendor title, updates the ExpenseVendor's details.
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.ExpenseVendors))]
         public async Task<IActionResult> UpdateExpenseVendor(string id, ExpenseVendorsModel model)
         {
             try
@@ -350,7 +356,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
 
             // Return model state errors if the model state is not valid
@@ -362,6 +368,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteExpenseVendorBankAccountsById
         // Description: This endpoint deletes a ExpenseVendor based on the provided ExpenseVendor ID. It first retrieves the ExpenseVendor entity by ID, checks if it exists, and if so, deletes the ExpenseVendor. If the ExpenseVendor is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.ExpenseVendors))]
         public async Task<IActionResult> DeleteExpenseVendorBankAccounts(string id)
         {
             try
@@ -380,7 +387,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

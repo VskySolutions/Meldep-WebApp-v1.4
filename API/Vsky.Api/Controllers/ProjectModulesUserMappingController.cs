@@ -24,6 +24,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace Vsky.Api.Controllers
 {
     [Route("project-module-users")]
+    [RequireMenu(MenuLinks.ProjectWork)]
     public class ProjectModulesUserMappingController : BaseController
     {
         #region Define Services
@@ -82,7 +83,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -163,7 +164,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -201,7 +202,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -227,7 +228,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

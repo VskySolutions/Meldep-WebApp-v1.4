@@ -17,12 +17,14 @@ namespace Vsky.Services.AzureBlobImage
     public class AzureBlobImageServices : IAzureBlobImageServices
     {
         private readonly BlobServiceClient _serviceClient;
+        private readonly bool _isSignedMode;
         private readonly Vsky.Services.Logging.ILogger _loggerService;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AzureBlobImageServices(IConfiguration config, Logging.ILogger loggerService, IHttpContextAccessor httpContextAccessor)
         {
             _serviceClient = new BlobServiceClient(config.GetConnectionString("AzureBlob"));
+            _isSignedMode = string.Equals(config["BlobAccess:Mode"], "Signed", StringComparison.OrdinalIgnoreCase);
             _loggerService = loggerService;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -37,7 +39,7 @@ namespace Vsky.Services.AzureBlobImage
         public async Task<BlobContainerClient> CreateContainerIfNotExistsAsync(string containerName)
         {
             var container = _serviceClient.GetBlobContainerClient(containerName);
-            await container.CreateIfNotExistsAsync(publicAccessType: PublicAccessType.Blob);
+            await container.CreateIfNotExistsAsync(publicAccessType: _isSignedMode ? PublicAccessType.None : PublicAccessType.Blob);
             return container;
         }
 
@@ -66,8 +68,18 @@ namespace Vsky.Services.AzureBlobImage
         }
 
         // ================= Upload Image =================
+        // Containers allow public reads, so a stored page or program would open from a trusted URL.
+        private static readonly HashSet<string> BlockedUploadExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".exe", ".dll", ".msi", ".bat", ".cmd", ".com", ".scr", ".ps1", ".sh", ".vbs",
+            ".js", ".jar", ".html", ".htm", ".xhtml", ".php", ".asp", ".aspx", ".jsp", ".cshtml"
+        };
+
         public async Task<string> UploadImageAsync(string containerName, string directoryName, IFormFile file)
         {
+            if (BlockedUploadExtensions.Contains(Path.GetExtension(file.FileName)))
+                throw new Exception("This file type can't be uploaded.");
+
             var container = await CreateContainerIfNotExistsAsync(containerName);
 
             string blobName = $"{directoryName}/{file.FileName}";

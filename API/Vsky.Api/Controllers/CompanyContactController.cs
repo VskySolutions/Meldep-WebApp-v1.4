@@ -18,6 +18,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("company-contact")]
+    [RequireMenu(MenuLinks.CompanyContacts + "|" + MenuLinks.Company)]
     public class CompanyContactController : BaseController
     {
         #region Services Initialization
@@ -49,6 +50,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllContactList
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllContactList(CompanyContactSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -121,6 +123,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -161,7 +164,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -17,6 +17,7 @@ using static NodaTime.TimeZones.TzdbZone1970Location;
 namespace Vsky.Api.Controllers
 {
     [Route("common")]
+    [SiteMember]
     public class CommonController : BaseController
     {
         #region Fields
@@ -127,7 +128,7 @@ namespace Vsky.Api.Controllers
                 return BadRequest(new
                 {
                     success = false,
-                    message = ex.Message
+                    message = SafeErrorMessage(ex)
                 });
             }
         }

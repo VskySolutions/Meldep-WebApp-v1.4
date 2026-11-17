@@ -329,11 +329,10 @@ namespace Vsky.Services.Users
             var lowercase = options.RequireLowercase;
             var uppercase = options.RequireUppercase;
             var password = new StringBuilder();
-            var random = new Random();
 
             while (password.Length < length)
             {
-                var c = (char)random.Next(32, 126);
+                var c = (char)System.Security.Cryptography.RandomNumberGenerator.GetInt32(32, 126);
 
                 if (char.IsLetterOrDigit(c))
                 {
@@ -361,17 +360,17 @@ namespace Vsky.Services.Users
 
             if (digit)
             {
-                password.Append((char)random.Next(48, 58));
+                password.Append((char)System.Security.Cryptography.RandomNumberGenerator.GetInt32(48, 58));
             }
 
             if (lowercase)
             {
-                password.Append((char)random.Next(97, 123));
+                password.Append((char)System.Security.Cryptography.RandomNumberGenerator.GetInt32(97, 123));
             }
 
             if (uppercase)
             {
-                password.Append((char)random.Next(65, 91));
+                password.Append((char)System.Security.Cryptography.RandomNumberGenerator.GetInt32(65, 91));
             }
 
             return password.ToString();

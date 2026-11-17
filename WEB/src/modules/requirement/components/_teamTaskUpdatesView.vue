@@ -56,7 +56,7 @@
             >
               <div
                 class="text-black note-text"
-                v-html="note.note || ''"
+                v-safe-html="note.note || ''"
               />
             </q-timeline-entry>
           </q-timeline>
@@ -95,7 +95,7 @@
               >
                 <div
                   class="text-black note-text"
-                  v-html="note.note || ''"
+                  v-safe-html="note.note || ''"
                 />
               </q-timeline-entry>
             </q-timeline>

@@ -78,7 +78,7 @@
                 >
                   <q-tooltip>Open Infrastructure Dashboard &amp; Financial Insights</q-tooltip>
                 </q-btn>
-                <q-btn icon="o_add" outline label="Add Infra Account" no-caps class="text-primary q-ml-sm btnRounded" @click="onInfraAccountAdd(refreshInfraAccountList)" />
+                <q-btn v-can icon="o_add" outline label="Add Infra Account" no-caps class="text-primary q-ml-sm btnRounded" @click="onInfraAccountAdd(refreshInfraAccountList)" />
                 <q-btn
                   v-if="role === 'admin'"
                   icon="o_playlist_add"
@@ -205,10 +205,10 @@
                   <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountView(props.row.id)">
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
-                  <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountEdit(props.row.id, refreshInfraAccountList)">
+                  <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraAccountEdit(props.row.id, refreshInfraAccountList)">
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
-                  <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
+                  <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
                     <q-tooltip>Delete</q-tooltip>
                   </q-icon>
                 </q-td>

@@ -11,7 +11,7 @@
           :color="'primary'"
         >
           <div class="fs-14">Notes:
-            <span class="text-black RichTextEditor" v-html="notes.note" />
+            <span class="text-black RichTextEditor" v-safe-html="notes.note" />
           </div>
           <div class="q-mt-xs fs-13">
             <i>

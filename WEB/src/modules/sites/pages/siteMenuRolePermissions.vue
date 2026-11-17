@@ -78,7 +78,7 @@
         :rows="rows"
         :columns="columns"
         row-key="id"
-        style="border:1px solid rgba(180, 180, 180, 0.4);max-width:1000px; width: 100%;"
+        style="border:1px solid rgba(180, 180, 180, 0.4);max-width:1200px; width: 100%;"
         flat bordered
         no-data-label="Please Select Role Name"
         :filter="filter"
@@ -105,14 +105,55 @@
             <q-td class="text-left" style="width: 25%; padding: 8px;"><span v-if="preModuleName !== props.row.moduleName" :set="preModuleName = props.row.moduleName">{{ props.row.moduleName }}</span></q-td>
             <q-td class="text-left" style="width: 25%; padding: 8px;">{{ props.row.menuName }}</q-td>
             <q-td style="width: 50%;">
-              <div class="row items-center q-gutter-xs">
-                <q-chip
-                  v-for="(item, index) in (props.row.roles || [])"
-                  :key="index"
+              <div
+                v-for="item in (props.row.roles || [])"
+                :key="item.id"
+                class="row items-center no-wrap q-py-xs"
+              >
+                <div class="col ellipsis">
+                  {{ item.name }}
+                  <q-badge v-if="isNotConfigured(item)" outline color="orange-9" class="q-ml-xs" label="Not configured">
+                    <q-tooltip>Full access until View or Manage is set for this role.</q-tooltip>
+                  </q-badge>
+                </div>
+                <q-checkbox
                   dense
-                  removable
-                  class="bg-primary text-white"
-                  @remove="onRemoveModuleMenuRoleAccess(
+                  size="sm"
+                  class="q-mr-sm"
+                  label="Show"
+                  :model-value="item.isShowMenu"
+                  :aria-label="`Show ${props.row.menuName} in the menu for ${item.name}`"
+                  @update:model-value="value => onPermissionChange(item, { isShowMenu: value })"
+                />
+                <q-checkbox
+                  dense
+                  size="sm"
+                  class="q-mr-sm"
+                  label="View"
+                  :model-value="item.isView || item.isManage"
+                  :disable="item.isManage"
+                  :aria-label="`${item.name} can view ${props.row.menuName}`"
+                  @update:model-value="value => onPermissionChange(item, { isView: value })"
+                >
+                  <q-tooltip v-if="item.isManage">Manage includes View.</q-tooltip>
+                </q-checkbox>
+                <q-checkbox
+                  dense
+                  size="sm"
+                  class="q-mr-sm"
+                  label="Manage"
+                  :model-value="item.isManage"
+                  :aria-label="`${item.name} can manage ${props.row.menuName}`"
+                  @update:model-value="value => onPermissionChange(item, { isManage: value })"
+                />
+                <q-btn
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  icon="o_close"
+                  :aria-label="`Remove ${item.name} from ${props.row.menuName}`"
+                  @click="onRemoveModuleMenuRoleAccess(
                     siteId,
                     props.row.siteModuleMenuId,
                     item.id,
@@ -121,12 +162,12 @@
                     refreshSiteModuleMenuPermissionList
                   )"
                 >
-                  {{ item.name }}
-                </q-chip>
+                  <q-tooltip>Remove role</q-tooltip>
+                </q-btn>
               </div>
             </q-td>
             <q-td auto-width>
-              <q-btn
+              <q-btn v-can
                 icon="o_add"
                 class="cursor-pointer q-mr-sm"
                 size="xs"
@@ -244,6 +285,33 @@ function isRoleDisabled(opt) {
     return false;
   }
   return selectedMenu.value.roles.some(role => role.id === opt.value);
+}
+
+// Existing rows have Show only. They keep today's full access until an admin sets View or Manage.
+function isNotConfigured (role) {
+  return role.isShowMenu && !role.isView && !role.isManage;
+}
+
+async function onPermissionChange (role, change) {
+  const previous = {
+    isShowMenu: role.isShowMenu,
+    isView: role.isView,
+    isManage: role.isManage
+  };
+
+  Object.assign(role, change);
+
+  try {
+    await moduleService.addSitesModuleMenusPermission({
+      id: role.permissionId,
+      isShowMenu: role.isShowMenu,
+      isView: role.isView,
+      isManage: role.isManage
+    });
+  } catch {
+    // The request's error is already shown, so put the checkbox back to the saved value.
+    Object.assign(role, previous);
+  }
 }
 
 function refreshSiteModuleMenuPermissionList () {

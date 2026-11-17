@@ -132,7 +132,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Role To Group " no-caps class="text-primary btnRounded" @click="onAdd" />
+                <q-btn v-can icon="o_add" outline label="Add Role To Group " no-caps class="text-primary btnRounded" @click="onAdd" />
                 <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.back()" />
               </div>
             </div>
@@ -181,7 +181,7 @@
               >
                 <q-tooltip>{{ props.row.active ? 'Set Inactive?' : 'Set Active?' }}</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_delete_outline"
                 class="cursor-pointer"
                 color="negative"

@@ -21,7 +21,7 @@
                 <legend>Description</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="text-black RichTextEditor">
-                    <span v-html="model.description || '-'"></span>
+                    <span v-safe-html="model.description || '-'"></span>
                   </div>
                 </div>
               </fieldset>

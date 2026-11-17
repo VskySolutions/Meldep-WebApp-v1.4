@@ -23,7 +23,7 @@
       </div>
       <div class="q-mb-lg">
         <div class="label text-primary">Description</div>
-        <div class="description-box" v-html="model.description || '-'" />
+        <div class="description-box" v-safe-html="model.description || '-'" />
       </div>
       <div class="row text-bold text-grey-7 q-pb-sm">
         <div class="col-3">Checklist</div>
@@ -38,7 +38,7 @@
           <div class="fs-12 section-title">{{ section.name }}</div>
           <div
             class="fs-10"
-            v-html="truncateText(section.description, 500)"
+            v-safe-html="truncateText(section.description, 500)"
           />
         </div>
         <div
@@ -52,7 +52,7 @@
             </div>
             <div
               class="fs-10 text-grey-7"
-              v-html="truncateText(item.description, 500)"
+              v-safe-html="truncateText(item.description, 500)"
             />
           </div>
           <div class="col-2">

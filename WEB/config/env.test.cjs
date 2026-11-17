@@ -13,6 +13,5 @@ module.exports = {
   MS_Authority_Url: "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize",
   AI_Chat_Assistant_Cdn: "https://chatbot.meldep.com/sop-agent/cdn/vsky_sop_assistant.js",
   AI_Chat_Assistant_ApiBase: "https://chatbot.meldep.com/",
-  AI_Chat_Assistant_ApiKey: "ag_067dc77f-6520-42ed-9e10-36c34b122411",
   AI_Chat_Assistant_Instance: "dev"
 };

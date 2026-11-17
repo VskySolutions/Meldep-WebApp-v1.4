@@ -62,7 +62,7 @@
                 :selected-field="selectedField"
               />
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Release" no-caps class="text-primary btnRounded" @click="onReleaseTrackingAdd(refreshReleaseTrackingList)" />
+                <q-btn v-can icon="o_add" outline label="Add Release" no-caps class="text-primary btnRounded" @click="onReleaseTrackingAdd(refreshReleaseTrackingList)" />
                 <q-btn
                   v-if="role === 'admin'"
                   icon="o_playlist_add"
@@ -291,10 +291,10 @@
                   <q-icon v-if="props.row.isEditable || props.row.isView" name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onReleaseTrackingView(props.row.id)">
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
-                  <q-icon v-if="props.row.isEditable" name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onReleaseTrackingEdit(props.row.id, refreshReleaseTrackingList)">
+                  <q-icon v-can v-if="props.row.isEditable" name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onReleaseTrackingEdit(props.row.id, refreshReleaseTrackingList)">
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
-                  <q-icon v-if="props.row.isEditable" name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitReleaseTrackingDelete(props.row.id, props.row.name, refreshReleaseTrackingList)">
+                  <q-icon v-can v-if="props.row.isEditable" name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitReleaseTrackingDelete(props.row.id, props.row.name, refreshReleaseTrackingList)">
                     <q-tooltip>Delete</q-tooltip>
                   </q-icon>
                 </q-td>

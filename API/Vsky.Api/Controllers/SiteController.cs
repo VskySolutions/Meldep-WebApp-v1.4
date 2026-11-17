@@ -36,6 +36,7 @@ using Vsky.Services.Users;
 namespace Vsky.Api.Controllers
 {
     [Route("sites")]
+    [SiteMember]
     public class SiteController : BaseController
     {
         #region Define services
@@ -122,6 +123,8 @@ namespace Vsky.Api.Controllers
 
         #region GetAllSites
         [HttpPost("list")]
+        [ReadAccess]
+        [RequireMenu(MenuLinks.Sites)]
         public IActionResult GetAllSites(SiteSearchModel searchModel)
         {
             try
@@ -139,7 +142,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -158,7 +161,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -179,7 +182,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -199,7 +202,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -218,7 +221,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -245,7 +248,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -254,11 +257,29 @@ namespace Vsky.Api.Controllers
         // Title: SetGlobalSite
         // Description: This endpoint update global siteId.
         [HttpGet("GetGlobalSiteData")]
-        public async Task<IActionResult> GetGlobalSiteData(string siteId)
+        [AuthenticatedOnly]
+        public async Task<IActionResult> GetGlobalSiteData(
+            string siteId,
+            [FromServices] Vsky.Services.Authorization.ISiteAccessService siteAccessService,
+            [FromServices] AdminAccess adminAccess,
+            [FromServices] AuthorizationAuditLog auditLog,
+            [FromServices] Microsoft.Extensions.Options.IOptions<Vsky.Services.Authorization.SecurityAuthorizationOptions> options)
         {
             try
             {
                 var userId = User.GetLoggedInUserId<string>();
+
+                // The target comes from the request rather than the checked header, so check it here.
+                if (!await siteAccessService.IsSiteMemberAsync(userId, siteId) && !await adminAccess.IsSystemAdminAsync(userId))
+                {
+                    var enforce = options.Value.SiteGateMode == Vsky.Services.Authorization.AuthorizationMode.Enforce;
+                    var referenceId = auditLog.Record(HttpContext, "GET Site.GetGlobalSiteData", "SITE_NOT_MEMBER",
+                        enforce ? AuthorizationOutcome.Denied : AuthorizationOutcome.WouldDeny, requestedSiteId: siteId);
+
+                    if (enforce)
+                        return AuthorizationAuditLog.Denied(StatusCodes.Status403Forbidden, "SITE_SWITCH_DENIED", referenceId);
+                }
+
                 var SiteData = await _siteService.GetById(siteId);
                 var LandingPageLink = await _sitesModulesMenusService.GetLandingPageBySiteId(SiteData.Id);
                 var roles = await _applicationUserRoleService.GetNormalizedRoleNamesByUserAndSite(userId, siteId);
@@ -270,7 +291,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                return BadRequest(new { success = false, message = SafeErrorMessage(ex) });
             }
         }
         #endregion
@@ -281,6 +302,7 @@ namespace Vsky.Api.Controllers
         ///<Author> Sachin Bhanse </Author>
         ///<CreatedOn> 07/19/2024 </CreatedOn>
         [HttpPost]
+        [RequireSystemAdmin]
         public async Task<IActionResult> CreateSite([FromForm] SiteModel model)
         {
             try
@@ -560,7 +582,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -572,6 +594,7 @@ namespace Vsky.Api.Controllers
         ///<Author> Sachin Bhanse </Author>
         ///<CreatedOn> 07/19/2024 </CreatedOn>
         [HttpPut("{id}")]
+        [RequireSiteAdmin(SiteKey = "id")]
         public async Task<IActionResult> UpdateSite(string id, [FromForm] SiteModel model)
         {
             try
@@ -839,7 +862,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -850,6 +873,7 @@ namespace Vsky.Api.Controllers
         ///<Author> Sachin Bhanse </Author>
         ///<CreatedOn> 07/19/2024 </CreatedOn>
         [HttpDelete("{id}")]
+        [RequireSystemAdmin]
         public async Task<IActionResult> DeleteSite(string id)
         {
             try
@@ -866,13 +890,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GenerateDropdown
         [HttpPut("generateDropdown/{id}")]
+        [RequireSiteAdmin(SiteKey = "id")]
         public async Task<IActionResult> GenerateDropdown(string id)
         {
             try
@@ -951,13 +976,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GenerateMasterNotifications
         [HttpPut("generateMasterNotifications/{siteId}")]
+        [RequireSiteAdmin(SiteKey = "siteId")]
         public async Task<IActionResult> GenerateMasterNotifications(string siteId)
         {
             try
@@ -990,7 +1016,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1022,13 +1048,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GenerateHelpDeskWorkspaceAndArea
         [HttpPut("generateHelpDeskWorkspaceAndArea/{id}")]
+        [RequireSiteAdmin(SiteKey = "id")]
         public async Task<IActionResult> GenerateHelpDeskWorkspaceAndArea(string id)
         {
             try
@@ -1103,7 +1130,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1125,7 +1152,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, SafeErrorMessage(ex));
             }
         }
         #endregion

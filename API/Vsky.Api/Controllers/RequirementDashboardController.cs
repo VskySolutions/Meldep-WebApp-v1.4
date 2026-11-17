@@ -23,6 +23,7 @@ namespace Vsky.Api.Controllers
 {
     [Route("requirement-dashboard")]
 
+    [RequireMenu(MenuLinks.Requirement + "|" + MenuLinks.ProjectWork)]
     public class RequirementDashboardController : BaseController
     {
         private readonly GlobalVariable _globalVariable;
@@ -57,6 +58,7 @@ namespace Vsky.Api.Controllers
 
         #region GetTestCasesByRequirementId        
         [HttpPost("test-case-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetTestCasesByRequirementId(RequirementCenterTestCaseSearchModel searchModel)
         {
             try
@@ -86,13 +88,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetIssuesByRequirementId        
         [HttpPost("issue-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetIssuesByRequirementId(RequirementCenterIssueSearchModel searchModel)
         {
             try
@@ -121,13 +124,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetTasksByRequirementId
         [HttpPost("task-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetTasksByRequirementId(RequirementCenterTaskSearchModel searchModel)
         {
             try
@@ -159,7 +163,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -167,6 +171,7 @@ namespace Vsky.Api.Controllers
         #region Get Timesheets
         #region GetTimesheetByRequirementId        
         [HttpGet("timesheet-list")]
+        [SiteMember]
         public async Task<IActionResult> GetTimesheetByRequirementId(string requirementId)
         {
             try
@@ -179,13 +184,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetTimesheetDetails
         [HttpPost("timesheet-details")]
+        [ReadAccess]
         public async Task<IActionResult> GetTimesheetDetails(RequirementCenterTimesheetSearchModel searchModel)
         {
             if (string.IsNullOrWhiteSpace(searchModel.GroupId) || searchModel.GroupId == "undefined")
@@ -220,6 +226,7 @@ namespace Vsky.Api.Controllers
 
         #region GetGroupedTimesheetsByRequirementId
         [HttpPost("timesheet-groups")]
+        [ReadAccess]
         public async Task<IActionResult> GetGroupedTimesheetsByRequirementId(
             RequirementCenterTimesheetSearchModel searchModel
         )
@@ -258,6 +265,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllTimesheetsByRequirementId
         [HttpPost("timesheet-tabular-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllTimesheetsByRequirementId(TimesheetSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -299,6 +307,7 @@ namespace Vsky.Api.Controllers
 
         #region GetProjectQAByRequirementId
         [HttpPost("project-QA")]
+        [ReadAccess]
         public async Task<IActionResult> GetProjectQAByRequirementId(ProjectQuestionsAnswersSearchModel searchModel)
         {
             try
@@ -327,13 +336,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetProjectActionItemsByRequirementId
         [HttpPost("project-action-items")]
+        [ReadAccess]
         public async Task<IActionResult> GetProjectActionItemsByRequirementId(ProjectActionItemsSearchModel searchModel)
         {
             try
@@ -366,7 +376,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

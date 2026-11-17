@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
+using Vsky.Api.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -53,6 +56,41 @@ namespace Vsky.Api.Controllers
             var error = modelState.GetErrorMessages();
 
             return new ObjectResult(new BadRequestError(error)) { StatusCode = StatusCodes.Status400BadRequest };
+        }
+
+        // Messages the application raises for users on purpose. Anything else could expose internal
+        // details such as SQL or file paths, so it's logged and the user gets a reference ID.
+        private static readonly string[] UserFacingMessages =
+        {
+            "Email account not found",
+            "Module not found",
+            "Invalid release type",
+            "A swimlane with the same name already exists.",
+            "This file type can't be uploaded.",
+            "SendGrid settings not configured."
+        };
+
+        [NonAction]
+        protected string SafeErrorMessage(Exception ex)
+        {
+            if (ex.InnerException == null && System.Array.IndexOf(UserFacingMessages, ex.Message) >= 0)
+                return ex.Message;
+
+            var referenceId = HttpContext?.RequestServices.GetService<SecurityLog>()
+                ?.WriteError(null, ex);
+
+            return referenceId == null
+                ? "An error occurred while processing your request."
+                : $"An error occurred while processing your request. Reference id is {referenceId}";
+        }
+
+        // For catch blocks that deliberately carry on or return their own response, so the failure
+        // still leaves a record. This never changes the response.
+        [NonAction]
+        protected void LogHandled(Exception ex, string description = null)
+        {
+            HttpContext?.RequestServices.GetService<SecurityLog>()
+                ?.WriteError(description ?? $"{ControllerContext?.ActionDescriptor?.ActionName} failed", ex);
         }
 
         protected IActionResult AccessDenied()

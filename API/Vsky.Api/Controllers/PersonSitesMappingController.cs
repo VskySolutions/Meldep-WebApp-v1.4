@@ -21,6 +21,7 @@ using Vsky.Services.Users;
 namespace Vsky.Api.Controllers
 {
     [Route("person-site-mapping")]
+    [SiteMember]
     public class PersonSitesMappingController : BaseController
     {
         #region Define services
@@ -68,6 +69,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllSiteShare
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllSiteShare(PersonSitesSearchModel searchModel)
         {
             try
@@ -100,21 +102,26 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllSharedSitesByLoggedUserId
         [HttpGet("my-share-sites-list")]
-        public async Task<IActionResult> GetAllSharedSitesByLoggedUserId()
+        [AuthenticatedOnly]
+        public async Task<IActionResult> GetAllSharedSitesByLoggedUserId([FromServices] Vsky.Services.Authorization.ISiteAccessService siteAccessService)
         {
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
 
-                var list = await _personSitesMappingService.GetAllSharedSitesByLoggedUserId(LoggedUserId, SiteId);
+                var allSites = await _personSitesMappingService.GetAllSharedSitesByLoggedUserId(LoggedUserId, SiteId);
+
+                // Offer only sites a switch would accept, so the menu has no dead choices.
+                var accessibleSiteIds = await siteAccessService.GetAccessibleSiteIdsAsync(LoggedUserId);
+                var list = allSites.Where(x => accessibleSiteIds.Contains(x.SiteId)).ToList();
 
                 var model = new PersonSitesListModel
                 {
@@ -126,14 +133,15 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region Create Site Share
         [HttpPost("save-site-share-user")]
-        public async Task<IActionResult> CreateSiteShareUser(SaveSiteSharing model)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> CreateSiteShareUser(SaveSiteSharing model, [FromServices] AdminAccess adminAccess)
         {
             try
             {
@@ -142,6 +150,16 @@ namespace Vsky.Api.Controllers
                     var LoggedUserId = User.GetLoggedInUserId<string>();
                     //var SiteId = _globalVariable.SiteId;
                     var SiteId = !string.IsNullOrEmpty(model.SiteId) ? model.SiteId : _globalVariable.SiteId;
+                    if (!await adminAccess.CanAdministerSiteAsync(LoggedUserId, SiteId))
+                        return AdminDenied.Result();
+
+                    if (model.RoleIds == null || !model.RoleIds.Any())
+                        return BadRequest(new { message = "Select at least one role." });
+
+                    var roleError = await adminAccess.ValidateGrantableSiteRolesAsync(LoggedUserId, SiteId, model.RoleIds);
+                    if (roleError != null)
+                        return BadRequest(new { message = roleError });
+
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
@@ -176,7 +194,7 @@ namespace Vsky.Api.Controllers
                     //var existingRoleIds = await _applicationUserRoleService.GetRoleIdsByUserAndSite(userId, SiteId);
 
                     var roleIds = await _db.SitesRoles
-                        .Where(x => model.RoleIds.Contains(x.Id))
+                        .Where(x => model.RoleIds.Contains(x.Id) && x.SiteId == SiteId && !x.Deleted)
                         .Select(x => x.RoleId)
                         .ToListAsync();
 
@@ -220,23 +238,27 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region Delete site share
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSiteShare(string id)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> DeleteSiteShare(string id, [FromServices] AdminAccess adminAccess)
         {
             try
             {
-                var SiteId = _globalVariable.SiteId;
-
                 //Find record
                 var entity = await _personSitesMappingService.GetById(id);
                 if (entity == null)
-                    return BadRequest(new BadRequestError("No user found with the specified id."));               
+                    return BadRequest(new BadRequestError("No user found with the specified id."));
+
+                // Roles are removed from the mapping's own site, never from the header's site
+                var SiteId = entity.SiteId;
+                if (!await adminAccess.CanAdministerSiteAsync(User.GetLoggedInUserId<string>(), SiteId))
+                    return AdminDenied.Result();
 
                 var userId = await _userService.GetUserIdByPersonId(SiteId, entity.PersonId);
 
@@ -253,6 +275,18 @@ namespace Vsky.Api.Controllers
                     _db.UserRoles.RemoveRange(userRoles);
                 }
 
+                // Direct grants and group memberships end with the share, so sharing again later
+                // starts clean instead of silently bringing back old access.
+                var groupMemberships = await _db.SecurityGroupMembers
+                    .Where(x => x.UserId == userId && x.SiteId == SiteId && !x.Deleted)
+                    .ToListAsync();
+                groupMemberships.ForEach(x => x.Deleted = true);
+
+                var directGrants = await _db.UserMenuPermissions
+                    .Where(x => x.UserId == userId && x.SiteId == SiteId && !x.Deleted)
+                    .ToListAsync();
+                directGrants.ForEach(x => x.Deleted = true);
+
                 _personSitesMappingService.DeletePersonSites(entity);
 
                 await _db.SaveChangesAsync();
@@ -261,18 +295,32 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         # region Update Last Used Site
         [HttpPost("update-last-used-site")]
-        public async Task<IActionResult> UpdateLastUsedSite(string userId, string personId, string siteId)
+        [AuthenticatedOnly]
+        public async Task<IActionResult> UpdateLastUsedSite(string siteId)
         {
+            // The user always comes from the token, so nobody can change another person's site.
+            var userId = User.GetLoggedInUserId<string>();
+            var personId = await _db.Users
+                .Where(x => x.Id == userId)
+                .Select(x => x.PersonId)
+                .FirstOrDefaultAsync();
+
             var personSites = await _personSitesMappingService.GetAllSitesByPersonId(personId);
-            var SiteId = _globalVariable.SiteId;
-            var SiteData = await _siteService.GetById(SiteId);
+            if (personSites == null || !personSites.Any(x => x.SiteId == siteId))
+                return AdminDenied.Result();
+
+            // Uses the target site, so a user whose current site was revoked can still switch.
+            var SiteData = await _siteService.GetById(siteId);
+            if (SiteData == null)
+                return AdminDenied.Result();
+
             var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
             if (personSites != null)

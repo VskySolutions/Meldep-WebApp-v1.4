@@ -20,6 +20,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("employee-org-structure")]
+    [RequireMenu(MenuLinks.OrgStructure)]
     public class EmployeeOrgStructuresController : BaseController
     {
 
@@ -58,6 +59,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Employee Org Structure
         // Description: This endpoint fetches a list of employee org structure based on the provided search criteria such as sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllEmployeeOrgStructureList(EmployeeOrgStructureSearchModel searchModel)
         {
             try
@@ -89,7 +91,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -107,7 +109,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -117,6 +119,7 @@ namespace Vsky.Api.Controllers
         // Title: GetEmployeeOrgStructureDetailsById
         // Description: This endpoint retrieves the details of a specific employee org structure based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.EmployeeOrgStructure))]
         public async Task<IActionResult> GetEmployeeOrgStructureDetailsById(string id)
         {
             try
@@ -135,7 +138,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -214,7 +217,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
 
         }
@@ -224,6 +227,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateDepartment
         // Description: This endpoint updates an existing employee org structure by its ID. It validates the employee org structure model, checks for duplicate employee org structure names, updates the employee org structure's details.
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.EmployeeOrgStructure))]
         public async Task<IActionResult> UpdateEmployeeOrgStructure(string id, EmployeeOrgStructureModel model)
         {
             try
@@ -329,7 +333,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -338,6 +342,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteDepartment
         // Description: This endpoint deletes a department based on the provided department ID. It first retrieves the department entity by ID, checks if it exists, and if so, deletes the department. If the department is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.EmployeeOrgStructure))]
         public async Task<IActionResult> DeleteEmployeeOrgStructure(string id)
         {
             try
@@ -354,7 +359,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

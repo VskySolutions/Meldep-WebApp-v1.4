@@ -96,7 +96,7 @@
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">
                     <div>
-                      <p class="q-pt-md text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
+                      <p class="q-pt-md text-black RichTextEditor" v-safe-html="model.description ? model.description : '-'" />
                     </div>
                   </div>
                 </div>
@@ -108,7 +108,7 @@
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">
                     <div>
-                      <p class="q-pt-md text-black RichTextEditor" v-html="model.steps" />
+                      <p class="q-pt-md text-black RichTextEditor" v-safe-html="model.steps" />
                     </div>
                   </div>
                 </div>
@@ -120,7 +120,7 @@
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">
                     <div>
-                      <p class="q-pt-md text-black RichTextEditor" v-html="model.expectedResult" />
+                      <p class="q-pt-md text-black RichTextEditor" v-safe-html="model.expectedResult" />
                     </div>
                   </div>
                 </div>
@@ -132,7 +132,7 @@
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">
                     <div>
-                      <p class="q-pt-md text-black RichTextEditor" v-html="model.actualResult" />
+                      <p class="q-pt-md text-black RichTextEditor" v-safe-html="model.actualResult" />
                     </div>
                   </div>
                 </div>
@@ -187,7 +187,7 @@
                   <div class="col-12">
                     <div class="q-mb-xs">Description</div>
                     <div class="text-black RichTextEditor">
-                      <p v-html="testPlanModel.description ? testPlanModel.description : '-'" />
+                      <p v-safe-html="testPlanModel.description ? testPlanModel.description : '-'" />
                     </div>
                   </div>
                 </div>

@@ -25,6 +25,7 @@ namespace Vsky.Services.Notifications
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _db;
         private readonly IApplicationUserRoleService _applicationUserRoleService;
+        private readonly Vsky.Services.Logging.ILogger _loggerService;
         #endregion
 
         #region Services Initializations
@@ -34,7 +35,8 @@ namespace Vsky.Services.Notifications
             IRepository<NotificationPermissions> notificationPermissionsRepository,
             ISiteService siteService, UserManager<ApplicationUser> userManager, 
             ApplicationDbContext db,
-            IApplicationUserRoleService applicationUserRoleService
+            IApplicationUserRoleService applicationUserRoleService,
+            Vsky.Services.Logging.ILogger loggerService
         )
         {
             _notificationsRepository = notificationsRepository;
@@ -44,6 +46,7 @@ namespace Vsky.Services.Notifications
             _userManager = userManager;
             _db = db;
             _applicationUserRoleService = applicationUserRoleService;
+            _loggerService = loggerService;
         }
         #endregion
 
@@ -223,6 +226,7 @@ namespace Vsky.Services.Notifications
             }
             catch (Exception ex)
             {
+                _loggerService.Error("Notification could not be saved", ex);
             }
             return 0;
         }

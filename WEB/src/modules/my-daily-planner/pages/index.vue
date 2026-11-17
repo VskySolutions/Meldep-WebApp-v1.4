@@ -132,7 +132,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline
@@ -251,7 +251,7 @@
                   >
                     <q-tooltip>Forward To Timesheet</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     :class="storedUser.username === props.row.user.userName ? '' : 'hidden'"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
@@ -259,7 +259,7 @@
                   >
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     name="o_delete_outline"
                     class="cursor-pointer"
                     :class="storedUser.username === props.row.user.userName ? '' : 'hidden'" color="negative"
@@ -321,12 +321,12 @@
                     class="q-ml-sm"
                   >
                     <q-tooltip v-if="line.activityNameDescription" class="text-wrap break-words" max-width="300px">
-                      <div class="RichTextEditor" v-html="line.activityNameDescription" />
+                      <div class="RichTextEditor" v-safe-html="line.activityNameDescription" />
                     </q-tooltip>
                   </q-icon>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('description')">
-                  <div class="RichTextEditor" style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" v-html="line.description" />
+                  <div class="RichTextEditor" style="display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" v-safe-html="line.description" />
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('createdById')" class="text-left" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                   {{ props.row.user.person.fullName }}

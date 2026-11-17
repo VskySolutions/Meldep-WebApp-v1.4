@@ -128,7 +128,7 @@
                   <div class="col-12 col-sm-12 col-md-12">
                     <div class="q-mb-xs">Description:</div>
                     <div class="text-black RichTextEditor">
-                      <p class="q-pt-md" v-html="model.description" />
+                      <p class="q-pt-md" v-safe-html="model.description" />
                     </div>
                   </div>
                 </div>

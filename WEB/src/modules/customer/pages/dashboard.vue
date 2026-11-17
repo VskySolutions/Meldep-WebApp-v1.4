@@ -56,7 +56,7 @@
                           </q-item>
                           <q-item v-if="msg.isSent" clickable v-close-popup @click="action2">
                             <q-item-section>
-                              <q-btn dense flat icon="o_delete" @click="onDelete(index, msg.id, msg.message)">
+                              <q-btn v-can dense flat icon="o_delete" @click="onDelete(index, msg.id, msg.message)">
                                 <q-tooltip>Delete</q-tooltip>
                               </q-btn>
                             </q-item-section>
@@ -74,11 +74,11 @@
                           clickable
                           @click="addReaction(index, msg.id, reaction.value, msg.message)"
                         >
-                          <q-item-section> <div v-html="reaction.value"></div></q-item-section>
+                          <q-item-section> <div v-safe-html="reaction.value"></div></q-item-section>
                         </q-item>
                       </q-list>
                     </q-menu>
-                    <div v-if="msg.reaction" class="reaction" v-html="msg.reaction"></div>
+                    <div v-if="msg.reaction" class="reaction" v-safe-html="msg.reaction"></div>
                   </div>
                 </template>
                 <!-- Editable input on message click -->

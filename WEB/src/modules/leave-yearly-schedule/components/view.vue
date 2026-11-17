@@ -52,7 +52,7 @@
               </div>
               <div class="col-12 col-sm-8 col-md-8">
                 <div class="form-group RichTextEditor">
-                  <p class="text-black" v-html="model.description ? model.description : '-'" />
+                  <p class="text-black" v-safe-html="model.description ? model.description : '-'" />
                 </div>
               </div>
             </div>

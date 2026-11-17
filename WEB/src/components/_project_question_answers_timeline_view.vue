@@ -20,7 +20,7 @@
             <div
               class="note-wrapper RichTextEditor"
             >
-              <span class="text-black note-text" v-html="note.description" />
+              <span class="text-black note-text" v-safe-html="note.description" />
             </div>
           </div>
         </q-timeline-entry>

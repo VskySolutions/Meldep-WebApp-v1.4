@@ -18,6 +18,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("inventory")]
+    [RequireMenu(MenuLinks.Inventory)]
     public class InventoryController : BaseController
     {
 
@@ -90,6 +91,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Inventory
         // Description: This endpoint fetches a list of Inventory based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllInventory(InventorySearchModel searchModel)
         {
             try
@@ -121,7 +123,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -138,7 +140,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -147,6 +149,7 @@ namespace Vsky.Api.Controllers
         // Title: GetInventoryDetailsById
         // Description: This endpoint retrieves the details of a specific Inventory based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.Inventory))]
         public async Task<IActionResult> GetInventoryDetailsById(string id)
         {
             try
@@ -161,7 +164,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -186,7 +189,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -316,7 +319,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
             // Return model state errors if the model state is not valid
             return ModelStateError(ModelState);
@@ -327,6 +330,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateInventory
         // Description: This endpoint updates an existing Inventory by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Inventory))]
         public async Task<IActionResult> UpdateInventory(string id, InventoryModel model)
         {
             try
@@ -478,7 +482,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -487,6 +491,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteInventoryById
         // Description: This endpoint deletes a test case based on the provided Inventory ID. It first retrieves the Inventory entity by ID, checks if it exists, and if so, deletes the Inventory. If the Inventory is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Inventory))]
         public async Task<IActionResult> DeleteInventory(string id)
         {
             try
@@ -504,7 +509,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Vsky.Core;
 using Vsky.Data;
 using Vsky.Models;
+using Vsky.Services.Authorization;
 
 namespace Vsky.Services.Logging
 {
@@ -17,15 +18,17 @@ namespace Vsky.Services.Logging
 
         private readonly ApplicationDbContext _context;
         private readonly IRepository<Log> _logRepository;
+        private readonly ISecurityLog _securityLog;
 
         #endregion
 
         #region Ctor
 
-        public DefaultLogger(ApplicationDbContext context, IRepository<Log> logRepository)
+        public DefaultLogger(ApplicationDbContext context, IRepository<Log> logRepository, ISecurityLog securityLog)
         {
             _context = context;
             _logRepository = logRepository;
+            _securityLog = securityLog;
         }
 
         #endregion
@@ -206,18 +209,9 @@ namespace Vsky.Services.Logging
         /// <returns>A log item</returns>
         public virtual string InsertLog(LogLevel logLevel, string shortMessage, string fullMessage = "", ApplicationUser user = null)
         {
-            var log = new Log
-            {
-                LogLevel = logLevel,
-                ShortMessage = shortMessage,
-                FullMessage = fullMessage,
-                User = user,
-                CreatedOnUtc = DateTime.UtcNow
-            };
-
-            _logRepository.Insert(log);
-
-            return log.Id;
+            // Not through the request's database context: saving there could also save the request's
+            // pending changes, and a failure here could hide the exception being logged.
+            return _securityLog.Write(logLevel, shortMessage, fullMessage, user?.Id);
         }
 
         /// <summary>
@@ -280,7 +274,7 @@ namespace Vsky.Services.Logging
 
             if (IsEnabled(LogLevel.Error))
             {
-                return InsertLog(LogLevel.Error, message, exception?.ToString() ?? string.Empty, user);
+                return _securityLog.WriteError(message, exception, user?.Id);
             }
 
             return null;

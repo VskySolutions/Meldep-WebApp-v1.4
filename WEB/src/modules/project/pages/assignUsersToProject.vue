@@ -58,7 +58,7 @@
                 </q-menu>
               </div>
               <div class="q-gutter-md q-ml-xs">
-                <q-btn icon="o_add" outline label="Assign Bulk" no-caps class="text-primary btnRounded q-ml-lg hidden" @click="onAssignBulkUserToProject(refreshProjectUserList)">
+                <q-btn v-can icon="o_add" outline label="Assign Bulk" no-caps class="text-primary btnRounded q-ml-lg hidden" @click="onAssignBulkUserToProject(refreshProjectUserList)">
                   <q-tooltip>Assign Bulk</q-tooltip>
                 </q-btn>
                 <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.back()" />

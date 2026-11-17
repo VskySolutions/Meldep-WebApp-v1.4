@@ -24,6 +24,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace Vsky.Api.Controllers
 {
     [Route("leaveCredits")]
+    [RequireMenu(MenuLinks.LeaveCredit)]
     public class LeaveCreditController : BaseController
     {
 
@@ -61,6 +62,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All LeaveCredits
         // Description: This endpoint fetches a list of LeaveCredit based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllLeaveCredits(LeaveCreditSearchModel searchModel)
         {
             try
@@ -124,7 +126,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -158,7 +160,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -184,7 +186,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -223,7 +225,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
             // Return model state errors if the model state is not valid
             return ModelStateError(ModelState);
@@ -265,7 +267,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
             // Return model state errors if the model state is not valid
             return ModelStateError(ModelState);

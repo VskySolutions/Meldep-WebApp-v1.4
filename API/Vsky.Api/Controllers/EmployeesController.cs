@@ -34,6 +34,7 @@ using static Vsky.Api.Models.EmployeeModel;
 namespace Vsky.Api.Controllers
 {
     [Route("employees")]
+    [RequireMenu(MenuLinks.Employee)]
     public class EmployeesController : BaseController
     {
 
@@ -91,6 +92,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Employee
         // Description: This endpoint fetches a list of employees based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllEmployee(EmployeeSearchModel searchModel)
         {
             try
@@ -129,7 +131,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -138,6 +140,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllEmployeeListForDropdown
         // Description: This endpoint retrieves the list of a employees. 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllEmployeeListForDropdown(string siteId)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -152,6 +155,7 @@ namespace Vsky.Api.Controllers
         // Title: getDefaultLeaveApproverNameForDropdown
         // Description: This endpoint retrieves the employee list for the Leave Approver dropdown 
         [HttpGet("leave-approver/list")]
+        [SiteMember]
         public async Task<IActionResult> getDefaultLeaveApproverNameForDropdown(string siteId)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -174,6 +178,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllActivityOwnerListForDropdown
         // Description: This endpoint retrieves the list of a activity owners. 
         [HttpGet("ownerdropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllActivityOwnerListForDropdown(string TargetMonthStr = null)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -210,6 +215,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllActiveEmployeeListForDropdown
         // Description: This endpoint retrieves the active employee of a specific employee based on its unique identifier (ID). 
         [HttpGet("activedropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllActiveEmployeeListForDropdown(string siteId)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -222,6 +228,7 @@ namespace Vsky.Api.Controllers
 
         #region GetEmployeesByStatus
         [HttpGet("employees/byStatus/list")]
+        [SiteMember]
         public async Task<IActionResult> GetEmployeesByStatus(string statusId)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -236,6 +243,7 @@ namespace Vsky.Api.Controllers
         //Title: GetEmployeeById
         //Description: This endpoint retrieves the details of a specific employee based on its unique identifier(ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Employee))]
         public async Task<IActionResult> GetEmployeeById(string id)
         {
             try
@@ -252,7 +260,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -329,7 +337,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -338,6 +346,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateEmployee
         // Description: This endpoint updates an existing employee by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Employee))]
         public async Task<IActionResult> UpdateEmployee(string id, EmployeeModel model)
         {
             try
@@ -853,7 +862,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -862,6 +871,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteEmployeeById
         // Description: This endpoint deletes a employee based on the provided employee ID. It first retrieves the employee entity by ID, checks if it exists, and if so, deletes the employee. If the employee is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Employee))]
         public async Task<IActionResult> DeleteEmployee(string id)
         {
             try
@@ -879,7 +889,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -181,7 +181,7 @@
                 </div>
               </div>
               <div class="q-ml-sm">
-                <q-btn
+                <q-btn v-can
                   v-if="role === 'admin'"
                   icon="o_add"
                   label="Add Report"
@@ -266,7 +266,7 @@
                 </a>
               </q-td> -->
               <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;" class="RichTextEditor">
-                <p v-html="props.row.reportDescription" />
+                <p v-safe-html="props.row.reportDescription" />
               </q-td>
               <q-td style="width: 5%;" class="text-center actions">
                 <a
@@ -282,7 +282,7 @@
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
                 </a>
-                <!-- <q-icon
+                <!-- <q-icon v-can
                   v-if="props.row.isEditable || props.row.hasReportGroupAccess && role === 'admin'"
                   name="o_edit"
                   class="cursor-pointer q-mr-sm"
@@ -291,7 +291,7 @@
                 >
                   <q-tooltip>Edit</q-tooltip>
                 </q-icon> -->
-                <q-icon
+                <q-icon v-can
                   v-if="role === 'admin'"
                   name="o_edit"
                   class="cursor-pointer q-mr-sm"
@@ -313,7 +313,7 @@
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
                 </a> -->
-                <q-icon
+                <q-icon v-can
                   v-if="role === 'admin'"
                   name="o_delete_outline"
                   class="cursor-pointer"

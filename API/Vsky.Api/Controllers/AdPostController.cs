@@ -20,6 +20,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("ad-post")]
+    [RequireMenu(MenuLinks.AdPost)]
     public class AdPostController : BaseController
     {
 
@@ -63,6 +64,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All AdPosts
         // Description: This endpoint fetches a list of AdPosts based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllAdPosts(AdPostSearchModel searchModel)
         {
             try
@@ -83,7 +85,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -92,6 +94,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAdPostDetailsById
         // Description: This endpoint retrieves the details of a specific AdPost based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.AdPost))]
         public async Task<IActionResult> GetAdPostDetailsById(string id)
         {
             try
@@ -109,7 +112,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -134,7 +137,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -161,7 +164,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -248,7 +251,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
 
             // Return model state errors if the model state is not valid
@@ -331,7 +334,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -340,6 +343,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateAdPost
         // Description: This endpoint updates an existing AdPost by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.AdPost))]
         public async Task<IActionResult> UpdateAdPost(string id, [FromForm] AdPostModel model)
         {
             try
@@ -466,7 +470,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -475,6 +479,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteAdPostById
         // Description: This endpoint deletes a test case based on the provided AdPost ID. It first retrieves the AdPost entity by ID, checks if it exists, and if so, deletes the AdPost. If the AdPost is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.AdPost))]
         public async Task<IActionResult> DeleteAdPost(string id)
         {
             try
@@ -492,7 +497,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

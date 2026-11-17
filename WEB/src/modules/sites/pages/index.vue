@@ -90,7 +90,7 @@
                 </div>
               </div>
               <div class="q-ml-sm">
-                <q-btn icon="o_add" outline label="Add Site" no-caps class="text-primary btnRounded" @click="onAdd" />
+                <q-btn v-can icon="o_add" outline label="Add Site" no-caps class="text-primary btnRounded" @click="onAdd" />
                 <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-md" @click="$router.push('/Settings')" />
               </div>
             </div>
@@ -126,7 +126,7 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" @click="onView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onEdit(props.row.id)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onEdit(props.row.id)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
               <q-icon name="o_playlist_add_check" class="cursor-pointer q-mr-sm" size="xs" @click="generateDropdown(props.row.id)">
@@ -157,7 +157,7 @@
               <q-icon v-else name="o_supervisor_account" class="text-grey-5 cursor-not-allowed q-mr-sm" size="xs">
                 <q-tooltip>Please Generate Dropdown First</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

@@ -14,6 +14,7 @@ using Vsky.Api.Models;
 namespace Vsky.Api.Controllers
 {
     [Route("infra-ftp")]
+    [RequireMenu(MenuLinks.InfraFtp + "|" + MenuLinks.FtpList)]
     public class InfraFTPController : BaseController
     {
         #region Define Services
@@ -48,6 +49,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllInfraFTPForList
         // Description: This endpoint retrieves the list of infra ftp.
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllInfraFTPForList(InfraFTPSearchModel searchModel)
         {
             try
@@ -78,7 +80,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -87,6 +89,7 @@ namespace Vsky.Api.Controllers
         // Title: GetInfraFTPInDetailById
         // Description: This endpoint retrieves the details of a specific infra ftp based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.InfraFTP))]
         public async Task<IActionResult> GetInfraFTPInDetailById(string id)
         {
             try
@@ -99,7 +102,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -170,7 +173,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
             return ModelStateError(ModelState);
         }
@@ -210,7 +213,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -253,7 +256,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -277,7 +280,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -286,6 +289,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteInfraFTP
         // Description: This endpoint deletes a infra FTP based on the provided infra FTP ID. It first retrieves the infra FTP entity by ID, checks if it exists, and if so, deletes the infra FTP. If the infra FTP is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.InfraFTP))]
         public async Task<IActionResult> DeleteInfraFTP(string id)
         {
             try
@@ -301,7 +305,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

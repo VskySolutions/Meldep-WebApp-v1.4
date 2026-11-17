@@ -167,7 +167,7 @@
                 >
                   <q-tooltip>Grid View</q-tooltip>
                 </q-btn>
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline
@@ -629,7 +629,7 @@
                     >
                       {{ isExpandedPersons(props.row) ? '−' : '...' }}
                     </span>
-                    <q-icon
+                    <q-icon v-can
                       v-if="props.row.isEditable"
                       name="o_add"
                       class="cursor-pointer"

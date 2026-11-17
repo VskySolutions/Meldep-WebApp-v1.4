@@ -10,7 +10,7 @@
           <q-breadcrumbs-el label="Modules" />
         </q-breadcrumbs>
         <div class="items-center">
-          <q-btn icon="o_add" outline label="Add Module" no-caps @click="onAdd" class="text-primary btnRounded" />
+          <q-btn v-can icon="o_add" outline label="Add Module" no-caps @click="onAdd" class="text-primary btnRounded" />
           <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.push('/Settings')" />
         </div>
       </q-card-section>
@@ -39,13 +39,13 @@
               <q-btn class="text-primary btnRounded" outline no-caps @click="$router.push('/modules/'+props.row.id+'/menus')">Add Menu</q-btn>
             </q-td>
             <q-td auto-width class="text-center actions" style="width: 25%">
-              <q-icon name="o_add" class="cursor-pointer q-mr-sm" @click="$router.push('/modules/'+props.row.id+'/menus')" size="xs">
+              <q-icon v-can name="o_add" class="cursor-pointer q-mr-sm" @click="$router.push('/modules/'+props.row.id+'/menus')" size="xs">
                 <q-tooltip>Add Menu</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" @click="onEdit(props.row.id)" size="xs">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" @click="onEdit(props.row.id)" size="xs">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" @click="onDelete(props.row)" size="xs">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" @click="onDelete(props.row)" size="xs">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

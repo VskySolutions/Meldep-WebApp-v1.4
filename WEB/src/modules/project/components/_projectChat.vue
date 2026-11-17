@@ -58,11 +58,11 @@
                       clickable
                       @click="addReaction(index, msg.id, reaction.value, msg.message)"
                     >
-                      <q-item-section> <div v-html="reaction.value" /></q-item-section>
+                      <q-item-section> <div v-safe-html="reaction.value" /></q-item-section>
                     </q-item>
                   </q-list>
                 </q-menu>
-                <div v-if="msg.reaction" class="reaction" v-html="msg.reaction" />
+                <div v-if="msg.reaction" class="reaction" v-safe-html="msg.reaction" />
               </div>
             </template>
             <!-- Editable input on message click -->

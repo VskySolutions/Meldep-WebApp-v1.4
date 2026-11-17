@@ -111,7 +111,7 @@
           </q-td>
 
           <q-td style="width:60%;">
-            <div v-html="props.row.description"></div>
+            <div v-safe-html="props.row.description"></div>
           </q-td>
         </q-tr>
         <!-- Response answer rows -->
@@ -127,7 +127,7 @@
           </q-td>
 
           <q-td style="width:60%;">
-            <div v-html="answer.description"></div>
+            <div v-safe-html="answer.description"></div>
           </q-td>
         </q-tr>
         <!-- No answer -->

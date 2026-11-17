@@ -1,34 +1,22 @@
-import { LocalStorage } from "quasar";
-
-// Analytics pages are reached by URL (there is no menu entry yet) and are for administrators only: the API
-// checks the same roles. The guard reads the stored user directly rather than the Pinia store so it works
-// on a cold load, before any component has touched the store.
-export const ADMIN_ROLES = ["admin", "site-super-admin", "system-super-admin"];
-
-export function isAdminUser () {
-  const roles = LocalStorage.getItem("user")?.roles || [];
-  return ADMIN_ROLES.some((role) => roles.includes(role));
-}
-
-// Vue Router 4 style: return true to continue, or the redirect target.
-function requireAdmin () {
-  return isAdminUser() ? true : "/dashboard";
-}
+// Each register is its own menu (ModulesMenus.Link), so access is granted per register in the permission
+// screens. permissionGuard checks meta.permission against the Pinia permission store on every navigation,
+// including a direct URL or a refresh, and the API checks the same link on every request.
+export const TIMESHEET_REGISTER_LINK = "/analytics/timesheet-register";
+export const ATTENDANCE_REGISTER_LINK = "/analytics/attendance-register";
 
 export default [
   {
     path: "/analytics",
     component: () => import("layouts/layout.vue"),
     children: [
-      { path: "", redirect: "/analytics/timesheet-register" },
+      { path: "", redirect: TIMESHEET_REGISTER_LINK },
 
       // #region Timesheet Register
       {
         path: "timesheet-register",
         name: "analytics-timesheet-register",
         component: () => import("modules/analytics/pages/timesheetRegister.vue"),
-        meta: { requiresAuth: true, title: "Timesheet Register" },
-        beforeEnter: requireAdmin
+        meta: { requiresAuth: true, permission: { menu: [TIMESHEET_REGISTER_LINK], level: "view" }, title: "Timesheet Register" }
       },
       // #endregion Timesheet Register
 
@@ -37,8 +25,7 @@ export default [
         path: "attendance-register",
         name: "analytics-attendance-register",
         component: () => import("modules/analytics/pages/attendanceRegister.vue"),
-        meta: { requiresAuth: true, title: "Attendance Register" },
-        beforeEnter: requireAdmin
+        meta: { requiresAuth: true, permission: { menu: [ATTENDANCE_REGISTER_LINK], level: "view" }, title: "Attendance Register" }
       }
       // #endregion TimeInTimeOut-MovementRegister (Attendance Register)
     ]

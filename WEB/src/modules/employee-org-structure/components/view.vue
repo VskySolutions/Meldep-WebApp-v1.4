@@ -79,7 +79,7 @@
               <div class="col-12 col-sm-12 col-md-12">
                 <div class="q-mb-xs">Responsibilities:</div>
                 <div class="text-black RichTextEditor">
-                  <p v-html="model.responsibilities ? model.responsibilities : '-'" />
+                  <p v-safe-html="model.responsibilities ? model.responsibilities : '-'" />
                 </div>
               </div>
             </div>

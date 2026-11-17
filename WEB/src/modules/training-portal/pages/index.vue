@@ -65,7 +65,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Add Training"
@@ -130,7 +130,7 @@
             >
               {{ props.row.url }}
             </a></q-td>
-            <q-td style="width: 30%; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"><div class="RichTextEditor" v-html="props.row.description" /></q-td>
+            <q-td style="width: 30%; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"><div class="RichTextEditor" v-safe-html="props.row.description" /></q-td>
             <q-td style="width: 20%;">
               <span v-if="props.row.trainingPortalMappings.length > 0">
                 <span v-for="(employeeMapping, index) in props.row.trainingPortalMappings" :key="employeeMapping.id">
@@ -147,7 +147,7 @@
               >
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
                 @click="onTrainingPortalEdit(props.row.id, refreshTrainingPortalList)"
@@ -162,7 +162,7 @@
               >
                 <q-tooltip>View File</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_delete_outline"
                 class="cursor-pointer"
                 color="negative"

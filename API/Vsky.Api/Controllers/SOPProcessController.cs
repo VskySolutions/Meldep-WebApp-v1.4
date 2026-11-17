@@ -16,8 +16,11 @@ using static Dapper.SqlMapper;
 namespace Vsky.Api.Controllers
 {
     [Route("sop-process")]
+    [RequireMenu(MenuLinks.SopProcess)]
     public class SOPProcessController : BaseController
     {
+        private static readonly System.Net.Http.HttpClient AssistantClient = new();
+        private const string DefaultAssistantWebhookUrl = "https://n8nworkflow.vskyapplications.com/webhook/c9cb3684-587b-4a09-97f9-b3bb4a0b357f/chat";
         #region Define Services and Initializations
         private readonly GlobalVariable _globalVariable;
         private readonly ICommonService _commonService;
@@ -42,7 +45,26 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
+        // The browser no longer holds the workflow's URL, and only signed-in users with access reach it.
+        [HttpPost("assistant-chat")]
+        [ReadAccess]
+        public async Task<IActionResult> AssistantChat([FromBody] System.Text.Json.JsonElement message, [FromServices] Microsoft.Extensions.Configuration.IConfiguration configuration)
+        {
+            try
+            {
+                var webhookUrl = configuration["SopAssistant:WebhookUrl"] ?? DefaultAssistantWebhookUrl;
+                using var content = new System.Net.Http.StringContent(message.GetRawText(), System.Text.Encoding.UTF8, "application/json");
+                using var response = await AssistantClient.PostAsync(webhookUrl, content);
+                return Content(await response.Content.ReadAsStringAsync(), "application/json");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(SafeErrorMessage(ex));
+            }
+        }
+
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllSOPProcesses(SOPProcessSearchModel searchModel)
         {
             try
@@ -76,11 +98,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpGet("details/{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.SopProcess)]
+        [SiteOwned(typeof(Vsky.Models.SOPProcess))]
         public async Task<IActionResult> GetSOPProcessByIdInDetail(string id)
         {
             try
@@ -96,7 +120,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -112,7 +136,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -178,7 +202,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -187,6 +211,8 @@ namespace Vsky.Api.Controllers
         // Title: UpdateSOPProcess
         // Description: This endpoint updates an existing SOP Process by its ID. 
         [HttpPut("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.SopProcess)]
+        [SiteOwned(typeof(Vsky.Models.SOPProcess))]
         public async Task<IActionResult> UpdateSOPProcess(string id, SaveSOPProcess model)
         {
             try
@@ -303,7 +329,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -341,7 +367,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -377,12 +403,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         [HttpDelete("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.SopProcess)]
+        [SiteOwned(typeof(Vsky.Models.SOPProcess))]
         public IActionResult DeleteSOPProcess(string id)
         {
             try
@@ -402,7 +430,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 

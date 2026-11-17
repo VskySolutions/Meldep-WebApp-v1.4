@@ -13,7 +13,7 @@
         </q-breadcrumbs>
       </q-card-section>
       <q-card-section class="flex items-center no-padding">
-        <q-btn icon="o_add" outline label="Weekly Saturday's Off" no-caps class="text-primary btnRounded q-mr-md" @click="onAdd" />
+        <q-btn v-can icon="o_add" outline label="Weekly Saturday's Off" no-caps class="text-primary btnRounded q-mr-md" @click="onAdd" />
         <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-mr-md no-space-between" @click="$router.back()" />
       </q-card-section>
     </q-card>

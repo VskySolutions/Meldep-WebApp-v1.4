@@ -23,6 +23,7 @@ using Vsky.Services.TestCases;
 namespace Vsky.Api.Controllers
 {
     [Route("project-action-items")]
+    [RequireMenu(MenuLinks.ProjectWork)]
     public class ProjectActionItemsController : BaseController
     {
         #region Define Services      
@@ -59,6 +60,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllProjectActionItems
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectActionItems(ProjectActionItemsSearchModel searchModel)
         {
             try
@@ -98,13 +100,15 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetProjectActionItemById
         [HttpGet("{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectActionItems))]
+        [SiteOwned(typeof(Vsky.Models.ProjectActionItems))]
         public async Task<IActionResult> GetProjectActionItemById(string id)
         {
             try
@@ -117,13 +121,15 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetProjectActionItemDetailsById
         [HttpGet("details/{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectActionItems))]
+        [SiteOwned(typeof(Vsky.Models.ProjectActionItems))]
         public async Task<IActionResult> GetProjectActionItemDetailsById(string id)
         {
             try
@@ -136,7 +142,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -205,6 +211,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }

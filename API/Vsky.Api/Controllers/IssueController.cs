@@ -18,6 +18,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("issue")]
+    [RequireMenu(MenuLinks.Issue)]
     public class IssueController : BaseController
     {
         #region Define Services
@@ -60,6 +61,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Issues
         // Description: This endpoint fetches a list of issue based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllIssues(IssueSearchModel searchModel)
         {
             try
@@ -108,7 +110,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -117,6 +119,8 @@ namespace Vsky.Api.Controllers
         //Title: GetIssueById
         //Description: This endpoint retrieves the details of a specific issue based on its unique identifier(ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Issue))]
+        [RecordScope(typeof(Vsky.Models.Issue))]
         public async Task<IActionResult> GetIssueById(string id)
         {
             try
@@ -133,7 +137,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -142,6 +146,8 @@ namespace Vsky.Api.Controllers
         // Title: GetIssueDetailsById
         // Description: This endpoint retrieves the details of a specific issue based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.Issue))]
+        [RecordScope(typeof(Vsky.Models.Issue))]
         public async Task<IActionResult> GetIssueDetailsById(string id)
         {
             try
@@ -158,7 +164,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -230,7 +236,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -239,6 +245,8 @@ namespace Vsky.Api.Controllers
         // Title: UpdateIssue
         // Description: This endpoint updates an existing issue by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Issue))]
+        [RecordScope(typeof(Vsky.Models.Issue))]
         public async Task<IActionResult> UpdateIssue(string id, IssueModel model)
         {
             try
@@ -327,7 +335,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -364,7 +372,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -400,7 +408,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -409,6 +417,8 @@ namespace Vsky.Api.Controllers
         // Title: DeleteIssueById
         // Description: This endpoint deletes a issue based on the provided issue ID. It first retrieves the issue entity by ID, checks if it exists, and if so, deletes the issue. If the issue is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Issue))]
+        [RecordScope(typeof(Vsky.Models.Issue))]
         public async Task<IActionResult> DeleteIssue(string id)
         {
             try
@@ -426,7 +436,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

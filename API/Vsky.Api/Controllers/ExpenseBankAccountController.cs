@@ -15,6 +15,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("expense-bankAccount")]
+    [RequireMenu(MenuLinks.BankAccounts)]
     public class ExpenseBankAccountController : BaseController
     {
         #region Fields
@@ -46,6 +47,7 @@ namespace Vsky.Api.Controllers
 
         #region Methods Bank Account
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAll(ExpenseBankAccountsSearchModel searchModel)
         {
             try
@@ -65,7 +67,7 @@ namespace Vsky.Api.Controllers
             catch (Exception e)
             {
 
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
 
             }
         }
@@ -92,7 +94,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
 
@@ -131,11 +133,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Expense_BankAccounts))]
         public async Task<IActionResult> Update(string id, Expense_BankAccountsModel model)
         {
             try
@@ -172,7 +175,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
 
@@ -199,7 +202,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(new BadRequestError(e.Message));
+                return BadRequest(new BadRequestError(SafeErrorMessage(e)));
             }
         }
 
@@ -217,7 +220,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion

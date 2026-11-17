@@ -20,6 +20,7 @@ using Vsky.Services.SOPAssignments;
 namespace Vsky.Api.Controllers
 {
     [Route("sop-assignment")]
+    [RequireMenu(MenuLinks.SopAssignment)]
     public class SOPAssignmentController : BaseController
     {
         #region Define Services and Initializations
@@ -59,6 +60,7 @@ namespace Vsky.Api.Controllers
         #endregion
 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllSOPAssignments(SOPAssignmentSearchModel searchModel)
         {
             try
@@ -96,11 +98,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.SOPAssignment))]
         public IActionResult GetSOPAssignmentByIdInDetail(string id)
         {
             try
@@ -117,7 +120,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -180,7 +183,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -342,7 +345,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -406,7 +409,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -414,6 +417,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateSOPAssignment
         // Description: This endpoint updates an existing SOP Assignment by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.SOPAssignment))]
         public async Task<IActionResult> UpdateSOPAssignment(string id, SOPAssignmentModel model)
         {
             try
@@ -469,7 +473,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -478,6 +482,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteSOPAssignmentById
         // Description: This endpoint deletes a SOPAssignment based on the provided SOPAssignment ID. It first retrieves the SOPAssignment entity by ID, checks if it exists, and if so, deletes the SOPAssignment. If the SOPAssignment is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.SOPAssignment))]
         public IActionResult DeleteSOPAssignment(string id)
         {
             try
@@ -498,7 +503,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

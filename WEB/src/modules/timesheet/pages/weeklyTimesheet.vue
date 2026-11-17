@@ -47,7 +47,7 @@
         </div>
 
         <!-- Right Side -->
-        <q-btn
+        <q-btn v-can
           v-if="selectedWeekLabel"
           color="primary"
           icon="o_add"
@@ -190,7 +190,7 @@
                 {{ getRowTotal(row) }}
               </div>
               <div class="col-auto">
-                <q-icon
+                <q-icon v-can
                   name="o_delete_outline"
                   size="xs"
                   :class="{
@@ -258,7 +258,7 @@
             <div class="text-left" style="width: 25%;">{{ item.task }}</div>
             <div class="text-right" style="width: 5%;">{{ item.hours }}</div>
             <div class="text-black RichTextEditor text-left" style="width: 40%;">
-              <p v-html="item.description" />
+              <p v-safe-html="item.description" />
             </div>
           </div>
         </div>

@@ -30,6 +30,7 @@ using static Vsky.Api.Models.ExpenseModels.Expense_Purchase_Requests_Models;
 namespace Vsky.Api.Controllers
 {
     [Route("purchase-expense-request")]
+    [RequireMenu(MenuLinks.PurchaseExpenseAny)]
     public class ExpensePurchaseRequestController : BaseController
     {
 
@@ -97,6 +98,7 @@ namespace Vsky.Api.Controllers
 
         #region Get All Purchase Expense Requests
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllPurchaseExpenseRequests(Expense_Purchase_RequestsSearchModel searchModel)
         {
             try
@@ -130,13 +132,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
 
         #region Get All Approve Purchase Expense Requests
         [HttpPost("approve-purchase-expense-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllApprovePurchaseExpenseRequests(Expense_Purchase_RequestsSearchModel searchModel)
         {
             try
@@ -174,7 +177,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -195,7 +198,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -216,13 +219,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
 
         #region Get Purchase Expense Request Dropdown List
         [HttpGet("purchase-expense-dropdown-list/{statusName}")]
+        [SiteMember]
         public async Task<IActionResult> GetPurchaseExpenseRequestList(string statusName = "")
         {
             try
@@ -239,7 +243,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -339,7 +343,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -474,7 +478,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(new BadRequestError($"An error occurred: {e.Message}"));
+                return BadRequest(new BadRequestError($"An error occurred: {SafeErrorMessage(e)}"));
             }
         }
         #endregion
@@ -496,7 +500,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -545,7 +549,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(new BadRequestError(e.Message));
+                return BadRequest(new BadRequestError(SafeErrorMessage(e)));
             }
         }
         #endregion

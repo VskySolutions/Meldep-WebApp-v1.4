@@ -2,8 +2,8 @@
   <q-dialog ref="dialogRef" class="customDialog" persistent>
     <q-card>
       <q-card-section>
-        <div class="text-h6 RichTextEditor" v-html="title" />
-        <div class="text-h6 RichTextEditor" v-html="message" />
+        <div class="text-h6 RichTextEditor" v-safe-html="title" />
+        <div class="text-h6 RichTextEditor" v-safe-html="message" />
         <div v-if="approver === 'Pre-Approved' || approver === 'Approved' || approver === 'Paid' || approver === 'Declined' || approver === 'Cancelled'" class="q-mt-sm">
           <label>Note <span v-if="approver === 'Declined' || approver === 'Cancelled'" class="text-negative">*</span></label>
           <q-editor

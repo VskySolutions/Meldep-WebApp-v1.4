@@ -15,6 +15,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("helpDeskTopicsQuestions")]
+    [SiteMember]
     public class HelpDeskTopicsQuestionsController : BaseController
     {
         #region Define Services
@@ -57,7 +58,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -78,7 +79,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -99,7 +100,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -120,13 +121,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllHelpDeskTopicAndQuestionList
         [HttpPost("topic-and-questions/list")]
+        [ReadAccess]
         public IActionResult GetAllHelpDeskTopicAndQuestionList(HelpDeskTopicQuestionsSearchModel searchModel)
         {
             try
@@ -155,7 +157,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -164,6 +166,7 @@ namespace Vsky.Api.Controllers
         // Title: GetHelpDeskTopicById
         // Description: This endpoint retrieve help desk topic for the specified  help desk topic ID.
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.HelpDeskTopic))]
         public async Task<IActionResult> GetHelpDeskTopicById(string id)
         {
             var entity = await _helpDeskTopicService.GetHelpDeskTopicById(id);
@@ -208,7 +211,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -246,7 +249,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -255,6 +258,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateHelpDeskTopic
         // Description: This endpoint updates an existing help desk topic by its ID. It validates the help desk topic model, checks for duplicate  help desk topic, updates the  help desk topic's details.
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.HelpDeskTopic))]
         public async Task<IActionResult> UpdateHelpDeskTopic(string id, HelpDeskTopicModel model)
         {
             if (ModelState.IsValid)
@@ -325,6 +329,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteHelpDeskTopic
         // Description: This endpoint deletes a help desk topic based on the provided help desk topic ID. It first retrieves the help desk topic entity by ID, checks if it exists, and if so, deletes the help desk topic. If the help desk topic is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.HelpDeskTopic))]
         public async Task<IActionResult> DeleteHelpDeskTopic(string id)
         {
             var entity = await _helpDeskTopicService.GetHelpDeskTopicById(id);

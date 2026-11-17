@@ -25,7 +25,7 @@
                     <q-td style="width: 18%; max-width: 350px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">{{ props.row.task.name }}</q-td>
                     <q-td style="width: 15%; max-width: 350px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">{{ props.row.project.name }}</q-td>
                     <q-td v-if="flag === 'DT'" style="width: 12%; max-width: 350px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">{{ props.row.projectActivity.name }}</q-td>
-                    <q-td v-if="flag === 'DT'" style="width: 35%; max-width: 350px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"><div v-html="props.row.description" /></q-td>
+                    <q-td v-if="flag === 'DT'" style="width: 35%; max-width: 350px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"><div v-safe-html="props.row.description" /></q-td>
                     <q-td style="width: 15%;">{{ props.row.timesheet.employee.person.fullName ? props.row.timesheet.employee.person.fullName : "" }}</q-td>
                     <q-td class="text-right" style="width: 3%;">{{ props.row.hours }}</q-td>
                   </q-tr>

@@ -238,7 +238,7 @@
                 </q-card>
               </q-menu>
               <div>
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline
@@ -578,7 +578,7 @@
                   }}
                   <q-tooltip>{{ props.row.shortDescription }}</q-tooltip>
                 </div>
-                <!-- <div v-html="props.row.shortDescription" /> -->
+                <!-- <div v-safe-html="props.row.shortDescription" /> -->
               </q-td>
               <q-td
                 v-if="selectedColumnNames.includes('projectTaskRelatedMappings')"

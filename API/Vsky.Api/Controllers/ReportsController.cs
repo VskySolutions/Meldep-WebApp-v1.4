@@ -26,6 +26,7 @@ using Vsky.Services.SitesRole;
 namespace Vsky.Api.Controllers
 {
     [Route("reports")]
+    [RequireMenu(MenuLinks.Reports)]
     public class ReportsController : BaseController
     {
         private string m_errorMessage;
@@ -101,12 +102,12 @@ namespace Vsky.Api.Controllers
             }
             catch (HttpOperationException exc)
             {
-                m_errorMessage = string.Format("Status: {0} ({1})\r\nResponse: {2}\r\nRequestId: {3}", exc.Response.StatusCode, (int)exc.Response.StatusCode, exc.Response.Content, exc.Response.Headers["RequestId"].FirstOrDefault());
-                return BadRequest(m_errorMessage);
+                var powerBiDetails = string.Format("Status: {0} ({1})\r\nResponse: {2}\r\nRequestId: {3}", exc.Response.StatusCode, (int)exc.Response.StatusCode, exc.Response.Content, exc.Response.Headers["RequestId"].FirstOrDefault());
+                return BadRequest(SafeErrorMessage(new InvalidOperationException(powerBiDetails, exc)));
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -151,8 +152,8 @@ namespace Vsky.Api.Controllers
             }
             catch (HttpOperationException exc)
             {
-                m_errorMessage = string.Format("Status: {0} ({1})\r\nResponse: {2}\r\nRequestId: {3}", exc.Response.StatusCode, (int)exc.Response.StatusCode, exc.Response.Content, exc.Response.Headers["RequestId"].FirstOrDefault());
-                return BadRequest(m_errorMessage);
+                var powerBiDetails = string.Format("Status: {0} ({1})\r\nResponse: {2}\r\nRequestId: {3}", exc.Response.StatusCode, (int)exc.Response.StatusCode, exc.Response.Content, exc.Response.Headers["RequestId"].FirstOrDefault());
+                return BadRequest(SafeErrorMessage(new InvalidOperationException(powerBiDetails, exc)));
             }
             catch (Exception ex)
             {
@@ -168,6 +169,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllReportsDetails
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllReportsDetails(ReportSettingsDetailsSearchModel searchModel)
         {
             try
@@ -216,6 +218,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
                 return BadRequest(new BadRequestError("No data found."));
             }
 
@@ -226,6 +229,7 @@ namespace Vsky.Api.Controllers
         #region GetAllReportListForDropdown
         // Title: GetAllReportListForDropdown
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllReportListForDropdown()
         {
             try
@@ -255,7 +259,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -279,7 +283,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -332,7 +336,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -389,7 +393,7 @@ namespace Vsky.Api.Controllers
 
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -411,13 +415,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllReportGroupRoles
         [HttpPost("report-group-roles/list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllReportGroupRoles(ReportRoleGroupMappingSearchModel searchModel)
         {
             try
@@ -445,6 +450,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
                 return BadRequest(new BadRequestError("No data found."));
             }
 
@@ -496,7 +502,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -517,7 +523,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -550,7 +556,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 

@@ -98,7 +98,7 @@
                   <div class="col-xxl-7 col-lg-7 col-md-7 col-sm-6 col-xs-10 q-pa-xs">
                     <div class="q-mb-xs text-black"><label>Description</label></div>
                     <div class="form-group">
-                      <span v-if="section.deleted" class="text-strike text-red" v-html="section.description ?? '--'" />
+                      <span v-if="section.deleted" class="text-strike text-red" v-safe-html="section.description ?? '--'" />
                       <q-editor
                         v-else
                         v-model="section.description"

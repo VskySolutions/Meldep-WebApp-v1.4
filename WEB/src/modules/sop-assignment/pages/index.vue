@@ -88,7 +88,7 @@
                 :selected-field="selectedField"
               />
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   v-if="role === 'admin'"
                   icon="o_add"
                   outline
@@ -216,10 +216,10 @@
                   }}
                 </q-tooltip>
               </q-icon>
-              <q-icon v-if="role === 'admin'" name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onSOPTemplateAssignmentEdit(props.row.id, refreshSOPAssignmentList)">
+              <q-icon v-can v-if="role === 'admin'" name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onSOPTemplateAssignmentEdit(props.row.id, refreshSOPAssignmentList)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 v-if="role === 'admin'"
                 name="o_delete_outline"
                 class="cursor-pointer"

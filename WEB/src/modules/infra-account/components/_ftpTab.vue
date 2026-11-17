@@ -29,7 +29,7 @@
           <q-td style="width: 10%">{{ props.row.host }}</q-td>
           <q-td style="width: 10%">{{ props.row.port }}</q-td>
           <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">
-            <p v-html="props.row.instructions || '-'" />
+            <p v-safe-html="props.row.instructions || '-'" />
           </q-td>
         </q-tr>
       </template>

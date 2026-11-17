@@ -72,7 +72,7 @@
               </template>
               <template v-else>
                 <div class="note-wrapper cursor-pointer RichTextEditor" @click="startEditing(notes)">
-                  <span class="text-black note-text" v-html="notes.note" />
+                  <span class="text-black note-text" v-safe-html="notes.note" />
                   <q-tooltip v-if="storedUser === notes.createdBy.userName">
                     Click to edit
                   </q-tooltip>
@@ -97,7 +97,7 @@
             <div v-else>
               <div class="fs-14 note-row">
                 <div class="note-wrapper RichTextEditor">
-                  <span class="text-black note-text" v-html="notes.note" />
+                  <span class="text-black note-text" v-safe-html="notes.note" />
                 </div>
               </div>
             </div>

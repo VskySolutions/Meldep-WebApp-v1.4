@@ -62,7 +62,7 @@
             >
               <span
                 class="text-black note-text"
-                v-html="responseLogDescription.description || ''"
+                v-safe-html="responseLogDescription.description || ''"
               ></span>
 
               <q-tooltip

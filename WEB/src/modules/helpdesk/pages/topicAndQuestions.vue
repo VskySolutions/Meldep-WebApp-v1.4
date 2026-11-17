@@ -28,7 +28,7 @@
               <div class="text-h3">
                 <span>Workspace</span>
               </div>
-              <q-btn
+              <q-btn v-can
                 color="primary"
                 icon="o_add"
                 label="Add"
@@ -118,7 +118,7 @@
                 class="q-mx-sm"
               >
                 <q-tooltip class="text-wrap break-words RichTextEditor" max-width="300px">
-                  <div v-html="helpDeskTopic.description" />
+                  <div v-safe-html="helpDeskTopic.description" />
                 </q-tooltip>
               </q-icon>
               <q-toggle
@@ -126,7 +126,7 @@
                 dense class="q-mx-md"
                 @update:model-value="() => saveOrUpdateHelpDeskTopic(helpDeskTopic)"
               />
-              <q-icon
+              <q-icon v-can
                 name="o_delete"
                 color="negative"
                 size="sm"
@@ -172,7 +172,7 @@
                   <span class="text-primary">{{ selectedHelpDeskTopic.title }}</span>
                 </div>
               </div>
-              <q-btn
+              <q-btn v-can
                 v-if="selectedHelpDeskTopic.title"
                 color="primary"
                 icon="o_add"
@@ -265,7 +265,7 @@
                 class="q-mx-sm"
               >
                 <q-tooltip class="text-wrap break-words RichTextEditor" max-width="300px">
-                  <div v-html="helpDeskQuestion.description" />
+                  <div v-safe-html="helpDeskQuestion.description" />
                 </q-tooltip>
               </q-icon>
               <q-toggle
@@ -273,7 +273,7 @@
                 dense class="q-mx-md"
                 @update:model-value="() => saveOrUpdateHelpDeskQuestion(helpDeskQuestion)"
               />
-              <q-icon
+              <q-icon v-can
                 name="o_delete"
                 color="negative"
                 size="sm"

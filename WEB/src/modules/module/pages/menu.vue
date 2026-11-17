@@ -12,7 +12,7 @@
         </q-breadcrumbs>
         <div class="items-center flex">
           <q-select v-model="moduleId" class="q-mr-sm size-1z q-my-sm" use-input outlined stack-label hide-bottom-space :dense="true" :options="modules" option-value="value" option-label="text" emit-value map-options style="width:300px;margin-top: 10px;" @update:model-value="onModuleChange(moduleId)" />
-          <q-btn icon="o_add" outline label="Add Menu" no-caps class="text-primary btnRounded" @click="onAdd" />
+          <q-btn v-can icon="o_add" outline label="Add Menu" no-caps class="text-primary btnRounded" @click="onAdd" />
           <div class="q-ml-sm">
             <q-btn color="black" class="btnRounded" icon="o_arrow_back" label="Back" no-caps style="display: none;" @click="$router.push('/modules')" />
             <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded no-space-between" @click="$router.push('/modules')" />
@@ -37,10 +37,10 @@
             <q-td class="text-right">{{ props.row.sortorder }}</q-td>
             <q-td class="text-left">{{ props.row.active==true ? 'Active' : 'InActive' }}</q-td>
             <q-td class="text-center actions">
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onEdit(props.row.id)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onEdit(props.row.id)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

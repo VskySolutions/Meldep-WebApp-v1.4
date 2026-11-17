@@ -20,6 +20,7 @@ using System.Text.Json;
 namespace Vsky.Api.Controllers
 {
     [Route("websitedemos")]
+    [SiteMember]
     public class WebsiteDemosController : BaseController
     {
         #region Define Services
@@ -51,6 +52,7 @@ namespace Vsky.Api.Controllers
         #endregion
 
         [AllowAnonymous]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(PublicEndpointLimit.PolicyName)]
         [HttpPost]
         public async Task<IActionResult> CreateWebsiteDemo(Website_DemosModel model)
         {
@@ -103,7 +105,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #region private methods

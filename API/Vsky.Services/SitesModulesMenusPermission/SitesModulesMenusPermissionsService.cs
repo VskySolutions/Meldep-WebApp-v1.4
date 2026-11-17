@@ -67,7 +67,7 @@ namespace Vsky.Services.SitesModulesMenusPermission
                 IsView = x.IsView,
                 SitesModulesMenus = new SitesModulesMenus
                 {
-                    Id = x.Id,
+                    Id = x.SitesModulesMenus.Id,
                     MenuId = x.SitesModulesMenus.MenuId,
                     ModulesMenus = new ModulesMenus
                     {
@@ -119,7 +119,7 @@ namespace Vsky.Services.SitesModulesMenusPermission
             if (roleIds?.Any() == true)
             {
                 var menuIdsWithRoles = await query
-                    .Where(x => roleIds.Contains(x.SiteRoleId) && x.IsShowMenu)
+                    .Where(x => roleIds.Contains(x.SiteRoleId) && (x.IsShowMenu || x.IsView || x.IsManage))
                     .Select(x => x.SiteModuleMenuId)
                     .Distinct()
                     .ToListAsync();
@@ -159,10 +159,15 @@ namespace Vsky.Services.SitesModulesMenusPermission
                     MenuId = g.Key.MenuId,
                     ModuleName = g.Key.ModuleName,
                     MenuName = g.Key.MenuName,
-                    Roles = g.Where(x => x.IsShowMenu).Select(x => new RoleDto
+                    // A role with View or Manage but no Show must stay listed, or it couldn't be edited.
+                    Roles = g.Where(x => x.IsShowMenu || x.IsView || x.IsManage).Select(x => new RoleDto
                     {
                         Id = x.SiteRoleId,
-                        Name = x.SitesRoles.ApplicationRole.Name
+                        Name = x.SitesRoles.ApplicationRole.Name,
+                        PermissionId = x.Id,
+                        IsShowMenu = x.IsShowMenu,
+                        IsView = x.IsView,
+                        IsManage = x.IsManage
                     }).Distinct().ToList()
                 });
 

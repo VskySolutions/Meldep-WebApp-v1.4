@@ -147,7 +147,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Create Ad Post Channel" no-caps class="text-primary btnRounded" @click="onAdd" />
+                <q-btn v-can icon="o_add" outline label="Create Ad Post Channel" no-caps class="text-primary btnRounded" @click="onAdd" />
               </div>
             </div>
           </div>
@@ -180,10 +180,10 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onEdit(props.row.id)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onEdit(props.row.id)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

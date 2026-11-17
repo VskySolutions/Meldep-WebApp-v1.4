@@ -10,6 +10,7 @@ using Vsky.Services.Projects;
 namespace Vsky.Api.Controllers
 {
     [Route("site-project-roles")]
+    [RequireMenu(MenuLinks.ProjectWork + "|" + MenuLinks.SiteRoles)]
     public class SiteProjectRolesController : BaseController
     {
 
@@ -36,6 +37,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllSiteProjectRolesListForDropdown
         // Description: This endpoint retrieves the list of Site Project Roles. 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllSiteProjectRolesListForDropdown()
         {
             try
@@ -48,7 +50,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

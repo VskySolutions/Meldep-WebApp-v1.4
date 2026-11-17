@@ -118,7 +118,7 @@
                 </div>
               </div>
               <div class="q-ml-sm">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Add Org Structure"
@@ -194,13 +194,13 @@
                 @click="onEmployeeOrgStructureView(props.row.id, refreshEmployeeOrgStructureList)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
                 @click="onEmployeeOrgStructureEdit(props.row.id, refreshEmployeeOrgStructureList)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_delete_outline"
                 class="cursor-pointer"
                 color="negative" @click="onDelete(props.row)">

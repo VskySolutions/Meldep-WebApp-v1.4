@@ -17,6 +17,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("departments")]
+    [RequireMenu(MenuLinks.Department)]
     public class DepartmentsController : BaseController
     {
 
@@ -51,6 +52,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Departments
         // Description: This endpoint fetches a list of departments based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllDepartments(DepartmentSearchModel searchModel)
         {
             try
@@ -69,7 +71,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -78,6 +80,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllDepartmentListForDropdown
         // Description: This endpoint retrieves the details of a specific department based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllDepartmentListForDropdown() 
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -92,6 +95,7 @@ namespace Vsky.Api.Controllers
         // Title: GetDepartmentById
         // Description: This endpoint retrieves the details of a specific department based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Department))]
         public async Task<IActionResult> GetDepartmentById(string id)
         {
             try
@@ -108,7 +112,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -162,7 +166,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
 
         }
@@ -172,6 +176,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateDepartment
         // Description: This endpoint updates an existing department by its ID. It validates the department model, checks for duplicate department names, updates the department's details.
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Department))]
         public async Task<IActionResult> UpdateDepartment(string id, DepartmentModel model)
         {
             try
@@ -212,7 +217,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -221,6 +226,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteDepartment
         // Description: This endpoint deletes a department based on the provided department ID. It first retrieves the department entity by ID, checks if it exists, and if so, deletes the department. If the department is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Department))]
         public async Task<IActionResult> DeleteDepartment(string id)
         {
             try
@@ -237,7 +243,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -242,7 +242,7 @@
                               {{ sitesItemSubCategoryAttribute.itemSubCategoryAttributes.fieldType }}
                             </span>
                           </div>
-                          <q-icon
+                          <q-icon v-can
                             v-ripple
                             name="o_delete"
                             color="negative"

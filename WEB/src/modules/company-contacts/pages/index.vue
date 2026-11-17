@@ -52,7 +52,7 @@
                 </div>
               </div>
               <div class="q-ml-sm">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Add Contact"
@@ -135,7 +135,7 @@
               >
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
                 @click="onCompanyContactEdit(props.row.id, refreshCompanyContactList)"
@@ -159,7 +159,7 @@
                   :label="props.row.companyContactNotesCount"
                 />
               </a>
-              <q-icon
+              <q-icon v-can
                 name="o_delete_outline"
                 class="cursor-pointer"
                 color="negative"

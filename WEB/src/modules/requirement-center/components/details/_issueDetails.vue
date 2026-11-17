@@ -98,7 +98,7 @@
 
           <div
             class="RichTextEditor"
-            v-html="model.description || '-'"
+            v-safe-html="model.description || '-'"
           />
         </div>
       </div>

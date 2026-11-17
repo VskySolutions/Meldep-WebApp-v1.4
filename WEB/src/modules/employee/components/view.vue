@@ -267,7 +267,7 @@
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-xs-12">
                     <!-- <div class="q-mb-xs">Education Details :  <span class="text-black">{{ model.educationDetail }}</span></div> -->
-                    <div class="q-mb-xs">Education Details :  <span class="text-black"><p v-html="model.educationDetail ? model.educationDetail : '-'" /></span></div>
+                    <div class="q-mb-xs">Education Details :  <span class="text-black"><p v-safe-html="model.educationDetail ? model.educationDetail : '-'" /></span></div>
                   </div>
                 </div>
               </fieldset>

@@ -14,6 +14,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("lead-groups")]
+    [RequireMenu(MenuLinks.LeadGroupUsers + "|" + MenuLinks.Lead)]
     public class LeadUserGroupMappingController : BaseController
     {
         private readonly GlobalVariable _globalVariable;
@@ -35,6 +36,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllLeadGroupUsers
         [HttpPost("lead-group-users/list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllLeadGroupUsers(LeadUserGroupMappingSearchModel searchModel)
         {
             try
@@ -62,6 +64,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
                 return BadRequest(new BadRequestError("No data found."));
             }
 
@@ -115,7 +118,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -148,13 +151,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region DeleteLeadGroupsUser
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.LeadUserGroupMapping))]
         public async Task<IActionResult> DeleteLeadGroupsUser(string id)
         {
             try
@@ -169,7 +173,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

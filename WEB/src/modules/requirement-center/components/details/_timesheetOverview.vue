@@ -11,7 +11,7 @@
         >
           <div
             class="fs-14 note-row text-black note-text"
-            v-html="item.description || ''"
+            v-safe-html="item.description || ''"
           >
           </div>
         </q-timeline-entry>

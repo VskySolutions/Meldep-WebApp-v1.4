@@ -16,6 +16,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("jobpost")]
+    [RequireMenu(MenuLinks.JobPost)]
     public class JobCreateController : BaseController
     {
         #region Define Services
@@ -49,6 +50,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All JobPosts
         // Description: This endpoint fetches a list of jobposts based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllJobPosts(JobCreateSearchModel searchModel)
         {
             try
@@ -68,7 +70,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -90,7 +92,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -108,7 +110,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -117,6 +119,7 @@ namespace Vsky.Api.Controllers
         // Title: GetJobPostDetailsById
         // Description: This endpoint retrieves the details of a specific jobcreate based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.JobCreate))]
         public async Task<IActionResult> GetJobPostDetailsById(string id)
         {
             try
@@ -133,7 +136,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -191,7 +194,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -200,6 +203,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateJobPost
         // Description: This endpoint updates an existing JobCreate by its ID. It validates the JobCreate model, checks for duplicate JobCreate title, updates the JobCreate's details.
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.JobCreate))]
         public async Task<IActionResult> UpdateJobPost(string id, JobCreateModel model)
         {
             try
@@ -252,7 +256,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -287,7 +291,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -296,6 +300,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteJobCreateById
         // Description: This endpoint deletes a jobCreate based on the provided jobCreate ID. It first retrieves the jobCreate entity by ID, checks if it exists, and if so, deletes the jobCreate. If the jobCreate is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.JobCreate))]
         public async Task<IActionResult> DeleteJobCreate(string id)
         {
             try
@@ -313,7 +318,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

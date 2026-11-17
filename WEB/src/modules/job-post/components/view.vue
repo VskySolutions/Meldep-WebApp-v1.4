@@ -57,7 +57,7 @@
               <div class="col-12 col-sm-12 col-md-12">
                 <div class="q-mb-xs">Job Description:</div>
                 <div class="text-black RichTextEditor">
-                  <p v-html="model.jobDescription ? model.jobDescription : '-'" />
+                  <p v-safe-html="model.jobDescription ? model.jobDescription : '-'" />
                 </div>
               </div>
             </div>

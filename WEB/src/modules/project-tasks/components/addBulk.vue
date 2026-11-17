@@ -266,7 +266,7 @@
                           ]"
                           style="width: 400px;"
                         />
-                        <span v-if="mode !== 'edit' || props.row.id !== activeRowId" :class="props.row.deleted ? 'text-delete RichTextEditor' : 'normal-text RichTextEditor'" v-html="props.row.description" />
+                        <span v-if="mode !== 'edit' || props.row.id !== activeRowId" :class="props.row.deleted ? 'text-delete RichTextEditor' : 'normal-text RichTextEditor'" v-safe-html="props.row.description" />
                       </q-td>
                       <q-td auto-width class="text-center">
                         <template v-if="mode == 'edit' && editingRow && props.row.id === activeRowId">

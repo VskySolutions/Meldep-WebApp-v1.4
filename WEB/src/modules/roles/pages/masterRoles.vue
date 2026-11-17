@@ -10,7 +10,7 @@
           <q-breadcrumbs-el label="Master Roles" />
         </q-breadcrumbs>
         <div class="items-center">
-          <q-btn icon="o_add" outline label="Add Role" no-caps class="text-primary btnRounded" @click="onAdd" />
+          <q-btn v-can icon="o_add" outline label="Add Role" no-caps class="text-primary btnRounded" @click="onAdd" />
           <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.back()" />
         </div>
       </q-card-section>
@@ -27,14 +27,14 @@
               <div class="flex justify-between items-center">
                 <span class="text-h2 break-word" style="white-space: normal; word-break: break-word;">{{ role.name }}</span>
                 <div class="actions flex items-center">
-                  <q-icon
+                  <q-icon v-can
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
                     @click="onEdit(role.id)"
                   >
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     v-if="role.name !== 'Site Super Admin'"
                     name="o_delete_outline"
                     class="cursor-pointer"

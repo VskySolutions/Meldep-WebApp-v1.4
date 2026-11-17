@@ -51,13 +51,13 @@
               <div class="col-xs-12 col-sm-12 col-md-12">
                 <div class="q-mb-xs">Description</div>
                 <div class="text-black RichTextEditor">
-                  <p v-html="model.description" />
+                  <p v-safe-html="model.description" />
                 </div>
               </div>
               <div class="col-xs-12 col-sm-12 col-md-12">
                 <div class="q-mb-xs">Note</div>
                 <div class="text-black RichTextEditor">
-                  <p v-html="model.notes" />
+                  <p v-safe-html="model.notes" />
                 </div>
               </div>
             </div>

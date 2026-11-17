@@ -63,7 +63,7 @@
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-lg-12 col-sm-12 col-md-12">
                   <div class="q-mb-xs">Reason :</div>
-                  <div class="text-black RichTextEditor"><p v-html="model.reason" /></div>
+                  <div class="text-black RichTextEditor"><p v-safe-html="model.reason" /></div>
                 </div>
               </div>
               <!-- <div class="row q-col-gutter-x-md">

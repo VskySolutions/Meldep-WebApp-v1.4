@@ -14,6 +14,7 @@ using Vsky.Api.Models;
 namespace Vsky.Api.Controllers
 {
     [Route("infra-database")]
+    [RequireMenu(MenuLinks.InfraDatabase)]
     public class InfraDatabaseController : BaseController
     {
         #region Define Services
@@ -48,6 +49,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllInfraDatabaseForList
         // Description: This endpoint retrieves the list of infra database.
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllInfraDatabaseForList(InfraDatabaseSearchModel searchModel)
         {
             try
@@ -75,7 +77,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -84,6 +86,7 @@ namespace Vsky.Api.Controllers
         // Title: GetInfraDatabaseInDetailById
         // Description: This endpoint retrieves the details of a specific infra database based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.InfraDatabase))]
         public async Task<IActionResult> GetInfraDatabaseInDetailById(string id)
         {
             try
@@ -96,7 +99,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -163,7 +166,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
             return ModelStateError(ModelState);
         }
@@ -203,7 +206,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -246,7 +249,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -270,7 +273,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -279,6 +282,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteInfraDatabase
         // Description: This endpoint deletes a infra database based on the provided infra database ID. It first retrieves the infra database entity by ID, checks if it exists, and if so, deletes the infra database. If the infra database is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.InfraDatabase))]
         public async Task<IActionResult> DeleteInfraDatabase(string id)
         {
             try
@@ -294,7 +298,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

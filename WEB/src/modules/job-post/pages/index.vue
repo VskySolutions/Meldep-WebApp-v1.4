@@ -56,7 +56,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Create Job"
@@ -144,7 +144,7 @@
               >
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon 
+              <q-icon v-can 
                 name="o_edit" 
                 class="cursor-pointer q-mr-sm" 
                 size="xs" 
@@ -152,7 +152,7 @@
               >
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon 
+              <q-icon v-can 
                 name="o_delete_outline" 
                 class="cursor-pointer" 
                 color="negative" 

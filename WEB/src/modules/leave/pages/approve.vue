@@ -275,7 +275,7 @@
               <q-chip v-if="props.row.leaveStatuses.dropDownValue == 'Decline'" label="Decline" name="o_done" class="rounded q-px-lg" color="red-5" text-color="black" />
             </q-td>
             <q-td class="text-center" style="width: 8%;">{{ props.row.createdOnUtc }}</q-td>
-            <q-td style="width: 22%;"><div v-html="stripHTML(truncate(props.row.reason, 50))" /></q-td>
+            <q-td style="width: 22%;"><div v-safe-html="stripHTML(truncate(props.row.reason, 50))" /></q-td>
             <q-td style="width: 5%;" class="text-center actions">
               <q-icon v-if="props.row.leaveStatuses.dropDownValue == 'Sent to Approver'" name="o_check_box" class="cursor-pointer q-mr-sm" @click="onLeaveApprove(props.row.id, refreshApproveLeaveList)">
                 <q-tooltip>Leave Approve/Decline</q-tooltip>

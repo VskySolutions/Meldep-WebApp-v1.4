@@ -65,7 +65,7 @@
               <div class="col-12">
                 <div class="q-mb-xs">Memo</div>
                 <div class="text-black RichTextEditor">
-                  <p v-html="model.memo" />
+                  <p v-safe-html="model.memo" />
                 </div>
               </div>
               <div v-if="model.virtualpath" class="col-12 col-sm-4 col-md-4 ">
@@ -130,17 +130,17 @@
               </div>
               <div class="col-12 col-sm-4 col-md-4  q-pb-sm">
                 <div class="q-mb-xs">Approver Note</div>
-                <div class="text-black RichTextEditor" v-html="model.postApproverNote" />
+                <div class="text-black RichTextEditor" v-safe-html="model.postApproverNote" />
               </div>
               <div class="col-12 col-sm-4 col-md-4  q-pb-sm">
                 <div class="q-mb-xs">Pre Approver Note</div>
-                <div class="text-black RichTextEditor" v-html="model.preApproverNote" />
+                <div class="text-black RichTextEditor" v-safe-html="model.preApproverNote" />
               </div>
             </div>
             <div class="row">
               <div class="col-12 col-sm-4 col-md-4  q-pb-sm">
                 <div class="q-mb-xs">Paid By Note</div>
-                <div class="text-black RichTextEditor" v-html="model.paidByNote" />
+                <div class="text-black RichTextEditor" v-safe-html="model.paidByNote" />
               </div>
             </div>
           </fieldset>

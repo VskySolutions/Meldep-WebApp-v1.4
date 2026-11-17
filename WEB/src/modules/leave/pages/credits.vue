@@ -81,7 +81,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Add Leave Credits"
@@ -151,7 +151,7 @@
               {{ props.row.remainingLeaves }}
             </q-td>
             <q-td auto-width class="text-center actions">
-              <q-icon
+              <q-icon v-can
                 v-if="props.row.employeeActiveStatus"
                 name="o_edit"
                 :class="{ 'cursor-not-allowed text-grey': !props.row.employeeActiveStatus, 'cursor-pointer': props.row.employeeActiveStatus }"

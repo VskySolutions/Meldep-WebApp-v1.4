@@ -56,7 +56,7 @@
               <div class="col-12 col-md-12" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                 <div class="q-mb-xs">Instruction</div>
                 <div class="text-black RichTextEditor">
-                  <p v-html="model.instructions ? model.instructions : '-'" />
+                  <p v-safe-html="model.instructions ? model.instructions : '-'" />
                 </div>
               </div>
             </div>

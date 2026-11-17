@@ -67,7 +67,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Create Requirement Group" no-caps class="text-primary btnRounded" @click="onRequirementGroupAdd(refreshRequirementGroupList)" />
+                <q-btn v-can icon="o_add" outline label="Create Requirement Group" no-caps class="text-primary btnRounded" @click="onRequirementGroupAdd(refreshRequirementGroupList)" />
               </div>
             </div>
           </div>
@@ -123,13 +123,13 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onRequirementGroupView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon v-if="props.row.isEditable" name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onRequirementGroupEdit(props.row.id, refreshRequirementGroupList)">
+              <q-icon v-can v-if="props.row.isEditable" name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onRequirementGroupEdit(props.row.id, refreshRequirementGroupList)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
               <q-icon name="o_description" class="cursor-pointer q-mr-sm hidden" size="xs" @click="$router.push('/requirement?requirementGroupId='+props.row.id+'&&projectId='+props.row.projectId)">
                 <q-tooltip>Requirements</q-tooltip>
               </q-icon>
-              <q-icon v-if="props.row.isEditable" name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
+              <q-icon v-can v-if="props.row.isEditable" name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onDelete(props.row)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

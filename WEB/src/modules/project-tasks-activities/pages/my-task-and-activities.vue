@@ -556,7 +556,7 @@
                           class="q-ml-xs"
                         >
                           <q-tooltip v-if="activityProps.row.activityNameDescription" class="text-wrap break-words" max-width="300px">
-                            <div v-html="activityProps.row.activityNameDescription" />
+                            <div v-safe-html="activityProps.row.activityNameDescription" />
                           </q-tooltip>
                         </q-icon>
                       </q-td> -->
@@ -706,7 +706,7 @@
                               View
                           </q-tooltip>
                         </q-icon>
-                        <q-icon
+                        <q-icon v-can
                           v-if="!isViewer || (isViewer && activityProps.row.isEditable)"
                           name="o_edit"
                           class="cursor-pointer q-mr-sm"
@@ -749,7 +749,7 @@
                             :label="activityProps.row.activitiesCount"
                           />
                         </a>
-                        <q-icon
+                        <q-icon v-can
                           name="o_delete_outline"
                           class="cursor-pointer q-mr-sm hidden"
                           color="negative"

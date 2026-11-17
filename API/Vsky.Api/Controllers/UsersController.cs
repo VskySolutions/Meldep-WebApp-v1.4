@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,7 @@ namespace Vsky.Api.Controllers
 {
     [Route("users")]
     //[Authorize(Roles = Roles.Administrator + "," + Roles.SuperAdmin)]
+    [RequireMenu(MenuLinks.UserManagement + "|" + MenuLinks.Sites)]
     public class UsersController : BaseController
     {
         #region Fields
@@ -85,6 +87,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllCompanies
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllUsersList(UserSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -114,12 +117,16 @@ namespace Vsky.Api.Controllers
 
 
         [HttpPut("updateUserStatus/{id}")]
-        public async Task<IActionResult> UpdateUserStatus(string id)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> UpdateUserStatus(string id, [FromServices] AdminAccess adminAccess)
         {
             try
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = _globalVariable.SiteId;
+                if (!await adminAccess.CanManageUserAsync(LoggedUserId, id, SiteId))
+                    return AdminDenied.Result();
+
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
@@ -163,7 +170,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -216,12 +223,20 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser(UserModel model)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> CreateUser(UserModel model, [FromServices] AdminAccess adminAccess)
         {
             if (ModelState.IsValid)
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
                 var SiteId = string.IsNullOrWhiteSpace(model.SiteId) ?  _globalVariable.SiteId : model.SiteId;
+                if (!await adminAccess.CanAdministerSiteAsync(LoggedUserId, SiteId))
+                    return AdminDenied.Result();
+
+                var roleError = await adminAccess.ValidateGrantableSiteRolesAsync(LoggedUserId, SiteId, model.SiteRoleIds);
+                if (roleError != null)
+                    return BadRequest(new BadRequestError(roleError));
+
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
@@ -326,6 +341,7 @@ namespace Vsky.Api.Controllers
                     }
 
                     await _db.SaveChangesAsync();
+                    LogRoleChange(user.Id, SiteId, new List<string>(), siteRolesList.Select(x => x.ApplicationRole?.Id).ToList());
 
                     //var userrole = await _roleManager.FindByNameAsync(Roles.Employee);
 
@@ -334,7 +350,7 @@ namespace Vsky.Api.Controllers
                     if (model.SendEmail)
                         await _workflowMessageService.SendWelcomeEmail(user, password);
 
-                    return Ok(new { password });
+                    return Ok(new { }); // Never the password: it's delivered by email, and the web app doesn't read it here.
                 }
                 else
                 {
@@ -345,7 +361,8 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(string id, UserModel model)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> UpdateUser(string id, UserModel model, [FromServices] AdminAccess adminAccess)
         {
             try
             {
@@ -354,6 +371,13 @@ namespace Vsky.Api.Controllers
                 {
                     var LoggedUserId = User.GetLoggedInUserId<string>();
                     var SiteId = _globalVariable.SiteId;
+                    if (!await adminAccess.CanManageUserAsync(LoggedUserId, id, SiteId))
+                        return AdminDenied.Result();
+
+                    var roleError = await adminAccess.ValidateGrantableSiteRolesAsync(LoggedUserId, SiteId, model.SiteRoleIds);
+                    if (roleError != null)
+                        return BadRequest(new BadRequestError(roleError));
+
                     var SiteData = await _siteService.GetById(SiteId);
                     var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
@@ -411,6 +435,7 @@ namespace Vsky.Api.Controllers
 
                         //}
 
+                        var rolesBefore = await _applicationUserRoleService.GetRoleIdsByUserAndSite(user.Id, SiteId);
                         // Remove existing roles for current site
                         await _applicationUserRoleService.RemoveAllUserRolesAsync(
                             user.Id,
@@ -432,6 +457,7 @@ namespace Vsky.Api.Controllers
                         }
 
                         await _db.SaveChangesAsync();
+                        LogRoleChangeIfDifferent(user.Id, SiteId, rolesBefore, siteRoles.Select(x => x.ApplicationRole?.Id).ToList());
 
                         return NoContent();
                     }
@@ -445,15 +471,19 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(string id)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> DeleteUser(string id, [FromServices] AdminAccess adminAccess)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
             var SiteId = _globalVariable.SiteId;
+            if (!await adminAccess.CanManageUserAsync(LoggedUserId, id, SiteId))
+                return AdminDenied.Result();
+
             var SiteData = await _siteService.GetById(SiteId);
             var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);
 
@@ -487,8 +517,12 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("{id}/reset-password")]
-        public async Task<IActionResult> ResetPassword(string id)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> ResetPassword(string id, [FromServices] AdminAccess adminAccess)
         {
+            if (!await adminAccess.CanManageUserAsync(User.GetLoggedInUserId<string>(), id, _globalVariable.SiteId))
+                return AdminDenied.Result();
+
             var user = await _userManager.FindByIdAsync(id);
 
             if (user == null || user.Deleted)
@@ -504,7 +538,7 @@ namespace Vsky.Api.Controllers
             {
                 await _workflowMessageService.SendResetPasswordEmail(user, password);
 
-                return Ok(new { password });
+                return Ok(new { }); // Never the password: it's delivered by email, and the web app doesn't read it here.
             }
             else
             {
@@ -516,6 +550,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllUserFirstNameListForDropdown
         [HttpGet("dropdown/firstnamelist")]
+        [SiteMember]
         public async Task<IActionResult> GetAllUserFirstNameListForDropdown()
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -528,6 +563,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllUserLastNameListForDropdown
         [HttpGet("dropdown/lastnamelist")]
+        [SiteMember]
         public async Task<IActionResult> GetAllUserLastNameListForDropdown()
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -540,6 +576,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllUserListForDropdown
         [HttpGet("dropdown/userlist/{siteId}/{flag}")]
+        [SiteMember]
         public async Task<IActionResult> GetAllUserListForDropdown(string siteId, string flag = null)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -555,6 +592,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllUserListByRoleForDropdown
         // Description: This endpoint retrieves the list of user. 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllUserListByRoleForDropdown(string roleName)
         {
             try
@@ -567,13 +605,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         // Title: GetSupportTeamUsersData
         // Description: This endpoint retrieves the list of user. 
         [HttpGet("team-workload-dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetSupportTeamUsersData(string roleName)
         {
             try
@@ -586,15 +625,57 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region SendUserLoginDetails
-        [HttpPost("{id}/send-user-login")]
-        public async Task<IActionResult> SendUserLoginDetails(string id)
+        // Same row as the Security Admin screens write, so role changes appear together in the audit log.
+        private void LogRoleChange(string userId, string siteId, List<string> before, List<string> after)
         {
+            HttpContext.RequestServices.GetRequiredService<SecurityLog>().Write(Vsky.Models.LogLevel.Warning, "Permission change", System.Text.Json.JsonSerializer.Serialize(new
+            {
+                action = "user-roles",
+                siteId,
+                actorId = User.GetLoggedInUserId<string>(),
+                targetType = "user",
+                targetId = userId,
+                before,
+                after
+            }));
+        }
+
+        private void LogRoleChangeIfDifferent(string userId, string siteId, List<string> before, List<string> after)
+        {
+            if (!before.OrderBy(x => x).SequenceEqual(after.OrderBy(x => x)))
+                LogRoleChange(userId, siteId, before, after);
+        }
+
+        // Ends all of a user's sessions, for example after a suspected compromise.
+        [HttpPost("{id}/revoke-sessions")]
+        [RequireSiteAdmin]
+        public async Task<IActionResult> RevokeUserSessions(string id, [FromServices] AdminAccess adminAccess)
+        {
+            if (!await adminAccess.CanManageUserAsync(User.GetLoggedInUserId<string>(), id, _globalVariable.SiteId))
+                return AdminDenied.Result();
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null || user.Deleted)
+                return BadRequest(new BadRequestError("No user was found with the specified id."));
+
+            await _userManager.UpdateSecurityStampAsync(user);
+            HttpContext.RequestServices.GetRequiredService<SecurityLog>().Write(Vsky.Models.LogLevel.Warning, "Sessions revoked", System.Text.Json.JsonSerializer.Serialize(new { siteId = _globalVariable.SiteId, actorId = User.GetLoggedInUserId<string>(), targetId = id }));
+            return NoContent();
+        }
+
+        [HttpPost("{id}/send-user-login")]
+        [RequireSiteAdmin]
+        public async Task<IActionResult> SendUserLoginDetails(string id, [FromServices] AdminAccess adminAccess)
+        {
+            if (!await adminAccess.CanManageUserAsync(User.GetLoggedInUserId<string>(), id, _globalVariable.SiteId))
+                return AdminDenied.Result();
+
             var user = await _userManager.FindByIdAsync(id);
             if (user == null || user.Deleted)
                 return BadRequest(new BadRequestError("No user was found with the specified id."));
@@ -606,7 +687,7 @@ namespace Vsky.Api.Controllers
             {
                 await _workflowMessageService.SendWelcomeEmail(user, password);
 
-                return Ok(new { password });
+                return Ok(new { }); // Never the password: it's delivered by email, and the web app doesn't read it here.
             }
             else
             {

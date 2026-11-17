@@ -16,6 +16,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("project-questions-answers")]
+    [RequireMenu(MenuLinks.ProjectWork)]
     public class ProjectQuestionsAnswerController : BaseController
     {
         #region Define Services and Initializations
@@ -46,6 +47,7 @@ namespace Vsky.Api.Controllers
         #endregion
 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectQuestionsAnswers(ProjectQuestionsAnswersSearchModel searchModel)
         {
             try
@@ -81,11 +83,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpGet("details/{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectQuestionsAnswers))]
+        [SiteOwned(typeof(Vsky.Models.ProjectQuestionsAnswers))]
         public async Task<IActionResult> GetProjectQuestionsAnswerByIdInDetail(string id)
         {
             try
@@ -100,7 +104,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -123,7 +127,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -233,7 +237,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -242,6 +246,8 @@ namespace Vsky.Api.Controllers
         // Title: UpdateProjectQuestionsAnswer
         // Description: This endpoint updates an existing project questions answer by its ID. 
         [HttpPut("{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectQuestionsAnswers))]
+        [SiteOwned(typeof(Vsky.Models.ProjectQuestionsAnswers))]
         public async Task<IActionResult> UpdateProjectQuestionsAnswer(string id, SaveProjectQuestionsAnswers model)
         {
             try
@@ -554,12 +560,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         [HttpDelete("{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectQuestionsAnswers))]
+        [SiteOwned(typeof(Vsky.Models.ProjectQuestionsAnswers))]
         public async Task<IActionResult> DeleteProjectQuestionsAnswer(string id)
         {
             try
@@ -577,7 +585,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
     }

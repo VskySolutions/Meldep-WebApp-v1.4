@@ -28,6 +28,7 @@ using Vsky.Services.Users;
 namespace Vsky.Api.Controllers
 {
     [Route("daily-planner")]
+    [RequireMenu(MenuLinks.DailyPlanner)]
     public class DailyPlannerController : BaseController
     {
         #region Define Services
@@ -78,6 +79,8 @@ namespace Vsky.Api.Controllers
         // Title: Get latest Three DailyPlanner data
         // Description: This endpoint fetches a list of daily planners 
         [HttpPost("Dashboardlist")]
+        [ReadAccess]
+        [RequireMenu(MenuLinks.Dashboard + "|" + MenuLinks.DailyPlanner)]
         public IActionResult GetAllDailyPlannerForDashboard(DailyPlannerSearchModel searchModel)
         {
             try
@@ -98,7 +101,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -107,6 +110,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All DailyPlanner
         // Description: This endpoint fetches a list of daily planners based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllDailyPlanner(DailyPlannerSearchModel searchModel)
         {
             try
@@ -210,7 +214,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -219,6 +223,7 @@ namespace Vsky.Api.Controllers
         // Title: GetDailyPlannerById
         // Description: This endpoint retrieves the details of a specific planner based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.DailyPlanner))]
         public async Task<IActionResult> GetDailyPlannerById(string id)
         {
             // Fetch the daily planner entity by its ID from the service
@@ -352,6 +357,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
                 return ModelStateError(ModelState);
             }
             return ModelStateError(ModelState);
@@ -362,6 +368,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateDailyPlanner
         // Description: This endpoint updates an existing daily plan by its ID. It validates the daily planner model, updates the dailyplanner's details.
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.DailyPlanner))]
         public async Task<IActionResult> UpdateDailyPlanner(string id, DailyPlannerModel model)
         {
             try
@@ -560,6 +567,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -569,6 +577,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteDailyPlanner
         // Description: This endpoint deletes a daily planner based on the provided daily planner ID. It first retrieves the daily planner entity by ID, checks if it exists, and if so, deletes the daily planner. If the daily planner is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.DailyPlanner))]
         public async Task<IActionResult> DeleteDailyPlanner(string id)
         {
             try
@@ -602,7 +611,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -164,6 +164,7 @@
               <div class="q-ml-xs">
                 <q-btn
                   v-if="!isViewer"
+                  v-can="'/test-case'"
                   icon="o_add"
                   outline
                   label="Create Test Case"
@@ -428,6 +429,7 @@
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
                     size="xs"
+                    v-can="'/test-case'"
                     @click="onTestCaseEdit(props.row.id, refreshTestCaseList)"
                   >
                     <q-tooltip>Edit</q-tooltip>
@@ -438,6 +440,7 @@
                     class="cursor-pointer"
                     color="negative"
                     size="xs"
+                    v-can="'/test-case'"
                     @click="onSubmitTestCaseDelete(props.row.id, props.row.name, refreshTestCaseList)"
                   >
                     <q-tooltip>Delete</q-tooltip>

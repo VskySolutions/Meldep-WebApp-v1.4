@@ -13,7 +13,7 @@
           <div class="note-wrapper">
             <div
               class="text-black note-text"
-              v-html="responseLogDescription.description || ''"
+              v-safe-html="responseLogDescription.description || ''"
             />
           </div>
         </div>

@@ -208,7 +208,7 @@
             <q-td class="text-left common-q-td"><span v-if="preProjectTaskName !== props.row.task.name" :set="preProjectTaskName = props.row.task.name">{{ props.row.task.name }}</span></q-td>
             <q-td class="text-center">{{ props.row.timesheet.timesheetDate }}</q-td>
             <q-td class="text-left common-q-td">{{ props.row.projectActivity.name }}</q-td>
-            <q-td class="RichTextEditor common-q-td"><div v-html="props.row.description" /></q-td>
+            <q-td class="RichTextEditor common-q-td"><div v-safe-html="props.row.description" /></q-td>
             <q-td class="text-left common-q-td">{{ props.row.timesheet.user.person.fullName }}</q-td>
             <q-td class="text-right" style="width: 5%;">{{ props.row.hours }}</q-td>
             <q-td class="text-right" style="width: 10%;">

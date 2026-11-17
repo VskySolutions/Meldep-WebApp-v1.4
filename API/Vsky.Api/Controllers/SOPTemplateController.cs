@@ -20,6 +20,7 @@ using Vsky.Services.SOPTemplates;
 namespace Vsky.Api.Controllers
 {
     [Route("sop-template")]
+    [RequireMenu(MenuLinks.SopTemplate)]
     public class SOPTemplateController : BaseController
     {
         #region Define Services and Initializations
@@ -59,6 +60,7 @@ namespace Vsky.Api.Controllers
         #endregion
 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllSOPTemplates(SOPTemplateSearchModel searchModel)
         {
             try
@@ -78,7 +80,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -86,6 +88,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllSOPTemplateListForDropdown
         // Description: This endpoint retrieves the details of a specific template based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllSOPTemplateListForDropdown()
         {
             try
@@ -98,12 +101,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.SOPTemplate))]
         public IActionResult GetSOPTemplateById(string id)
         {
             try
@@ -121,11 +125,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.SOPTemplate))]
         public IActionResult GetSOPTemplateByIdInDetail(string id)
         {
             try
@@ -142,7 +147,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -310,11 +315,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.SOPTemplate))]
         public async Task<IActionResult> DeleteSOPTemplate(string id)
         {
             try
@@ -335,7 +341,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
     }

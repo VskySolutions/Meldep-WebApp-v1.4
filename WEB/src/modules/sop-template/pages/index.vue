@@ -75,7 +75,7 @@
                 :selected-field="selectedField"
               />
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Template" no-caps class="text-primary btnRounded" @click="onSOPTemplateAdd(refreshSOPTemplateList)" />
+                <q-btn v-can icon="o_add" outline label="Add Template" no-caps class="text-primary btnRounded" @click="onSOPTemplateAdd(refreshSOPTemplateList)" />
                 <q-btn
                   v-if="role === 'admin'"
                   icon="o_playlist_add"
@@ -147,10 +147,10 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onSOPTemplateView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onSOPTemplateEdit(props.row.id, refreshSOPTemplateList)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onSOPTemplateEdit(props.row.id, refreshSOPTemplateList)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitSOPTemplateDelete(props.row.id, props.row.name, refreshSOPTemplateList)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitSOPTemplateDelete(props.row.id, props.row.name, refreshSOPTemplateList)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

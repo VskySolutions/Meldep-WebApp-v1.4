@@ -300,7 +300,7 @@
                   <div class="col-12">
                     <div class="q-mb-xs"><label>Identification Note</label></div>
                     <div class="form-group text-black RichTextEditor">
-                      <p v-html="model.identificationNote ? model.identificationNote : '-' "></p>
+                      <p v-safe-html="model.identificationNote ? model.identificationNote : '-' "></p>
                     </div>
                   </div>
                 </div>

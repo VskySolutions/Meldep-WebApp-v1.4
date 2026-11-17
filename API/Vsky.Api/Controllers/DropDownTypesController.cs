@@ -20,6 +20,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("drop-downs-type")]
+    [RequireMenu(MenuLinks.DropdownTypes)]
     public class DropDownTypesController : BaseController
     {
         #region Define Services
@@ -53,6 +54,8 @@ namespace Vsky.Api.Controllers
         // Title: Get All DropDownTypes
         // Description: This endpoint fetches a list of DropDowns based on the provided search criteria such as dropdown type, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
+        [SiteMember]
         public IActionResult GetAllDropDownTypes(DropDownTypeSearchModel searchModel)
         {
             try
@@ -81,7 +84,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -90,6 +93,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllDropDownTypeListForDropdown
         // Description: This endpoint retrieves the list of dropDown Types. 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllDropDownTypeListForDropdown()
         {
             try
@@ -102,7 +106,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -111,6 +115,7 @@ namespace Vsky.Api.Controllers
         // Title: GetDropDownTypeById
         // Description: This endpoint retrieves the details of a specific Dropdown type based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [SiteMember]
         public async Task<IActionResult> GetDropDownTypeById(string id)
         {
             
@@ -127,6 +132,7 @@ namespace Vsky.Api.Controllers
         // Title: GetDropdownTypeByGroupName
         // Description: This endpoint retrieves all dropdown types under the specified group name. 
         [HttpGet("dropDownTypeByGroupName")]
+        [SiteMember]
         public async Task<IActionResult> GetDropdownTypeByGroupName(string groupName)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -142,6 +148,7 @@ namespace Vsky.Api.Controllers
         // Title: GetDropdownByTypeId
         // Description: This endpoint retrieves all dropdown values for the specified dropdown type ID.
         [HttpGet("dropDownValueByTypeId")]
+        [SiteMember]
         public async Task<IActionResult> GetDropdownByTypeId(string typeId)
         {
             var list = await _dropDownService.GetDropDowns(typeId);
@@ -158,6 +165,8 @@ namespace Vsky.Api.Controllers
         // Title: GetDropdownByTypeIds
         // Description: This endpoint retrieves all dropdown values for the specified dropdown type IDs.
         [HttpPost("dropDownValuesByTypeIds")]
+        [ReadAccess]
+        [SiteMember]
         public async Task<IActionResult> GetDropdownByTypeIds(
             [FromBody] List<string> typeIds)
         {
@@ -182,6 +191,7 @@ namespace Vsky.Api.Controllers
         // Title: GetDropdownTypeByModuleName
         // Description: This endpoint retrieves all dropdown types associated with a given module name.
         [HttpGet("dropDownTypeByModuleName")]
+        [SiteMember]
         public async Task<IActionResult> GetDropdownTypeByModuleName(string moduleName)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -197,6 +207,7 @@ namespace Vsky.Api.Controllers
         // Title: GetDropdownTypesByIdAndGroupName
         // Description: This endpoint retrieves dropdown types by group name or a single type by ID. 
         [HttpGet("{id}/{groupName}")]
+        [SiteMember]
         public async Task<IActionResult> GetDropdownTypesByIdAndGroupName(string id, string groupName)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -219,7 +230,7 @@ namespace Vsky.Api.Controllers
         #region Get
         // Title: Get
         // Description: This endpoint retrieves the details of a specific Dropdown value based on its unique identifier (ID). 
-        [AllowAnonymous]
+        [SiteMember]
         [HttpGet("list")]
         public async Task<IActionResult> Get(string type)
         {
@@ -244,6 +255,7 @@ namespace Vsky.Api.Controllers
         // Title: GetDropdownForSite
         // Description: This endpoint retrieves the details of a specific Dropdown value based on its  on the siteId and type.
         [HttpGet("dropdownlist")]
+        [SiteMember]
         public async Task<IActionResult> GetDropdownForSite(string siteId, string type)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -286,6 +298,7 @@ namespace Vsky.Api.Controllers
 
 
         [HttpGet("dropdown-list/by-button")]
+        [SiteMember]
         public async Task<IActionResult> GetDropdownByButton(string buttonType, string type)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -336,7 +349,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -405,7 +418,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -542,7 +555,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

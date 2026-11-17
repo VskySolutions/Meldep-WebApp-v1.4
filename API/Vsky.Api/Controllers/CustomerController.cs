@@ -26,6 +26,7 @@ using System.Diagnostics;
 namespace Vsky.Api.Controllers
 {
     [Route("customer")]
+    [RequireMenu(MenuLinks.Customer)]
     public class CustomerController : BaseController
     {
         #region Services Initialization
@@ -62,6 +63,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllCustomers
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllCustomers(CompanyClientsSearchModel searchModel)
         {
             try
@@ -143,7 +145,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -272,7 +274,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -395,7 +397,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -440,7 +442,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -461,7 +463,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -470,6 +472,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllCustomerContactListForDropdown
         // Description: This endpoint retrieves the details of a specific project based on its unique identifier (ID). 
         [HttpGet("contactdropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllCustomerContactListForDropdown(string siteId)
         {
             try
@@ -484,7 +487,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -493,6 +496,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllClientListForDropdown
         // Description: This endpoint retrieves the list of Client For Dropdown
         [HttpGet("customerdropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllClientListForDropdown()
         {
             try
@@ -505,13 +509,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllParentCustomerListForDropdown
         [HttpGet("parentCustomerList/dropdownlist")]
+        [SiteMember]
         [HttpGet("parentCustomerList/dropdownlist/{customerId?}")]
         public async Task<IActionResult> GetAllParentCustomerListForDropdown(string customerId = null)
         {
@@ -525,12 +530,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
 
         [HttpGet("parentCustomerList/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllParentCustomerList(string customerId = null)
         {
             try
@@ -543,7 +549,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -552,6 +558,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllContactListForDropdown
         // Description: This endpoint retrieves the list of company contacts For Dropdown. 
         [HttpGet("companycontactdropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllContactListForDropdown(string customerId = null)
         {
             try
@@ -564,7 +571,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -573,6 +580,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllContactListByCompanyIdForDropdown
         // Description: This endpoint retrieves the list of company contacts For Dropdown. 
         [HttpGet("contactlistbycompanyidFordropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllContactListByCompanyIdForDropdown(string companyId = null)
         {
             try
@@ -585,11 +593,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpGet("companyContactlistFordropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllCompanyContactList(string customerId = null)
         {
             try
@@ -603,13 +612,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllCompanyListForCustomerDropdown
         [HttpGet("companyCustomerDropdownList")]
+        [SiteMember]
         public async Task<IActionResult> GetAllCompanyListForCustomerDropdown()
         {
             try
@@ -622,7 +632,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

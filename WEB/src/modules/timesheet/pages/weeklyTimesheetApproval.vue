@@ -216,7 +216,7 @@
                         />
                       </q-td>
                       <q-td class="common-q-td" style="width: 40%;">
-                        <p v-html="lineProps.row.description" class="q-ma-none" />
+                        <p v-safe-html="lineProps.row.description" class="q-ma-none" />
                       </q-td>
                     </q-tr>
                   </template>

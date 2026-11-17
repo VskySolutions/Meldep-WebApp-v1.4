@@ -62,7 +62,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Advance Expense" no-caps class="text-primary btnRounded" @click="onAdvanceExpenseAdd(refreshAdvanceExpenseList)" />
+                <q-btn v-can icon="o_add" outline label="Add Advance Expense" no-caps class="text-primary btnRounded" @click="onAdvanceExpenseAdd(refreshAdvanceExpenseList)" />
               </div>
             </div>
           </div>
@@ -119,7 +119,7 @@
                   <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" @click="onAdvanceExpenseView(props.row.id, false, refreshAdvanceExpenseList)">
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
-                  <q-icon name="o_edit" class="cursor-pointer q-mr-sm" :class="['Draft', 'Submitted'].includes(props.row.advanceExpenseStatus) ? '' : 'hidden'" @click="onAdvanceExpenseEdit(props.row.id, refreshAdvanceExpenseList)">
+                  <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" :class="['Draft', 'Submitted'].includes(props.row.advanceExpenseStatus) ? '' : 'hidden'" @click="onAdvanceExpenseEdit(props.row.id, refreshAdvanceExpenseList)">
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
                   <q-icon
@@ -139,7 +139,7 @@
                   >
                     <q-tooltip>Data Change Log</q-tooltip>
                   </q-icon>
-                  <q-icon name="o_delete_outline" class="cursor-pointer" :class="(props.row.advanceExpenseStatus === 'Draft' ) ? '' : 'hidden'" color="negative" @click="onSubmitAdvanceExpenseDelete(props.row.id, props.row.referenceId, refreshAdvanceExpenseList)">
+                  <q-icon v-can name="o_delete_outline" class="cursor-pointer" :class="(props.row.advanceExpenseStatus === 'Draft' ) ? '' : 'hidden'" color="negative" @click="onSubmitAdvanceExpenseDelete(props.row.id, props.row.referenceId, refreshAdvanceExpenseList)">
                     <q-tooltip>Delete</q-tooltip>
                   </q-icon>
                 </div>

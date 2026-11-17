@@ -46,7 +46,7 @@
                 Attribute
               </div>
               <div class="row q-gutter-sm">
-                <q-btn
+                <q-btn v-can
                   color="primary"
                   icon="o_add"
                   label="Add"
@@ -201,7 +201,7 @@
                   </div>
                 </div>
               </div>
-              <q-btn
+              <q-btn v-can
                 v-if="selectedItemSubcategoryAttribute.name"
                 color="primary"
                 icon="o_add"
@@ -433,7 +433,7 @@
                         size="xs"
                         @click="onViewItemSubcategoryAttributeValue(itemSubcategoryAttributeValue.id)"
                       />
-                      <q-icon
+                      <q-icon v-can
                         name="o_delete"
                         color="negative"
                         size="xs"

@@ -19,6 +19,7 @@ using static Vsky.Api.Models.SalesPersonModel;
 namespace Vsky.Api.Controllers
 {
     [Route("salesperson")]
+    [RequireMenu(MenuLinks.Lead)]
     public class SalesPersonController : BaseController
     {
         #region Services Initialization
@@ -47,6 +48,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllSalesPersons
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllSalesPersons([FromQuery] SalesPersonSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -118,6 +120,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }

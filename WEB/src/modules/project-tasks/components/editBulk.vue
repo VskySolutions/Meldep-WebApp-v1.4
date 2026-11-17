@@ -158,7 +158,7 @@
                         :class="props.row.deleted ? 'text-delete' : ''"
                         style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 28% !important;"
                       >
-                        <p class="q-mb-none" v-html="props.row.name" />
+                        <p class="q-mb-none" v-safe-html="props.row.name" />
                       </span>
                     </q-td>
                     <q-td class="text-left">
@@ -223,7 +223,7 @@
                         ]"
                         style="width: 400px;"
                       />
-                      <span v-if="mode !== 'edit' || props.row.id !== activeBulkRowId" :class="props.row.deleted ? 'text-delete RichTextEditor' : 'normal-text RichTextEditor'" v-html="props.row.description" />
+                      <span v-if="mode !== 'edit' || props.row.id !== activeBulkRowId" :class="props.row.deleted ? 'text-delete RichTextEditor' : 'normal-text RichTextEditor'" v-safe-html="props.row.description" />
                     </q-td>
                     <q-td auto-width class="text-center">
                       <template v-if="mode == 'edit' && editingRow && props.row.id === activeBulkRowId">

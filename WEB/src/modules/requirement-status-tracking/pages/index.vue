@@ -99,7 +99,7 @@
                 </div>
               </div>
               <div class="row items-center q-gutter-sm q-ml-xs no-wrap">
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline
@@ -365,7 +365,7 @@
                     >
                       <q-tooltip>{{ isViewer ? "View" : "Edit" }} tracking record ({{ props.row.recordRowCount }} requirement row(s))</q-tooltip>
                     </q-icon>
-                    <q-icon
+                    <q-icon v-can
                       v-if="!isViewer"
                       name="o_delete_outline"
                       class="cursor-pointer"

@@ -72,7 +72,7 @@
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">
                     <div class="q-mb-xs">Description</div>
-                    <p class="q-pt-md text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
+                    <p class="q-pt-md text-black RichTextEditor" v-safe-html="model.description ? model.description : '-'" />
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">

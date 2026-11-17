@@ -19,11 +19,11 @@ export default {
   resetPassword (model) {
     return http2.post("/auth/reset-password", model).then(response => response.data);
   },
-  getUser (userid) {
-    return http2.get(`/auth/user/?userid=${userid}`).then(response => response.data);
+  getResetLinkUser (userId, token) {
+    return http2.post("/auth/user", { userId, token }).then(response => response.data);
   },
   getUserByToken (token) {
-    return http2.get("/auth/user-by-token?token=" + token).then(response => response.data);
+    return http2.post("/auth/user-by-token", { token }).then(response => response.data);
   }
 };
 

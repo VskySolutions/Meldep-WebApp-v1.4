@@ -124,7 +124,7 @@
                 </div>
               </div>
               <div class="q-gutter-md">
-                <q-btn icon="o_add" outline label="Assign Bulk" no-caps class="text-primary btnRounded q-ml-lg" @click="onAssignBulkUsers">
+                <q-btn v-can icon="o_add" outline label="Assign Bulk" no-caps class="text-primary btnRounded q-ml-lg" @click="onAssignBulkUsers">
                   <q-tooltip>Assign Bulk</q-tooltip>
                 </q-btn>
                 <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-md" @click="$router.back()" />

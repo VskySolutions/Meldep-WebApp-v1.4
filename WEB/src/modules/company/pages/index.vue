@@ -80,7 +80,7 @@
                 </q-card>
               </q-menu>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Company" no-caps class="text-primary btnRounded" @click="onCompanyAdd(refreshCompanyNameDropdown, refreshCompanyList)" />
+                <q-btn v-can icon="o_add" outline label="Add Company" no-caps class="text-primary btnRounded" @click="onCompanyAdd(refreshCompanyNameDropdown, refreshCompanyList)" />
                 <q-btn v-if="role === 'admin'" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
@@ -183,7 +183,7 @@
               >
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
                 @click="onCompanyEdit(props.row.id, refreshCompanyList)"
@@ -207,7 +207,7 @@
                   :label="props.row.companyCount"
                 />
               </a>
-              <q-icon
+              <q-icon v-can
                 v-if="props.row.status.dropDownValue !== 'Converted'"
                 name="o_delete_outline"
                 class="cursor-pointer"

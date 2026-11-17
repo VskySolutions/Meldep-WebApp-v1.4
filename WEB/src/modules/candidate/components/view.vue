@@ -242,7 +242,7 @@
                   <div class="col-lg-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Experience Details</div>
                     <div class="text-black RichTextEditor">
-                      <p v-html="model.experienceDetails ? model.experienceDetails : '-'" />
+                      <p v-safe-html="model.experienceDetails ? model.experienceDetails : '-'" />
                     </div>
                   </div>
                 </div>
@@ -250,7 +250,7 @@
                   <div class="col-lg-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Notes</div>
                     <div class="text-black RichTextEditor">
-                      <p v-html="model.notes ? model.notes : '-'" />
+                      <p v-safe-html="model.notes ? model.notes : '-'" />
                     </div>
                   </div>
                 </div>

@@ -97,7 +97,7 @@
                 </div>
               </div>
               <div class="row items-center q-gutter-sm q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline
@@ -211,7 +211,7 @@
                   {{ props.row.requirementTitle }}
                 </q-td>
                 <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
-                  <q-icon
+                  <q-icon v-can
                     v-if="!isViewer"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
@@ -219,7 +219,7 @@
                   >
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     name="o_delete_outline"
                     class="cursor-pointer"
                     color="negative"
@@ -297,7 +297,7 @@
                   {{ mapping.integrationDirection.dropDownValue }}
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('note')" class="RichTextEditor common-q-td hidden">
-                  <div v-html="mapping.requirementDataMappingNotes[0]?.note" />
+                  <div v-safe-html="mapping.requirementDataMappingNotes[0]?.note" />
                 </q-td>
                 <q-td
                   v-if="selectedColumnNames.includes('createdBy.person.firstName')"

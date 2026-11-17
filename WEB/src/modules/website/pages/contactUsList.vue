@@ -184,10 +184,10 @@
               {{ props.row.email }}
             </q-td>
             <q-td style="width: 20%; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-              <div class="RichTextEditor" v-html="props.row.title" />
+              <div class="RichTextEditor" v-safe-html="props.row.title" />
             </q-td>
             <q-td style="width: 35%; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
-              <div class="RichTextEditor" v-html="props.row.message" />
+              <div class="RichTextEditor" v-safe-html="props.row.message" />
             </q-td>
             <q-td style="width: 10%;">
               {{ props.row.source }}

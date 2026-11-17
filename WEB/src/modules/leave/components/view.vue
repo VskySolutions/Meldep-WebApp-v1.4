@@ -75,7 +75,7 @@
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-lg-12 col-sm-6 col-md-6">
                 <div class="q-mb-xs">Reason</div>
-                <div class="text-black"><p v-html="model.reason ? model.reason : '-'" /></div>
+                <div class="text-black"><p v-safe-html="model.reason ? model.reason : '-'" /></div>
               </div>
             </div>
           </fieldset>
@@ -83,7 +83,7 @@
             <legend>HR Note</legend>
             <div class="row q-col-gutter-x-md">
               <div class="col-lg-12 col-sm-6 col-md-6">
-                <div class="text-black break-word"><p v-html="model.hrNote ? model.hrNote : '-'" /></div>
+                <div class="text-black break-word"><p v-safe-html="model.hrNote ? model.hrNote : '-'" /></div>
               </div>
             </div>
           </fieldset>
@@ -91,10 +91,10 @@
             <legend>Approver Note</legend>
             <div class="row q-col-gutter-x-md">
               <div class="col-lg-12 col-sm-6 col-md-6">
-                <div class="text-black break-word"><p v-html="model.approverNote ? model.approverNote : '-'" /></div>
+                <div class="text-black break-word"><p v-safe-html="model.approverNote ? model.approverNote : '-'" /></div>
               </div>
               <!-- <div class="col-lg-12">
-                    <p class="text-black leavenote break-word" v-html="model.approverNote ? model.approverNote : '-'"></p>
+                    <p class="text-black leavenote break-word" v-safe-html="model.approverNote ? model.approverNote : '-'"></p>
                   </div> -->
             </div>
           </fieldset>

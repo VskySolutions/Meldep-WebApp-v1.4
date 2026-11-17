@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 namespace Vsky.Api.Controllers
 {
     [Route("sites-items")]
+    [SiteMember]
     public class SitesItemsController : BaseController
     {
         #region Define Services
@@ -56,6 +57,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Sites Item List
         // Description: This endpoint fetches a list of issue based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllSitesItemList(SitesItemsSearchModel searchModel)
         {
             try
@@ -84,7 +86,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -93,6 +95,7 @@ namespace Vsky.Api.Controllers
         // Title: GetSitesItemDetailsById
         // Description: This endpoint retrieves the details of a specific site item based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.SitesItems))]
         public async Task<IActionResult> GetSitesItemDetailsById(string id)
         {
             try
@@ -107,7 +110,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -213,7 +216,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -222,6 +225,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateSitesItem
         // Description: This endpoint updates an existing item category by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.SitesItems))]
         public async Task<IActionResult> UpdateSitesItem(string id, [FromBody] SaveSitesItem model)
         {
             try
@@ -342,7 +346,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -351,6 +355,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteSitesItem
         // Description: This endpoint deletes a sites item based on the provided id. It first retrieves the sites item entity by ID, checks if it exists, and if so, deletes the  sites item. If the  sites item is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.SitesItems))]
         public async Task<IActionResult> DeleteSitesItem(string id)
         {
             try
@@ -366,7 +371,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

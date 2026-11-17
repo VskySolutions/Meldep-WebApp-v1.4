@@ -29,6 +29,7 @@ using static Vsky.Api.Models.EmployeeModel;
 namespace Vsky.Api.Controllers
 {
     [Route("requirement-group")]
+    [RequireMenu(MenuLinks.RequirementGroup + "|" + MenuLinks.Requirement)]
     public class RequirementGroupController : BaseController
     {
 
@@ -64,6 +65,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All RequirementGroups
         // Description: This endpoint fetches a list of RequirementGroups based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllRequirementGroups(RequirementGroupSearchModel searchModel)
         {
             try
@@ -98,7 +100,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -107,6 +109,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllRequirementGroupsListForDropdown
         // Description: This endpoint retrieves the details of a specific RequirementGroup based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllRequirementGroupsListForDropdown(string ProjectId = null)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -121,6 +124,7 @@ namespace Vsky.Api.Controllers
         //Title: GetRequirementGroupById
         //Description: This endpoint retrieves the details of a specific RequirementGroup based on its unique identifier(ID). 
         [HttpGet("{id}")]
+        [RecordScope(typeof(Vsky.Models.RequirementGroup))]
         public async Task<IActionResult> GetRequirementGroupById(string id)
         {
             try
@@ -137,7 +141,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -146,6 +150,7 @@ namespace Vsky.Api.Controllers
         // Title: GetRequirementGroupDetailsById
         // Description: This endpoint retrieves the details of a specific Requirement Group based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [RecordScope(typeof(Vsky.Models.RequirementGroup))]
         public async Task<IActionResult> GetRequirementGroupDetailsById(string id)
         {
             try
@@ -162,7 +167,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -205,7 +210,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -214,6 +219,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateRequirementGroup
         // Description: This endpoint updates an existing Requirement Group by its ID. 
         [HttpPut("{id}")]
+        [RecordScope(typeof(Vsky.Models.RequirementGroup))]
         public async Task<IActionResult> UpdateRequirementGroup(string id, RequirementGroupModel model)
         {
             try
@@ -248,7 +254,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -257,6 +263,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteRequirementGroupById
         // Description: This endpoint deletes a Requirement Group based on the provided RequirementGroup ID. It first retrieves the RequirementGroup entity by ID, checks if it exists, and if so, deletes the RequirementGroup. If the RequirementGroup is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [RecordScope(typeof(Vsky.Models.RequirementGroup))]
         public async Task<IActionResult> DeleteRequirementGroup(string id)
         {
             try
@@ -274,7 +281,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

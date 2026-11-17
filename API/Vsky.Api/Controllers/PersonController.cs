@@ -25,6 +25,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("person")]
+    [RequireMenu(MenuLinks.Person)]
     public class PersonController : BaseController
     {
         #region Define Services
@@ -65,6 +66,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Persons
         // Description: This endpoint fetches a list of persons based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllPerson(PersonSearchModel searchModel)
         {
             try
@@ -100,7 +102,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -109,6 +111,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllPersonListForDropdown
         // Description: This endpoint retrieves the details of a specific person based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllPersonListForDropdown(string siteId)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -121,6 +124,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllPersonPrimaryEmailAddressListForDropdown
         [HttpGet("dropdown/primaryEmailAddressList")]
+        [SiteMember]
         public async Task<IActionResult> GetAllPersonPrimaryEmailAddressListForDropdown(string siteId)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -133,6 +137,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllIsSharedPersonListForDropdown
         [HttpGet("dropdown/isSharedPersonList")]
+        [SiteMember]
         public async Task<IActionResult> GetAllIsSharedPersonListForDropdown(string siteId)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -178,7 +183,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -299,7 +304,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -453,7 +458,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -479,7 +484,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -520,7 +525,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

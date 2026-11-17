@@ -23,6 +23,7 @@ using Vsky.Services.TrainingPortals;
 namespace Vsky.Api.Controllers
 {
     [Route("training-portals")]
+    [RequireMenu(MenuLinks.TrainingPortal)]
     public class TrainingPortalController : BaseController
     {
         #region Define services
@@ -60,6 +61,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllTrainingList
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllTrainingList(TrainingPortalSearchModels trainingModel)
         {
             try
@@ -78,13 +80,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetTrainingDetailsById
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.TrainingPortal))]
         public async Task<IActionResult> GetTrainingDetailsById(string id)
         {
             try
@@ -98,7 +101,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -220,13 +223,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region UpdateTraining
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.TrainingPortal))]
         public async Task<IActionResult> UpdateTraining(string id, [FromForm] TrainingPortalModel model)
         {
             try
@@ -405,13 +409,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region DeleteTraining
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.TrainingPortal))]
         public async Task<IActionResult> DeleteTraining(string id)
         {
             try
@@ -427,7 +432,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

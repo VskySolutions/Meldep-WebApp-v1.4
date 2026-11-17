@@ -18,8 +18,9 @@ namespace Vsky.Services.GlobalVariables
 
         public async Task InvokeAsync(HttpContext context, GlobalVariable tenantContext)
         {
-            tenantContext.SiteId = context.Request.Headers["X-Site-Id"].ToString();
-            tenantContext.TimeZone = context.Request.Headers["X-Site-TimeZone"].ToString();
+            // Trimmed, because a value pasted into Swagger or Postman often carries a stray space.
+            tenantContext.SiteId = context.Request.Headers["X-Site-Id"].ToString().Trim();
+            tenantContext.TimeZone = context.Request.Headers["X-Site-TimeZone"].ToString().Trim();
 
             await _next(context);
         }

@@ -95,7 +95,7 @@
               <div class="row q-col-gutter-x-md q-mb-md">
                 <div class="col-12">
                   <div class="q-mb-xs">Reason</div>
-                  <div class="text-black"><p v-html="model.reason" /></div>
+                  <div class="text-black"><p v-safe-html="model.reason" /></div>
                 </div>
               </div>
             </fieldset>
@@ -103,7 +103,7 @@
               <legend>HR Note</legend>
               <div class="row q-col-gutter-x-md">
                 <div class="col-12">
-                  <div class="text-black"><p v-html="model.hrNote ? model.hrNote : '-'" /></div>
+                  <div class="text-black"><p v-safe-html="model.hrNote ? model.hrNote : '-'" /></div>
                 </div>
               </div>
             </fieldset>
@@ -131,7 +131,7 @@
               <div class="row q-col-gutter-x-md">
                 <div class="col-12">
                   <div class="text-black leavenote">
-                    <p v-html="model.approverNote ? model.approverNote : '-'" />
+                    <p v-safe-html="model.approverNote ? model.approverNote : '-'" />
                   </div>
                 </div>
               </div>

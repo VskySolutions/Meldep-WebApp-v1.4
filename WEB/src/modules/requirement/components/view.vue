@@ -83,7 +83,7 @@
                 <legend>Initial Scope</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="text-black RichTextEditor">
-                    <span v-html="model.scope || '-'"></span>
+                    <span v-safe-html="model.scope || '-'"></span>
                   </div>
                 </div>
               </fieldset>
@@ -252,14 +252,14 @@
                   <div class="row q-col-gutter-x-md q-mb-md hidden">
                     <div class="col-12">
                       <div class="q-mb-xs">Notes :</div>
-                      <div class="text-black"><p v-html="model.notes ? model.notes : '-'" /></div>
+                      <div class="text-black"><p v-safe-html="model.notes ? model.notes : '-'" /></div>
                     </div>
                   </div>
                   <div v-if="model.lastNote" class="row q-col-gutter-x-md q-mb-md">
                     <div class="col-12 col-sm-12 col-md-12">
                       <div class="q-mb-xs">Note :</div>
                       <div class="text-black">
-                        <span v-html="model.lastNote" />
+                        <span v-safe-html="model.lastNote" />
                       </div>
                     </div>
                   </div>
@@ -313,7 +313,7 @@
                           <q-td>{{ props.row.requirementLogDate }}</q-td>
                           <q-td>{{ props.row.employee.person.fullName }}</q-td>
                           <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;">{{ props.row.requirementName }}</q-td>
-                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 40%;"><div class="RichTextEditor" v-html="props.row.description" /></q-td>
+                          <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 40%;"><div class="RichTextEditor" v-safe-html="props.row.description" /></q-td>
                         </q-tr>
                       </template>
                     </q-table>

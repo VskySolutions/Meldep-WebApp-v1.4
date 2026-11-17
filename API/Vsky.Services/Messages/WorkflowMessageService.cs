@@ -38,6 +38,7 @@ namespace Vsky.Services.Messages
         private readonly IEmployeeService _employeeService;
         private readonly ISitesEmailNotificationsServices _sitesEmailNotificationsServices;
         private readonly IUserService _userService;
+        private readonly Vsky.Services.Logging.ILogger _loggerService;
         #endregion
 
         #region Ctor
@@ -55,7 +56,8 @@ namespace Vsky.Services.Messages
             IHelpDeskReminderLogService helpDeskReminderLogService,
             IEmployeeService employeeService,
             ISitesEmailNotificationsServices sitesEmailNotificationsServices,
-            IUserService userService
+            IUserService userService,
+            Vsky.Services.Logging.ILogger loggerService
         )
         {
             _db = db;
@@ -72,6 +74,7 @@ namespace Vsky.Services.Messages
             _employeeService = employeeService;
             _sitesEmailNotificationsServices = sitesEmailNotificationsServices;
             _userService = userService;
+            _loggerService = loggerService;
         }
         #endregion
 
@@ -442,7 +445,7 @@ namespace Vsky.Services.Messages
 
                 // URL Link
                 var WEB_Domain = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("AppSettings")["WEB_Domain"];
-                string AppUrl = WEB_Domain + "/auth/reset-password/" + user.Id;
+                string AppUrl = WEB_Domain + "/auth/reset-password/" + user.Id + "?token=" + Uri.EscapeDataString(code);
 
                 // Header, Body, Footer
                 var Header = "<div style='text-align:center;padding:10px;background-color:#000;'><img src='" + "https://www.meldep.com/assets/meldep_logo.a392f709.png" + "' style='width:8%; height: 8%;'/></div>";
@@ -594,8 +597,9 @@ namespace Vsky.Services.Messages
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _loggerService.Error("Help desk email could not be sent", ex);
             }
         }
         public async Task SendHelpDeskReplyMail(Employee employee, HelpDesk code, EmailReplies reply, string twilioEmailId, List<string> toEmailList, List<string> actualToEmails, List<string> ccEmailList, string prefixNo, DateTime GetDateTime)
@@ -638,8 +642,9 @@ namespace Vsky.Services.Messages
 
                 InsertSystemEmailReplyAsync(actualToEmailCsv, reply.FromEmail, reply.Subject, reply.Body, reply.OwnerId, twilioEmailId, code.Id, GetDateTime, false, reply.ExternalToEmail, ccEmailCsv);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _loggerService.Error("Help desk reply email could not be sent", ex);
             }
         }
         public async Task SendHelpDeskStatusMail(Employee employee, HelpDesk code, List<string> emailAddresses, string twilioEmailId, string prefixNo, string siteName, string requesterEmail, string assignedToName, DateTime GetDateTime)
@@ -701,8 +706,9 @@ namespace Vsky.Services.Messages
                     InsertSystemEmailReplyAsync(toEmailCsv, emailAccount.Email, subject, body, null, twilioEmailId, code.Id, GetDateTime);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _loggerService.Error("Help desk status email could not be sent", ex);
             }
         }
         public async Task SendHelpDeskAssignedToMail(Employee employee, HelpDesk code, string assignedToName, string twilioEmailId, string prefixNo, string siteName, string requesterEmail, DateTime GetDateTime)
@@ -755,8 +761,9 @@ namespace Vsky.Services.Messages
                     InsertSystemEmailReplyAsync(empEmail, emailAccount.Email, subject, body, employee?.Id, twilioEmailId, code.Id, GetDateTime);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _loggerService.Error("Help desk assignment email could not be sent", ex);
             }
         }       
         public async Task SendHelpDeskReminderMail(HelpDesk helpdesk, string title, string templateName, string prefixNo, DateTime GetDateTime)

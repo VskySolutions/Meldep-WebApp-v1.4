@@ -239,7 +239,7 @@
       <div class="col-12">
         <div class="q-mb-xs"><label>Identification Note</label></div>
         <div class="form-group text-black RichTextEditor">
-          <p v-html="model.identificationNote ? model.identificationNote : '-'" />
+          <p v-safe-html="model.identificationNote ? model.identificationNote : '-'" />
         </div>
       </div>
     </div>
@@ -262,7 +262,7 @@
       <div class="col-12 col-md-4">
         <div class="q-mb-xs"><label>Phone Number</label></div>
         <div class="form-group text-black">
-          <p v-html="model.phoneNumber ? model.phoneNumber : '-'" />
+          <p v-safe-html="model.phoneNumber ? model.phoneNumber : '-'" />
         </div>
       </div>
     </div>

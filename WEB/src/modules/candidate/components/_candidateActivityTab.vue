@@ -40,7 +40,7 @@
       <template #body="props">
         <q-tr :props="props">
           <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 15%;">
-            <div class="text-black" v-html="props.row.activityName" />
+            <div class="text-black" v-safe-html="props.row.activityName" />
           </q-td>
           <q-td style="width: 5%;">
             {{ props.row.dueDate }}

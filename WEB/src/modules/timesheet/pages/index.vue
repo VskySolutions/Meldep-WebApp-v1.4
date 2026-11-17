@@ -172,7 +172,7 @@
                 </div>
               </div>
               <div class="row items-center q-gutter-sm q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline
@@ -181,7 +181,7 @@
                   class="text-primary btnRounded"
                   @click="onTimesheetAdd(refreshTimesheetList)"
                 />
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline
@@ -313,7 +313,7 @@
               >
                 <q-td :colspan="totalVisibleColumns - (!isViewer ? 1 : 2)" style="background: #dbf2ff;" class="text-center">{{ toDate(props.row.timesheetDate) }}</q-td>
                 <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
-                  <q-icon
+                  <q-icon v-can
                     v-if="props.row.isActionVisible && storedUser.username === props.row.user.userName"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
@@ -321,7 +321,7 @@
                   >
                     <q-tooltip>Edit</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     v-if="props.row.isActionVisible && storedUser.username === props.row.user.userName"
                     name="o_delete_outline"
                     class="cursor-pointer"
@@ -419,12 +419,12 @@
                     class="q-ml-sm"
                   >
                     <q-tooltip v-if="line.activityNameDescription" class="text-wrap break-words" max-width="300px">
-                      <div v-html="line.activityNameDescription" />
+                      <div v-safe-html="line.activityNameDescription" />
                     </q-tooltip>
                   </q-icon>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('description')" class="RichTextEditor common-q-td">
-                  <div v-html="line.description" />
+                  <div v-safe-html="line.description" />
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('createdById')" class="text-left common-q-td">
                   {{ props.row.user.person.fullName }}
@@ -809,8 +809,13 @@ const updateDates = (weekFilter) => {
     dates = { fromDate: "", toDate: "" };
   }
 
-  search.value.fromDate = format(dates.fromDate, "MM/dd/yyyy");
-  search.value.toDate = format(dates.toDate, "MM/dd/yyyy");
+  search.value.fromDate = dates.fromDate
+    ? format(dates.fromDate, "MM/dd/yyyy")
+    : "";
+
+  search.value.toDate = dates.toDate
+    ? format(dates.toDate, "MM/dd/yyyy")
+    : "";
 };
 
 const handleDocumentClick = (event) => {
@@ -1107,7 +1112,7 @@ const appliedFilters = computed(() => ({
   ...mapFilterToLabel(search.value.employeeId, activeEmployeesDropdownSingleSelect.list, "Employee Name"),
   ...mapFilterToLabel(search.value.projectId, projectNameDropdownSingleSelect.list, "Projects"),
   ...mapFilterToLabel(search.value.projectModuleId, projectModulesByProjectIdForDropdownSingleSelect.list, "Project Modules"),
-  ...mapFilterToLabel(search.value.requirementId, requirementByProjectModuleIdForDropdownSingleSelect.list, "Requirement"),  
+  ...mapFilterToLabel(search.value.requirementId, requirementByProjectModuleIdForDropdownSingleSelect.list, "Requirement"),
   ...mapFilterToLabel(search.value.projectTaskId, projectTasksByProjectIdAndModuleIdForDropdownSingleSelect.list, "Project Tasks"),
   ...mapFilterToLabel(search.value.weekFilter, weekFilterList, "Week Filter"),
   ...(search.value.activityDate ? { "Activity Date": search.value.activityDate } : {}),
@@ -1130,6 +1135,8 @@ function onClearFilters (key) {
     search.value.projectTaskId = null;
   } else if (key === "Week Filter") {
     search.value.weekFilter = "";
+    search.value.fromDate = "";
+    search.value.toDate = "";
   } else if (key === "Activity Date") {
     search.value.activityDate = "";
   } else if (key === "From Date") {

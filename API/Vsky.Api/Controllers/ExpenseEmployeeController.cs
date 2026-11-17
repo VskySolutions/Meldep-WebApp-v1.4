@@ -9,6 +9,7 @@ namespace Vsky.Api.Controllers
 {
 
     [Route("expense-employee")]
+    [RequireMenu(MenuLinks.ExpenseAny)]
     public class ExpenseEmployeeController : BaseController
     {
         #region Fields
@@ -45,7 +46,7 @@ namespace Vsky.Api.Controllers
         //    }
         //    catch (Exception e)
         //    {
-        //        return BadRequest(e.Message);
+        //        return BadRequest(SafeErrorMessage(e));
         //    }
         //}
         #endregion

@@ -14,6 +14,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("tag-master")]
+    [RequireMenu(MenuLinks.Tags)]
     public class TagsController : BaseController
     {
         #region Define Services
@@ -42,6 +43,8 @@ namespace Vsky.Api.Controllers
 
         #region Get All lists
         [HttpPost("list")]
+        [ReadAccess]
+        [SiteMember]
         public IActionResult GetAllTags(TagSearchModel searchModel)
         {
             try
@@ -60,11 +63,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpGet("dropdown/tagslist")]
+        [SiteMember]
         public async Task<IActionResult> GetAllTagsListForDropdown()
         {
             try
@@ -77,12 +81,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         [HttpGet("{id}")]
+        [SiteMember]
+        [SiteOwned(typeof(Vsky.Models.Tags))]
         public async Task<IActionResult> GetTagById(string id)
         {
             try
@@ -98,7 +104,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -133,6 +139,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -169,12 +176,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Tags))]
         public async Task<IActionResult> UpdateTags(string id, TagModels model)
         {
             try
@@ -209,7 +217,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -217,6 +225,7 @@ namespace Vsky.Api.Controllers
 
         #region DeleteTags
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Tags))]
         public async Task<IActionResult> DeleteTags(string id)
         {
             try
@@ -231,7 +240,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

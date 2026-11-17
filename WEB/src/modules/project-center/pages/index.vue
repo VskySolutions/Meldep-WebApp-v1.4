@@ -202,7 +202,7 @@
                         <div class="q-mb-xs q-mr-lg">Description:</div>
                         <div class="text-black q-mt-sm RichTextEditor">
                           <q-badge v-if="!model.description" color="red" square>No Data</q-badge>
-                          <p v-html="model.description" />
+                          <p v-safe-html="model.description" />
                         </div>
                       </div>
                     </div>
@@ -395,7 +395,7 @@
                         :icon="done_all"
                         :color="'primary'"
                       >
-                        <div class="fs-14 RichTextEditor">Notes: <span class="text-black" v-html="notes.note" /></div>
+                        <div class="fs-14 RichTextEditor">Notes: <span class="text-black" v-safe-html="notes.note" /></div>
                         <div v-if="notes.type !== 'Projects'" class="q-mt-xs fs-13"><i>{{ notes.type }}: <span class="text-black">{{ notes.sub_Module }}</span></i></div>
                       </q-timeline-entry>
                     </q-timeline>

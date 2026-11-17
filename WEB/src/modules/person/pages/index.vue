@@ -228,7 +228,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Person" no-caps class="text-primary btnRounded" @click="onAdd" />
+                <q-btn v-can icon="o_add" outline label="Add Person" no-caps class="text-primary btnRounded" @click="onAdd" />
               </div>
             </div>
           </div>
@@ -294,7 +294,7 @@
               >
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
                 :class="['q-mr-sm',storedUser === props.row.id ? 'text-grey-5 cursor-not-allowed' : 'cursor-pointer']"
@@ -310,7 +310,7 @@
               >
                 <q-tooltip>Convert To Customer</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 v-if="!props.row.isCustomer"
                 name="o_delete_outline"
                 class="cursor-pointer"

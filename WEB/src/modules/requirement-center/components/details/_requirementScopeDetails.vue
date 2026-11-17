@@ -3,7 +3,7 @@
     <div class="row q-col-gutter-lg q-pa-sm">
       <div class="col-10 q-ml-md">
         <div v-if="model.scope" class="text-black RichTextEditor">
-          <span v-html="model.scope" />
+          <span v-safe-html="model.scope" />
         </div>
         <div v-else>
           <span class="text-grey">No initial scope available</span>

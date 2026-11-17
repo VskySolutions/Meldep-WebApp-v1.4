@@ -24,6 +24,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("project-modules")]
+    [RequireMenu(MenuLinks.ProjectWork)]
     public class ProjectModulesController : BaseController
     {
         #region Define Services
@@ -72,6 +73,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All ProjectModules
         // Description: This endpoint fetches a list of ProjectModules based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectModules(ProjectModuleSearchModel searchModel)
         {
             try
@@ -94,13 +96,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllProjectModulesByProjectId
         [HttpGet("listbyproject")]
+        [SiteMember]
         public async Task<IActionResult> GetAllModulesByProjectId(string projectId)
         {
             var list = await _projectModuleService.GetAllModulesByProjectId(projectId);
@@ -113,6 +116,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllProjectModuleListForDropdown
         // Description: This endpoint retrieves the details of a specific ProjectModule based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllProjectModuleListForDropdown(bool isTemplate, bool showTaskCount, string ProjectId = null)
         {
             try
@@ -125,7 +129,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -134,6 +138,8 @@ namespace Vsky.Api.Controllers
         // Title: GetProjectModuleById
         // Description: This endpoint retrieves the details of a specific Project Module based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectModule))]
+        [SiteOwned(typeof(Vsky.Models.ProjectModule))]
         public async Task<IActionResult> GetProjectModuleById(string id)
         {
             try
@@ -150,7 +156,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -211,6 +217,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
                 return new NextSortOrder
                 {
                     NextSortOrderOfProjectModule = 1,
@@ -224,6 +231,8 @@ namespace Vsky.Api.Controllers
         // Title: GetProjectModuleDetailsById
         // Description: This endpoint retrieves the details of a specific project module based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectModule))]
+        [SiteOwned(typeof(Vsky.Models.ProjectModule))]
         public async Task<IActionResult> GetProjectModuleDetailsById(string id)
         {
             try
@@ -240,7 +249,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -398,7 +407,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
             // Return model state errors if the model state is not valid
             return ModelStateError(ModelState);
@@ -480,7 +489,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -509,6 +518,8 @@ namespace Vsky.Api.Controllers
         // Title: UpdateProjectModule
         // Description: This endpoint updates an existing project module by its ID. It validates the project module model, checks for duplicate module names within the same project, updates the modules's details.
         [HttpPut("{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectModule))]
+        [SiteOwned(typeof(Vsky.Models.ProjectModule))]
         public async Task<IActionResult> UpdateProjectModule(string id, [FromForm] ProjectModuleModel model)
         {
             if (ModelState.IsValid)
@@ -795,7 +806,7 @@ namespace Vsky.Api.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return BadRequest(ex.Message);
+                    return BadRequest(SafeErrorMessage(ex));
                 }
             }
             // Return model state errors if the model state is not valid
@@ -842,7 +853,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -876,7 +887,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -885,6 +896,8 @@ namespace Vsky.Api.Controllers
         // Title: DeleteProjectModule
         // Description: This endpoint deletes a person module based on the provided project module ID. It first retrieves the project module entity by ID, checks if it exists, and if so, deletes the project module. If the module is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectModule))]
+        [SiteOwned(typeof(Vsky.Models.ProjectModule))]
         public async Task<IActionResult> DeleteProjectModule(string id)
         {
             try
@@ -902,7 +915,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -921,7 +934,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

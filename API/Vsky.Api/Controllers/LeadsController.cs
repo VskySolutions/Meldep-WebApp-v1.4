@@ -21,6 +21,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("leads")]
+    [RequireMenu(MenuLinks.Lead)]
     public class LeadsController : BaseController
     {
         #region Services Initializations
@@ -61,6 +62,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllLeads
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllLeads(LeadSearchModels leadModels) 
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -93,13 +95,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllLeadStages
         [HttpGet("leadstages-list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllLeadStages()
         {
             var list = await _leadService.GetAllLeadStages();
@@ -110,6 +113,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllActivities
         [HttpGet("leadactivities-list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllActivities()
         {
             var list = await _leadService.GetAllActivities();
@@ -122,6 +126,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllLeadActivityListForDropdown
         // Description: This endpoint retrieves the list of lead activities. 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllLeadActivityListForDropdown()
         {
             try
@@ -132,13 +137,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllLeadListForDropdown
         [HttpGet("lead-dropdown")]
+        [SiteMember]
         public async Task<IActionResult> GetAllLeadListForDropdown()
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -151,6 +157,8 @@ namespace Vsky.Api.Controllers
 
         #region GetLeadById
         [HttpGet("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.Lead)]
+        [SiteOwned(typeof(Vsky.Models.Lead))]
         public async Task<IActionResult> GetLeadById(string id)
         {
             var entity = await _leadService.GetById(id);
@@ -220,6 +228,8 @@ namespace Vsky.Api.Controllers
 
         #region UpdateLead
         [HttpPut("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.Lead)]
+        [SiteOwned(typeof(Vsky.Models.Lead))]
         public async Task<IActionResult> UpdateLead(string id, LeadModels model)
         {
             if (ModelState.IsValid)
@@ -264,6 +274,8 @@ namespace Vsky.Api.Controllers
 
         #region DeleteLead
         [HttpDelete("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.Lead)]
+        [SiteOwned(typeof(Vsky.Models.Lead))]
         public async Task<IActionResult> DeleteLead(string id)
         {
             var entity = await _leadService.GetById(id);

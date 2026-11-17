@@ -36,14 +36,14 @@
                 Category
               </div>
               <div class="row q-gutter-sm">
-                <q-btn
+                <q-btn v-can
                   color="primary"
                   icon="o_add"
                   label="Add"
                   no-caps
                   @click="onAddItemCategory"
                 />
-                <q-btn
+                <q-btn v-can
                   color="primary"
                   icon="o_add"
                   label="Add Bulk"
@@ -213,7 +213,7 @@
                   </div>
                 </div>
               </div>
-              <q-btn
+              <q-btn v-can
                 v-if="selectedItemCategory.name"
                 color="primary"
                 icon="o_add"
@@ -360,7 +360,7 @@
                       >
                         <q-tooltip>View</q-tooltip>
                       </q-icon>
-                      <q-icon
+                      <q-icon v-can
                         name="o_delete"
                         color="negative"
                         size="xs"

@@ -66,7 +66,7 @@
             <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12">
                 <div class="q-mb-xs">Answer</div>
-                <p class="text-black RichTextEditor" v-html="model.description ? model.description : '-'" />
+                <p class="text-black RichTextEditor" v-safe-html="model.description ? model.description : '-'" />
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
@@ -114,7 +114,7 @@
 
               <template #body="props">
                 <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
-                  <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 40%;"><div class="RichTextEditor" v-html="props.row.description" /></q-td>
+                  <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 40%;"><div class="RichTextEditor" v-safe-html="props.row.description" /></q-td>
                   <q-td>{{ props.row.createdBy?.person?.fullName }}</q-td>
                   <q-td>{{ props.row.createdOnUtc }}</q-td>
                   <q-td>{{ props.row.updatedBy?.person?.fullName }}</q-td>

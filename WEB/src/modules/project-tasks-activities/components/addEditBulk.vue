@@ -92,7 +92,7 @@
                                       class="q-ml-xs"
                                     >
                                       <q-tooltip class="text-wrap break-words" max-width="300px">
-                                        <div v-html="opt.data" />
+                                        <div v-safe-html="opt.data" />
                                       </q-tooltip>
                                     </q-icon>
                                   </div>

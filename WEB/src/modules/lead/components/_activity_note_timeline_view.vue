@@ -37,7 +37,7 @@
                   <div
                     class="note-wrapper RichTextEditor"
                   >
-                    <span class="text-black note-text" style="white-space: pre-wrap;" v-html="note.activityNote" />
+                    <span class="text-black note-text" style="white-space: pre-wrap;" v-safe-html="note.activityNote" />
                   </div>
               </div>
             </q-timeline-entry>

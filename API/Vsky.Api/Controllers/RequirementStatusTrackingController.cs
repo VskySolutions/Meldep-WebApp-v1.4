@@ -15,6 +15,7 @@ using Vsky.Services.Timesheets;
 namespace Vsky.Api.Controllers
 {
     [Route("requirement-status-tracking")]
+    [RequireMenu(MenuLinks.Requirement)]
     public class RequirementStatusTrackingController : BaseController
     {
         #region Define Services
@@ -71,6 +72,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Requirement Status Tracking Records
         // Description: Returns complete tracking records (with all their rows), paged by record.
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllRecords(RequirementStatusTrackingSearchModel searchModel)
         {
             try
@@ -99,13 +101,16 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAvailableRequirementsForStatusTracking
         [HttpGet("available-requirements")]
+        [SiteOwned(typeof(Vsky.Models.Project), RouteKey = "projectId")]
+        [SiteOwned(typeof(Vsky.Models.ProjectModule), RouteKey = "projectModuleId")]
+        [RecordScope(RecordRule.Project, RouteKey = "projectId")]
         public async Task<IActionResult> GetAvailableRequirementsForStatusTracking(string projectId, string projectModuleId)
         {
             var result = await _requirementStatusTrackingService.GetAvailableRequirementsForStatusTracking(projectId, projectModuleId);
@@ -129,13 +134,15 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetRequirementStatusTrackingByRequirementId
         [HttpGet("get-requirement-status-tracking-by-requirementId")]
+        [SiteOwned(typeof(Vsky.Models.Requirement), RouteKey = "requirementId")]
+        [RecordScope(typeof(Vsky.Models.Requirement), RouteKey = "requirementId")]
         public async Task<IActionResult> GetRequirementStatusTrackingByRequirementId(string requirementId = null)
         {
             try
@@ -153,7 +160,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -175,6 +182,7 @@ namespace Vsky.Api.Controllers
         #region BulkAdd
         // Creates one complete project/module/date record with all its requirement rows in a single request.
         [HttpPost("bulk-add")]
+        [SiteOwned(typeof(Vsky.Models.Requirement), Field = "RequirementId")]
         public async Task<IActionResult> BulkAdd(RequirementStatusTrackingSaveModel model)
         {
             try
@@ -190,7 +198,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -198,6 +206,7 @@ namespace Vsky.Api.Controllers
         #region BulkSave
         // Updates one complete record: row additions, changes and staged removals are committed together.
         [HttpPost("bulk-save")]
+        [SiteOwned(typeof(Vsky.Models.Requirement), Field = "RequirementId")]
         public async Task<IActionResult> BulkSave(RequirementStatusTrackingSaveModel model)
         {
             try
@@ -213,7 +222,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -237,7 +246,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -261,7 +270,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

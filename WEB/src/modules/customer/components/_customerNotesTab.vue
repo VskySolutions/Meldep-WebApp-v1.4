@@ -9,7 +9,7 @@
           :subtitle="`${notes.createdOnUtc} - ${notes.user.person.firstName} ${notes.user.person.lastName}`"
           :icon="done_all"
           :color="'primary'"
-        ><div class="fs-14">Notes: <span class="text-black RichTextEditor" v-html="notes.note" /></div>
+        ><div class="fs-14">Notes: <span class="text-black RichTextEditor" v-safe-html="notes.note" /></div>
           <div class="q-mt-xs fs-13"><i>{{ notes.type }}: <span class="text-black">{{ notes.sub_Module }}</span></i></div>
         </q-timeline-entry>
       </q-timeline>

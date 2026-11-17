@@ -721,8 +721,6 @@ function validateTaskEstimatedHours (value) {
 //   script.src = process.env.AI_Chat_Assistant_Cdn,
 //   // script.dataset.apiBase = "https://api-sowbuddy-prasad-local.prasadsawant.site";
 //   script.dataset.apiBase = process.env.AI_Chat_Assistant_ApiBase,
-//   // script.dataset.apiKey = "ag_067dc77f-6520-42ed-9e10-36c34b122434";
-//   script.dataset.apiKey = process.env.AI_Chat_Assistant_ApiKey,
 //   script.dataset.instance = process.env.AI_Chat_Assistant_Instance,
 //   script.dataset.title = "SOP Assistant";
 //   script.dataset.subtitle = "Workplace process guidance";

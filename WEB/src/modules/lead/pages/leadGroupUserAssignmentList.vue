@@ -74,7 +74,7 @@
                 :selected-field="selectedField"
               />
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Assign Users to Lead Groups"
@@ -141,7 +141,7 @@
               >
                 <q-tooltip>{{ props.row.active ? 'Set Inactive?' : 'Set Active?' }}</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 name="o_delete_outline"
                 class="cursor-pointer"
                 color="negative"

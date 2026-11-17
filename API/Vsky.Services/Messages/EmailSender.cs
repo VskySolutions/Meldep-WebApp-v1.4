@@ -13,6 +13,7 @@ using SendGrid.Helpers.Mail;
 using Vsky.Core.Infrastructure;
 using Vsky.Data;
 using Vsky.Models;
+using Vsky.Services.Logging;
 
 namespace Vsky.Services.Messages
 {
@@ -23,6 +24,7 @@ namespace Vsky.Services.Messages
         private readonly IAppFileProvider _fileProvider;
         private readonly ISmtpBuilder _smtpBuilder;
         private readonly ApplicationDbContext _db;
+        private readonly ILogger _loggerService;
 
         #endregion
 
@@ -30,11 +32,13 @@ namespace Vsky.Services.Messages
 
         public EmailSender(IAppFileProvider fileProvider, 
                            ISmtpBuilder smtpBuilder,
-                           ApplicationDbContext db)
+                           ApplicationDbContext db,
+                           ILogger loggerService)
         {
             _fileProvider = fileProvider;
             _smtpBuilder = smtpBuilder;
             _db = db;
+            _loggerService = loggerService;
         }
 
         #endregion
@@ -369,8 +373,8 @@ namespace Vsky.Services.Messages
             }
             catch (Exception ex)
             {
-                // TODO: log exception for debugging
-                return $"Exception occurred while sending email: {ex.Message}";
+                _loggerService.Error("Email could not be sent", ex);
+                return "Exception occurred while sending email.";
             }
         }
 

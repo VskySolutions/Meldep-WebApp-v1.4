@@ -29,6 +29,7 @@ using static Vsky.Api.Models.EmployeeModel;
 namespace Vsky.Api.Controllers
 {
     [Route("notification")]
+    [SiteMember]
     public class NotificationController : BaseController
     {
         #region Define Services  
@@ -65,6 +66,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Notifications
         // Description: This endpoint fetches a list of Notifications based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllNotifications(NotificationsSearchModel searchModel)
         {
             try
@@ -101,7 +103,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -110,6 +112,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Notifications
         // Description: This endpoint fetches a list of NotificationPermissions based on the provided search criteria such as date, sorting, and pagination. 
         [HttpPost("notificationPermissionList")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllNotificationPermissions(NotificationPermissionsSearchModel searchModel)
         {
             try
@@ -145,7 +148,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -195,7 +198,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -228,7 +231,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -270,7 +273,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -279,6 +282,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Notifications
         // Description: This endpoint fetches a list of Notifications based on the LoggedUserId.
         [HttpPost]
+        [ReadAccess]
         public async Task<IActionResult> PopupList(string Id = null, string Flag = null)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();

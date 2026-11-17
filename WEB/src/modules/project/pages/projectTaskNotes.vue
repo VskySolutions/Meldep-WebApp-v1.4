@@ -406,7 +406,7 @@
                       </template>
                       <template v-else>
                         <div class="note-wrapper cursor-pointer RichTextEditor" @click="startEditing(notes)">
-                          <span class="text-black note-text" v-html="notes.note" />
+                          <span class="text-black note-text" v-safe-html="notes.note" />
                           <q-tooltip v-if="storedUser === notes.user.userName">
                             Click to edit
                           </q-tooltip>

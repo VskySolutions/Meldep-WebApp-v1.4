@@ -60,6 +60,17 @@ namespace Vsky.Api.Models
         public string ConfirmPassword { get; set; }
     }
 
+    public record UserByTokenModel
+    {
+        public string Token { get; set; }
+    }
+
+    public record ResetLinkModel
+    {
+        public string UserId { get; set; }
+        public string Token { get; set; }
+    }
+
     public record ForgotPasswordModel
     {
         public string Email { get; set; }

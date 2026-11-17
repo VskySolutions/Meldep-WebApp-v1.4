@@ -117,7 +117,7 @@
                 </q-card>
               </q-menu>
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Add Customer"
@@ -328,7 +328,7 @@
                   >
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
                     @click="onCustomerEdit(props.row.id, props.row.customerTypeId, props.row.personId, props.row.companyId, refreshCustomerList)"
@@ -352,7 +352,7 @@
                       :label="props.row.customerNoteCount"
                     />
                   </a>
-                  <q-icon
+                  <q-icon v-can
                     name="o_delete_outline"
                     class="cursor-pointer"
                     color="negative"

@@ -98,7 +98,7 @@
                 </q-card>
               </q-menu>
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   v-if="!isViewer"
                   icon="o_add"
                   outline
@@ -293,7 +293,7 @@
                   >
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     v-if="props.row.isEditable"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
@@ -310,7 +310,7 @@
                   >
                     <q-tooltip>Test Case</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     v-if="props.row.isEditable"
                     name="o_delete_outline"
                     class="cursor-pointer"

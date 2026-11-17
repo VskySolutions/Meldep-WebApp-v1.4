@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.PowerBI.Api.Models;
 using Org.BouncyCastle.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
 using Vsky.Api.Models;
@@ -35,6 +36,7 @@ using Vsky.Services.Users;
 namespace Vsky.Api.Controllers
 {
     [Route("employee-leave")]
+    [RequireMenu(MenuLinks.LeaveAny)]
     public class EmployeeLeaveController : BaseController
     {
         #region Define Services      
@@ -102,6 +104,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All EmployeeLeave
         // Description: This endpoint fetches a list of EmployeeLeave based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllEmployeeLeave(EmployeeLeaveSearchModel searchModel)
         {
             try
@@ -143,7 +146,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -151,6 +154,8 @@ namespace Vsky.Api.Controllers
         #region GetFiveEmployeeLeaveForApprove
         // Title: Get Five EmployeeLeave For Approve
         [HttpPost("dashBoardLeave/list")]
+        [ReadAccess]
+        [RequireMenu(MenuLinks.Dashboard + "|" + MenuLinks.LeaveAny)]
         public async Task<IActionResult> GetFiveEmployeeLeaveForApprove()
         {
             try
@@ -170,7 +175,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -179,6 +184,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All EmployeeLeave For Approve
         // Description: This endpoint fetches a list of EmployeeLeave for approve based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("forward/list")]
+        [ReadAccess]
         public IActionResult GetAllEmployeeLeaveForApprove(EmployeeLeaveSearchModel searchModel)
         {
             try
@@ -201,7 +207,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -210,7 +216,7 @@ namespace Vsky.Api.Controllers
         //Title: GetEmployeeLeaveDetailsById
         //Description: This endpoint retrieves the details of a specific Leave based on its unique identifier(ID). 
         [HttpGet("{id}")]
-        [AllowAnonymous]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.Leave)]
         public async Task<IActionResult> GetEmployeeLeaveDetailsById(string id)
         {
             try
@@ -241,7 +247,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -325,6 +331,8 @@ namespace Vsky.Api.Controllers
         #region GetEmployeeLeaveListForDashboard
         // Title: Get EmployeeLeave List
         [HttpPost("approvedLeave/list")]
+        [ReadAccess]
+        [RequireMenu(MenuLinks.Dashboard + "|" + MenuLinks.LeaveAny)]
         public async Task<IActionResult> GetEmployeeLeaveListForDashboard()
         {
             try
@@ -340,12 +348,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         // Title: Get EmployeeLeave List for Movement Register
         [HttpPost("leaveListForMovReg/list/{movRegDateStr}")]
+        [ReadAccess]
         public async Task<IActionResult> GetEmployeeLeaveListForMovReg(string movRegDateStr)
         {
             try
@@ -361,7 +370,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -664,19 +673,49 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
             // Return model state errors if the model state is not valid
             return ModelStateError(ModelState);
         }
         #endregion
 
+        // Matches who each page lists leaves for. Approve: the assigned approver. Forward: HR, or the
+        // leave's owner. Admins and anyone given Manage on purpose may do either. A Show-only legacy
+        // row isn't enough: the employee role has one, so it would let everyone decide for everyone.
+        private async Task<bool> CanDecideLeaveAsync(EmployeeLeave leave, string flag, string userId, string siteId)
+        {
+            var employeeId = _commonService.GetEmployeeIdByUserIdAndEmail(siteId, userId);
+
+            if (!string.IsNullOrEmpty(leave.LeaveApproverId) && leave.LeaveApproverId == employeeId)
+                return true;
+
+            if (flag == "FD")
+            {
+                if (!string.IsNullOrEmpty(employeeId) && leave.EmployeeId == employeeId)
+                    return true;
+
+                var roleNames = await HttpContext.RequestServices
+                    .GetRequiredService<Vsky.Services.ApplicationUserRoles.IApplicationUserRoleService>()
+                    .GetNormalizedRoleNamesByUserAndSite(userId, siteId);
+                if (roleNames.Contains("hr"))
+                    return true;
+            }
+
+            var snapshot = await HttpContext.RequestServices
+                .GetRequiredService<Vsky.Services.Authorization.IPermissionService>()
+                .GetSnapshotAsync(userId, siteId);
+
+            return snapshot.IsSiteAdmin
+                   || snapshot.HasConfiguredManage(new[] { flag == "FD" ? MenuLinks.ForwardLeaves : MenuLinks.ApproveLeaves });
+        }
+
         #region UpdateEmployeeLeave
         // Title: Update EmployeeLeave
         // Description: This endpoint updates an existing EmployeeLeave by its ID. It validates the EmployeeLeave model, updates the EmployeeLeave's details.
+        // Login is required. The email link opens the login-protected approval page, so that
+        // workflow is unchanged, and nothing in the application called this anonymously.
         [HttpPut("{ids}")]
-        [AllowAnonymous]
-
         public async Task<IActionResult> UpdateEmployeeLeave(string ids, EmployeeLeaveModel model)
         {
             if (ModelState.IsValid)
@@ -704,7 +743,14 @@ namespace Vsky.Api.Controllers
 
                         // If no EmployeeLeave is not found with the given ID, return a bad request with an error message
                         if (entity == null)
-                            return BadRequest(new BadRequestError("No Employee Leave found with the specified id."));                       
+                            return BadRequest(new BadRequestError("No Employee Leave found with the specified id."));
+
+                        // Only the assigned approver, or someone with leave approval rights, may decide.
+                        if ((model.Flag == "FD" || model.Flag == "AV")
+                            && !await CanDecideLeaveAsync(entity, model.Flag, LoggedUserId, SiteId))
+                        {
+                            return AuthorizationAuditLog.Denied(StatusCodes.Status403Forbidden, "PERMISSION_DENIED", null);
+                        }
 
                         if (model.Flag == "FD")
                         {
@@ -813,7 +859,7 @@ namespace Vsky.Api.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return BadRequest(ex.Message);
+                    return BadRequest(SafeErrorMessage(ex));
                 }
             }
             // Return model state errors if the model state is not valid
@@ -825,6 +871,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteEmployeeLeaveById
         // Description: This endpoint deletes a employee leave based on the provided employee leave ID. It first retrieves the employee leave entity by ID, checks if it exists, and if so, deletes the employee leave. If the employee leave is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.Leave)]
         public async Task<IActionResult> DeleteEmployeeLeave(string id)
         {
             try
@@ -846,7 +893,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -855,6 +902,7 @@ namespace Vsky.Api.Controllers
         // Title: CancelEmployeeLeaveById
         // Description: This endpoint cancel a employee leave based on the provided employee leave ID. It first retrieves the employee leave entity by ID, checks if it exists, and if so, cancels the employee leave. If the employee leave is not found, it returns a BadRequest response with an error message.
         [HttpPost("cancelleave/{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.Leave)]
         public async Task<IActionResult> CancelEmployeeLeave(string id)
         {
             try
@@ -911,7 +959,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -973,7 +1021,7 @@ namespace Vsky.Api.Controllers
             //}
             //catch (Exception ex)
             //{
-            //    return BadRequest(ex.Message);
+            //    return BadRequest(SafeErrorMessage(ex));
             //}
         }
         #endregion

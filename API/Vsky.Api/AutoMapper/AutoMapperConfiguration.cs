@@ -178,6 +178,10 @@ namespace Vsky.Api.AutoMapper
             CreateMap<Issue, IssueModel>();
             CreateMap<IssueModel, Issue>();
 
+            CreateMap<SecurityGroupModel, SecurityGroup>();
+            CreateMap<MenuPermissionModel, SecurityGroupMenuPermission>();
+            CreateMap<MenuPermissionModel, UserMenuPermission>();
+
             CreateMap<Modules, ModulesModel>();
             CreateMap<ModulesModel, Modules>();
 

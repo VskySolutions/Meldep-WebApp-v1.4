@@ -23,6 +23,7 @@ using Vsky.Services.Common;
 namespace Vsky.Api.Controllers
 {
     [Route("menus")]
+    [SiteMember]
     public class ModulesMenusController : BaseController
     {
 
@@ -124,6 +125,7 @@ namespace Vsky.Api.Controllers
 
         #region CreateMenu
         [HttpPost]
+        [RequireSystemAdmin]
         public async Task<IActionResult> CreateMenu(ModulesMenusModel model)
         {
             if (ModelState.IsValid)
@@ -195,6 +197,7 @@ namespace Vsky.Api.Controllers
 
         #region UpdateMenu
         [HttpPut("{id}")]
+        [RequireSystemAdmin]
         public async Task<IActionResult> UpdateMenu(string id, ModulesMenusModel model)
         {
             if (ModelState.IsValid)
@@ -243,6 +246,7 @@ namespace Vsky.Api.Controllers
 
         #region DeleteMenu
         [HttpDelete("{id}")]
+        [RequireSystemAdmin]
         public async Task<IActionResult> DeleteMenu(string id)
         {
             var entity = await _menuService.GetMenuById(id);
@@ -269,7 +273,8 @@ namespace Vsky.Api.Controllers
 
         #region Menu Permissions Methods
         [HttpPost("savesitemenupermission")]
-        public async Task<IActionResult> CreateSiteModuleMenuPermission(SitesModulesMenusPermissionsModel model)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> CreateSiteModuleMenuPermission(SitesModulesMenusPermissionsModel model, [FromServices] AdminAccess adminAccess)
         {
             if (ModelState.IsValid)
             {
@@ -281,6 +286,9 @@ namespace Vsky.Api.Controllers
                 var entity = await _sitesModulesMenusPermissionsService.GetSiteModuleMenuPermissionById(model.Id);
                 if (entity == null)
                     return BadRequest(new BadRequestError("No menu found with the specified id."));
+
+                if (!await adminAccess.CanAdministerSiteAsync(LoggedUserId, entity.SiteId))
+                    return AdminDenied.Result();
 
                 entity.IsShowMenu = model.IsShowMenu;
                 entity.IsView = model.IsView;
@@ -296,7 +304,8 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("assignRolesToMenu")]
-        public async Task<IActionResult> SaveRolesToSiteModuleMenu(SitesModulesMenusPermissionsModel model)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> SaveRolesToSiteModuleMenu(SitesModulesMenusPermissionsModel model, [FromServices] AdminAccess adminAccess)
         {
             var loggedUserId = User.GetLoggedInUserId<string>();
             var siteId = _globalVariable.SiteId;
@@ -304,6 +313,12 @@ namespace Vsky.Api.Controllers
             var dateTime = _siteService.GetDateTime(siteData.TimeZone);
 
             var roleIds = model.SiteRoleIds.Split(',');
+
+            if (!await adminAccess.CanAdministerSiteAsync(loggedUserId, model.SiteId))
+                return AdminDenied.Result();
+
+            if (!await adminAccess.AreSiteRolesInSiteAsync(model.SiteId, roleIds))
+                return BadRequest(new BadRequestError("One or more selected roles are not valid for this site."));
 
             foreach (var roleId in roleIds)
             {
@@ -333,9 +348,8 @@ namespace Vsky.Api.Controllers
                         .InsertSiteModuleMenusPermission(entity);
                 } else
                 {
+                    // Re-assigning a role must not wipe View and Manage values an admin already set.
                     entity.IsShowMenu = true;
-                    entity.IsView = false;
-                    entity.IsManage = false;
                     entity.UpdatedById = loggedUserId;
                     entity.UpdatedOnUtc = dateTime;
                     _sitesModulesMenusPermissionsService.UpdateSiteModuleMenusPermission(entity);
@@ -348,6 +362,7 @@ namespace Vsky.Api.Controllers
 
         #region DeleteModuleMenuRoleAccess
         [HttpDelete("delete-role-access/{siteId}/{moduleMenuId}/{roleId}")]
+        [RequireSiteAdmin(SiteKey = "siteId")]
         public async Task<IActionResult> DeleteModuleMenuRoleAccess(string siteId, string moduleMenuId, string roleId)
         {
             var permission = await _sitesModulesMenusPermissionsService

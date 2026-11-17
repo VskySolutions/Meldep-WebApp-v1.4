@@ -57,6 +57,9 @@ namespace Vsky.Services.Persons
         Task<PersonSitesMapping> GetLastUsedSiteByPersonId(string personId);
         #endregion
 
+        #region GetAllSitesByUserId
+        Task<IList<PersonSitesMapping>> GetAllSitesByUserId(string userId);
+        #endregion
 
         #region InsertPersonSites
         void InsertPersonSites(PersonSitesMapping entity);
@@ -64,6 +67,7 @@ namespace Vsky.Services.Persons
 
         #region UpdatePersonSites
         void UpdatePersonSites(PersonSitesMapping entity);
+        void UpdatePersonSites(IEnumerable<PersonSitesMapping> entities);
         #endregion
 
         #region DeletePersonSites

@@ -27,6 +27,7 @@ using Vsky.Services.SitesRole;
 namespace Vsky.Api.Controllers
 {
     [Route("modules")]
+    [SiteMember]
     public class ModulesController : BaseController
     {
         #region Services Initialization
@@ -80,7 +81,6 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region GetAllModules
-        [AllowAnonymous]
         [HttpGet("moduleslist")]
         public async Task<IActionResult> GetModules()
         {
@@ -92,7 +92,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -113,7 +113,7 @@ namespace Vsky.Api.Controllers
 
         #region GetSiteActiveModulesMenu
         [HttpGet("activemodulesmenusbysite")]
-        public async Task<IActionResult> GetSiteActiveModulesMenus()
+        public async Task<IActionResult> GetSiteActiveModulesMenus([FromServices] Vsky.Services.Authorization.IPermissionService permissionService)
         {
             try
             {
@@ -131,14 +131,26 @@ namespace Vsky.Api.Controllers
                     .ToArray();
 
                 var rolesArray = siteRoleIds.Length > 0 ? siteRoleIds : Array.Empty<string>();
-                var list = await _sitesModulesService.GetSiteActiveModulesMenus(SiteId, rolesArray);
+
+                // With no group or individual grants the role query runs exactly as before.
+                var snapshot = await permissionService.GetSnapshotAsync(LoggedUserId, SiteId);
+                var list = snapshot.DirectGrantLinks.Count == 0
+                    ? await _sitesModulesService.GetSiteActiveModulesMenus(SiteId, rolesArray)
+                    : await _sitesModulesService.GetSiteActiveModulesMenus(SiteId, rolesArray, link =>
+                    {
+                        var key = Vsky.Services.Authorization.MenuLink.Normalize(link);
+                        if (key == null || !snapshot.DirectGrantLinks.Contains(key))
+                            return null;
+
+                        return snapshot.Menus.TryGetValue(key, out var access) && access.Show;
+                    });
                 var model = _mapper.Map<IList<CustomSiteModule>>(list);
 
                 return Ok(model);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -158,6 +170,7 @@ namespace Vsky.Api.Controllers
 
         #region CreateModule
         [HttpPost]
+        [RequireSystemAdmin]
         public async Task<IActionResult> CreateModule(ModulesModel model)
         {
             if (ModelState.IsValid)
@@ -199,6 +212,7 @@ namespace Vsky.Api.Controllers
 
         #region UpdateModule
         [HttpPut("{id}")]
+        [RequireSystemAdmin]
         public async Task<IActionResult> UpdateModule(string id, ModulesModel model)
         {
             if (ModelState.IsValid)
@@ -236,6 +250,7 @@ namespace Vsky.Api.Controllers
 
         #region DeleteModule
         [HttpDelete("{id}")]
+        [RequireSystemAdmin]
         public async Task<IActionResult> DeleteModule(string id)
         {
             var entity = await _moduleService.GetModuleById(id);
@@ -271,6 +286,7 @@ namespace Vsky.Api.Controllers
         #region GetMenuPermission
         //for toggle functionality
         [HttpGet("sitesmenusmanage-permission/{siteId}/{siteRoleId}")]
+        [RequireMenu(MenuLinks.SiteRoles + "|" + MenuLinks.Sites + "|" + MenuLinks.Modules)]
         public async Task<IActionResult> GetSiteModuleMenuPermission(string siteId, string siteRoleId)
         {
             try
@@ -291,11 +307,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("menu-role-permissions/list")]
+        [ReadAccess]
+        [RequireMenu(MenuLinks.SiteRoles + "|" + MenuLinks.Sites + "|" + MenuLinks.Modules)]
         public async Task<IActionResult> GetSiteMenuRolePermissions(SitesModulesMenusPermissionsSearchModel searchModel)
         {
             try
@@ -323,18 +341,22 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region SaveSitesModules
         [HttpPost("savesitemodules")]
-        public async Task<IActionResult> SaveSitesModules(SitesModulesModel model)
+        [RequireSiteAdmin]
+        public async Task<IActionResult> SaveSitesModules(SitesModulesModel model, [FromServices] AdminAccess adminAccess)
         {
             if (ModelState.IsValid)
             {
                 var LoggedUserId = User.GetLoggedInUserId<string>();
+                if (!await adminAccess.CanAdministerSiteAsync(LoggedUserId, model.SiteId))
+                    return AdminDenied.Result();
+
                 var SiteId = _globalVariable.SiteId;
                 var SiteData = await _siteService.GetById(SiteId);
                 var GetDateTime = _siteService.GetDateTime(SiteData.TimeZone);

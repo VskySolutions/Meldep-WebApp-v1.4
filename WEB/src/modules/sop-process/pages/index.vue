@@ -88,7 +88,7 @@
                 </div>
               </div>
               <div>
-                <q-btn
+                <q-btn v-can
                   v-if="role === 'editor' || role === 'both'"
                   icon="o_add"
                   outline label="Add Process"
@@ -423,7 +423,7 @@
               }">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 v-if="canEdit(props.row) ||
                   (
                     canApprove() &&
@@ -485,7 +485,7 @@
                   }}
                 </q-tooltip>
               </q-icon>
-              <q-icon
+              <q-icon v-can
                 v-if="canDelete(props.row)"
                 name="o_delete_outline"
                 class="cursor-pointer"

@@ -406,7 +406,7 @@
                       v-if="isDisabled(model.statusId) !== 'New' && isDisabled(model.statusId) !== 'Open'"
                       class="text-black RichTextEditor"
                     >
-                      <p v-if="model.description" v-html="model.description" />
+                      <p v-if="model.description" v-safe-html="model.description" />
                     </div>
                     <div
                       v-else

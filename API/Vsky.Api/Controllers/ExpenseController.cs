@@ -38,6 +38,7 @@ using static Vsky.Api.Models.ExpenseModel;
 namespace Vsky.Api.Controllers
 {
     [Route("Expense")]
+    [RequireMenu(MenuLinks.ExpenseAny)]
     public class ExpenseController : BaseController
     {
         #region Services Initialization
@@ -107,6 +108,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllExpenses
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllExpenses(ExpensesSearchModel searchModel)
         {
             try
@@ -146,13 +148,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
 
         #region GetAllApproverExpenses
         [HttpPost("approve-expense-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllApproverExpenses(ExpensesSearchModel searchModel)
         {
             try
@@ -190,7 +193,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -211,7 +214,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -235,13 +238,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
 
         #region GetBankAccountNoList
         [HttpGet("GetBankAccountNoBySelectItemList")]
+        [SiteMember]
         public async Task<IActionResult> GetBankAccountNoList()
         {
             try
@@ -259,7 +263,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -298,7 +302,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -451,8 +455,9 @@ namespace Vsky.Api.Controllers
                                         await file.CopyToAsync(stream);
                                     }
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
+                                    LogHandled(ex, "Expense line file upload failed");
                                     return BadRequest(new BadRequestError("Expense line file upload failed"));
                                 }
 
@@ -486,7 +491,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -692,7 +697,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(new BadRequestError($"An error occurred: {e.Message}"));
+                return BadRequest(new BadRequestError($"An error occurred: {SafeErrorMessage(e)}"));
             }
         }
         #endregion
@@ -739,7 +744,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(new BadRequestError(e.Message));
+                return BadRequest(new BadRequestError(SafeErrorMessage(e)));
             }
         }
         #endregion

@@ -17,7 +17,7 @@
           <q-btn icon="o_assignment" outline no-caps color="primary" class="q-mr-xs" label="Notes" @click="openProjectNotes(projectId, 'Projects', projectId, '', '')" />
           <q-btn icon="o_developer_board" outline no-caps :color="!viewAsWorkBoardOrList ? 'secondary' : 'primary'" class="q-mr-xs" @click="viewAsWorkBoardOrList=true"><q-tooltip>WorkBoard View</q-tooltip></q-btn>
           <q-btn icon="o_format_list_bulleted" outline no-caps :color="viewAsWorkBoardOrList ? 'secondary' : 'primary'" class="q-mr-xs" @click="viewAsWorkBoardOrList = false"><q-tooltip>WorkBoard as List</q-tooltip></q-btn>
-          <q-btn icon="o_add" outline no-caps color="primary" label="Add Swimlane" class="q-mr-xs" @click="showSwimLaneTypeModal = true" />
+          <q-btn v-can icon="o_add" outline no-caps color="primary" label="Add Swimlane" class="q-mr-xs" @click="showSwimLaneTypeModal = true" />
           <q-btn icon="o_chevron_left" outline no-caps color="secondary" :label="'Back'" @click="$router.back()" />
         </div>
       </q-card-section>
@@ -71,7 +71,7 @@
               </div>
               <div class="col-xxl-1 col-lg-1 col-md-2 col-sm-2 col-xs-3 text-end">
                 <!-- SwimLane View More -->
-                <q-btn v-if="lane.swimlaneType.dropDownValue !== defaultSwimlaneTypeName" dense flat icon="o_add" size="sm" color="primary" @click="addList(swimLaneIndex)">
+                <q-btn v-can v-if="lane.swimlaneType.dropDownValue !== defaultSwimlaneTypeName" dense flat icon="o_add" size="sm" color="primary" @click="addList(swimLaneIndex)">
                   <q-tooltip>Add List</q-tooltip>
                 </q-btn>
                 <q-btn dense flat icon="o_more_vert" size="sm" color="primary" class="q-pa-none" @click.stop>
@@ -529,7 +529,7 @@
                           </q-item>
                           <q-item class="q-pa-none table text-end" style="min-height: 48px;">
                             <!-- Add Project Task -->
-                            <q-btn v-show="projectListHovered === list.id" color="primary" icon="o_add" outline no-caps label="Add Task" class="full-width q-mt-sm" style="height: 30px; min-height: 30px;" @click="addTask(swimLaneIndex, listIndex)" />
+                            <q-btn v-can v-show="projectListHovered === list.id" color="primary" icon="o_add" outline no-caps label="Add Task" class="full-width q-mt-sm" style="height: 30px; min-height: 30px;" @click="addTask(swimLaneIndex, listIndex)" />
                           </q-item>
                         </q-list>
                       </div>
@@ -594,7 +594,7 @@
               <!-- SwimLane Actions -->
               <div class="col-xxl-1 col-lg-1 col-md-2 col-sm-2 col-xs-3 text-end">
                 <!-- SwimLane - Add -->
-                <q-btn v-if="lane.swimlaneType.dropDownValue !== defaultSwimlaneTypeName" dense flat icon="o_add" size="sm" color="primary" @click="addList(swimLaneIndex)">
+                <q-btn v-can v-if="lane.swimlaneType.dropDownValue !== defaultSwimlaneTypeName" dense flat icon="o_add" size="sm" color="primary" @click="addList(swimLaneIndex)">
                   <q-tooltip>Add List</q-tooltip>
                 </q-btn>
                 <!-- SwimLane - View More -->
@@ -1109,7 +1109,7 @@
                           </div>
                           <div class="col-xxl-1 col-md-2 flex" style="min-height: 48px;">
                             <!-- Add Project Task -->
-                            <q-btn v-show="projectListHovered === list.id" color="primary" icon="o_add" outline no-caps label="Add Task" class="full-width q-mt-sm" style="height: 30px; min-height: 30px;" @click="addTask(swimLaneIndex, listIndex)" />
+                            <q-btn v-can v-show="projectListHovered === list.id" color="primary" icon="o_add" outline no-caps label="Add Task" class="full-width q-mt-sm" style="height: 30px; min-height: 30px;" @click="addTask(swimLaneIndex, listIndex)" />
                           </div>
                         </div>
                       </div>

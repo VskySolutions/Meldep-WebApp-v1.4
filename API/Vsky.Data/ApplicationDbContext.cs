@@ -32,6 +32,10 @@ namespace Vsky.Data
         public virtual DbSet<SitesModules> SitesModules { get; set; }
         public virtual DbSet<SitesModulesMenus> SitesModulesMenus { get; set; }
         public virtual DbSet<SitesModulesMenusPermissions> SitesModulesMenusPermissions { get; set; }
+        public virtual DbSet<SecurityGroup> SecurityGroups { get; set; }
+        public virtual DbSet<SecurityGroupMember> SecurityGroupMembers { get; set; }
+        public virtual DbSet<SecurityGroupMenuPermission> SecurityGroupMenuPermissions { get; set; }
+        public virtual DbSet<UserMenuPermission> UserMenuPermissions { get; set; }
         public virtual DbSet<SitesModifiedLogs> SitesModifiedLogs { get; set; }
         public virtual DbSet<TimeZones> TimeZone { get; set; }
 
@@ -441,6 +445,12 @@ namespace Vsky.Data
                 entity.HasOne(d => d.SitesRoles).WithMany().HasForeignKey(d => d.SiteRoleId);
                 entity.HasOne(d => d.SitesModulesMenus).WithMany(x => x.SitesModulesMenusPermissions).HasForeignKey(d => d.SiteModuleMenuId);
             });
+
+            // The tables come from Vsky.Database/schema_security_permissions.sql.
+            builder.Entity<SecurityGroup>(entity => entity.ToTable("SecurityGroups"));
+            builder.Entity<SecurityGroupMember>(entity => entity.ToTable("SecurityGroupMembers"));
+            builder.Entity<SecurityGroupMenuPermission>(entity => entity.ToTable("SecurityGroupMenuPermissions"));
+            builder.Entity<UserMenuPermission>(entity => entity.ToTable("UserMenuPermissions"));
 
             builder.Entity<SitesModifiedLogs>(entity =>
             {

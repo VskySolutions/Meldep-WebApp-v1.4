@@ -20,6 +20,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("server")]
+    [RequireMenu(MenuLinks.Server)]
     public class ServerController : BaseController
     {
         #region Services Initialization
@@ -52,6 +53,7 @@ namespace Vsky.Api.Controllers
         #region GetAllServers
 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllServers(ServerSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -70,6 +72,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllServers
         [HttpPost("ftplist")]
+        [ReadAccess]
         public IActionResult GetFTPList(ServerSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -86,6 +89,7 @@ namespace Vsky.Api.Controllers
 
         #region GetServerById
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Server))]
         public async Task<IActionResult> GetServerById(string id)
         {
             var entity = await _serverService.GetServerDetailsById(id);
@@ -158,6 +162,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -165,6 +170,7 @@ namespace Vsky.Api.Controllers
 
         #region UpdateServer
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Server))]
         public async Task<IActionResult> UpdateServer(string id, ServerModel model)
         {
             try
@@ -266,6 +272,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -273,6 +280,7 @@ namespace Vsky.Api.Controllers
 
         #region DeleteServer
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Server))]
         public async Task<IActionResult> DeleteServer(string id)
         {
             try
@@ -287,7 +295,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -295,6 +303,7 @@ namespace Vsky.Api.Controllers
         #region GetAllServerListForDropdown
         // Title: GetAllServerListForDropdown
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllServerListForDropdown()
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -308,6 +317,7 @@ namespace Vsky.Api.Controllers
         #region GetAllTypeListForDropdown
         // Title: GetAllServerListForDropdown
         [HttpGet("dropdown/typelist")]
+        [SiteMember]
         public async Task<IActionResult> GetAllServerListForDropdown(string type)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();

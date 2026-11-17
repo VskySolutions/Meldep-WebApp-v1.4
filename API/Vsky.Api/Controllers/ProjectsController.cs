@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Pqc.Crypto.Lms;
+using StackExchange.Profiling.Internal;
 using Vsky.Api.ApiErrors;
 using Vsky.Api.Extensions;
 using Vsky.Api.Models;
@@ -50,6 +51,7 @@ using Vsky.Services.Timesheets;
 namespace Vsky.Api.Controllers
 {
     [Route("projects")]
+    [RequireMenu(MenuLinks.ProjectWork)]
     public class ProjectsController : BaseController
     {
         #region Define Services
@@ -199,6 +201,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Projects
         // Description: This endpoint fetches a list of projects based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjects(ProjectSearchModel searchModel)
         {
             try
@@ -212,12 +215,24 @@ namespace Vsky.Api.Controllers
                 if (!string.IsNullOrWhiteSpace(searchModel.StatusId))
                 {
                     var activeStatus = _dropDownService.GetDropDownById(searchModel.StatusId).GetAwaiter().GetResult();
-                    Status = activeStatus.DropDownValue == "Active" ? 1 : (activeStatus.DropDownValue == "Inactive" ? 0 : 2);
+                    //Status = (!string.IsNullOrWhiteSpace(activeStatus.DropDownValue)) && activeStatus.DropDownValue == "Active" ? 1 : (activeStatus.DropDownValue == "Inactive" ? 0 : 2);
+                    Status = activeStatus?.DropDownValue switch
+                    {
+                        "Active" => 1,
+                        "Inactive" => 0,
+                        _ => 2
+                    };
                 }
                 if (!string.IsNullOrWhiteSpace(searchModel.ArchiveStatusId))
                 {
                     var archivedStatus = _dropDownService.GetDropDownById(searchModel.ArchiveStatusId).GetAwaiter().GetResult();
-                    archiveStatus = archivedStatus.DropDownValue == "Archive" ? 1 : (archivedStatus.DropDownValue == "Unarchive" ? 0 : 2);
+                    //archiveStatus = archivedStatus.DropDownValue == "Archive" ? 1 : (archivedStatus.DropDownValue == "Unarchive" ? 0 : 2);
+                    archiveStatus = archivedStatus?.DropDownValue switch
+                    {
+                        "Archive" => 1,
+                        "Unarchive" => 0,
+                        _ => 2
+                    };
                 }
 
                 // Fetch a list of projects based on search criterias
@@ -272,11 +287,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("projectListForNotes")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectsForNotes(ProjectSearchModel searchModel)
         {
             try
@@ -327,11 +343,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("listFromSP")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectListFromSP([FromBody] ProjectListRequest request)
         {
             try
@@ -341,7 +358,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException.ToString());
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -350,6 +367,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllProjectListForDropdown
         // Description: This endpoint retrieves the details of a specific project based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllProjectListForDropdown([FromQuery] string[] statuses = null)
         {
             try
@@ -365,12 +383,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         //[HttpGet("allDropdown/list/{isTemplate}/{archiveStatus}/{isAllProject}")]
         [HttpGet("allDropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetProjectsListForDropdown(bool isTemplate, string archiveStatus, bool isAllProject)
         {
             try
@@ -386,7 +405,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -395,6 +414,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllProjectsForDropdown
         // Description: This endpoint retrieves all projects for the dropdown without applying an activity status filter.
         [HttpGet("dropdown/all-projects")]
+        [SiteMember]
         public async Task<IActionResult> GetAllProjectsForDropdown(
             bool isTemplate)
         {
@@ -419,7 +439,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -428,6 +448,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllProjectTagListForDropdown
         // Description: This endpoint retrieves all tags created by the logged-in user for dropdown display.
         [HttpGet("projectTags/dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllProjectTagListForDropdown()
         {
             try
@@ -441,13 +462,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllCustomerContactListByProjectIdForDropdown
         [HttpGet("project-customer-contact-dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllCustomerContactListByProjectIdForDropdown(string projectId)
         {
             try
@@ -468,7 +490,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -477,6 +499,8 @@ namespace Vsky.Api.Controllers
         // Title: GetProjectById
         // Description: This endpoint retrieves the details of a specific project based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.Project)]
+        [SiteOwned(typeof(Vsky.Models.Project))]
         public async Task<IActionResult> GetProjectById(string id)
         {
             try
@@ -494,7 +518,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -552,7 +576,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -579,7 +603,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -612,7 +636,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -621,6 +645,8 @@ namespace Vsky.Api.Controllers
         // Title: Get Projects And Charter List
         // Description: This endpoint fetches a list of projects based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("Dashboardlist")]
+        [ReadAccess]
+        [RequireMenu(MenuLinks.Dashboard + "|" + MenuLinks.ProjectWork)]
         public IActionResult GetProjectsAndCharterListForDashboard(ProjectSearchModel searchModel)
         {
             try
@@ -641,13 +667,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllFilesByProjectId
         [HttpPost("filesList")]
+        [ReadAccess]
         public IActionResult GetAllFilesByProjectId(PicturesSearchModel searchModel)
         {
             try
@@ -665,7 +692,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -827,7 +854,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -910,7 +937,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -1028,7 +1055,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1037,6 +1064,8 @@ namespace Vsky.Api.Controllers
         // Title: UpdateProject
         // Description: This endpoint updates an existing project by its ID. It validates the project model, checks for duplicate project names within the same customer, updates the project's details, removes existing team members, and adds new team members if provided.
         [HttpPut("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.Project)]
+        [SiteOwned(typeof(Vsky.Models.Project))]
         public async Task<IActionResult> UpdateProject(string id, [FromForm] ProjectModel model)
         {
             try
@@ -1499,7 +1528,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1522,7 +1551,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1602,7 +1631,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1643,7 +1672,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1666,7 +1695,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1689,7 +1718,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1728,7 +1757,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1737,6 +1766,8 @@ namespace Vsky.Api.Controllers
         // Title: DeleteProjectById
         // Description: This endpoint deletes a project based on the provided project ID. It first retrieves the project entity by ID, checks if it exists, and if so, deletes the project. If the project is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [RecordScope(Vsky.Services.Authorization.RecordRule.Project)]
+        [SiteOwned(typeof(Vsky.Models.Project))]
         public async Task<IActionResult> DeleteProject(string id)
         {
             try
@@ -1754,7 +1785,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1858,7 +1889,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1869,6 +1900,7 @@ namespace Vsky.Api.Controllers
         // Title: GetmessagesByProjectId
         // Description: This endpoint retrieves the details of a specific project messages based on its unique identifier (ID). 
         [HttpGet("projectmessages/list/{id}")]
+        [SiteMember]
         public async Task<IActionResult> GetmessagesByProjectId(string id)
         {
             try
@@ -1881,7 +1913,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1941,7 +1973,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1984,7 +2016,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -2009,13 +2041,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId
         [HttpGet("ProjectCharterEmployeesWithWeeklyPlanHours/list")]
+        [SiteMember]
         public async Task<IActionResult> GetProjectCharterEmployeesWithWeeklyPlanHoursByProjectId(string id, string taskId)
         {
             try
@@ -2031,7 +2064,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -2040,6 +2073,7 @@ namespace Vsky.Api.Controllers
 
         #region GetProjectEmployeesByProjectId
         [HttpGet("ProjectEmployees/list")]
+        [SiteMember]
         public async Task<IActionResult> GetProjectEmployeesByProjectId(string id)
         {
             try
@@ -2055,12 +2089,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
         #region GetProjectEmployeesByProjectIdAndReturnUserId
         [HttpGet("ProjectMappingUsers/list")]
+        [SiteMember]
         public async Task<IActionResult> GetProjectEmployeesByProjectIdAndReturnUserId(string id)
         {
             try
@@ -2076,7 +2111,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -2170,7 +2205,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -2179,6 +2214,7 @@ namespace Vsky.Api.Controllers
 
         #region Get All List
         [HttpPost("get-project-weekly-plan")]
+        [ReadAccess]
         public async Task<IActionResult> GetProjectWeeklyPlanAsync(ProjectWeeklyPlanSearchModel searchModel)
         {
             try
@@ -2229,11 +2265,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("get-project-weekly-plan-details")]
+        [ReadAccess]
         public async Task<IActionResult> GetProjectWeeklyPlanAsync(string projectId, string planTypeId, string sortByFilter = null, int skipIndex = 0, int takeCount = 4, DateTime? weekEndDate = null, string projectTaskId = null)
         {
             try
@@ -2250,11 +2287,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("get-project-weekly-type-id")]
+        [ReadAccess]
         public async Task<IActionResult> GetProjectWeeklyTypeIdAsync(string type, string value)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -2265,6 +2303,7 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("get-all-employees-esthrs-as-dropdown-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllEmployeesEstHrsAsDropdownListAsync(Guid projectId, Guid planTypeId, DateTime weekDate)
         {
             try
@@ -2291,12 +2330,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
 
         }
 
         [HttpPost("get-resource-summary-for-weekPlan-by-id")]
+        [ReadAccess]
         public async Task<IActionResult> GetResourceSummaryForWeekPlanByIdAsync(string planTypeId, string planDateId)
         {
             try
@@ -2306,7 +2346,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -2337,7 +2377,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -2368,7 +2408,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -2400,7 +2440,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -2517,7 +2557,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -2718,7 +2758,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -2784,7 +2824,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -2921,7 +2961,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -3067,7 +3107,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"{ex.Message} :- {ex.InnerException?.Message}");
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -3094,7 +3134,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -3121,7 +3161,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -3164,7 +3204,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -3190,11 +3230,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("check-if-employee-already-exists-in-plan-line")]
+        [ReadAccess]
         public async Task<IActionResult> CheckIfEmployeeAlreadyExistsInPlanLine(string Id, string EmployeeId)
         {
             try
@@ -3204,7 +3245,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -3406,7 +3447,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -74,7 +74,7 @@
                 </div>
               <!-- </div> -->
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Bulk" no-caps class="text-primary btnRounded" @click="onInfraAccountServicesAddBulk(refreshInfraAccountServicesList)">
+                <q-btn v-can icon="o_add" outline label="Add Bulk" no-caps class="text-primary btnRounded" @click="onInfraAccountServicesAddBulk(refreshInfraAccountServicesList)">
                   <q-tooltip>Add Infra Account Services</q-tooltip>
                 </q-btn>
                  <!-- Reset Column Width -->
@@ -446,7 +446,7 @@
                   >
                     <q-tooltip>Assign Project</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     v-if="editingRowId !== props.row.id"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
@@ -507,7 +507,7 @@
                     :wallet-options="infraWalletTypeDropdownSingleSelect.list.value"
                     :on-save-api="saveWalletDetails"
                   />
-                  <q-icon
+                  <q-icon v-can
                     name="o_delete_outline"
                     class="cursor-pointer"
                     color="negative"

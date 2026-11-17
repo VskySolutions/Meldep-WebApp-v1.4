@@ -12,6 +12,7 @@ using Vsky.Services.TimesheetAISummarys;
 namespace Vsky.Api.Controllers
 {
     [Route("timesheet-AI-summary")]
+    [RequireMenu(MenuLinks.Timesheet + "|" + MenuLinks.BillingProcessing)]
     public class TimesheetAISummaryController : BaseController
     {
         #region Define Services
@@ -38,6 +39,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All TimesheetAISummary
         // Description: This endpoint fetches a list of Timesheet AI Summary based on the provided search criteria such as sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllTimesheetAISummary(TimesheetAISummarySearchModel searchModel)
         {
             try
@@ -61,7 +63,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -87,7 +89,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -117,7 +119,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -155,7 +157,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -181,7 +183,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -17,6 +17,7 @@ using Vsky.Services.SitesItemSubCategoryAttributesMappings;
 namespace Vsky.Api.Controllers
 {
     [Route("sites_item_subcategory_attributes_mapping")]
+    [SiteMember]
     public class SitesItemSubCategoryAttributesMappingController : BaseController
     {
 
@@ -61,7 +62,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -105,7 +106,7 @@ namespace Vsky.Api.Controllers
 
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -134,7 +135,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

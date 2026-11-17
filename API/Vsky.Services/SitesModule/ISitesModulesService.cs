@@ -27,6 +27,7 @@ namespace Vsky.Services.SitesModule
 
         #region GetSiteActiveModulesMenu
         Task<IList<CustomSiteModule>> GetSiteActiveModulesMenus(string siteId, string[] roleId);
+        Task<IList<CustomSiteModule>> GetSiteActiveModulesMenus(string siteId, string[] roleId, Func<string, bool?> visibilityOverride);
         #endregion
 
         #region InsertSiteModule

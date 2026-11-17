@@ -43,7 +43,7 @@
                         <q-checkbox v-model="model.taskIds" :val="props.row.id" />
                       </q-td>
                       <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 100%;" class="RichTextEditor">
-                        <div class="text-black RichTextEditor" v-html="props.row.name" />
+                        <div class="text-black RichTextEditor" v-safe-html="props.row.name" />
                         <span style="font-size: 12px;">{{ "[" + props.row.status.dropDownValue + "]" }}</span>
                       </q-td>
                       <q-td>{{ toDate(props.row.startDate) }}</q-td>

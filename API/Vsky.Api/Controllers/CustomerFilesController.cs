@@ -17,6 +17,7 @@ using System.Numerics;
 namespace Vsky.Api.Controllers
 {
     [Route("customer-file")]
+    [RequireMenu(MenuLinks.CustomerFiles + "|" + MenuLinks.Customer)]
     public class CustomerFilesController : BaseController
     {
         #region Define service
@@ -45,6 +46,7 @@ namespace Vsky.Api.Controllers
 
         #region Get All
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllCustomerFiles(CustomerFilesSearchModel searchModel)
         {
             try
@@ -66,11 +68,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         
         [HttpPost("listVW")]
+        [ReadAccess]
         public IActionResult GetAllCustomerFilesFromVW(CustomerFilesSearchModel searchModel)
         {
             try
@@ -92,7 +95,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -101,6 +104,7 @@ namespace Vsky.Api.Controllers
 
         #region
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.CustomerFiles))]
         public async Task<IActionResult> GetCustomerFileDetailsById(string id)
         {
             try
@@ -117,7 +121,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -140,7 +144,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -215,12 +219,13 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
 
         #region UpdateCustomerFiles
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.CustomerFiles))]
         public async Task<IActionResult> UpdateCustomerFiles(string id, CustomerFilesModel model)
         {
             try
@@ -280,6 +285,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
+                LogHandled(ex);
             }
             return ModelStateError(ModelState);
         }
@@ -287,6 +293,7 @@ namespace Vsky.Api.Controllers
 
         #region DeleteCustomerFiles
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.CustomerFiles))]
         public async Task<IActionResult> DeleteCustomerFiles(string id)
         {
             var entity = await _customerFilesService.GetById(id);

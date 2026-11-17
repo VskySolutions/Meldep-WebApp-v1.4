@@ -19,6 +19,7 @@ using Vsky.Services.TestCases;
 namespace Vsky.Api.Controllers
 {
     [Route("project-release-tracking")]
+    [RequireMenu(MenuLinks.ProjectWork)]
     public class ProjectReleaseTrackingController : BaseController
     {
         #region Define Services
@@ -68,6 +69,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllProjectReleaseTrackingList
         // Description: This endpoint retrieves the list of release tracking.
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectReleaseTrackingList(ProjectReleaseTrackingSearchModel searchModel)
         {
             try
@@ -104,7 +106,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -160,7 +162,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -183,6 +185,8 @@ namespace Vsky.Api.Controllers
         // Title: GetProjectReleaseTrackingInDetailsById
         // Description: This endpoint retrieves the details of a specific release tracking based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectReleaseTracking))]
+        [SiteOwned(typeof(Vsky.Models.ProjectReleaseTracking))]
         public async Task<IActionResult> GetProjectReleaseTrackingInDetailsById(string id)
         {
             try
@@ -197,7 +201,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -293,7 +297,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -302,6 +306,8 @@ namespace Vsky.Api.Controllers
         // Title: UpdateProjectReleaseTracking
         // Description: This endpoint updates an existing release tracking by its ID. 
         [HttpPut("{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectReleaseTracking))]
+        [SiteOwned(typeof(Vsky.Models.ProjectReleaseTracking))]
         public async Task<IActionResult> UpdateProjectReleaseTracking(string id, SaveProjectReleaseTracking model)
         {
             try
@@ -594,7 +600,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -642,7 +648,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -651,6 +657,8 @@ namespace Vsky.Api.Controllers
         // Title: DeleteProjectReleaseTracking
         // Description: This endpoint deletes a release tracking based on the provided release tracking ID. It first retrieves the release tracking entity by ID, checks if it exists, and if so, deletes the release tracking. If the release tracking is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [RecordScope(typeof(Vsky.Models.ProjectReleaseTracking))]
+        [SiteOwned(typeof(Vsky.Models.ProjectReleaseTracking))]
         public async Task<IActionResult> DeleteProjectReleaseTracking(string id)
         {
             try
@@ -666,7 +674,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

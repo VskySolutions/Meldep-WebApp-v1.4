@@ -18,6 +18,7 @@ using System.Collections.Generic;
 namespace Vsky.Api.Controllers
 {
     [Route("movementRegister")]
+    [SiteMember]
     public class MovementRegisterController : BaseController
     {
         #region Define Services
@@ -62,6 +63,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllMovementRegistersAsync
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllMovementRegistersAsync(MovementRegisterSearchModel searchModel)
         {
             try
@@ -119,13 +121,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllMovementRegistersForDashboard
         [HttpPost("dashboardlist")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllMovementRegistersForDashboard(MovementRegisterSearchModel searchModel)
         {
             try
@@ -160,7 +163,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -184,7 +187,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -209,7 +212,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -279,7 +282,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -340,7 +343,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

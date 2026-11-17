@@ -30,6 +30,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace Vsky.Api.Controllers
 {
     [Route("requirement")]
+    [RequireMenu(MenuLinks.Requirement)]
     public class RequirementController : BaseController
     {
 
@@ -98,6 +99,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Requirements
         // Description: This endpoint fetches a list of Requirements based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllRequirements(RequirementSearchModel searchModel)
         {
             try
@@ -145,7 +147,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion      
@@ -154,6 +156,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllRequirementTagListForDropdown
         // Description: This endpoint retrieves all tags created by the logged-in user for dropdown display.
         [HttpGet("requirementTags/dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllRequirementTagListForDropdown()
         {
             try
@@ -167,7 +170,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -176,6 +179,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllRequirementListForDropdown
         // Description: This endpoint retrieves the list of Requirements. 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllRequirementListForDropdown(string ProjectModuleId = null, string ProjectId = null, string requirementType = null)
         {
             try
@@ -188,7 +192,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -197,6 +201,8 @@ namespace Vsky.Api.Controllers
         // Title: GetRequirementDetailsById
         // Description: This endpoint retrieves the details of a specific Requirement based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.Requirement))]
+        [RecordScope(typeof(Vsky.Models.Requirement))]
         public async Task<IActionResult> GetRequirementDetailsById(string id)
         {
             try
@@ -213,7 +219,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -234,7 +240,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -258,7 +264,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -277,7 +283,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -297,7 +303,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -343,7 +349,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -537,7 +543,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
             // Return model state errors if the model state is not valid
             return ModelStateError(ModelState);
@@ -548,6 +554,8 @@ namespace Vsky.Api.Controllers
         // Title: UpdateRequirement
         // Description: This endpoint updates an existing Requirement by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Requirement))]
+        [RecordScope(typeof(Vsky.Models.Requirement))]
         public async Task<IActionResult> UpdateRequirement(string id, RequirementModel model)
         {
             try
@@ -840,7 +848,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -849,6 +857,8 @@ namespace Vsky.Api.Controllers
         // Title: DeleteRequirementById
         // Description: This endpoint deletes a test case based on the provided Requirement ID. It first retrieves the Requirement entity by ID, checks if it exists, and if so, deletes the Requirement. If the Requirement is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Requirement))]
+        [RecordScope(typeof(Vsky.Models.Requirement))]
         public async Task<IActionResult> DeleteRequirement(string id)
         {
             try
@@ -866,7 +876,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -891,7 +901,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -977,7 +987,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -1020,7 +1030,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1060,7 +1070,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1105,7 +1115,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1167,7 +1177,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1205,7 +1215,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -1214,6 +1224,8 @@ namespace Vsky.Api.Controllers
         #region UpdateRequirementDates
 
         [HttpPut("update-dates")]
+        [SiteOwned(typeof(Vsky.Models.Requirement), Field = "RequirementId")]
+        [RecordScope(typeof(Vsky.Models.Requirement), Field = "RequirementId")]
         public async Task<IActionResult> UpdateRequirementDates([FromBody] UpdateDatesAndNoteModel model)
         {
             try
@@ -1340,7 +1352,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -1417,7 +1429,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -28,9 +28,22 @@ using System.Data.SqlTypes;
 namespace Vsky.Api.Controllers
 {
     [Route("calendar")]
+    [AuthenticatedOnly]
     public class CalendarController : BaseController
     {
         #region Define Services
+        private static readonly HashSet<string> AllowedIcsHosts = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "outlook.office365.com",
+            "outlook.office.com",
+            "outlook.live.com"
+        };
+
+        private static readonly HttpClient IcsClient = new(new HttpClientHandler { AllowAutoRedirect = false })
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+
         private readonly ApplicationDbContext _db;
         private readonly IMapper _mapper;
         #endregion
@@ -45,7 +58,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllCalendarEvents
         [HttpPost("list")]
-        [AllowAnonymous]
+        [ReadAccess]
         public async Task<IActionResult> GetAllCalendarEvents([FromBody] CalendarSearchModel searchModel)
         {
             try
@@ -55,10 +68,20 @@ namespace Vsky.Api.Controllers
                 if (string.IsNullOrWhiteSpace(icsUrl))
                     return BadRequest("ICS URL is required");
 
-                using var webClient = new WebClient();
-                webClient.Headers.Add("User-Agent", "Mozilla/5.0");
+                // The server fetches this URL, so only known calendar hosts over HTTPS are allowed.
+                // Redirects are off, so an allowed host can't send the request somewhere else.
+                if (!Uri.TryCreate(icsUrl, UriKind.Absolute, out var icsUri)
+                    || icsUri.Scheme != Uri.UriSchemeHttps
+                    || !AllowedIcsHosts.Contains(icsUri.Host))
+                    return BadRequest("This calendar link is not allowed.");
 
-                string icsData = webClient.DownloadString(icsUrl);
+                using var icsRequest = new HttpRequestMessage(HttpMethod.Get, icsUri);
+                icsRequest.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
+                using var icsResponse = await IcsClient.SendAsync(icsRequest);
+                if (!icsResponse.IsSuccessStatusCode)
+                    return BadRequest("The calendar link could not be read.");
+
+                string icsData = await icsResponse.Content.ReadAsStringAsync();
                 var calendar = Ical.Net.Calendar.Load(icsData);
 
                 //var calendar = Ical.Net.Calendar.Load(icsData);
@@ -124,7 +147,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"Error: {ex.Message}");
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 

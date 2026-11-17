@@ -50,7 +50,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Add Department"
@@ -114,10 +114,10 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" @click="onDepartmentView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" @click="onDepartmentEdit(props.row.id, refreshDepartmentList)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" @click="onDepartmentEdit(props.row.id, refreshDepartmentList)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" @click="onDelete(props.row)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" @click="onDelete(props.row)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

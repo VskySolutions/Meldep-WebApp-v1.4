@@ -255,7 +255,7 @@
                 >
                   <q-tooltip>Manage Ticket Workspace & Menu</q-tooltip>
                 </q-btn>
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Add"

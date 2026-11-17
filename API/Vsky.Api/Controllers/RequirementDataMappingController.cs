@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,6 +19,9 @@ using Vsky.Services.SitesModifiedLog;
 namespace Vsky.Api.Controllers
 {
     [Route("requirement-data-mappings")]
+    // The Requirement screens (list, view, Requirement Center) show and edit data mappings too, so either menu
+    // grants access, the same way Requirement Group works. GET needs View and the other verbs need Manage.
+    [RequireMenu(MenuLinks.RequirementDataMapping + "|" + MenuLinks.Requirement)]
     public class RequirementDataMappingController : BaseController
     {
         #region Define Services      
@@ -57,6 +60,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllRequirementDataMappings
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllRequirementDataMappings(RequirementDataMappingsSearchModel searchModel)
         {
             try
@@ -89,13 +93,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllGroupRequirementDataMappings
         [HttpPost("get-all-data-mappings-group")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllRequirementDataMappingGroups(RequirementDataMappingsSearchModel searchModel)
         {
             try
@@ -131,13 +136,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllDataMappingByRequirementId
         [HttpPost("data-mappings-list")]
+        [ReadAccess]
         public IActionResult GetAllDataMappingByRequirementId(RequirementDataMappingsSearchModel searchModel)
         {
             try
@@ -162,7 +168,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -185,7 +191,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -328,7 +334,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -375,7 +381,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -403,7 +409,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -473,7 +479,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

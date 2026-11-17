@@ -16,6 +16,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("email-Notification")]
+    [SiteMember]
     public class EmailNotificationController : BaseController
     {
         #region Define Services
@@ -51,6 +52,7 @@ namespace Vsky.Api.Controllers
 
         #region Get All Master MessageTemplate List
         [HttpPost("messageTemplateList")]
+        [ReadAccess]
         public IActionResult GetAllMessageTemplates(MessageTemplateSearchModel searchModel)
         {
             try
@@ -76,13 +78,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllSitesEmailNotificationsPermissions
         [HttpPost("emailNotificationsPermissionsList")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllSitesEmailNotificationsPermissions(SiteEmailNotificationsSearchModel searchModel)
         {
             try
@@ -122,7 +125,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -155,7 +158,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -196,7 +199,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -29,6 +29,14 @@
                 {{ menu.displayName }}
               </div>
             </q-card>
+            <q-card
+              v-if="permissions.isSiteAdmin"
+              class="col-xs-12 col-sm-6 col-md-4 col-lg-2 text-center q-ml-xl q-my-md q-py-md custom-card cursor-pointer"
+              @click="$router.push('/security-admin')"
+            >
+              <q-icon name="o_shield" size="60px" class="text-primary q-pr-lg" />
+              <div class="text-h1 text-bold text-primary q-pr-lg">Security Administration</div>
+            </q-card>
           </div>
         </q-card-section>
       </q-card>
@@ -39,8 +47,10 @@
 import { ref, onMounted, computed } from "vue";
 import moduleService from "modules/module/module.service";
 import { useAuthStore } from "stores/auth";
+import { usePermissionStore } from "stores/permissions";
 
 const authStore = useAuthStore();
+const permissions = usePermissionStore();
 const user = authStore.user;
 const roles = computed(() => user?.roles || []);
 const settingMenus = ref([]);

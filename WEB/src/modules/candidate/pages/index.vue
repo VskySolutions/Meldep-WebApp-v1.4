@@ -156,7 +156,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   label="Add Candidate"
@@ -273,7 +273,7 @@
               {{ props.row.updatedOnUtc }}
             </q-td>
             <q-td style="width: 10%;" class="text-center actions">
-              <q-icon
+              <q-icon v-can
                 name="o_edit"
                 class="cursor-pointer q-mr-sm"
                 @click="setActiveRowIdInLocalStorage(props.row.id); onCandidateEdit(props.row.id, refreshCandidateList)"
@@ -325,7 +325,7 @@
                   :label="props.row.candidateNotesCount"
                 />
               </a>
-              <q-icon
+              <q-icon v-can
                 name="o_delete_outline"
                 class="cursor-pointer"
                 color="negative"

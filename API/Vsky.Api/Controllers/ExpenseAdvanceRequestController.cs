@@ -42,6 +42,7 @@ namespace Vsky.Api.Controllers
 {
     [Route("advance-expense-request")]
     [ApiController]
+    [RequireMenu(MenuLinks.AdvanceExpenseAny)]
     public class ExpenseAdvanceRequestController : BaseController
     {
         #region Fields
@@ -111,6 +112,7 @@ namespace Vsky.Api.Controllers
 
         #region Get All Advance Expense Requests
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllAdvanceExpenseRequests(Expense_Advance_RequestsSearchModel searchModel)
         {
             try
@@ -144,13 +146,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
 
         #region Get All Approve Advance Expense Requests
         [HttpPost("approve-advance-expense-list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllApproveAdvanceExpenseRequests(Expense_Advance_RequestsSearchModel searchModel)
         {
             try
@@ -188,7 +191,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -209,7 +212,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -230,13 +233,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
          
         #region Get Advance Expense Request Dropdown List
         [HttpGet("advance-expense-dropdown-list/{statusName}")]
+        [SiteMember]
         public async Task<IActionResult> GetAdvanceExpenseRequestList(string statusName = "")
         {
             try
@@ -253,13 +257,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllFilesByAdvanceExpenseId
         [HttpPost("filesList")]
+        [ReadAccess]
         public IActionResult GetAllFilesByAdvanceExpenseId(PicturesSearchModel searchModel)
         {
             try
@@ -279,7 +284,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -381,7 +386,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion
@@ -459,7 +464,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -592,7 +597,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(new BadRequestError($"An error occurred: {e.Message}"));
+                return BadRequest(new BadRequestError($"An error occurred: {SafeErrorMessage(e)}"));
             }
         }
         #endregion
@@ -642,7 +647,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(new BadRequestError(e.Message));
+                return BadRequest(new BadRequestError(SafeErrorMessage(e)));
             }
         }
         #endregion
@@ -668,7 +673,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(SafeErrorMessage(e));
             }
         }
         #endregion

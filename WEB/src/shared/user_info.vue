@@ -137,15 +137,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "stores/auth";
+import { axios, http } from "boot/axios";
 import { getLocalStorage } from "assets/utils";
 import _ from "lodash";
 
 import accountService from "modules/account/account.service";
 import siteShareService from "modules/sites-sharing/sitesSharing.service";
-import siteService from "modules/sites/site.service";
 
 // ---------------------------------------------------------------------------------------------------
 // Common variables
@@ -184,7 +184,16 @@ function getProfile () {
   });
 }
 
+// Plain axios, so a failure here can't show an error or start the session-end handling.
+const recordLogout = () => {
+  axios.post("/auth/logout", null, {
+    baseURL: http.defaults.baseURL,
+    headers: { Authorization: `Bearer ${authStore.token}` }
+  }).catch(() => {});
+};
+
 const onLogout = async () => {
+  recordLogout();
   authStore.user = null;
   if (user.isMsLogin) {
     authStore.mslogout();
@@ -223,20 +232,10 @@ const getTimeZoneAbbreviation = (timeZoneName) => {
 // on change site
 async function onSiteSelected (selectedId) {
   try {
+    const data = await authStore.switchSite(selectedId);
 
-    await siteShareService.updateLastUsedSite(user.userId, user.personId, selectedId);
-
-    // Change MT
-    const data = await siteService.getGlobalSiteData(selectedId);
-    authStore.changeTenant(data.siteId, data.timeZone, data.name, data.landingPage, data.roles, data.isFileUploadOrExternal);
-
-    // Redirect to the landing page
-    if (data.landingPage) {
-      await router.push(data.landingPage);
-    }
-
-    await nextTick();
-    window.location.reload();
+    // A full page load, so nothing from the previous site stays in memory
+    window.location.assign(data.landingPage || "/dashboard");
   } catch (err) {
     console.error("Error setting global site:", err);
   }

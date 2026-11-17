@@ -156,7 +156,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add User" no-caps class="text-primary btnRounded" @click="onAdd" />
+                <q-btn v-can icon="o_add" outline label="Add User" no-caps class="text-primary btnRounded" @click="onAdd" />
                 <q-btn v-if="!hasSiteId" icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-md no-space-between" @click="$router.push('/Sites')" />
               </div>
             </div>
@@ -222,7 +222,7 @@
                 <q-icon name="o_mail" class="cursor-pointer q-mr-sm" @click="onSendUserLoginDetails(props.row)">
                   <q-tooltip>Send User Login Details</q-tooltip>
                 </q-icon>
-                <q-icon name="o_edit" class="cursor-pointer q-mr-sm" @click="onEdit(props.row.id)">
+                <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" @click="onEdit(props.row.id)">
                   <q-tooltip>Edit</q-tooltip>
                 </q-icon>
                 <q-icon v-if="!props.row.userRoles.some(role => role.role.name === 'Site Super Admin' || role.role.name === 'System Super Admin')" name="o_delete_outline" class="cursor-pointer" color="negative" @click="onDelete(props.row)">

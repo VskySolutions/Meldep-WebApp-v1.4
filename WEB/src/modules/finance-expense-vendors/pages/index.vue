@@ -76,7 +76,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Vendor Account" no-caps class="text-primary btnRounded" @click="onVendorAdd(refreshVendorList)" />
+                <q-btn v-can icon="o_add" outline label="Add Vendor Account" no-caps class="text-primary btnRounded" @click="onVendorAdd(refreshVendorList)" />
               </div>
             </div>
           </div>
@@ -121,10 +121,10 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onVendorView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onVendorEdit(props.row.id, refreshVendorList)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" size="xs" @click="onVendorEdit(props.row.id, refreshVendorList)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitVendorDelete(props.row.id, props.row.vendorName, refreshVendorList)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer" color="negative" size="xs" @click="onSubmitVendorDelete(props.row.id, props.row.vendorName, refreshVendorList)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

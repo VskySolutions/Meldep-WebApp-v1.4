@@ -260,6 +260,20 @@ namespace Vsky.Services.Persons
         }
         #endregion
 
+        #region GetAllSitesByUserId
+        // Title: GetAllSitesByUserId
+        // Description: Returns the active site mappings of the person behind this user.
+        public async Task<IList<PersonSitesMapping>> GetAllSitesByUserId(string userId)
+        {
+            var personId = await _userManager.Users
+                .Where(x => x.Id == userId)
+                .Select(x => x.PersonId)
+                .FirstOrDefaultAsync();
+
+            return await GetAllSitesByPersonId(personId);
+        }
+        #endregion
+
         #region InsertPersonSites
         public void InsertPersonSites(PersonSitesMapping entity)
         {
@@ -271,6 +285,12 @@ namespace Vsky.Services.Persons
         public void UpdatePersonSites(PersonSitesMapping entity)
         {
             _personSitesMappingRepository.Update(entity);
+        }
+
+        // All rows are saved together.
+        public void UpdatePersonSites(IEnumerable<PersonSitesMapping> entities)
+        {
+            _personSitesMappingRepository.Update(entities);
         }
         #endregion
 

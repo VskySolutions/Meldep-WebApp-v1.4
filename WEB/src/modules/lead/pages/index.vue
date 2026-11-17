@@ -87,7 +87,7 @@
                 </q-card>
               </q-menu>
               <div class="q-ml-sm">
-                <q-btn icon="o_add" outline label="Add Lead" no-caps class="text-primary btnRounded" @click="onLeadAdd(refreshLeadNameDropdown, refreshLeadList)" />
+                <q-btn v-can icon="o_add" outline label="Add Lead" no-caps class="text-primary btnRounded" @click="onLeadAdd(refreshLeadNameDropdown, refreshLeadList)" />
                 <q-btn
                   v-if="role === 'admin'"
                   icon="o_playlist_add"
@@ -266,7 +266,7 @@
                   >
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
                     @click="onLeadEdit(props.row.id, refreshLeadList)"
@@ -290,7 +290,7 @@
                       :label="props.row.leadNotesCount"
                     />
                   </a>
-                  <q-icon
+                  <q-icon v-can
                     name="o_delete_outline"
                     class="cursor-pointer"
                     color="negative"

@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.Http;
 namespace Vsky.Api.Controllers
 {
     [Route("candidate")]
+    [RequireMenu(MenuLinks.Candidate)]
     public class CandidateController : BaseController
     {
         #region Define services
@@ -84,6 +85,7 @@ namespace Vsky.Api.Controllers
 
         #region GetAllCandidateList
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllCandidateList(CandidateSearchModel candidateSearchModel)
         {
             try
@@ -102,13 +104,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetCandidateDetailsById
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Candidate))]
         public async Task<IActionResult> GetCandidateDetailsById(string id)
         {
             try
@@ -125,7 +128,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -279,13 +282,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region UpdateCandidate
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Candidate))]
         public async Task<IActionResult> UpdateCandidate(string id, [FromForm] CandidateModels model)
         {
             try
@@ -486,7 +490,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -521,13 +525,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region DeleteCandidate
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Candidate))]
         public async Task<IActionResult> DeleteCandidate(string id)
         {
             try
@@ -541,13 +546,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllActivities
         [HttpGet("candidateactivities-list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllActivities()
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -755,6 +761,7 @@ namespace Vsky.Api.Controllers
         #region candidate register from VskyApplication and Hr-Lens
 
         [AllowAnonymous]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(PublicEndpointLimit.PolicyName)]
         [HttpGet("check-email/{emailAddress}")]
 
         public async Task<IActionResult> CheckCandidateEmailAlreadyExist(string emailAddress)
@@ -790,6 +797,7 @@ namespace Vsky.Api.Controllers
         }
 
         [AllowAnonymous]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(PublicEndpointLimit.PolicyName)]
         [HttpPost("register-candidate")]
         public async Task<IActionResult> RegisterCandidate([FromForm] CandidateModels model)
         {
@@ -995,7 +1003,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

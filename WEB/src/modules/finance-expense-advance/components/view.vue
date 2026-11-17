@@ -84,19 +84,19 @@
               </div>
               <div class="col-12 col-sm-4 col-md-4  q-pb-sm">
                 <div class="q-mb-xs">Advance Details</div>
-                <div class="text-black RichTextEditor" v-html="model.advanceDetails" />
+                <div class="text-black RichTextEditor" v-safe-html="model.advanceDetails" />
               </div>
               <div class="col-12 col-sm-4 col-md-4  q-pb-sm">
                 <div class="q-mb-xs">Approver Note</div>
-                <div class="text-black RichTextEditor" v-html="model.postApproverNote" />
+                <div class="text-black RichTextEditor" v-safe-html="model.postApproverNote" />
               </div>
               <div class="col-12 col-sm-4 col-md-4  q-pb-sm">
                 <div class="q-mb-xs">Pre Approver Note</div>
-                <div class="text-black RichTextEditor" v-html="model.preApproverNote" />
+                <div class="text-black RichTextEditor" v-safe-html="model.preApproverNote" />
               </div>
               <div class="col-12 col-sm-4 col-md-4  q-pb-sm">
                 <div class="q-mb-xs">Paid By Note</div>
-                <div class="text-black RichTextEditor" v-html="model.paidByNote" />
+                <div class="text-black RichTextEditor" v-safe-html="model.paidByNote" />
               </div>
             </div>
           </fieldset>

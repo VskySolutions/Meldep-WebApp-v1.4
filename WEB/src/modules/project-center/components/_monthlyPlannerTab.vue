@@ -42,7 +42,7 @@
                 <div class="col-12 position-relative RichTextEditor">
                   <div
                     class="plan-desc q-mt-md"
-                    v-html="line.expectedDescription"
+                    v-safe-html="line.expectedDescription"
                   />
                 </div>
               </div>
@@ -87,7 +87,7 @@
               </div>
             </td>
             <td>
-              <div v-if="line.actualDescription?.length > 0" class="plan-desc q-mt-sm RichTextEditor" v-html="line.actualDescription" />
+              <div v-if="line.actualDescription?.length > 0" class="plan-desc q-mt-sm RichTextEditor" v-safe-html="line.actualDescription" />
               <div v-if="(line.actualDescription?.length === 0 || line.actualDescription === '<br>')" class="fs-12 text-red">No Description Available</div>
               <template v-if="line.actualDescriptionUpdatedOnUtc">
                 <div class="LastUpdatedBy text-capitalize text-end">

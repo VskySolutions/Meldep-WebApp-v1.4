@@ -27,6 +27,10 @@ namespace Vsky.Models
     {
         public string Id { get; set; }
         public string Name { get; set; }
+        public string PermissionId { get; set; }
+        public bool IsShowMenu { get; set; }
+        public bool IsView { get; set; }
+        public bool IsManage { get; set; }
     }
 
     public class ModuleMenuRoleDto

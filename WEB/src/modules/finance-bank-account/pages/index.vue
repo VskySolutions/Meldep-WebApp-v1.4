@@ -67,7 +67,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Bank Account" no-caps class="text-primary btnRounded" @click="onBankAccountAdd(refreshBankAccountList)" />
+                <q-btn v-can icon="o_add" outline label="Add Bank Account" no-caps class="text-primary btnRounded" @click="onBankAccountAdd(refreshBankAccountList)" />
               </div>
             </div>
           </div>
@@ -124,10 +124,10 @@
               <q-icon name="o_visibility" class="cursor-pointer" @click="onBankAccountView(props.row.id)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-ml-sm" @click="onBankAccountEdit(props.row.id, refreshBankAccountList)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-ml-sm" @click="onBankAccountEdit(props.row.id, refreshBankAccountList)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer q-ml-sm" color="negative" @click="onSubmitBankAccountDelete(props.row.id, props.row.accountNumber, refreshBankAccountList)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer q-ml-sm" color="negative" @click="onSubmitBankAccountDelete(props.row.id, props.row.accountNumber, refreshBankAccountList)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
               <q-icon

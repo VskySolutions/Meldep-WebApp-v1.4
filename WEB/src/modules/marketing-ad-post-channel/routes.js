@@ -3,7 +3,7 @@ export default [
     path: "/marketing-ad-post-channel",
     component: () => import("layouts/layout.vue"),
     children: [
-      { path: "", name: "marketing-ad-post-channel", component: () => import("modules/marketing-ad-post-channel/pages/index.vue"), meta: { requiresAuth: true, title: "Ad Post Channel" } }
+      { path: "", name: "marketing-ad-post-channel", component: () => import("modules/marketing-ad-post-channel/pages/index.vue"), meta: { requiresAuth: true, permission: { menu: ["/marketing-ad-post-channel"], level: "view" }, title: "Ad Post Channel" } }
     ]
   }
 ];

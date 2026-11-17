@@ -14,6 +14,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("ad-post-channel")]
+    [RequireMenu(MenuLinks.AdPostChannel)]
     public class AdPostChannelController : BaseController
     {
         #region Define Services      
@@ -45,6 +46,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All AdPostChannel
         // Description: This endpoint fetches a list of Ad Post Channel based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllAdPostChannel(AdPostChannelSearchModel searchModel)
         {
             try
@@ -65,7 +67,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -74,6 +76,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllAdPostChannelsListForDropdown
         // Description: This endpoint retrieves the details of a specific AdPostChannel based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllAdPostChannelsListForDropdown()
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -108,7 +111,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -117,6 +120,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAdPostChannelDetailsById
         // Description: This endpoint retrieves the details of a specific ad post channel based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.AdPostChannel))]
         public async Task<IActionResult> GetAdPostChannelDetailsById(string id)
         {
             try
@@ -134,7 +138,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -185,7 +189,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -194,6 +198,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateAdPostChannel
         // Description: This endpoint updates an existing AdPostChannel by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.AdPostChannel))]
         public async Task<IActionResult> UpdateAdPostChannel(string id, AdPostChannelModel model)
         {
             try
@@ -242,7 +247,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -251,6 +256,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteAdPostChannelById
         // Description: This endpoint deletes a ad post channel based on the provided ad post channel ID. It first retrieves the ad post channel entity by ID, checks if it exists, and if so, deletes the ad post channel. If the ad post channel is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.AdPostChannel))]
         public async Task<IActionResult> DeleteAdPostChannel(string id)
         {
             try
@@ -268,7 +274,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -3,7 +3,7 @@ export default [
     path: "/employee",
     component: () => import("layouts/layout.vue"),
     children: [
-      { path: "", name: "employee", component: () => import("modules/employee/pages/index.vue"), meta: { requiresAuth: true, title: "Employees" } }
+      { path: "", name: "employee", component: () => import("modules/employee/pages/index.vue"), meta: { requiresAuth: true, permission: { menu: ["/employee"], level: "view" }, title: "Employees" } }
     ]
   }
 ];

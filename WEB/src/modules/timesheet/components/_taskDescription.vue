@@ -13,7 +13,7 @@
             <div class="q-pa-sm text-black">
               <div class="row no-wrap items-start justify-between">
                 <div class="col-11 RichTextEditor" style="white-space: pre-wrap; word-break: break-word;">
-                  <p v-if="model.description" v-html="model.description" />
+                  <p v-if="model.description" v-safe-html="model.description" />
                   <p v-else class="text-grey-7">No Description available</p>
                 </div>
                 <q-icon

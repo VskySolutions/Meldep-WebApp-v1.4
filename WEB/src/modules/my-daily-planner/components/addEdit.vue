@@ -156,7 +156,7 @@
                                     size="20px"
                                   >
                                     <q-tooltip v-if="props.row.activityNameDescription" class="text-wrap break-words" max-width="300px">
-                                      <div class="RichTextEditor" v-html="props.row.activityNameDescription" />
+                                      <div class="RichTextEditor" v-safe-html="props.row.activityNameDescription" />
                                     </q-tooltip>
                                   </q-icon>
                                 </div>
@@ -184,7 +184,7 @@
                                         class="q-ml-xs"
                                       >
                                         <q-tooltip class="text-wrap break-words" max-width="300px">
-                                          <div v-html="opt.data" />
+                                          <div v-safe-html="opt.data" />
                                         </q-tooltip>
                                       </q-icon>
                                   </div>

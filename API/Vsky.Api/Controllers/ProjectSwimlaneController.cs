@@ -19,6 +19,7 @@ using Vsky.Services.SitesModifiedLog;
 namespace Vsky.Api.Controllers
 {
     [Route("project-swimlane")]
+    [RequireMenu(MenuLinks.ProjectWork + "|" + MenuLinks.SwimlaneTemplates)]
     public class ProjectSwimlaneController : BaseController
     {
         #region Define Services
@@ -90,7 +91,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return Ok($"{ex.Message} :- {ex.InnerException}");
+                return Ok(SafeErrorMessage(ex));
             }
         }
 
@@ -141,7 +142,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -186,6 +187,7 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("duplicate-list")]
+        [ReadAccess]
         public async Task<IActionResult> DuplicateProjectList(string projectId, string projectSwimLaneId, string listId)
         {
             if (string.IsNullOrEmpty(projectId))
@@ -366,7 +368,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"{ex.Message} :- {ex.InnerException?.Message}");
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

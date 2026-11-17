@@ -296,7 +296,7 @@
                     <span class="text-caption text-black text-weight-bold q-mb-xs">
                       Body:
                     </span>
-                    <div class="email-body text-black q-mt-xs RichTextEditor" v-html="reply.body" />
+                    <div class="email-body text-black q-mt-xs RichTextEditor" v-safe-html="reply.body" />
                   </div>
                 </q-card>
               </div>

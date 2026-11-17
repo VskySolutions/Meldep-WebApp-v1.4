@@ -18,6 +18,7 @@ namespace Vsky.Api.Controllers
 {
     [Route("yearly-leave-schedule")]
 
+    [SiteMember]
     public class LeaveScheduleController : BaseController
     {
         private readonly GlobalVariable _globalVariable;
@@ -44,6 +45,7 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllLeaveEvents()
         {
             try
@@ -57,11 +59,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.LeaveSchedules))]
         public async Task<IActionResult> GetLeaveEventById(string id)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -132,7 +135,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -180,13 +183,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region update leave event
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.LeaveSchedules))]
         public async Task<IActionResult> UpdateLeaveEvent(string id, LeaveScheduleModels model)
         {
             try
@@ -232,7 +236,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -273,13 +277,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region delete event
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.LeaveSchedules))]
         public async Task<IActionResult> DeleteLeaveEvent(string id)
         {
             try
@@ -296,7 +301,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -317,7 +322,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -325,6 +330,7 @@ namespace Vsky.Api.Controllers
         #region GetYearlyLeaveListForDashboard
         // Title: Get EmployeeLeave List
         [HttpPost("yealyLeaves/list")]
+        [ReadAccess]
         public async Task<IActionResult> GetYearlyLeaveListForDashboard()
         {
             try
@@ -340,7 +346,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

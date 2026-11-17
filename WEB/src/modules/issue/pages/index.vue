@@ -155,7 +155,7 @@
                 </q-card>
               </q-menu>
               <div class="q-ml-xs">
-                <q-btn v-if="!isViewer" icon="o_add" outline label="Create Issue" no-caps class="text-primary btnRounded" @click="onIssueAdd(refreshIssueList)" />
+                <q-btn v-can v-if="!isViewer" icon="o_add" outline label="Create Issue" no-caps class="text-primary btnRounded" @click="onIssueAdd(refreshIssueList)" />
                 <q-btn
                   v-if="!isViewer"
                   icon="o_checklist"

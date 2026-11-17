@@ -27,17 +27,20 @@ namespace Vsky.Services.PowerBI
         private readonly ISiteService _siteService;
         private readonly IReportSettingsService _reportSettingsService;
         private readonly IReportSettingDetailService _reportSettingDetailService;
+        private readonly Vsky.Services.Logging.ILogger _loggerService;
 
         public EmbedService(
             AadService aadService,
             ISiteService siteService,
             IReportSettingsService reportSettingsService,
-            IReportSettingDetailService reportSettingDetailService)
+            IReportSettingDetailService reportSettingDetailService,
+            Vsky.Services.Logging.ILogger loggerService)
         {
             _aadService = aadService;
             _siteService = siteService;
             _reportSettingsService = reportSettingsService;
             _reportSettingDetailService = reportSettingDetailService;
+            _loggerService = loggerService;
         }
 
         public async Task<PowerBIClient> GetPowerBiClient(string SiteId)
@@ -79,8 +82,8 @@ namespace Vsky.Services.PowerBI
                     }
                     catch (Microsoft.Rest.HttpOperationException ex)
                     {
-                        // Log the error or handle it gracefully
-                        Console.WriteLine($"No datasources found or an error occurred: {ex.Response.Content}");
+                        // The report still opens without them, so this only leaves a record.
+                        _loggerService.Error("Power BI datasources could not be read", new InvalidOperationException(ex.Response?.Content, ex));
                     }
                 }
 

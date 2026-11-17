@@ -33,7 +33,7 @@ export default {
   deleteNote (id) {
     return http.delete(`/requirement-data-mappings/delete-note/?id=${id}`).then(response => response.data);
   },
-  
+
   deleteBulkDataMapping (requirementId) {
     return http.delete(`/requirement-data-mappings/bulk-delete/${requirementId}`).then(response => response.data);
   }

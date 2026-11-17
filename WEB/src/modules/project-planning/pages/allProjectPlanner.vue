@@ -81,7 +81,7 @@
                       </q-toolbar-title>
 
                       <div class="row items-center q-gutter-sm">
-                        <q-btn
+                        <q-btn v-can
                           v-if="!isViewer"
                           icon="o_add"
                           outline
@@ -657,7 +657,7 @@
                           </div>
                           <div class="q-mb-sm">
                             <!-- </q-toolbar-title> -->
-                            <q-btn
+                            <q-btn v-can
                               v-if="getProjectDetail(selectedProjectId)?.isEditable && !isViewer"
                               icon="o_add"
                               outline
@@ -865,7 +865,7 @@
                             <q-td class="highlight-text" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal !important; width: 40% !important;"  @click="loadRequirements(props.row.projectId, props.row.id)">
                               <div class="row items-center justify-between">
                                 <div class="col-9">
-                                  <div class="" v-html="props.row.name" />
+                                  <div class="" v-safe-html="props.row.name" />
                                   <q-badge v-if="props.row.projectModuleStatus" color="grey" rounded>
                                     {{ props.row.projectModuleStatus }}
                                     <q-tooltip>Module Status</q-tooltip>
@@ -955,7 +955,7 @@
                               </div>
 
                               <div class="q-mb-sm">
-                                <q-btn
+                                <q-btn v-can
                                   v-if="getProjectDetail(selectedProjectId)?.isEditable && !isViewer"
                                   icon="o_add"
                                   outline
@@ -1183,7 +1183,7 @@
                                     "
                                   >
                                     <div class="col-9">
-                                      <div v-html="props.row.title" />
+                                      <div v-safe-html="props.row.title" />
                                       <div class="row items-center q-gutter-xs q-mt-xs">
                                         <q-badge
                                           v-if="props.row.requirementStatus"
@@ -1339,12 +1339,12 @@
                                   </div>
                                   <div class="q-mb-sm">
                                     <!-- </q-toolbar-title> -->
-                                    <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddProjectTask(selectedProjectId)" />
-                                    <q-btn v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTask">
+                                    <q-btn v-can v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddProjectTask(selectedProjectId)" />
+                                    <q-btn v-can v-if="selectedRequirement && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTask">
                                       <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
                                       <q-tooltip>Add Bulk Tasks</q-tooltip>
                                     </q-btn>
-                                    <q-btn v-if="selectedTaskId!=null && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_edit" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onEditBulkTasks">
+                                    <q-btn v-can v-if="selectedTaskId!=null && getProjectDetail(selectedProjectId)?.isEditable && !isViewer" :class="isPastMonth ? 'pointer-disbled' : ''" size="sm" icon="o_edit" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onEditBulkTasks">
                                       <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
                                       <q-tooltip>Edit Bulk Tasks</q-tooltip>
                                     </q-btn>
@@ -1624,7 +1624,7 @@
                                       </div>
                                       <div class="row items-center justify-between">
                                         <div class="col-md-12">
-                                          <div class="" v-html="props.row.name" />
+                                          <div class="" v-safe-html="props.row.name" />
                                         </div>
                                         <div class="col-md-12">
                                           <q-badge v-if="props.row.status" rounded color="grey" :label="props.row.status">
@@ -1995,10 +1995,10 @@
                                     <h3 class="text-black q-mb-none"><span>Activity for </span><span v-if="storedTaskName" class="text-primary"> {{ storedTaskName }}</span></h3>
                                   </div>
                                   <div class="q-mb-sm">
-                                    <q-btn v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddInlineTaskActivity(selectedTaskId)">
+                                    <q-btn v-can v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddInlineTaskActivity(selectedTaskId)">
                                       <q-tooltip>Add Task Activity</q-tooltip>
                                     </q-btn>
-                                    <q-btn v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTaskActivity">
+                                    <q-btn v-can v-if="selectedTaskId!=null && !isViewer" size="sm" icon="o_add" outline label="" no-caps class="text-primary q-mr-xs" style="padding: 3px 7px; min-height: 30px;" @click="onAddBulkTaskActivity">
                                       <q-icon size="xs" name="o_view_list" class="cursor-pointer q-mr-xs" />
                                       <q-tooltip>Add/Edit Bulk Activities</q-tooltip>
                                     </q-btn>
@@ -2255,7 +2255,7 @@
                                                     class="q-ml-xs"
                                                   >
                                                     <q-tooltip v-if="opt.description" class="text-wrap break-words q-pa-sm" max-width="300px">
-                                                      <div v-html="opt.description" />
+                                                      <div v-safe-html="opt.description" />
                                                     </q-tooltip>
                                                   </q-icon>
                                                 </div>
@@ -2297,7 +2297,7 @@
                                           class="q-ml-xs"
                                         >
                                           <q-tooltip v-if="props.row.activityNameDescription" class="text-wrap break-words q-pa-sm" max-width="300px">
-                                            <div v-html="props.row.activityNameDescription" />
+                                            <div v-safe-html="props.row.activityNameDescription" />
                                           </q-tooltip>
                                         </q-icon>
                                         <q-badge
@@ -2356,7 +2356,7 @@
                                                     class="q-ml-xs"
                                                   >
                                                     <q-tooltip v-if="opt.description" class="text-wrap break-words q-pa-sm" max-width="300px">
-                                                      <div v-html="opt.description" />
+                                                      <div v-safe-html="opt.description" />
                                                     </q-tooltip>
                                                   </q-icon>
                                                 </div>
@@ -2502,7 +2502,7 @@
                                           </q-list>
                                         </q-menu>
                                       </q-btn>
-                                      <q-btn v-else size="xs" flat round icon="o_delete_outline" color="negative" class="text-primary btnRounded" @click="onRemoveTaskActivity(props.row)">
+                                      <q-btn v-can v-else size="xs" flat round icon="o_delete_outline" color="negative" class="text-primary btnRounded" @click="onRemoveTaskActivity(props.row)">
                                         <q-tooltip>Delete Row</q-tooltip>
                                       </q-btn>
                                     </q-td>

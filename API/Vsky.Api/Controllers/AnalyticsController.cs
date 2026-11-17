@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Security.Claims;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Vsky.Api.Authorization;
 using Vsky.Api.Models;
 using Vsky.Models;
 using Vsky.Models.Analytics;
@@ -16,23 +14,16 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     /// <summary>
-    /// Analytics pages are reached by URL and are for administrators only: a logged-in user (BaseController's
-    /// [Authorize]) who holds the admin, site-super-admin or system-super-admin role. The JWT carries role
-    /// names as typed in AspNetRoles ("Site Super Admin"), so the check normalises them instead of relying on
-    /// [Authorize(Roles = ...)]'s exact, case-sensitive match.
+    /// Each register is its own menu, so access is granted per register through the permission screens
+    /// (role, security group or individual user, per site): the Timesheet Register actions need
+    /// MenuLinks.TimesheetRegister and the Attendance Register actions need MenuLinks.AttendanceRegister.
+    /// Every action only reads, so each needs View; the two POST searches are marked [ReadAccess].
     /// One region per register: "Timesheet Register" and "TimeInTimeOut-MovementRegister" (the Attendance
     /// Register); the helpers at the end serve both.
     /// </summary>
     [Route("Analytics")]
     public class AnalyticsController : BaseController
     {
-        private static readonly HashSet<string> AdminRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "admin",
-            "site-super-admin",
-            "system-super-admin"
-        };
-
         private static readonly string[] DateFormats = { "yyyy-MM-dd", "MM/dd/yyyy", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.FFFK" };
 
         #region Fields
@@ -61,12 +52,12 @@ namespace Vsky.Api.Controllers
         #region GetTimesheetRegister
         /// <summary>Every active employee of the site against every day of the range, each day classified.</summary>
         [HttpPost("timesheet-register")]
+        [RequireMenu(MenuLinks.TimesheetRegister)]
+        [ReadAccess] // A search: a POST only for its body, so View is enough and it isn't logged as a change.
         public async Task<IActionResult> GetTimesheetRegister(TimesheetRegisterSearchModel model)
         {
             try
             {
-                if (!IsAdmin()) return AdminOnly();
-
                 if (model == null || !TryParseDate(model.FromDate, out var fromDate) || !TryParseDate(model.ToDate, out var toDate))
                     return BadRequest("From date and To date are required (yyyy-MM-dd).");
 
@@ -82,9 +73,14 @@ namespace Vsky.Api.Controllers
 
                 return Ok(result);
             }
+            catch (ArgumentException ex)
+            {
+                // The register services raise these on purpose, with messages written for the user.
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -92,12 +88,11 @@ namespace Vsky.Api.Controllers
         #region GetTimesheetRegisterDay
         /// <summary>One employee on one day, with the timesheet lines behind the cell.</summary>
         [HttpGet("timesheet-register/day")]
+        [RequireMenu(MenuLinks.TimesheetRegister)]
         public async Task<IActionResult> GetTimesheetRegisterDay([FromQuery] string employeeId, [FromQuery] string date)
         {
             try
             {
-                if (!IsAdmin()) return AdminOnly();
-
                 if (string.IsNullOrWhiteSpace(employeeId) || !TryParseDate(date, out var day))
                     return BadRequest("employeeId and date (yyyy-MM-dd) are required.");
 
@@ -106,9 +101,14 @@ namespace Vsky.Api.Controllers
 
                 return Ok(result);
             }
+            catch (ArgumentException ex)
+            {
+                // The register services raise these on purpose, with messages written for the user.
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -116,12 +116,11 @@ namespace Vsky.Api.Controllers
         #region GetTimesheetRegisterEmployee
         /// <summary>One employee over a period (at most a quarter): the register row, the days and every line.</summary>
         [HttpGet("timesheet-register/employee")]
+        [RequireMenu(MenuLinks.TimesheetRegister)]
         public async Task<IActionResult> GetTimesheetRegisterEmployee([FromQuery] string employeeId, [FromQuery] string fromDate, [FromQuery] string toDate)
         {
             try
             {
-                if (!IsAdmin()) return AdminOnly();
-
                 if (string.IsNullOrWhiteSpace(employeeId) || !TryParseDate(fromDate, out var from) || !TryParseDate(toDate, out var to))
                     return BadRequest("employeeId, fromDate and toDate (yyyy-MM-dd) are required.");
 
@@ -130,9 +129,14 @@ namespace Vsky.Api.Controllers
 
                 return Ok(result);
             }
+            catch (ArgumentException ex)
+            {
+                // The register services raise these on purpose, with messages written for the user.
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -148,12 +152,12 @@ namespace Vsky.Api.Controllers
         /// holiday) and carrying its breaks, time adjustments and work from home.
         /// </summary>
         [HttpPost("attendance-register")]
+        [RequireMenu(MenuLinks.AttendanceRegister)]
+        [ReadAccess] // A search: a POST only for its body, so View is enough and it isn't logged as a change.
         public async Task<IActionResult> GetAttendanceRegister(AttendanceRegisterSearchModel model)
         {
             try
             {
-                if (!IsAdmin()) return AdminOnly();
-
                 if (model == null || !TryParseDate(model.FromDate, out var fromDate) || !TryParseDate(model.ToDate, out var toDate))
                     return BadRequest("From date and To date are required (yyyy-MM-dd).");
 
@@ -169,9 +173,14 @@ namespace Vsky.Api.Controllers
 
                 return Ok(result);
             }
+            catch (ArgumentException ex)
+            {
+                // The register services raise these on purpose, with messages written for the user.
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -179,12 +188,11 @@ namespace Vsky.Api.Controllers
         #region GetAttendanceRegisterDay
         /// <summary>One employee on one day, with the time-ins and the Movement Register entries behind the cell.</summary>
         [HttpGet("attendance-register/day")]
+        [RequireMenu(MenuLinks.AttendanceRegister)]
         public async Task<IActionResult> GetAttendanceRegisterDay([FromQuery] string employeeId, [FromQuery] string date)
         {
             try
             {
-                if (!IsAdmin()) return AdminOnly();
-
                 if (string.IsNullOrWhiteSpace(employeeId) || !TryParseDate(date, out var day))
                     return BadRequest("employeeId and date (yyyy-MM-dd) are required.");
 
@@ -193,9 +201,14 @@ namespace Vsky.Api.Controllers
 
                 return Ok(result);
             }
+            catch (ArgumentException ex)
+            {
+                // The register services raise these on purpose, with messages written for the user.
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -203,12 +216,11 @@ namespace Vsky.Api.Controllers
         #region GetAttendanceRegisterEmployee
         /// <summary>One employee over a period (at most a quarter): the register row, the days, every time-in and every Movement Register entry.</summary>
         [HttpGet("attendance-register/employee")]
+        [RequireMenu(MenuLinks.AttendanceRegister)]
         public async Task<IActionResult> GetAttendanceRegisterEmployee([FromQuery] string employeeId, [FromQuery] string fromDate, [FromQuery] string toDate)
         {
             try
             {
-                if (!IsAdmin()) return AdminOnly();
-
                 if (string.IsNullOrWhiteSpace(employeeId) || !TryParseDate(fromDate, out var from) || !TryParseDate(toDate, out var to))
                     return BadRequest("employeeId, fromDate and toDate (yyyy-MM-dd) are required.");
 
@@ -217,9 +229,14 @@ namespace Vsky.Api.Controllers
 
                 return Ok(result);
             }
+            catch (ArgumentException ex)
+            {
+                // The register services raise these on purpose, with messages written for the user.
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -227,26 +244,6 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region Helpers
-        private bool IsAdmin()
-        {
-            var roles = User?.Claims?
-                .Where(c => c.Type == ClaimTypes.Role || c.Type == "role" || c.Type == "roles")
-                .Select(c => NormalizeRole(c.Value));
-
-            return roles != null && roles.Any(r => AdminRoles.Contains(r));
-        }
-
-        /// <summary>"Site Super Admin" → "site-super-admin", the normalised form the web app compares against.</summary>
-        private static string NormalizeRole(string role)
-        {
-            return string.IsNullOrWhiteSpace(role) ? string.Empty : Regex.Replace(role.Trim().ToLowerInvariant(), @"[\s_]+", "-");
-        }
-
-        private IActionResult AdminOnly()
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, "Analytics is available to administrators only.");
-        }
-
         private static bool TryParseDate(string text, out DateTime date)
         {
             var value = (text ?? string.Empty).Trim();

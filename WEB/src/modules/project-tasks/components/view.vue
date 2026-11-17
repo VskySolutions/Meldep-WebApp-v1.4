@@ -22,7 +22,7 @@
                 <legend>Description</legend>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="text-black RichTextEditor">
-                    <span v-html="model.description || '-'"></span>
+                    <span v-safe-html="model.description || '-'"></span>
                   </div>
                 </div>
               </fieldset>
@@ -254,13 +254,13 @@
                           class="q-ml-xs"
                         >
                           <q-tooltip v-if="props.row.activityNameDescription" class="text-wrap break-words q-pa-sm" max-width="300px">
-                            <div v-html="props.row.activityNameDescription" />
+                            <div v-safe-html="props.row.activityNameDescription" />
                           </q-tooltip>
                         </q-icon>
                       </q-td>
                       <!-- <q-td style="width: 20%;">{{ props.row.activityStatus.dropDownValue }}</q-td> -->
                       <q-td style="width: 10%;" class="text-right hidden">{{ props.row.estimateHours }}</q-td>
-                      <q-td class="RichTextEditor"><div style="display: block; max-width: 500px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" v-html="props.row.description" /></q-td>
+                      <q-td class="RichTextEditor"><div style="display: block; max-width: 500px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;" v-safe-html="props.row.description" /></q-td>
                     </q-tr>
                     <q-tr class="hidden" v-if="props.pageIndex === rows.length - 1">
                       <q-td colspan="2" class="text-right font-bold"><b>Total Hours:</b></q-td>

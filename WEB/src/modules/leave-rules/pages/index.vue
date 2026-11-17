@@ -75,7 +75,7 @@
                 </div>
               </div>
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Leave Rules" no-caps class="text-primary btnRounded" @click="onAdd" />
+                <q-btn v-can icon="o_add" outline label="Add Leave Rules" no-caps class="text-primary btnRounded" @click="onAdd" />
                 <q-btn icon="o_chevron_left" outline label="Back" no-caps class="text-primary btnRounded q-ml-sm" @click="$router.back()" />
               </div>
             </div>
@@ -116,14 +116,14 @@
               <!-- <q-icon name="o_event_available" class="cursor-pointer q-mr-sm" @click="onLeaveSchedule(props.row.id)" size="xs">
                 <q-tooltip>Leave Schedule</q-tooltip>
               </q-icon> -->
-              <!-- <q-icon name="o_edit" class="q-mr-sm" :class="{ 'cursor-pointer': !props.row.isGenerated, 'text-grey-5 pointer-events-none': props.row.isGenerated }" @click="!props.row.isGenerated && onEdit(props.row.id)" size="xs"> -->
-              <q-icon
+              <!-- <q-icon v-can name="o_edit" class="q-mr-sm" :class="{ 'cursor-pointer': !props.row.isGenerated, 'text-grey-5 pointer-events-none': props.row.isGenerated }" @click="!props.row.isGenerated && onEdit(props.row.id)" size="xs"> -->
+              <q-icon v-can
                 name="o_edit" class="q-mr-sm" :class="{ 'pointer-events-none text-grey-5': !isEditFromCurrentOrFutureYear(props.row.year), 'cursor-pointer': isEditFromCurrentOrFutureYear(props.row.year) }"
                 size="xs" @click="isEditFromCurrentOrFutureYear(props.row.year) && onEdit(props.row.id)"
               >
                 <q-tooltip v-if="isEditFromCurrentOrFutureYear(props.row.year)">Edit</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" :class="{ 'cursor-pointer': !props.row.isGenerated, 'text-grey-5 pointer-events-none': props.row.isGenerated }" color="negative" size="xs" @click="!props.row.isGenerated && onDelete(props.row)">
+              <q-icon v-can name="o_delete_outline" :class="{ 'cursor-pointer': !props.row.isGenerated, 'text-grey-5 pointer-events-none': props.row.isGenerated }" color="negative" size="xs" @click="!props.row.isGenerated && onDelete(props.row)">
                 <q-tooltip v-if="!props.row.isGenerated">Delete</q-tooltip>
               </q-icon>
             </q-td>

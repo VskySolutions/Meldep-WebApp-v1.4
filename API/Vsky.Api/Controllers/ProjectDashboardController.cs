@@ -25,6 +25,7 @@ namespace Vsky.Api.Controllers
 {
     [Route("project-dashboard")]
 
+    [RequireMenu(MenuLinks.ProjectWork)]
     public class ProjectDashboardController : BaseController
     {
         private readonly GlobalVariable _globalVariable;
@@ -80,6 +81,7 @@ namespace Vsky.Api.Controllers
 
         #region projectModule
         [HttpPost("projectModulelist")]
+        [ReadAccess]
         public IActionResult GetAllProjectModulesForDashboard(ProjectModuleSearchModel searchModel)
         {
             try
@@ -97,13 +99,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllProjectTasks
         [HttpPost("projectTaskList")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllProjectTasksForDashboard(ProjectTaskSearchModel searchModel)
         {
             try
@@ -132,13 +135,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllIssues
         [HttpPost("issueList")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllIssuesForDashboard(IssueSearchModel searchModel)
         {
             try
@@ -158,13 +162,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllProjectActivities
         [HttpPost("projectActivityList")]
+        [ReadAccess]
         public IActionResult GetAllProjectActivitiesForDashboard(ProjectActivitySearchModel searchModel)
         {
             try
@@ -189,13 +194,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllNotesForDashboard
         [HttpPost("notesList")]
+        [ReadAccess]
         public IActionResult GetAllNotesByProjectId(NoteSearchModel searchModel)
         {
             try
@@ -213,13 +219,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllTestPlanForDashboard
         [HttpPost("testPlanList")]
+        [ReadAccess]
         public IActionResult GetAllTestPlanForDashboard(TestPlanSearchModel searchModel)
         {
             try
@@ -237,7 +244,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -246,6 +253,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All TestCases
         // Description: This endpoint fetches a list of test cases based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("testCasesList")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllTestCasesForDashboard(TestCaseSearchModel searchModel)
         {
             try
@@ -266,7 +274,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -275,6 +283,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All RequirementGroups
         // Description: This endpoint fetches a list of RequirementGroups based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("requirementGroupList")]
+        [ReadAccess]
         public IActionResult GetAllRequirementGroupsForDashboard(RequirementGroupSearchModel searchModel)
         {
             try
@@ -293,7 +302,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -302,6 +311,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Requirements
         // Description: This endpoint fetches a list of Requirements based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("requirementList")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllRequirementsForDashboard(RequirementSearchModel searchModel)
         {
             try
@@ -331,13 +341,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllProjectQuestionAndAnswers
         [HttpPost("projectQuestionAndAnswersList")]
+        [ReadAccess]
         public IActionResult GetAllProjectQuestionAndAnswersForDashboard(ProjectQuestionsAnswersSearchModel searchModel)
         {
             try
@@ -365,13 +376,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region GetAllProjectActionItems
         [HttpPost("projectActionItemsList")]
+        [ReadAccess]
         public IActionResult GetAllProjectActionItemsForDashboard(ProjectActionItemsSearchModel searchModel)
         {
             try
@@ -399,7 +411,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -420,7 +432,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

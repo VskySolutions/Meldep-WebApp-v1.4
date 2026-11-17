@@ -34,6 +34,7 @@ namespace Vsky.Api.Controllers
 {
     [AllowAnonymous]
     [Route("cron-job")]
+    [ServiceKey]
     public class CronjobController : BaseController
     {
         #region Define Services
@@ -110,7 +111,7 @@ namespace Vsky.Api.Controllers
         #region SendAnniversaryEmailToHr
         // Title: SendAnniversaryEmailToHr
         // Description:This method retrieves all users with the HR role for the site and collects their registered email addresses. It then identifies employees who have work anniversaries today, one week before, and two weeks before, and sends consolidated anniversary notification emails only to HR users for each period.
-        [AllowAnonymous]
+        [ServiceKey]
         [HttpGet("send-anniversary-email-to-hr")]
         public async Task<IActionResult> SendAnniversaryEmailToHr()
         {
@@ -159,7 +160,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -239,6 +240,7 @@ namespace Vsky.Api.Controllers
                     }
                     catch (Exception ex)
                     {
+                        LogHandled(ex);
                         // Optional: log failure
                     }
                 }
@@ -247,7 +249,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -270,7 +272,7 @@ namespace Vsky.Api.Controllers
         /// </summary>
         /// <returns></returns>
        
-        [AllowAnonymous]
+        [ServiceKey]
         [HttpGet("send-helpdesk-reminder-system-notifications")]
         public async Task<IActionResult> SendHelpDeskReminderSystemNotifications()
         {
@@ -526,7 +528,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -537,7 +539,7 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
-        [AllowAnonymous]
+        [ServiceKey]
         [HttpGet("send-pending-weekly-timesheet-notification")]
         public async Task SendPendingWeeklyTimesheetNotification()
         {

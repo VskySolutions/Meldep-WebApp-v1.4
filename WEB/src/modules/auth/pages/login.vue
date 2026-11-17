@@ -76,15 +76,27 @@
 import { ref, computed } from "vue";
 import useVuelidate from "@vuelidate/core";
 import { required, helpers } from "@vuelidate/validators";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "stores/auth";
 import { setLocalStorage, getLocalStorage, clearLocalStorage } from "assets/utils";
 
 import moduleService from "modules/module/module.service";
 // import { msalInstancePromise } from "modules/auth/auth.service";
 // import authService from "modules/auth/auth.service";
+const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+
+// Only paths inside this app: "//host" and "/\host" would send the user to another site.
+function getSafeRedirect () {
+  const redirect = route.query.redirect;
+  const isInternalPath = typeof redirect === "string"
+    && redirect.startsWith("/")
+    && !redirect.startsWith("//")
+    && !redirect.includes("\\")
+    && !redirect.startsWith("/auth");
+  return isInternalPath ? redirect : null;
+}
 
 const loading = ref(false);
 const isPassword = ref(true);
@@ -94,8 +106,13 @@ const localStorageKey = "Login";
 const filterLocalStorage = getLocalStorage(localStorageKey);
 
 const username = filterLocalStorage ? filterLocalStorage.username : "";
-const password = filterLocalStorage ? filterLocalStorage.password : "";
+const password = "";
 const isRememberMeChecked = filterLocalStorage ? filterLocalStorage.isRememberMeChecked : ref(false);
+
+// Remove any password saved by earlier versions of this page
+if (filterLocalStorage?.password) {
+  setLocalStorage(localStorageKey, { username, isRememberMeChecked });
+}
 
 const model = ref({
   username,
@@ -119,11 +136,17 @@ const login = async () => {
     loading.value = true;
     authStore.login(model.value).then((resp) => {
       if (model.value.isRememberMeChecked === true) {
-        setLocalStorage(localStorageKey, model.value);
+        setLocalStorage(localStorageKey, {
+          username: model.value.username,
+          isRememberMeChecked: model.value.isRememberMeChecked
+        });
       } else {
         clearLocalStorage(localStorageKey);
       }
-      if (resp?.roles?.includes("system-super-admin")) {
+      const redirect = getSafeRedirect();
+      if (redirect) {
+        router.push(redirect);
+      } else if (resp?.roles?.includes("system-super-admin")) {
         router.push({ name: "settings", params: {} });
       } else {
         redirectToLanding();
@@ -148,15 +171,18 @@ async function handleLogin () {
       // const loginResponse = await msalInstance.loginPopup({
       //   scopes: ["user.read", "openid", "profile", "email", "api://5f80e284-2b73-4227-88cd-3f4843f0e80a/api.read"] // Replace with your app's scopes
       // });
-      const accessToken = loginResponse.accessToken;
-      // Send the token to the backend
-      Loginmodel.value.token = `Bearer ${accessToken}`;
+      // Send the ID token: it is issued for this app, so the API can verify it.
+      // The access token is issued for Microsoft Graph and can't be verified here.
+      Loginmodel.value.token = `Bearer ${loginResponse.idToken}`;
       loading.value = true;
       authStore.mslogin(Loginmodel.value).then((resp) => {
         if (resp.loginErrorMessage) {
           router.push({ name: "not_authorized", params: {} });
         } else {
-          if (resp?.roles?.includes("system-super-admin")) {
+          const redirect = getSafeRedirect();
+          if (redirect) {
+            router.push(redirect);
+          } else if (resp?.roles?.includes("system-super-admin")) {
             router.push({ name: "settings", params: {} });
           } else {
             redirectToLanding();

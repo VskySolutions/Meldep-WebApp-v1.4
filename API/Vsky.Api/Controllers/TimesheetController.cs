@@ -49,6 +49,7 @@ using static Vsky.Api.Models.TimesheetModel;
 namespace Vsky.Api.Controllers
 {
     [Route("Timesheet")]
+    [RequireMenu(MenuLinks.Timesheet + "|" + MenuLinks.BillingProcessing + "|" + MenuLinks.Dashboard)]
     public class TimesheetController : BaseController
     {
         #region Define Services
@@ -117,6 +118,7 @@ namespace Vsky.Api.Controllers
         // Title:Get All Timesheet
         // Description: This endpoint fetches a list of timesheets based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllTimesheets(TimesheetSearchModel searchModel)
         {
             try
@@ -227,11 +229,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("timesheetBillingList")]
+        [ReadAccess]
         public IActionResult GetAllBillingTimesheet(TimesheetSearchModel searchModel)
         {
             try
@@ -327,11 +330,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("groupedBillingTimesheetList")]
+        [ReadAccess]
         public IActionResult GetGroupedBillingTimesheet(TimesheetSearchModel searchModel)
         {
             try
@@ -367,11 +371,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("timesheetWeeklyList")]
+        [ReadAccess]
         public async Task<IActionResult> GetAllTimesheetByWeek(TimesheetSearchModel searchModel)
         {
             try
@@ -387,11 +392,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("weekly-timesheet-approval-list")]
+        [ReadAccess]
         # region GetAllWeeklyTimesheetApprovalList
         public async Task<IActionResult> GetAllWeeklyTimesheetApprovalList(TimesheetSearchModel searchModel)
         {
@@ -420,7 +426,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -430,6 +436,7 @@ namespace Vsky.Api.Controllers
         // Title:Get All Timesheet
         // Description: This endpoint fetches a list of timesheets based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("total-hours-week-and-month")]
+        [ReadAccess]
         public async Task<IActionResult> GetTimesheetTotalHoursByWeekAndMonth(TimesheetSearchModel searchModel)
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -560,6 +567,8 @@ namespace Vsky.Api.Controllers
         // Title:Get All Timesheet
         // Description: This endpoint fetches a list of timesheets based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("Dashboardlist")]
+        [ReadAccess]
+        [RequireMenu(MenuLinks.Dashboard + "|" + MenuLinks.Timesheet + "|" + MenuLinks.BillingProcessing)]
         public IActionResult GetAllTimesheetForDashboard(TimesheetSearchModel searchModel)
         {
             try
@@ -581,7 +590,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -590,6 +599,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllTimesheetListForDropdown
         // Description: This endpoint retrieves the details of a specific timesheet based on its unique identifier (ID). 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllTimesheetListForDropdown()
         {
             var LoggedUserId = User.GetLoggedInUserId<string>();
@@ -604,6 +614,7 @@ namespace Vsky.Api.Controllers
         // Title: GetTimesheetById
         // Description: This endpoint retrieves the details of a specific timesheet based on its unique identifier (ID). 
         [HttpGet("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Timesheet))]
         public async Task<IActionResult> GetTimesheetById(string id)
         {
             try
@@ -620,7 +631,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -828,7 +839,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -837,6 +848,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateTimesheet
         // Description: This endpoint updates an existing timesheet by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Timesheet))]
         public async Task<IActionResult> UpdateTimesheet(string id, TimesheetModel model)
         {
             try
@@ -1009,7 +1021,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
             // Return model state errors if the model state is not valid
             return ModelStateError(ModelState);
@@ -1020,6 +1032,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteTimesheet
         // Description: This endpoint deletes a timesheet based on the provided timesheet ID. It first retrieves the timesheet entity by ID, checks if it exists, and if so, deletes the timesheet. If the timesheet is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.Timesheet))]
         public async Task<IActionResult> DeleteTimesheet(string id)
         {
             try
@@ -1037,7 +1050,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1066,7 +1079,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
@@ -1095,7 +1108,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1115,6 +1128,7 @@ namespace Vsky.Api.Controllers
         }
 
         [HttpPost("export")]
+        [ReadAccess]
         public async Task<IActionResult> ExportTimesheet(TimesheetModel model)
         {
             try
@@ -1334,11 +1348,12 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
 
         [HttpPost("exportBillingTimesheet")]
+        [ReadAccess]
 
         public async Task<IActionResult> ExportBillingTimesheet(TimesheetLinesModel model)
         {
@@ -1469,7 +1484,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1534,7 +1549,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception Ex)
             {
-                return BadRequest(Ex.Message + ":- " + Ex.InnerException);
+                return BadRequest(SafeErrorMessage(Ex));
             }
         }
         #endregion
@@ -1571,7 +1586,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1596,7 +1611,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1622,7 +1637,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1687,7 +1702,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -1777,7 +1792,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

@@ -31,7 +31,7 @@
             <div class="col-xxl-6 col-lg-5 col-md-5 col-sm-12 col-xs-12">
               <div class="q-mb-xs">Description</div>
               <div class="text-black RichTextEditor">
-                <p v-html="model.description ? model.description : '-'" />
+                <p v-safe-html="model.description ? model.description : '-'" />
               </div>
             </div>
             <div class="col-xxl-1 col-lg-1 col-md-2 col-sm-6 col-xs-12 flex column justify-between items-end">
@@ -60,7 +60,7 @@
                   <div class="col-xxl-7 col-lg-7 col-md-7 col-sm-6 col-xs-10 q-pa-xs">
                     <div class="q-mb-xs">Description</div>
                     <div class="text-black RichTextEditor">
-                      <p v-html="section.description ? section.description : '-'" />
+                      <p v-safe-html="section.description ? section.description : '-'" />
                     </div>
                   </div>
                 </div>
@@ -86,7 +86,7 @@
                         </td>
                         <td>
                           <span class="fs-13 text-black RichTextEditor">
-                            <p v-html="sectionItem.description ? sectionItem.description : '-'" />
+                            <p v-safe-html="sectionItem.description ? sectionItem.description : '-'" />
                           </span>
                         </td>
                         <td>

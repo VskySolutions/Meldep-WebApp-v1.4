@@ -99,7 +99,7 @@ const rules = {
 const v$ = useVuelidate(rules, model, { $lazy: true, $autoDirty: true });
 const route = useRoute();
 const userid = route.params.userid;
-// const expires = route.params.token;
+const token = route.query.token;
 const submit = async () => {
   if (await v$.value.$validate()) {
     if (model.value.newPassword !== model.value.confirmPassword) {
@@ -107,7 +107,7 @@ const submit = async () => {
     }
 
     loading.value = true;
-    // model.value.token = expires;
+    model.value.token = token;
     authService.resetPassword(model.value).then((resp) => {
       notifySuccess({ message: "Your password has been reset successfully. Log in with your new password." });
     }).finally(() => {
@@ -119,7 +119,11 @@ const submit = async () => {
 };
 
 function getUser () {
-  authService.getUser(userid).then((resp) => {
+  if (!token) {
+    notifyError({ message: "This password reset link is invalid or has expired. Please request a new one." });
+    return;
+  }
+  authService.getResetLinkUser(userid, token).then((resp) => {
     model.value.email = resp.email;
   });
 }

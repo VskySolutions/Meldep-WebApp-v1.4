@@ -184,7 +184,7 @@
               {{ props.row.createdOnUtc }}
             </q-td>
             <q-td auto-width class="text-left actions">
-              <q-icon
+              <q-icon v-can
                 name="o_delete_outline"
                 class="cursor-pointer"
                 color="negative"

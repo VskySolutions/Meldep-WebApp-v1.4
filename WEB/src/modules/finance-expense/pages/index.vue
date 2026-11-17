@@ -81,7 +81,7 @@
                 :selected-field="selectedField"
               />
               <div class="q-ml-xs">
-                <q-btn icon="o_add" outline label="Add Expenses" no-caps class="text-primary btnRounded" @click="onExpenseAdd(refreshExpenseList)" />
+                <q-btn v-can icon="o_add" outline label="Add Expenses" no-caps class="text-primary btnRounded" @click="onExpenseAdd(refreshExpenseList)" />
                 <q-btn v-if="role === 'admin'" icon="o_playlist_add" outline no-caps class="text-primary btnRounded q-ml-sm" @click="showManageDropdownOptions = !showManageDropdownOptions">
                   <q-tooltip>Manage Dropdowns</q-tooltip>
                 </q-btn>
@@ -137,7 +137,7 @@
               <q-icon name="o_visibility" class="cursor-pointer q-mr-sm" @click="onExpenseView(props.row.id, false, refreshExpenseList)">
                 <q-tooltip>View</q-tooltip>
               </q-icon>
-              <q-icon name="o_edit" class="cursor-pointer q-mr-sm" :class="['Draft', 'Submitted'].includes(props.row.status) ? '' : 'hidden'" @click="onExpenseEdit(props.row.id, refreshExpenseList)">
+              <q-icon v-can name="o_edit" class="cursor-pointer q-mr-sm" :class="['Draft', 'Submitted'].includes(props.row.status) ? '' : 'hidden'" @click="onExpenseEdit(props.row.id, refreshExpenseList)">
                 <q-tooltip>Edit</q-tooltip>
               </q-icon>
               <q-icon
@@ -148,7 +148,7 @@
               >
                 <q-tooltip>Data Change Log</q-tooltip>
               </q-icon>
-              <q-icon name="o_delete_outline" class="cursor-pointer q-ml-sm" :class="(props.row.status === 'Draft' ) ? '' : 'hidden'" color="negative" @click="onSubmitExpenseDelete(props.row.id, props.row.payee, refreshExpenseList)">
+              <q-icon v-can name="o_delete_outline" class="cursor-pointer q-ml-sm" :class="(props.row.status === 'Draft' ) ? '' : 'hidden'" color="negative" @click="onSubmitExpenseDelete(props.row.id, props.row.payee, refreshExpenseList)">
                 <q-tooltip>Delete</q-tooltip>
               </q-icon>
             </q-td>

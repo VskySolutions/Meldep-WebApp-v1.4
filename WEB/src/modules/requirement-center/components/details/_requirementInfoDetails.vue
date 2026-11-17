@@ -178,7 +178,7 @@
                 Last Note
               </div>
               <div class="q-mb-sm">
-                <span v-html="model.lastNote" />
+                <span v-safe-html="model.lastNote" />
               </div>
             </q-item-section>
           </q-item>
@@ -189,7 +189,7 @@
                 Short Description
               </div>
               <div class="q-mb-sm">
-                <span v-html="model.shortDescription" />
+                <span v-safe-html="model.shortDescription" />
               </div>
             </q-item-section>
           </q-item>

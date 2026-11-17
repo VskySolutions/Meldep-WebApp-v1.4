@@ -19,6 +19,7 @@ using Microsoft.PowerBI.Api.Models;
 namespace Vsky.Api.Controllers
 {
     [Route("report-users")]
+    [RequireMenu(MenuLinks.Reports)]
     public class ReportUserMappingController : BaseController
     {
         #region Define Services
@@ -48,6 +49,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All Reports For User Permission
         // Description: This endpoint fetches a list of reports based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllReportsForUserPermission(ReportSettingsDetailsSearchModel searchModel)
         {
             try
@@ -67,7 +69,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -89,7 +91,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -156,7 +158,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -231,7 +233,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

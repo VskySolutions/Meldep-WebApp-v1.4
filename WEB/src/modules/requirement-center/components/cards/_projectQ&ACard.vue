@@ -80,7 +80,7 @@
           </q-td>
 
           <q-td style="width:60%;">
-            <p v-html="props.row.lastAnswer ? props.row.lastAnswer : props.row.description" />
+            <p v-safe-html="props.row.lastAnswer ? props.row.lastAnswer : props.row.description" />
           </q-td>
 
         </q-tr>

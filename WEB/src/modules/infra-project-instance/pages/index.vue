@@ -63,7 +63,7 @@
                 </q-menu>
               </div>
               <div>
-                <q-btn
+                <q-btn v-can
                   icon="o_add"
                   outline
                   no-caps
@@ -288,7 +288,7 @@
                   <q-icon v-if="!props.row.isNew" name="o_visibility" class="cursor-pointer q-mr-sm" size="xs" @click="onInfraProjectInstanceView(props.row.id, refreshInfraProjectInstancesList)">
                     <q-tooltip>View</q-tooltip>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     v-if="!props.row.isNew && editingRowId !== props.row.id"
                     name="o_edit"
                     class="cursor-pointer q-mr-sm"
@@ -342,7 +342,7 @@
                       </template>
                     </q-popup-edit>
                   </q-icon>
-                  <q-icon
+                  <q-icon v-can
                     name="o_delete_outline"
                     size="xs"
                     class="cursor-pointer"

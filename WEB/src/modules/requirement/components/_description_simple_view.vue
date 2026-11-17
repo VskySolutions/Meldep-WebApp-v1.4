@@ -21,7 +21,7 @@
           >
               <div
                 class="text-black note-text"
-                v-html="responseLogDescription.description || ''"/>
+                v-safe-html="responseLogDescription.description || ''"/>
               <q-separator v-if="showDescriptionInfo" class="q-my-sm" />
           </div>
         </div>

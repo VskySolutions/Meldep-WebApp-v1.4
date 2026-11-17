@@ -259,7 +259,7 @@
               <q-chip v-if="props.row.leaveStatuses.dropDownValue == 'Decline'" label="Decline" name="o_done" class="rounded q-px-lg" color="red-5" text-color="black" />
             </q-td>
             <!-- <q-td style="width: 15%;">{{ props.row.reason }}</q-td> -->
-            <q-td style="width: 15%;" class="RichTextEditor"><div v-html="stripHTML(truncate(props.row.reason, 50))" /></q-td>
+            <q-td style="width: 15%;" class="RichTextEditor"><div v-safe-html="stripHTML(truncate(props.row.reason, 50))" /></q-td>
             <q-td auto-width class="text-center actions" style="width: 10%;">
               <q-icon v-if="props.row.leaveStatuses.dropDownValue == 'Applied'" name="o_double_arrow" class="cursor-pointer q-mr-sm" @click="onLeaveForward(props.row.id, refreshForwardLeaveList)">
                 <q-tooltip>Forward to Approver</q-tooltip>

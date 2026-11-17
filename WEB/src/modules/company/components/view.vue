@@ -60,7 +60,7 @@
               <div class="col-12 col-sm-12 col-md-12">
                 <div class="q-mb-xs">Description</div>
                 <div class="text-black RichTextEditor">
-                  <p v-html="model.description ? model.description : '-'" />
+                  <p v-safe-html="model.description ? model.description : '-'" />
                 </div>
               </div>
             </div>

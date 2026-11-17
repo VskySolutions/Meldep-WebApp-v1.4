@@ -18,6 +18,7 @@ using Vsky.Services.Sites;
 namespace Vsky.Api.Controllers
 {
     [Route("contact")]
+    [SiteMember]
     public class ContactController : BaseController
     {
         #region Services Initializations
@@ -49,6 +50,7 @@ namespace Vsky.Api.Controllers
 
         #region Get All
         [HttpPost("contact-us-list")]
+        [ReadAccess]
         public IActionResult GetAllContactUs(ContactSearchModel searchModel)
         {
             try
@@ -80,13 +82,14 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
 
         #region CreateContactUs
         [AllowAnonymous]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(PublicEndpointLimit.PolicyName)]
         [HttpPost("save-contact-us")]
         public async Task<IActionResult> CreateContactUs(SaveContactUs model)
         {
@@ -121,7 +124,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -132,6 +135,7 @@ namespace Vsky.Api.Controllers
 
         #region create contact
         [AllowAnonymous]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(PublicEndpointLimit.PolicyName)]
         [HttpPost]
         public async Task<IActionResult> CreateContact(ContactModel model)
         {
@@ -157,7 +161,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

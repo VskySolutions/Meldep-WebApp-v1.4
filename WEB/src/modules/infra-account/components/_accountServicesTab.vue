@@ -56,7 +56,7 @@
           <q-td style="width: 8%">{{ props.row.walletType.dropDownValue }}</q-td>
           <q-td style="width: 8%">{{ props.row.walletNumber }}</q-td>
           <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 14%;">
-            <p v-html="props.row.instructions || '-'" />
+            <p v-safe-html="props.row.instructions || '-'" />
           </q-td>
         </q-tr>
       </template>

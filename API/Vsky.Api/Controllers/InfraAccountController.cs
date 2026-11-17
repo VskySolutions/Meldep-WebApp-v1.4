@@ -16,6 +16,7 @@ using Vsky.Services.DropDowns;
 namespace Vsky.Api.Controllers
 {
     [Route("infra-account")]
+    [RequireMenu(MenuLinks.InfraAccount)]
     public class InfraAccountController : BaseController
     {
         #region Define Services
@@ -56,6 +57,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllInfraAccountList
         // Description: This endpoint retrieves the list of infra account.
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllInfraAccountList(InfraAccountSearchModel searchModel)
         {
             try
@@ -85,7 +87,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -94,6 +96,7 @@ namespace Vsky.Api.Controllers
         // Title: GetAllInfraAccountListForDropdown
         // Description: This endpoint retrieves the list of Infra Account for dropdown. 
         [HttpGet("dropdown/list")]
+        [SiteMember]
         public async Task<IActionResult> GetAllInfraAccountListForDropdown()
         {
             try
@@ -105,7 +108,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -114,6 +117,7 @@ namespace Vsky.Api.Controllers
         // Title: GetInfraAccountDetailsById
         // Description: This endpoint retrieves the details of a specific infra account based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.InfraAccount))]
         public async Task<IActionResult> GetInfraAccountDetailsById(string id)
         {
             try
@@ -127,7 +131,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -255,7 +259,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -264,6 +268,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateInfraAccount
         // Description: This endpoint updates an existing infra account by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.InfraAccount))]
         public async Task<IActionResult> UpdateInfraAccount(string id, SaveInfraAccount model)
         {
             try
@@ -477,7 +482,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message + ":- " + ex.InnerException);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -486,6 +491,7 @@ namespace Vsky.Api.Controllers
         // Title: DeleteInfraAccount
         // Description: This endpoint deletes a infra account based on the provided infra account ID. It first retrieves the infra account entity by ID, checks if it exists, and if so, deletes the infra account. If the infra account is not found, it returns a BadRequest response with an error message.
         [HttpDelete("{id}")]
+        [SiteOwned(typeof(Vsky.Models.InfraAccount))]
         public async Task<IActionResult> DeleteInfraAccount(string id)
         {
             try
@@ -501,7 +507,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

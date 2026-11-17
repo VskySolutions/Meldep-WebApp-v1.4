@@ -61,7 +61,7 @@
         <div ref="messagesEl" class="chat-messages">
             <div v-for="msg in messages" :key="msg.id" class="msg-row" :class="msg.role">
                 <div class="bubble" :class="msg.role"
-                    v-html="msg.role === 'bot' ? renderMarkdown(msg.text) : escapeHtml(msg.text)"></div>
+                    v-safe-html="msg.role === 'bot' ? renderMarkdown(msg.text) : escapeHtml(msg.text)"></div>
             </div>
 
             <div v-if="isTyping" class="msg-row bot">
@@ -90,9 +90,8 @@
 
 <script setup>
 import { nextTick, ref } from 'vue'
+import { http } from 'boot/axios'
 
-const WEBHOOK_URL =
-    'https://n8nworkflow.vskyapplications.com/webhook/c9cb3684-587b-4a09-97f9-b3bb4a0b357f/chat'
 
 const isOpen = ref(false)
 const isSending = ref(false)
@@ -178,19 +177,11 @@ async function sendMessage() {
     isTyping.value = true
 
     try {
-        const response = await fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'sendMessage',
-                sessionId: sessionId.value,
-                chatInput: text,
-            }),
+        const { data } = await http.post('/sop-process/assistant-chat', {
+            action: 'sendMessage',
+            sessionId: sessionId.value,
+            chatInput: text,
         })
-
-        const data = await response.json()
 
         const reply =
             data.output ||

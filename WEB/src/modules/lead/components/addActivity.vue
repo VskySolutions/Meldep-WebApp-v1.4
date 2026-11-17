@@ -176,7 +176,7 @@
                         <q-td style="width: 5%;">{{ props.row.activityDate }}</q-td>
                         <!-- <q-td>{{ truncateText(props.row.activityNote) }}</q-td> -->
                         <q-td style="white-space: break-spaces;" @click="showActivityNote(props.row.activityNote)">
-                          <div class="clamped-text RichTextEditor" v-html="removeLeadingSpaces(props.row.activityNote)" />
+                          <div class="clamped-text RichTextEditor" v-safe-html="removeLeadingSpaces(props.row.activityNote)" />
                         </q-td>
                         <q-td style="width: 5%;" class="text-center actions">
                           <q-icon
@@ -214,7 +214,7 @@
           <div class="text-h2 text-weight-medium text-white">{{ label || 'Note Summary' }}</div>
         </q-card-section>
         <q-card-section class="q-pt-sm">
-          <div style="white-space: pre-wrap;" class="RichTextEditor" v-html="currentActivityNote" />
+          <div style="white-space: pre-wrap;" class="RichTextEditor" v-safe-html="currentActivityNote" />
         </q-card-section>
         <q-card-actions align="right" class="bg-white text-teal">
           <q-btn

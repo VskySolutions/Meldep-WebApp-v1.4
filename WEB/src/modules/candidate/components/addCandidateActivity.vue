@@ -114,7 +114,7 @@
                     <template #body="props">
                       <q-tr :props="props" :class="activeRowId == props.row.id ? 'highlight' : ''">
                         <q-td style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal; width: 20%;" class="RichTextEditor">
-                          <div class="text-black" v-html="props.row.activityName" />
+                          <div class="text-black" v-safe-html="props.row.activityName" />
                         </q-td>
                         <q-td style="width: 5%;">
                           {{ props.row.dueDate }}

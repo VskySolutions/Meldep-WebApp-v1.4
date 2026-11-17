@@ -34,6 +34,7 @@ using static Vsky.Api.Models.EmployeeModel;
 namespace Vsky.Api.Controllers
 {
     [Route("time-in-time-out")]
+    [SiteMember]
     public class TimeInTimeOutController : BaseController
     {
 
@@ -96,6 +97,7 @@ namespace Vsky.Api.Controllers
         // Title: Get All TimeInTimeOuts
         // Description: This endpoint fetches a list of TimeInTimeOuts based on the provided search criteria such as name, sorting, and pagination. 
         [HttpPost("list")]
+        [ReadAccess]
         public IActionResult GetAllTimeInTimeOuts(TimeInTimeOutSearchModel searchModel)
         {
             try
@@ -128,7 +130,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -148,7 +150,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -157,6 +159,7 @@ namespace Vsky.Api.Controllers
         // Title: GetTimeInTimeOutDetailsById
         // Description: This endpoint retrieves the details of a specific TimeInTimeOut based on its unique identifier (ID). 
         [HttpGet("details/{id}")]
+        [SiteOwned(typeof(Vsky.Models.TimeInTimeOut))]
         public async Task<IActionResult> GetTimeInTimeOutDetailsById(string id)
         {
             try
@@ -173,7 +176,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -217,7 +220,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -226,6 +229,7 @@ namespace Vsky.Api.Controllers
         // Title: UpdateTimeInTimeOut
         // Description: This endpoint updates an existing time in time out by its ID. 
         [HttpPut("{id}")]
+        [SiteOwned(typeof(Vsky.Models.TimeInTimeOut))]
         public async Task<IActionResult> UpdateTimeOut(string id)
         {
             try
@@ -324,7 +328,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion
@@ -486,7 +490,7 @@ namespace Vsky.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(SafeErrorMessage(ex));
             }
         }
         #endregion

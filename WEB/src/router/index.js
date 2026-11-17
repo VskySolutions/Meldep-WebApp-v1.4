@@ -2,6 +2,7 @@ import { route } from "quasar/wrappers";
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from "vue-router";
 import routes from "./routes";
 import { useAuthStore } from "stores/auth";
+import { permissionGuard } from "./permissionGuard";
 
 /*
  * If not building with SSR mode, you can
@@ -84,6 +85,7 @@ import projectActionItems from "src/modules/project-action-items/routes";
 import projectQuestionsAnswersRoutes from "src/modules/project-questions-answers/routes";
 import requirementDataMappingRoutes from "src/modules/requirement-data-mapping/routes";
 import requirementStatusTrackingRoutes from "src/modules/requirement-status-tracking/routes";
+import securityAdminRoutes from "modules/security-admin/routes";
 
 routes.push(...userManagementRoutes);
 routes.push(...companyRoutes);
@@ -157,6 +159,7 @@ routes.push(...projectActionItems);
 routes.push(...projectQuestionsAnswersRoutes);
 routes.push(...requirementDataMappingRoutes);
 routes.push(...requirementStatusTrackingRoutes);
+routes.push(...securityAdminRoutes);
 
 export default route(function ({ store } /* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
@@ -196,17 +199,12 @@ export default route(function ({ store } /* { store, ssrContext } */) {
       return next();
     }
 
-    // If user is NOT logged in and route requires auth
-    if (to.meta.requiresAuth && !token) {
-      return next("/auth/login");
-    }
-
     // If user opens root `/`
     if (to.path === "/" && token) {
       return next(lastRoute || "/dashboard");
     }
 
-    next();
+    return permissionGuard(to, next, store);
   });
   return Router;
 });
