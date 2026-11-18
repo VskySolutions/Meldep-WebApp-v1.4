@@ -716,6 +716,7 @@ namespace Vsky.Services.Issues
                         Id = x.CreatedBy.PersonId,
                         FirstName = x.CreatedBy.Person.FirstName,
                         LastName = x.CreatedBy.Person.LastName,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
                     }
                 },
                 UpdatedBy = new ApplicationUser
@@ -726,6 +727,7 @@ namespace Vsky.Services.Issues
                         Id = x.UpdatedBy.PersonId,
                         FirstName = x.UpdatedBy.Person.FirstName,
                         LastName = x.UpdatedBy.Person.LastName,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                     }
                 },
                 IssueStatusChangedLog = x.IssueStatusChangedLog.OrderByDescending(m => m.StatusChangedDate).Select(p => new IssueStatusChangedLog

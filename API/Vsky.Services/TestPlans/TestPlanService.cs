@@ -346,6 +346,8 @@ namespace Vsky.Services.TestPlans
                 WorkspaceId = x.WorkspaceId,
                 Description = x.Description,
                 TestPlanNumber = x.TestPlanNumber,
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 Area = new DropDown
                 {
                     Id = x.Area.Id,
@@ -377,7 +379,22 @@ namespace Vsky.Services.TestPlans
                     Id = x.Project.Id,
                     Name = x.Project.Name
                 },
-
+                CreatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.CreatedBy.Person.Id,
+                        FullName = x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Person = new Person
+                    {
+                        Id = x.UpdatedBy.Person.Id,
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
+                    }
+                }
             });
             var item = await query.FirstOrDefaultAsync();
             return item;

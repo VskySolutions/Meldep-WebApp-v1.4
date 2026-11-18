@@ -9,6 +9,15 @@ export default {
     return http.get(`/requirement/${id}`).then(response => response.data);
   },
 
+  // WO-74: one requirement as an .xlsx workbook. Returns the full response so the caller can check
+  // the content type and Content-Disposition before downloading.
+  exportRequirement (id) {
+    return http.get(`/requirement/${encodeURIComponent(id)}/export`, {
+      responseType: "blob",
+      headers: { Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json" }
+    });
+  },
+
   getRequirementDetails (id) {
     return http.get(`/requirement/details/${id}`).then(response => response.data);
   },

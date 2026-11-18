@@ -1,6 +1,6 @@
 <template>
   <q-dialog ref="dialogRef" class="customDialog dialog-scrollable-content" persistent full-height position="right" @hide="onDialogHide">
-    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 100% !important; max-width: 100%;">
+    <q-card class="q-dialog-plugin PersonMain card-header with-tools headerBasic" style="width: 95vw !important; max-width: 100vw;">
       <q-card-section class="card-header with-tools bg-primary stickyHeader">
         <div class="text-h2 text-white">{{ config.title }}</div>
         <q-btn icon="o_close" class="close" color="white" flat round dense :disable="isConfirming" @click="onClose" />
@@ -10,7 +10,7 @@
         <fieldset>
           <legend>Upload File</legend>
           <div class="row q-col-gutter-md items-center">
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-4">
               <q-file
                 v-model="fileModel"
                 outlined
@@ -27,9 +27,10 @@
                 </template>
               </q-file>
             </div>
-            <div class="col-12 col-md-6 text-caption text-grey-8">
+            <div class="col-12 col-md-8 text-caption text-grey-8">
               Only .xlsx files from the template, up to {{ maxSizeMb }} MB and {{ config.policy.maxRows }} rows.
-              {{ config.guidance }}
+              Please select all required fields.
+              <!-- {{ config.guidance }} -->
               If any row is invalid, nothing is imported.
               <q-btn flat dense no-caps color="primary" icon="o_download" label="Download Excel Template" class="q-ml-xs" :loading="downloading" @click="onDownloadTemplate" />
             </div>
@@ -69,7 +70,7 @@
             flat
             bordered
             no-data-label="No rows found in the file"
-            :rows-per-page-options="[20, 50, 100, 0]"
+            :rows-per-page-options="[20, 50, 100, 200, 500, 0]"
           >
             <template #header="props">
               <q-tr :props="props" class="bg-primary text-white">
@@ -80,8 +81,8 @@
             </template>
             <template #body="props">
               <q-tr :props="props" :class="rowHasErrors(props.row) ? 'bg-red-1' : ''">
-                <q-td class="text-center">
-                  {{ props.row.rowNumber }}
+                <q-td class="text-right">
+                  {{ props.row.rowNumber - 1 }}
                 </q-td>
                 <q-td
                   v-for="field in config.fields"
@@ -144,7 +145,7 @@
 // Imported values are rendered with text interpolation only (never v-html).
 import { useDialogPluginComponent } from "quasar";
 import { ref, reactive, computed } from "vue";
-import { notifySuccess, notifyError } from "assets/utils";
+import { notifySuccess, notifyError, zwConfirmLeave } from "assets/utils";
 import {
   createImportState,
   createExcelImportFlow,
@@ -195,10 +196,14 @@ async function onConfirm () {
 }
 
 function onClose () {
-  if (isConfirming.value) return;
-  // Closing/cancelling never sends a confirmation request.
-  flow.reset();
-  onDialogCancel();
+  // if (isConfirming.value) return;
+  // // Closing/cancelling never sends a confirmation request.
+  // flow.reset();
+  // onDialogCancel();  
+  zwConfirmLeave({ data: "" }, () => {
+    onDialogCancel();
+  }, () => {
+  });
 }
 
 async function onDownloadTemplate () {

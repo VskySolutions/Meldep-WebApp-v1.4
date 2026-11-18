@@ -1023,6 +1023,19 @@
                     :label="props.row.requirementNotesCount"
                   />
                 </a>
+                <q-btn
+                  dense
+                  flat
+                  icon="o_file_download"
+                  color="primary"
+                  aria-label="Export Requirement"
+                  data-test="export-requirement"
+                  :loading="requirementExport.isExporting(props.row.id)"
+                  :disable="requirementExport.isExporting(props.row.id)"
+                  @click.stop="requirementExport.exportRow(props.row)"
+                >
+                  <q-tooltip>Export Requirement</q-tooltip>
+                </q-btn>
                 <q-btn dense flat icon="o_more_vert" color="primary">
                   <q-tooltip>More Options</q-tooltip>
                   <q-menu auto-close>
@@ -1179,7 +1192,7 @@
 </template>
 <script setup>
 // Import libraries
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, reactive, onMounted, watch, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { zwConfirmDelete, notifySuccess, notifyError, notifyWarning } from "assets/utils";
@@ -1193,6 +1206,8 @@ import selectMultiRequirement from "modules/requirement/components/_multiRequire
 import linkTaskToPlan from "modules/project-targetplan/components/_linkRequirementTaskIssueToWeeklyMonthlyPlan.vue";
 
 import requirementService from "modules/requirement/requirement.service";
+import { createRequirementExportAction } from "modules/requirement/utils/requirementExport.js";
+import { downloadBlob } from "src/composables/excelImport/downloadBlob.js";
 import requirementGroupsService from "modules/requirement-group/requirementGroup.service";
 import taskService from "modules/project-tasks/projectTasks.service";
 
@@ -1294,6 +1309,15 @@ const searchLoader = ref(false);
 const showMultiSelectOptions = ref(false);
 const selectedField = ref(null);
 const { fonts, toolbar } = getEditorConfig($q);
+
+// WO-74: per-row Export Requirement (uses only the clicked row's ID; tracks in-flight rows)
+const requirementExport = createRequirementExportAction({
+  exportRequirement: (id) => requirementService.exportRequirement(id),
+  download: downloadBlob,
+  notifyError,
+  notifySuccess,
+  pending: reactive({})
+});
 // const multiSelectRequirementIds = ref([]);
 // const multiSelectRequirementTitles = ref([]);
 // const multiSelectRequirementProjectMap = ref({});

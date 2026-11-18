@@ -653,6 +653,7 @@ namespace Vsky.Services.TestCases
                 TestCaseNumber = x.TestCaseNumber,
                 CreatedById = x.CreatedById,
                 CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
                 Area = new DropDown
                 {
                     Id = x.Area.Id,
@@ -739,6 +740,14 @@ namespace Vsky.Services.TestCases
                     Person = new Person
                     {
                         FullName = x.CreatedByUser.Person.FirstName + " " + x.CreatedByUser.Person.LastName
+                    }
+                },
+                UpdatedBy = new ApplicationUser
+                {
+                    Id = x.UpdatedBy.Id,
+                    Person = new Person
+                    {
+                        FullName = x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                     }
                 },
             });

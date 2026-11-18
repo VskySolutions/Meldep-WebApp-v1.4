@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -1136,6 +1137,7 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region CheckMobileVersion
+        [AllowAnonymous]
         [HttpGet("check-mobile-version")]
         public async Task<IActionResult> CheckMobileVersion(string currentVersion)
         {

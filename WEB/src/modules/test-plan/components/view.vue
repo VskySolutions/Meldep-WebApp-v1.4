@@ -53,6 +53,34 @@
               </div>
             </div>
             <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Created By</div>
+                <div class="text-black">
+                  {{ model.createdBy.person.fullName ? model.createdBy.person.fullName : "-" }}
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Created Date</div>
+                <div class="text-black">
+                  {{ model.createdOnUtc ? model.createdOnUtc : "-" }}
+                </div>
+              </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Updated By</div>
+                <div class="text-black">
+                  {{ model.updatedBy.person.fullName ? model.updatedBy.person.fullName : "-" }}
+                </div>
+              </div>
+              <div class="col-12 col-sm-6 col-md-6">
+                <div class="q-mb-xs">Updated Date</div>
+                <div class="text-black">
+                  {{ model.updatedOnUtc ? model.updatedOnUtc : "-" }}
+                </div>
+              </div>
+            </div>
+            <div class="row q-col-gutter-x-md q-mb-md">
               <div class="col-12">
                 <div class="q-mb-xs">Description</div>
                 <div class="text-black RichTextEditor">
@@ -87,6 +115,8 @@ const { dialogRef, onDialogHide } = useDialogPluginComponent();
 const model = ref({
   name: "-",
   description: "",
+  createdOnUtc: "",
+  updatedOnUtc: "",
   project: {
     name: ""
   },
@@ -102,6 +132,16 @@ const model = ref({
     }
   },
   planReviewer: {
+    person: {
+      fullName: ""
+    }
+  },
+  createdBy: {
+    person: {
+      fullName: ""
+    }
+  },
+  updatedBy: {
     person: {
       fullName: ""
     }

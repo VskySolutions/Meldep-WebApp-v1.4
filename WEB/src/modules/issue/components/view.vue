@@ -64,20 +64,22 @@
                       {{ model.requirement?.title || "-" }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Area</div>
                     <div class="text-black">
                       {{ model.area?.dropDownValue || "-" }}
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Workspace</div>
                     <div class="text-black">
                       {{ model.workspace?.dropDownValue || "-" }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">                  
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Task</div>
                     <div class="text-black">
@@ -95,32 +97,52 @@
                       <span v-else>-</span>
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Assign To</div>
                     <div class="text-black">
                       {{ model.employee?.person?.fullName || "-" }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Issue Priority</div>
                     <div class="text-black">
                       {{ model.priority?.dropDownValue || "-" }}
                     </div>
                   </div>
-                </div>
-                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Reported By</div>
                     <div class="text-black">
                       {{ model.reportedBy?.person?.fullName || "-" }}
                     </div>
                   </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Created By</div>
+                    <div class="text-black">
+                      {{ model.createdBy.person.fullName ? model.createdBy.person.fullName : "-" }}
+                    </div>
+                  </div>
                   <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Created Date</div>
                     <div class="text-black">
                       {{ model.createdOnUtc }}
+                    </div>
+                  </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Updated By</div>
+                    <div class="text-black">
+                      {{ model.updatedBy.person.fullName ? model.updatedBy.person.fullName : "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Updated Date</div>
+                    <div class="text-black">
+                      {{ model.updatedOnUtc }}
                     </div>
                   </div>
                 </div>
@@ -159,6 +181,7 @@ const model = ref({
   issuIssueNumber: "",
   description: "",
   createdOnUtc: "",
+  updatedOnUtc: "",
   area: {
     dropDownValue: ""
   },
@@ -183,6 +206,16 @@ const model = ref({
     }
   },
   reportedBy: {
+    person: {
+      fullName: ""
+    }
+  },
+  createdBy: {
+    person: {
+      fullName: ""
+    }
+  },
+  updatedBy: {
     person: {
       fullName: ""
     }

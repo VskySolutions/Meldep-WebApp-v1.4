@@ -29,21 +29,23 @@
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
-                  <div class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Project Name</div>
-                    <div class="text-black q-mb-sm">{{ model.project?.name || "-" }}</div>
-                  </div>
-                  <div class="col-12 col-sm-6 col-md-6">
+                  <div class="col-12">
                     <div class="q-mb-xs">Test Plan Name</div>
                     <div class="text-black q-mb-sm">{{ model.testPlan?.name || "-" }}</div>
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Project Name</div>
+                    <div class="text-black q-mb-sm">{{ model.project?.name || "-" }}</div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Project Module Name</div>
                     <div class="text-black q-mb-sm">{{ model.projectModule?.name || "-" }}</div>
                   </div>
-                  <div class="col-12 col-sm-6 col-md-6">
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12">
                     <div class="q-mb-xs">Requirement</div>
                     <div class="text-black q-mb-sm">{{ model.requirement?.title || "-" }}</div>
                   </div>
@@ -70,6 +72,16 @@
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Status</div>
+                    <div class="text-black q-mb-sm">{{ model.status?.dropDownValue || "-" }}</div>
+                  </div>
+                  <div v-if="model.status?.dropDownValue === 'Fail'" class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Assign To</div>
+                    <div v-if="model.status?.dropDownValue === 'Fail'" class="col-12 col-sm-6 col-md-6 text-black">{{ model.employee?.person?.fullName }}</div>
+                  </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
                     <div class="q-mb-xs">Created By</div>
                     <div class="text-black q-mb-sm"> {{ model.createdByUser?.person?.fullName || "-" }}</div>
                   </div>
@@ -80,12 +92,12 @@
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Status</div>
-                    <div class="text-black q-mb-sm">{{ model.status?.dropDownValue || "-" }}</div>
+                    <div class="q-mb-xs">Updated By</div>
+                    <div class="text-black q-mb-sm"> {{ model.updatedBy?.person?.fullName || "-" }}</div>
                   </div>
-                  <div v-if="model.status?.dropDownValue === 'Fail'" class="col-12 col-sm-6 col-md-6">
-                    <div class="q-mb-xs">Assign To</div>
-                    <div v-if="model.status?.dropDownValue === 'Fail'" class="col-12 col-sm-6 col-md-6 text-black">{{ model.employee?.person?.fullName }}</div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Updated Date</div>
+                    <div class="text-black q-mb-sm">{{ model.updatedOnUtc || "-" }}</div>
                   </div>
                 </div>
               </fieldset>
@@ -184,6 +196,34 @@
                   </div>
                 </div>
                 <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Created By</div>
+                    <div class="text-black">
+                      {{ testPlanModel.createdBy.person.fullName ? testPlanModel.createdBy.person.fullName : "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Created Date</div>
+                    <div class="text-black">
+                      {{ testPlanModel.createdOnUtc ? testPlanModel.createdOnUtc : "-" }}
+                    </div>
+                  </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Updated By</div>
+                    <div class="text-black">
+                      {{ testPlanModel.updatedBy.person.fullName ? testPlanModel.updatedBy.person.fullName : "-" }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-6">
+                    <div class="q-mb-xs">Updated Date</div>
+                    <div class="text-black">
+                      {{ testPlanModel.updatedOnUtc ? testPlanModel.updatedOnUtc : "-" }}
+                    </div>
+                  </div>
+                </div>
+                <div class="row q-col-gutter-x-md q-mb-md">
                   <div class="col-12">
                     <div class="q-mb-xs">Description</div>
                     <div class="text-black RichTextEditor">
@@ -229,6 +269,7 @@ const model = ref({
   actualResult: "",
   testedDate: "",
   createdOnUtc: "",
+  updatedOnUtc: "",
   project: {
     name: ""
   },
@@ -251,6 +292,11 @@ const model = ref({
       fullName: ""
     }
   },
+  updatedBy: {
+    person: {
+      fullName: ""
+    }
+  },
   employee: {
     person: {
       fullName: ""
@@ -264,6 +310,8 @@ const model = ref({
 const testPlanModel = ref({
   name: "-",
   description: "",
+  createdOnUtc: "",
+  updatedOnUtc: "",
   project: {
     name: ""
   },
@@ -279,6 +327,16 @@ const testPlanModel = ref({
     }
   },
   planMaker: {
+    person: {
+      fullName: ""
+    }
+  },
+  createdBy: {
+    person: {
+      fullName: ""
+    }
+  },
+  updatedBy: {
     person: {
       fullName: ""
     }

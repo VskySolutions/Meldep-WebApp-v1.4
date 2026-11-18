@@ -336,6 +336,18 @@ const getTestCase = () => {
     model.value = _.cloneDeep(resp);
     model.value.statusId = resp.status.id;
     model.value.testedDateStr = resp.testedDate ? format(resp.testedDate, "MM/dd/yyyy") : "";
+    model.value.description = resp.description
+      ? resp.description
+      : "";
+    model.value.steps = resp.steps
+      ? resp.steps
+      : "";
+    model.value.expectedResult = resp.expectedResult
+      ? resp.expectedResult
+      : "";
+    model.value.actualResult = resp.actualResult
+      ? resp.actualResult
+      : "";
     testPlansByProjectIdForDropdownSingleSelect.load(resp.projectId);
   }).finally(() => {
     loading.value = false;

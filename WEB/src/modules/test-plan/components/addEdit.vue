@@ -213,6 +213,9 @@ const getTestPlan = () => {
   loading.value = true;
   testplanService.getTestPlan(props.id).then((resp) => {
     model.value = _.cloneDeep(resp);
+    model.value.description = resp.description
+      ? resp.description
+      : "";
   }).finally(() => {
     loading.value = false;
   });
