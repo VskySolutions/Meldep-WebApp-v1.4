@@ -1,7 +1,17 @@
 <template>
   <security-shell title="Users">
     <div class="row items-center justify-between q-pa-md q-gutter-sm">
-      <q-input v-model="search" outlined dense clearable debounce="300" label="Search users" aria-label="Search users" style="min-width: 280px;" @update:model-value="reload">
+      <q-input
+        v-model="search.searchText"
+        outlined
+        dense
+        clearable
+        debounce="300"
+        label="Search users"
+        aria-label="Search users"
+        style="min-width: 280px;"
+        @update:model-value="reload"
+      >
         <template #prepend><q-icon name="o_search" /></template>
       </q-input>
       <q-btn outline no-caps color="primary" icon="o_manage_accounts" label="Create or edit users" to="/user-management" />
@@ -49,12 +59,14 @@ import { onMounted, ref } from "vue";
 import securityShell from "../components/securityShell.vue";
 import userRolesDialog from "../components/userRolesDialog.vue";
 import securityAdminService from "../securityAdmin.service";
+import { useAuthStore } from "stores/auth";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
 
-const search = ref("");
 const rows = ref([]);
 const loading = ref(false);
 const rolesUser = ref(null);
-const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 });
+const authStore = useAuthStore();
+const user = authStore.user;
 
 const columns = [
   { name: "name", label: "Name", field: "name", align: "left" },
@@ -66,20 +78,67 @@ const columns = [
   { name: "actions", label: "Actions", field: "actions", align: "right" }
 ];
 
-async function load ({ pagination: page }) {
+async function load ({ pagination: page } = { pagination: pagination.value }) {
   loading.value = true;
+
   try {
-    const result = await securityAdminService.getUsers({ search: search.value, page: page.page, pageSize: page.rowsPerPage });
+    saveDataTableState({
+      search: search.value,
+      pagination: page
+    });
+
+    const result = await securityAdminService.getUsers({
+      search: search.value.searchText || "",
+      page: page.page,
+      pageSize: page.rowsPerPage
+    });
+
     rows.value = result.items;
-    pagination.value = { ...page, rowsNumber: result.total };
+
+    pagination.value = {
+      ...page,
+      rowsNumber: result.total
+    };
+
+    saveDataTableState({
+      search: search.value,
+      pagination: pagination.value
+    });
   } finally {
     loading.value = false;
   }
 }
 
 function reload () {
-  load({ pagination: { ...pagination.value, page: 1 } });
+  load({
+    pagination: {
+      ...pagination.value,
+      page: 1
+    }
+  });
 }
+
+const {
+  search,
+  pagination,
+  saveDataTableState
+} = useSiteTableState({
+  storageKey: "securityUsers-Index",
+  siteId: user?.siteId,
+
+  defaultSearch: {
+    searchText: ""
+  },
+
+  defaultPagination: {
+    page: 1,
+    rowsPerPage: 20
+  },
+
+  defaultSorts: {},
+  defaultResizableWidth: {},
+  defaultColumns: []
+});
 
 onMounted(reload);
 </script>

@@ -23,7 +23,7 @@
       :columns="columns"
       :filter="filter"
       :loading="loading"
-      :pagination="{ rowsPerPage: 50 }"
+      v-model:pagination="pagination"
       :rows-per-page-options="[20, 50, 100, 0]"
       no-data-label="No menus match."
     >
@@ -68,12 +68,30 @@ import securityShell from "../components/securityShell.vue";
 import userSelect from "../components/userSelect.vue";
 import securityAdminService from "../securityAdmin.service";
 
+import { useAuthStore } from "stores/auth";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
+
+const authStore = useAuthStore();
+const user = authStore.user;
 const route = useRoute();
-const userId = ref(route.query.userId || null);
+
 const result = ref(null);
 const loading = ref(false);
-const filter = ref("");
-const grantedOnly = ref(false);
+const filter = computed({
+  get: () => search.value.filter,
+  set: value => {
+    search.value.filter = value;
+    saveDataTableState({ search: search.value });
+  }
+});
+
+const grantedOnly = computed({
+  get: () => search.value.grantedOnly,
+  set: value => {
+    search.value.grantedOnly = value;
+    saveDataTableState({ search: search.value });
+  }
+});
 
 const columns = [
   { name: "expand", label: "", field: "expand" },
@@ -85,6 +103,33 @@ const columns = [
   { name: "manage", label: "Manage", field: row => row.manageReason, align: "left" }
 ];
 
+const {
+  search,
+  pagination,
+  saveDataTableState
+} = useSiteTableState({
+  storageKey: "effectivePermissions-Index",
+  siteId: user?.siteId,
+
+  defaultSearch: {
+    filter: "",
+    grantedOnly: false
+  },
+
+  defaultPagination: {
+    page: 1,
+    rowsPerPage: 50
+  },
+
+  defaultSorts: {},
+  defaultResizableWidth: {},
+  defaultColumns: []
+});
+
+const userId = ref(
+  route.query.userId || search.value.userId || null
+);
+
 const visibleRows = computed(() => {
   const menus = result.value?.menus || [];
   return grantedOnly.value ? menus.filter(menu => menu.view || menu.manage) : menus;
@@ -94,7 +139,16 @@ async function load () {
   result.value = null;
   if (!userId.value) return;
 
+  saveDataTableState({
+    search: {
+      ...search.value,
+      userId: userId.value
+    },
+    pagination: pagination.value
+  });
+
   loading.value = true;
+
   try {
     result.value = await securityAdminService.getEffective(userId.value);
   } finally {

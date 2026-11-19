@@ -57,7 +57,7 @@ namespace Vsky.Api.Authorization
             {
                 AuthorizationOutcome.Denied => "Authorization denied",
                 AuthorizationOutcome.Bypassed => "Authorization bypass",
-                _ => "Authorization audit: would deny"
+                _ => "Authorization denied: Unauthorized module access"
             };
 
             return TryWrite(message, JsonSerializer.Serialize(new

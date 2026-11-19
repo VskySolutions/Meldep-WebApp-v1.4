@@ -1,7 +1,7 @@
 <template>
   <security-shell title="Roles">
     <div class="row items-center justify-end q-pa-md">
-      <q-btn outline no-caps color="primary" icon="o_badge" label="Create or edit roles" to="/site-roles" />
+      <q-btn outline no-caps color="primary" icon="o_badge" label="Edit Roles" to="/site-roles" />
     </div>
     <q-table
       flat

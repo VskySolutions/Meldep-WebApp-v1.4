@@ -66,11 +66,47 @@ import securityShell from "../components/securityShell.vue";
 import securityAdminService, { formatUtc } from "../securityAdmin.service";
 import securityAdminModule from "src/modules/security-admin/utils/dropdowns.js";
 
+import { useAuthStore } from "stores/auth";
+import useSiteTableState from "composables/dataTable/useSiteTableState.js";
+const authStore = useAuthStore();
+const user = authStore.user;
+
+const {
+  search,
+  pagination,
+  saveDataTableState
+} = useSiteTableState({
+  storageKey: "securityAudit-Index",
+  siteId: user?.siteId,
+
+  defaultSearch: {
+    category: null,
+    search: "",
+    from: "",
+    to: "",
+    allSites: false
+  },
+
+  defaultPagination: {
+    page: 1,
+    rowsPerPage: 20
+  },
+
+  defaultSorts: {},
+  defaultResizableWidth: {},
+  defaultColumns: []
+});
+
 const rows = ref([]);
 const loading = ref(false);
 const canSeeAllSites = ref(false);
-const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 });
-const filters = reactive({ category: null, search: "", from: "", to: "", allSites: false });
+const filters = computed({
+  get: () => search.value,
+  set: value => {
+    search.value = value;
+    saveDataTableState({ search: search.value });
+  }
+});
 
 const baseCategories = [
   { label: "Denied", value: "denied" },
@@ -107,30 +143,50 @@ function boundary (date, time) {
   return date ? new Date(`${date}T${time}`).toISOString() : undefined;
 }
 
-async function load ({ pagination: page }) {
+async function load ({ pagination: page } = { pagination: pagination.value }) {
   loading.value = true;
+
   try {
+    saveDataTableState({
+      search: search.value,
+      pagination: page
+    });
+
     const result = await securityAdminService.getAudit({
-      category: filters.category || undefined,
-      search: filters.search || undefined,
-      fromUtc: boundary(filters.from, "00:00:00"),
-      toUtc: boundary(filters.to, "23:59:59"),
-      allSites: filters.allSites,
+      category: filters.value.category || undefined,
+      search: filters.value.search || undefined,
+      fromUtc: boundary(filters.value.from, "00:00:00"),
+      toUtc: boundary(filters.value.to, "23:59:59"),
+      allSites: filters.value.allSites,
       page: page.page,
       pageSize: page.rowsPerPage
     });
+
     rows.value = result.items;
     canSeeAllSites.value = result.canSeeAllSites;
-    pagination.value = { ...page, rowsNumber: result.total };
+
+    pagination.value = {
+      ...page,
+      rowsNumber: result.total
+    };
+
+    saveDataTableState({
+      search: search.value,
+      pagination: pagination.value
+    });
   } finally {
     loading.value = false;
   }
 }
 
 function reload () {
-  load({ pagination: { ...pagination.value, page: 1 } });
+  load({
+    pagination: {
+      ...pagination.value,
+      page: 1
+    }
+  });
 }
-
 // ------------------------------------------------------------------------------------
 // Advance Filter :- All Dropdowns (SOP Change)
 // ------------------------------------------------------------------------------------

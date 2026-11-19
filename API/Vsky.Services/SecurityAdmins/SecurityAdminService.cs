@@ -29,7 +29,7 @@ namespace Vsky.Services.SecurityAdmins
         private static readonly Dictionary<string, string[]> AuditCategories = new()
         {
             ["denied"] = new[] { "Authorization denied", "Authentication failed" },
-            ["would-deny"] = new[] { "Authorization audit: would deny" },
+            ["would-deny"] = new[] { "Authorization denied: Unauthorized module access" },
             ["activity"] = new[] { "User activity", "Record access", "Module access" },
             ["permission"] = new[] { PermissionChange, "Administrative change" },
             ["session"] = new[]
