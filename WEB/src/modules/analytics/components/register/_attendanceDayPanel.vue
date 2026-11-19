@@ -64,7 +64,7 @@
       </ol>
       <div v-if="hasMovement" class="text-caption text-grey-7 q-mt-sm">
         A Movement Register entry has no clock time of its own, so it sits at the time it was entered. Breaks
-        take their minutes out of the worked hours; time adjustments and work from home are shown as declared.
+        and time adjustments take their minutes out of the productive hours; work from home is shown as declared.
       </div>
     </template>
 
@@ -99,7 +99,8 @@ import {
   RECORD_LOOK,
   fmtLate,
   fmtMinutes,
-  fmtClock
+  fmtClock,
+  fmtTime12
 } from "modules/analytics/utils/registerStates";
 import { formatAppDate, formatDayLabel } from "modules/analytics/composables/useDateRangePresets";
 
@@ -147,20 +148,21 @@ const facts = computed(() => {
   if (c.breaks > 0) {
     list.push({ label: "Breaks", value: `${fmtMinutes(c.breakMinutes)} in ${plural(c.breaks, "entry", "entries")}` });
   }
+  // The time adjustments sit with the breaks: both are taken out of the clocked time to give the productive time.
+  if (c.adjustments > 0) {
+    list.push({ label: "Time adjustments", value: `${fmtMinutes(c.adjustMinutes)} in ${plural(c.adjustments, "entry", "entries")}` });
+  }
   if (c.clocked > 0) {
-    list.push({ label: c.state === "InNow" ? "Worked so far" : "Worked", value: judged ? `${fmtMinutes(c.worked)} of ${fmtMinutes(c.expected)}` : fmtMinutes(c.worked) });
+    list.push({ label: c.state === "InNow" ? "Productive so far" : "Productive", value: judged ? `${fmtMinutes(c.worked)} of ${fmtMinutes(c.expected)} required` : fmtMinutes(c.worked) });
   }
   if (judged) {
     const { shift, assigned } = shiftOf(c, r);
     const rule = (rules.value?.shifts || []).find((s) => s.name === shift);
-    const window = rule ? ` · starts ${rule.start}, late after ${rule.lateAfter}` : "";
+    const window = rule ? ` · starts ${fmtTime12(rule.start)}, late after ${fmtTime12(rule.lateAfter)}` : "";
     list.push({ label: "Shift", value: `${assigned ? shift : `${shift} (none assigned, default used)`}${window}` });
   }
   if (c.lateMinutes > 0) {
     list.push({ label: "Late by", value: `${fmtLate(c.lateMinutes)} · ${c.adjustments > 0 ? "time adjustment entered" : "no time adjustment entered"}` });
-  }
-  if (c.adjustments > 0) {
-    list.push({ label: "Time adjustments", value: `${fmtMinutes(c.adjustMinutes)} in ${plural(c.adjustments, "entry", "entries")}` });
   }
   if (c.wfh) {
     list.push({ label: "Work From Home", value: c.wfh === "Unspecified" ? "Yes" : c.wfh });

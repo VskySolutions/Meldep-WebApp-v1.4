@@ -517,7 +517,7 @@ export const ATTENDANCE_STATES = {
     icon: "o_donut_large",
     glyph: "",
     colour: "#d9541e",
-    description: "Timed in and out, but the hours worked (time in to time out, minus the breaks) are fewer than expected."
+    description: "Timed in and out, but the productive hours (time in to time out, minus the breaks and the time adjustments) are fewer than required."
   },
   NoTimeOut: {
     key: "NoTimeOut",
@@ -683,23 +683,32 @@ export function fmtMinutes (minutes) {
   return mins ? `${hours} h ${mins} m` : `${hours} h`;
 }
 
+/** A 24-hour clock text in the 12-hour form the register shows: "14:13" → "2:13 PM", "00:04" → "12:04 AM". */
+export function fmtTime12 (hhmm) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || ""));
+  if (!m) return String(hhmm || "");
+  const h = Number(m[1]);
+  return `${h % 12 === 0 ? 12 : h % 12}:${m[2]} ${h < 12 ? "AM" : "PM"}`;
+}
+
 /**
- * "2026-10-09T14:13" → "14:13". With the day it belongs to, a time on another date says so: "00:04 next day",
- * or the date itself when it is further away.
+ * "2026-10-09T14:13" → "2:13 PM". With the day it belongs to, a time on another date says so: "12:04 AM next
+ * day", or the date itself when it is further away.
  */
 export function fmtClock (value, dayIso = "") {
   const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(String(value || ""));
   if (!m) return "";
-  if (!dayIso || m[1] === dayIso) return m[2];
+  const time = fmtTime12(m[2]);
+  if (!dayIso || m[1] === dayIso) return time;
   const gap = Math.round((Date.parse(`${m[1]}T00:00:00Z`) - Date.parse(`${dayIso}T00:00:00Z`)) / 86400000);
-  if (gap === 1) return `${m[2]} next day`;
-  return `${m[2]} on ${formatAppDate(m[1])}`;
+  if (gap === 1) return `${time} next day`;
+  return `${time} on ${formatAppDate(m[1])}`;
 }
 
-/** "2026-10-09T17:10" → "10/09/2026 17:10": a moment that needs its date (when an entry was made). */
+/** "2026-10-09T17:10" → "10/09/2026 5:10 PM": a moment that needs its date (when an entry was made). */
 export function fmtStamp (value) {
   const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(String(value || ""));
-  return m ? `${formatAppDate(m[1])} ${m[2]}` : "";
+  return m ? `${formatAppDate(m[1])} ${fmtTime12(m[2])}` : "";
 }
 
 /** The length of a Movement Register entry: the duration picked for work from home, the minutes otherwise. */
@@ -717,10 +726,11 @@ export const SESSION_STATUS_TEXT = {
   TooLong: "Timed out too late to count; hours not counted"
 };
 
-/** The clock time after which a first time-in is late for the shift the day was judged with, e.g. "11:15". */
+/** The clock time after which a first time-in is late for the shift the day was judged with, e.g. "11:15 AM". */
 export function lateAfterOf (cell, row, rules) {
   const { shift } = shiftOf(cell, row);
-  return (rules?.shifts || []).find((s) => s.name === shift)?.lateAfter || "";
+  const lateAfter = (rules?.shifts || []).find((s) => s.name === shift)?.lateAfter || "";
+  return lateAfter ? fmtTime12(lateAfter) : "";
 }
 
 /** "Full Day" → "", "1st Half" → "1st half", ...: the length of a Work From Home entry when it is not the whole day. */
@@ -864,8 +874,9 @@ export function attendanceCellHover (row, day, cell, rules = null) {
   }
   if (cell.clocked > 0) {
     const breaks = cell.breakMinutes > 0 ? ` − breaks ${fmtMinutes(cell.breakMinutes)}` : "";
-    const expected = judged ? ` of ${fmtMinutes(cell.expected)} expected` : "";
-    facts.push(`Clocked ${fmtMinutes(cell.clocked)}${breaks} = worked ${fmtMinutes(cell.worked)}${expected}`);
+    const adjusts = cell.adjustMinutes > 0 ? ` − time adjustments ${fmtMinutes(cell.adjustMinutes)}` : "";
+    const expected = judged ? ` of ${fmtMinutes(cell.expected)} required` : "";
+    facts.push(`Clocked ${fmtMinutes(cell.clocked)}${breaks}${adjusts} = productive ${fmtMinutes(cell.worked)}${expected}`);
   }
   if (judged) {
     const { shift, assigned } = shiftOf(cell, row);
@@ -925,23 +936,78 @@ export function attendanceExportCellText (cell) {
   }
 }
 
+/** Minutes → "156 h 15 m" for a period total; blank when there are none. */
+function hoursOf (minutes) {
+  return minutes > 0 ? fmtMinutes(minutes) : "";
+}
+
 // The period-total columns of the attendance grid (same contract as TOTAL_COLUMNS).
 export const ATTENDANCE_TOTAL_COLUMNS = [
+  // The hours story, left to right: Req, then Clk − Brk − TA = Prod, then what Prod is short of Req. All are
+  // kept in minutes and shown as hours and minutes: 45 → "45 m", 585 → "9 h 45 m" (never decimal hours).
   {
-    key: "hours",
-    abbr: "Hrs",
-    full: "Worked hours",
-    desc: "Time in to time out, minus the Break minutes of the Movement Register, over the period. Days with a missing time-out add nothing.",
+    key: "required",
+    abbr: "Req",
+    full: "Required hours",
+    desc: "The hours the employee had to work in the period: 8 a working day, 4 under a half-day leave, nothing on a holiday or a full-day leave. Today counts once the employee has timed out.",
     cls: "",
-    value: (t) => fmtWorked(t.workedMinutes)
+    value: (t) => hoursOf(t.requiredMinutes)
   },
   {
-    key: "present",
-    abbr: "P",
-    full: "Present days",
-    desc: "Working days with a time-in, whatever the verdict.",
-    cls: "tsr-td--ok",
-    value: (t) => t.present || ""
+    key: "clocked",
+    abbr: "Clk",
+    full: "Clocked hours",
+    desc: "Time in to time out, added over the period. A day with a missing time-out, or with no time-in at all (absent, work from home), adds nothing.",
+    cls: "",
+    value: (t) => hoursOf(t.clockedMinutes)
+  },
+  // The Movement Register columns open their entries date by date: `action` is the key of
+  // ATTENDANCE_MOVEMENT_KINDS the grid hands back when a value is clicked.
+  {
+    key: "breaks",
+    abbr: "Brk",
+    full: "Break hours",
+    desc: "Total length of the Break entries in the Movement Register over the period, in hours and minutes. Click an employee's value to see the breaks date by date.",
+    cls: "",
+    action: "Break",
+    actionHint: "Show the breaks, date by date",
+    // An entry saved without a length still counts: it shows as 0 rather than blank, and can be opened.
+    value: (t) => (t.breaks ? fmtMinutes(t.breakMinutes) : "")
+  },
+  {
+    key: "adjust",
+    abbr: "TA",
+    full: "Time Adjustment hours",
+    desc: "Total length of the Time Adjustment entries in the Movement Register over the period, in hours and minutes. Click an employee's value to see them date by date.",
+    cls: "",
+    action: "Adjust",
+    actionHint: "Show the time adjustments, date by date",
+    value: (t) => (t.adjustments ? fmtMinutes(t.adjustMinutes) : "")
+  },
+  {
+    key: "productive",
+    abbr: "Prod",
+    full: "Productive hours",
+    desc: "Clocked hours minus the Break and the Time Adjustment hours, day by day. Hours on a holiday or a leave day are included.",
+    cls: "tsr-td--strong",
+    value: (t) => hoursOf(t.workedMinutes)
+  },
+  {
+    key: "shortfall",
+    abbr: "Short",
+    full: "Hours short of required",
+    desc: "Required hours minus productive hours over the period, when the productive hours are fewer. A longer day offsets a shorter one, so this is the balance of the whole period. Blank means the required hours were met.",
+    cls: "tsr-td--pnd",
+    value: (t) => hoursOf(t.shortMinutes)
+  },
+  // The other side of the same balance: an employee has a value under Short or under Extra, never both.
+  {
+    key: "extra",
+    abbr: "Extra",
+    full: "Hours above required",
+    desc: "Productive hours minus required hours over the period, when the productive hours are more. An employee shows a value here or under Short, never both; both blank means the hours match exactly.",
+    cls: "tsr-td--ok tsr-td--strong",
+    value: (t) => hoursOf(t.extraMinutes)
   },
   {
     key: "late",
@@ -952,22 +1018,6 @@ export const ATTENDANCE_TOTAL_COLUMNS = [
     value: (t) => t.late || ""
   },
   {
-    key: "short",
-    abbr: "Sh",
-    full: "Short-hours days",
-    desc: "Days with fewer worked hours than expected.",
-    cls: "tsr-td--par",
-    value: (t) => t.short || ""
-  },
-  {
-    key: "noTimeOut",
-    abbr: "NTO",
-    full: "No time-out",
-    desc: "Days whose time-in was never closed, or was closed too late to be believed.",
-    cls: "tsr-td--par",
-    value: (t) => t.noTimeOut || ""
-  },
-  {
     key: "absent",
     abbr: "Ab",
     full: "Absent days",
@@ -975,39 +1025,15 @@ export const ATTENDANCE_TOTAL_COLUMNS = [
     cls: "tsr-td--pnd",
     value: (t) => t.absent || ""
   },
-  // The three Movement Register columns open their entries date by date: `action` is the key of
-  // ATTENDANCE_MOVEMENT_KINDS the grid hands back when a value is clicked.
   {
     key: "wfh",
     abbr: "WFH",
     full: "Work From Home days",
-    desc: "Days with a Work From Home entry in the Movement Register, with or without a time-in. Click an employee's value to see the dates.",
+    desc: "Days with a Work From Home entry in the Movement Register, with or without a time-in. They add productive hours only when the employee also timed in. Click an employee's value to see the dates.",
     cls: "",
     action: "Wfh",
     actionHint: "Show the Work From Home days, date by date",
     value: (t) => t.wfh || ""
-  },
-  // Both are kept in minutes and shown in hours (minutes / 60, at most two decimals): 45 m → 0.75, 585 m → 9.75.
-  {
-    key: "breaks",
-    abbr: "Brk",
-    full: "Break hours",
-    desc: "Hours of the Break entries in the Movement Register over the period (their minutes divided by 60). Click an employee's value to see the breaks date by date.",
-    cls: "",
-    action: "Break",
-    actionHint: "Show the breaks, date by date",
-    // An entry saved without a length still counts: it shows as 0 rather than blank, and can be opened.
-    value: (t) => (t.breaks ? fmtHours((t.breakMinutes || 0) / 60) : "")
-  },
-  {
-    key: "adjust",
-    abbr: "TA",
-    full: "Time Adjustment hours",
-    desc: "Hours of the Time Adjustment entries in the Movement Register over the period (their minutes divided by 60). Click an employee's value to see them date by date.",
-    cls: "",
-    action: "Adjust",
-    actionHint: "Show the time adjustments, date by date",
-    value: (t) => (t.adjustments ? fmtHours((t.adjustMinutes || 0) / 60) : "")
   }
 ];
 
@@ -1050,7 +1076,7 @@ const ATTENDANCE_LEGEND = [
     glyph: "B",
     small: true,
     plain: true,
-    description: "The day has Break entries in the Movement Register. Their minutes are taken out of the worked hours."
+    description: "The day has Break entries in the Movement Register. Their minutes are taken out of the productive hours."
   },
   {
     key: "adjustTag",
@@ -1059,7 +1085,7 @@ const ATTENDANCE_LEGEND = [
     glyph: "T",
     small: true,
     plain: true,
-    description: "The day has a Time Adjustment entry in the Movement Register (a late arrival, an early login or a shift change the employee declared)."
+    description: "The day has a Time Adjustment entry in the Movement Register (a late arrival, an early login or a shift change the employee declared). Its minutes are taken out of the productive hours."
   },
   {
     key: "movementDot",
@@ -1092,7 +1118,7 @@ function attendanceTiles (summary, rules) {
       key: "expected",
       label: "Expected days",
       value: expected,
-      caption: `${s.employees || 0} employees · ${fmtWorked(s.workedMinutes)} of ${fmtWorked(s.expectedMinutes)} h worked`,
+      caption: `${s.employees || 0} employees · ${fmtMinutes(s.workedMinutes)} of ${fmtMinutes(s.requiredMinutes)} productive`,
       icon: "o_event_available",
       colour: "#647a82",
       clickable: false,
@@ -1150,6 +1176,18 @@ function attendanceTiles (summary, rules) {
     }
   ];
 
+  // The hours balance beside the day counts: how far the productive hours fall below the required hours.
+  tiles.splice(1, 0, {
+    key: "ShortHours",
+    label: "Hours short",
+    value: fmtMinutes(s.shortMinutes),
+    caption: `${s.employeesShort || 0} employees below required`,
+    icon: "o_hourglass_bottom",
+    colour: "#d03b3b",
+    clickable: true,
+    hint: "Required hours minus productive hours (clocked minus breaks and time adjustments), struck per employee over the period so a longer day offsets a shorter one, then added up. Click to keep the employees who are short."
+  });
+
   // Only meaningful while the period includes today.
   if (s.inNow || s.awaited) {
     tiles.push({
@@ -1193,7 +1231,7 @@ function attendanceTiles (summary, rules) {
       icon: "o_free_breakfast",
       colour: "#647a82",
       clickable: true,
-      hint: "Break entries in the Movement Register and their total length. Break minutes are taken out of the worked hours."
+      hint: "Break entries in the Movement Register and their total length. Break minutes are taken out of the productive hours."
     },
     {
       key: "Adjust",
@@ -1203,7 +1241,7 @@ function attendanceTiles (summary, rules) {
       icon: "o_more_time",
       colour: "#647a82",
       clickable: true,
-      hint: "Time Adjustment entries in the Movement Register: late arrivals, early logins and shift changes the employees declared."
+      hint: "Time Adjustment entries in the Movement Register: late arrivals, early logins and shift changes the employees declared. Their minutes are taken out of the productive hours."
     },
     {
       key: "noShift",
@@ -1252,7 +1290,7 @@ export const ATTENDANCE_VOCAB = {
   cellTags: attendanceCellTags,
   offStates: ["Holiday", "Future", "NotEmployed"],
   // Day-column width per cell mode (px): the hours plus the letters, or the in–out times plus the letters.
-  cellWidth: { hours: 84, inout: 126 },
+  cellWidth: { hours: 96, inout: 172 },
   // grid
   cellHover: attendanceCellHover,
   // The hover card lists more facts than the timesheet's, so it needs more room before it flips above the cell.
@@ -1270,7 +1308,7 @@ export const ATTENDANCE_VOCAB = {
     detail: attendanceFootText
   },
   todayText: "Today. Employees who are timed in show as “in now”; the rest are “not in yet” until their shift start plus grace passes.",
-  shiftWindow: (rule) => `${rule.start}–${rule.end}${rule.endsNextDay ? " (next day)" : ""}, late after ${rule.lateAfter}`,
+  shiftWindow: (rule) => `${fmtTime12(rule.start)}–${fmtTime12(rule.end)}${rule.endsNextDay ? " (next day)" : ""}, late after ${fmtTime12(rule.lateAfter)}`,
   // legend and tiles
   legendItems: ATTENDANCE_LEGEND,
   tiles: attendanceTiles

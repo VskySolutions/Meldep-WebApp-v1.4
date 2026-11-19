@@ -93,6 +93,29 @@ namespace Vsky.Services.Analytics
         }
         #endregion
 
+        #region Productive hours
+        /// <summary>
+        /// The productive minutes of a day: clocked (time in to time out) minus the Break and the Time Adjustment
+        /// minutes of the Movement Register, never below 0.
+        /// </summary>
+        public static int ProductiveMinutes(int clockedMinutes, int breakMinutes, int adjustMinutes)
+        {
+            return Math.Max(0, clockedMinutes - breakMinutes - adjustMinutes);
+        }
+
+        /// <summary>Required minus productive over a period, when productive is the lower; a long day offsets a short one.</summary>
+        public static int ShortMinutes(int requiredMinutes, int productiveMinutes)
+        {
+            return Math.Max(0, requiredMinutes - productiveMinutes);
+        }
+
+        /// <summary>Productive minus required over a period, when productive is the higher.</summary>
+        public static int ExtraMinutes(int requiredMinutes, int productiveMinutes)
+        {
+            return Math.Max(0, productiveMinutes - requiredMinutes);
+        }
+        #endregion
+
         #region Expected hours and arrival
         /// <summary>480 on a plain working day, 240 under a half-day leave, 0 under a full-day leave.</summary>
         public static int ExpectedMinutes(RegisterLeave leave)

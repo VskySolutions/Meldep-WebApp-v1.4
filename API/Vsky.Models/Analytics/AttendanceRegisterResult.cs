@@ -123,7 +123,7 @@ namespace Vsky.Models.Analytics
         /// <summary>Minutes between time-in and time-out over the day's sessions (up to now for a live one). 0 when a time-out is missing.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Clocked { get; set; }
-        /// <summary>Clocked minus the Break minutes of the Movement Register, never below 0.</summary>
+        /// <summary>The productive minutes: clocked minus the Break and Time Adjustment minutes of the Movement Register, never below 0.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int Worked { get; set; }
         /// <summary>Minutes between the shift start and the first time-in, when that is beyond the grace.</summary>
@@ -155,8 +155,14 @@ namespace Vsky.Models.Analytics
         public int ExpectedDays { get; set; }
         public int ExpectedMinutes { get; set; }
         public int ClockedMinutes { get; set; }
-        /// <summary>Clocked minus breaks, over every day (hours on a holiday or leave day included).</summary>
+        /// <summary>Expected minutes of the days that can be judged: ExpectedMinutes without the days still open (in now, not in yet).</summary>
+        public int RequiredMinutes { get; set; }
+        /// <summary>Productive minutes (clocked minus breaks and time adjustments) over every day, hours on a holiday or leave day included.</summary>
         public int WorkedMinutes { get; set; }
+        /// <summary>Required minus productive when productive is lower. Struck per employee over the period; on the summary, the sum of the employees' shortfalls.</summary>
+        public int ShortMinutes { get; set; }
+        /// <summary>Productive minus required when productive is higher; summed like ShortMinutes.</summary>
+        public int ExtraMinutes { get; set; }
         /// <summary>Expected days with a time-in, whatever the verdict.</summary>
         public int Present { get; set; }
         public int OnTime { get; set; }
@@ -213,6 +219,8 @@ namespace Vsky.Models.Analytics
     {
         public int Employees { get; set; }
         public int EmployeesWithoutShift { get; set; }
+        /// <summary>Employees whose productive hours are below the required hours of the period.</summary>
+        public int EmployeesShort { get; set; }
         public List<AttendanceDayTotal> PerDay { get; set; } = new List<AttendanceDayTotal>();
     }
 

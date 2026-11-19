@@ -186,7 +186,8 @@ import {
   fmtMinutes,
   fmtWorked,
   fmtClock,
-  fmtStamp
+  fmtStamp,
+  fmtTime12
 } from "modules/analytics/utils/registerStates";
 import {
   todayIso,
@@ -247,7 +248,7 @@ const usualTimeIn = computed(() => {
   if (!minutes.length) return null;
   minutes.sort((a, b) => a - b);
   const middle = minutes[Math.floor((minutes.length - 1) / 2)] % 1440;
-  return { text: `${pad(Math.floor(middle / 60))}:${pad(middle % 60)}`, days: minutes.length };
+  return { text: fmtTime12(`${pad(Math.floor(middle / 60))}:${pad(middle % 60)}`), days: minutes.length };
 });
 
 const facts = computed(() => {
@@ -259,10 +260,10 @@ const facts = computed(() => {
   return [
     { label: "Team lead", value: r.teamLeadName || "None" },
     { label: "Department", value: r.department || "—" },
-    { label: "Shift", value: rule ? `${shift} · ${rule.start}–${rule.end}, late after ${rule.lateAfter}` : shift },
+    { label: "Shift", value: rule ? `${shift} · ${fmtTime12(rule.start)}–${fmtTime12(rule.end)}, late after ${fmtTime12(rule.lateAfter)}` : shift },
     { label: "Usual time-in", value: usual ? `${usual.text} (middle of ${usual.days} ${usual.days === 1 ? "day" : "days"})` : "—" },
     { label: "Joined", value: r.joiningDate ? formatAppDate(r.joiningDate) : "—" },
-    { label: "Worked", value: `${fmtWorked(t.workedMinutes)} of ${fmtWorked(t.expectedMinutes)} h expected` }
+    { label: "Productive", value: `${fmtWorked(t.workedMinutes)} of ${fmtWorked(t.requiredMinutes)} h required${t.shortMinutes > 0 ? ` · ${fmtMinutes(t.shortMinutes)} short` : ""}` }
   ];
 });
 
@@ -279,8 +280,8 @@ const tiles = computed(() => {
     { key: "Absent", label: A.Absent.label, value: t.absent || 0, caption: pct(t.absent || 0), icon: A.Absent.icon, colour: A.Absent.colour, hint: A.Absent.description },
     { key: "Wfh", label: "Work From Home", value: t.wfh || 0, caption: t.wfhNoTimeIn ? `days · ${t.wfhNoTimeIn} with no time-in` : "days", icon: "o_home_work", colour: A.Wfh.colour, hint: "Days with a Work From Home entry in the Movement Register." },
     { key: "Leave", label: "On leave", value: t.leave || 0, caption: t.halfDay ? `full days · ${t.halfDay} half days besides` : "full days", icon: "o_beach_access", colour: A.Leave.colour, hint: "Days covered by a full-day leave." },
-    { key: "Break", label: "Breaks", value: t.breaks || 0, caption: `entries · ${fmtMinutes(t.breakMinutes)}`, icon: "o_free_breakfast", colour: "#647a82", hint: "Break entries in the Movement Register; their minutes are taken out of the worked hours." },
-    { key: "Adjust", label: "Time adjustments", value: t.adjustments || 0, caption: `entries · ${fmtMinutes(t.adjustMinutes)}`, icon: "o_more_time", colour: "#647a82", hint: "Time Adjustment entries in the Movement Register." }
+    { key: "Break", label: "Breaks", value: t.breaks || 0, caption: `entries · ${fmtMinutes(t.breakMinutes)}`, icon: "o_free_breakfast", colour: "#647a82", hint: "Break entries in the Movement Register; their minutes are taken out of the productive hours." },
+    { key: "Adjust", label: "Time adjustments", value: t.adjustments || 0, caption: `entries · ${fmtMinutes(t.adjustMinutes)}`, icon: "o_more_time", colour: "#647a82", hint: "Time Adjustment entries in the Movement Register; their minutes are taken out of the productive hours." }
   ];
 });
 
@@ -326,7 +327,7 @@ const dayColumns = [
   { name: "lastOut", label: "Time out", field: "lastOut", align: "left", sortable: true },
   { name: "clocked", label: "Clocked", field: "clocked", align: "right", sortable: true, format: minutesOrBlank },
   { name: "breakMinutes", label: "Breaks", field: "breakMinutes", align: "right", sortable: true, format: minutesOrBlank },
-  { name: "worked", label: "Worked", field: "worked", align: "right", sortable: true, format: minutesOrBlank },
+  { name: "worked", label: "Productive", field: "worked", align: "right", sortable: true, format: minutesOrBlank },
   { name: "lateMinutes", label: "Late by", field: "lateMinutes", align: "right", sortable: true, format: (v) => fmtLate(v) },
   { name: "movement", label: "Movement Register", field: "movement", align: "left", sortable: true }
 ];
@@ -418,7 +419,7 @@ function exportDays () {
       { label: "Time-ins", value: (d) => d.cell.sessions || 0 },
       { label: "Clocked minutes", value: (d) => d.clocked },
       { label: "Break minutes", value: (d) => d.breakMinutes },
-      { label: "Worked minutes", value: (d) => d.worked },
+      { label: "Productive minutes", value: (d) => d.worked },
       { label: "Expected minutes", value: (d) => d.cell.expected || 0 },
       { label: "Late minutes", value: (d) => d.lateMinutes },
       { label: "Breaks", value: (d) => d.cell.breaks || 0 },

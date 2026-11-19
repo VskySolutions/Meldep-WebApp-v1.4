@@ -8,7 +8,9 @@
           <app-info-tip size="18px" color="primary" max-width="480px" anchor="bottom left" self="top left">
             Time In / Time Out and the Movement Register in one view: every active employee against every day of
             the chosen period. A cell says how the day went (on time, late, short hours, no time-out, absent) and
-            carries its breaks, time adjustments and work from home. Click a tile to keep only the employees it
+            carries its breaks, time adjustments and work from home. The columns on the right give the hours of
+            the period: required, clocked, breaks, time adjustments, productive (clocked minus breaks and time
+            adjustments) and how many hours short of required. Click a tile to keep only the employees it
             counts, a cell to open that day, the icon beside a name to open that employee's records, an
             employee's WFH, Brk or TA total to see those entries date by date, and "How to use" for the full
             guide. The arrow on the right folds the filters and totals away so the grid gets the whole screen.
@@ -218,7 +220,7 @@ import {
   attendanceCellHas,
   attendanceExportCellText,
   fmtHours,
-  fmtWorked
+  fmtTime12
 } from "modules/analytics/utils/registerStates";
 import {
   MAX_RANGE_DAYS,
@@ -354,6 +356,8 @@ const normalize = (text) => String(text || "").toLowerCase();
 // A row answers to a tile, a day-state filter or a movement filter when any of its days does.
 function rowHas (row, key) {
   if (key === "noShift") return !row.shiftAssigned;
+  // The hours balance belongs to the period, not to one day.
+  if (key === "ShortHours") return row.totals?.shortMinutes > 0;
   return row.cells.some((c) => attendanceCellHas(c, key));
 }
 
@@ -390,10 +394,11 @@ function toggleQuick (key) {
 
 // The tiles: every total of the listed employees, added up.
 const summary = computed(() => {
-  const s = { employees: 0, employeesWithoutShift: 0 };
+  const s = { employees: 0, employeesWithoutShift: 0, employeesShort: 0 };
   for (const row of baseRows.value) {
     s.employees++;
     if (!row.shiftAssigned) s.employeesWithoutShift++;
+    if (row.totals?.shortMinutes > 0) s.employeesShort++;
     for (const [key, value] of Object.entries(row.totals || {})) s[key] = (s[key] || 0) + Number(value || 0);
   }
   return s;
@@ -469,7 +474,7 @@ const filterOptions = computed(() => {
     .map(memberOption);
 
   const shifts = [
-    ...(rules.value?.shifts || []).map((s) => ({ label: `${s.name} (${s.start}–${s.end})`, value: s.name })),
+    ...(rules.value?.shifts || []).map((s) => ({ label: `${s.name} (${fmtTime12(s.start)}–${fmtTime12(s.end)})`, value: s.name })),
     { label: `Not assigned (judged as ${rules.value?.defaultShift || "default"})`, value: NONE }
   ];
   return { departments, teamLeads, teamMembers, shifts, states: ATTENDANCE_DAY_FILTERS, movements: ATTENDANCE_MOVEMENT_FILTERS };
@@ -567,8 +572,13 @@ function exportRegister () {
     { label: "Team lead", value: (r) => r.teamLeadName || "" },
     { label: "Shift", value: (r) => (r.shiftAssigned ? r.shift : `${r.shift} (not assigned)`) },
     ...indexes.map((i) => ({ label: formatDayLabel(days.value[i].date), value: (r) => attendanceExportCellText(r.cells[i]) })),
-    { label: "Worked hours", value: (r) => fmtWorked(r.totals.workedMinutes) },
-    { label: "Expected hours", value: (r) => fmtWorked(r.totals.expectedMinutes) },
+    { label: "Required hours", value: (r) => fmtHours((r.totals.requiredMinutes || 0) / 60) },
+    { label: "Clocked hours", value: (r) => fmtHours((r.totals.clockedMinutes || 0) / 60) },
+    { label: "Break hours", value: (r) => fmtHours(r.totals.breakMinutes / 60) },
+    { label: "Time adjustment hours", value: (r) => fmtHours(r.totals.adjustMinutes / 60) },
+    { label: "Productive hours", value: (r) => fmtHours((r.totals.workedMinutes || 0) / 60) },
+    { label: "Hours short of required", value: (r) => fmtHours((r.totals.shortMinutes || 0) / 60) },
+    { label: "Hours above required", value: (r) => fmtHours((r.totals.extraMinutes || 0) / 60) },
     { label: "Expected days", value: (r) => r.totals.expectedDays },
     { label: "Present days", value: (r) => r.totals.present },
     { label: "On time", value: (r) => r.totals.onTime },
@@ -583,9 +593,7 @@ function exportRegister () {
     { label: "Leave days", value: (r) => r.totals.leave },
     { label: "Half days", value: (r) => r.totals.halfDay },
     { label: "Breaks", value: (r) => r.totals.breaks },
-    { label: "Break hours", value: (r) => fmtHours(r.totals.breakMinutes / 60) },
-    { label: "Time adjustments", value: (r) => r.totals.adjustments },
-    { label: "Time adjustment hours", value: (r) => fmtHours(r.totals.adjustMinutes / 60) }
+    { label: "Time adjustments", value: (r) => r.totals.adjustments }
   ];
   exportCsv({ filename: `attendance-register_${range.value.from}_${range.value.to}.csv`, columns, rows: visibleRows.value });
 }

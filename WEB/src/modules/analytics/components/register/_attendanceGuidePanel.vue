@@ -99,7 +99,7 @@
       <ol>
         <li><b>Is it a working day for this employee?</b> Sundays and the site's leave-schedule dates (public holidays, Saturdays off) are <b>H</b>. Days before joining or after release are blank. A full-day leave is <b>L</b>. Nobody is expected on these.</li>
         <li><b>Which day does a time-in count for?</b> Its own date; a time-in before {{ dayStartsAt }} counts for the day before, so a night shift stays on the day it began.</li>
-        <li><b>How many hours were worked?</b> Time in to time out, added over the day's time-ins, <b>minus the Break minutes</b> of the Movement Register. {{ fullDayText }} are expected on a working day, {{ halfDayText }} under a half-day leave.</li>
+        <li><b>How many hours were productive?</b> Time in to time out, added over the day's time-ins, <b>minus the Break and the Time Adjustment minutes</b> of the Movement Register. {{ fullDayText }} are required on a working day, {{ halfDayText }} under a half-day leave.</li>
         <li><b>Was the arrival late?</b> The first time-in is late when it comes more than {{ graceText }} after the start of the employee's shift. The shift is read from the designation record; without one, {{ defaultShift }} is used and the cell says so. A Time Adjustment entered that day is shown beside the cell; the day still counts as late.</li>
         <li><b>Was the time-out made?</b> A time-in still open after {{ forgottenText }}, or closed that long afterwards, is a forgotten time-out: the day counts as attended but its hours are not counted.</li>
         <li>
@@ -116,8 +116,8 @@
         <tbody>
           <tr v-for="s in shifts" :key="s.name">
             <td>{{ s.name }}</td>
-            <td>{{ s.start }} – {{ s.end }}{{ s.endsNextDay ? " (next day)" : "" }}</td>
-            <td>{{ s.lateAfter }}</td>
+            <td>{{ fmtTime12(s.start) }} – {{ fmtTime12(s.end) }}{{ s.endsNextDay ? " (next day)" : "" }}</td>
+            <td>{{ fmtTime12(s.lateAfter) }}</td>
           </tr>
           <tr>
             <td>Not assigned</td>
@@ -134,8 +134,8 @@
     <section :id="sections[4].id" class="att-guide__section">
       <h3>5. The Movement Register on the grid</h3>
       <ul>
-        <li><b>Break</b>: the minutes the employee declared, with the reason and who gave permission. They are taken out of the worked hours and never change the state by themselves, except that a day can fall short because of them.</li>
-        <li><b>Time Adjustment</b>: a late arrival, an early login or a shift change the employee declared. It does not change the hours or the verdict; it marks a late day as declared, and the Late tile counts the late days that have none.</li>
+        <li><b>Break</b>: the minutes the employee declared, with the reason and who gave permission. They are taken out of the productive hours and never change the state by themselves, except that a day can fall short because of them.</li>
+        <li><b>Time Adjustment</b>: a late arrival, an early login or a shift change the employee declared. Its minutes are taken out of the productive hours like a break, so a day can fall short because of it. It also marks a late day as declared (the day still counts late), and the Late tile counts the late days that have none.</li>
         <li><b>Work From Home</b>: a full day or a half. With a time-in the day is judged like any other and carries a small <b>W</b>; without one the day shows as <b>WFH, no time-in</b> instead of absent.</li>
         <li>An entry belongs to the date it was filed under, as in the Movement Register list, whenever it was typed in. The day panel says when an entry was made afterwards or ahead.</li>
         <li>These records carry the name of the person who gave permission, not an approval status.</li>
@@ -168,6 +168,7 @@
         <li>Click an <b>employee's name</b> to open their employee record, the same view the employee list offers.</li>
         <li>The <b>icon</b> beside a name, or <b>View week</b> / <b>View period</b> in the day panel, opens that employee's <b>attendance</b>: the totals, one row per day, and every time-in and Movement Register entry in one list, for the selected period or any week you pick by its Sunday. Both tables export to CSV.</li>
         <li>The <b>WFH</b>, <b>Brk</b> and <b>TA</b> totals on the right of a row are links. Click one to see that employee's Work From Home days, breaks or time adjustments for the period <b>date by date</b>: how each day went, how much was declared, and every entry with its message, who gave permission and when it was entered. A switch at the top moves between the three, and the list exports to CSV.</li>
+        <li>The <b>hours columns</b> on the right of a row read left to right: <b>Req</b> (required: {{ fullDayText }} a working day, {{ halfDayText }} under a half-day leave; today counts once the employee has timed out), <b>Clk</b> (clocked, time in to time out), <b>Brk</b> and <b>TA</b> (break and time adjustment hours), <b>Prod</b> (productive = clocked minus breaks and time adjustments), <b>Short</b> (required minus productive when productive is lower, in red) and <b>Extra</b> (productive minus required when productive is higher, in green); an employee has one or the other. The balance is struck over the whole period, so a longer day offsets a shorter one. A day with no time-in (absent, work from home) or no time-out adds zero productive hours. The <b>Hours short</b> tile adds the shortfalls up and keeps the employees who are short.</li>
         <li><b>Export CSV</b> downloads the grid as shown: one row per employee, one column per visible day with the state, the times, the hours and the movement, and the period totals.</li>
       </ul>
     </section>
@@ -180,7 +181,7 @@
         <dt>The employee was in the office, so why is the day Absent?</dt>
         <dd>Because there is no time-in for that day. The register only knows what was recorded: a time-in, a Work From Home entry or a leave.</dd>
         <dt>Why does a day with nine hours in the office show Short hours?</dt>
-        <dd>The breaks of the Movement Register are taken out. Open the day to see clocked time, breaks and worked time side by side.</dd>
+        <dd>The breaks and the time adjustments of the Movement Register are taken out. Open the day to see clocked time, breaks, time adjustments and productive time side by side.</dd>
         <dt>Why is a time-out "missing" although the employee timed out the next morning?</dt>
         <dd>A time-out more than {{ forgottenText }} after the time-in is taken as forgotten: nobody works that long, so the hours cannot be trusted.</dd>
         <dt>An employee on the night shift timed in after midnight. Which day is it?</dt>
@@ -198,7 +199,8 @@
         <tbody>
           <tr><th>Full working day</th><td>{{ fullDayText }}</td></tr>
           <tr><th>Half-day leave</th><td>{{ halfDayText }}</td></tr>
-          <tr><th>Worked hours</th><td>Time in to time out, minus Break minutes</td></tr>
+          <tr><th>Productive hours</th><td>Time in to time out, minus Break and Time Adjustment minutes</td></tr>
+          <tr><th>Hours short</th><td>Required minus productive over the period; longer days offset shorter ones</td></tr>
           <tr><th>Late grace after the shift start</th><td>{{ graceText }}</td></tr>
           <tr><th>Forgotten time-out</th><td>Open or closed {{ forgottenText }} or more after the time-in</td></tr>
           <tr><th>Day starts at</th><td>{{ dayStartsAt }} (earlier time-ins count for the day before)</td></tr>
@@ -222,7 +224,7 @@
 // API returned with the register, so the guide can never drift from what the page actually did.
 import { computed } from "vue";
 import AppSidePanel from "components/common/AppSidePanel.vue";
-import { ATTENDANCE_STATES, ATTENDANCE_STATE_ORDER, fmtMinutes } from "modules/analytics/utils/registerStates";
+import { ATTENDANCE_STATES, ATTENDANCE_STATE_ORDER, fmtMinutes, fmtTime12 } from "modules/analytics/utils/registerStates";
 
 const props = defineProps({
   rules: { type: Object, default: null }
@@ -264,7 +266,7 @@ const fullDayText = computed(() => fmtMinutes(props.rules?.fullDayMinutes ?? 480
 const halfDayText = computed(() => fmtMinutes(props.rules?.halfDayMinutes ?? 240));
 const graceText = computed(() => fmtMinutes(props.rules?.lateGraceMinutes ?? 15));
 const forgottenText = computed(() => fmtMinutes(props.rules?.forgottenAfterMinutes ?? 960));
-const dayStartsAt = computed(() => props.rules?.dayStartsAt || "05:00");
+const dayStartsAt = computed(() => fmtTime12(props.rules?.dayStartsAt || "05:00"));
 const defaultShift = computed(() => props.rules?.defaultShift || "Shift 1");
 const weeklyOff = computed(() => props.rules?.weeklyOff || "Sunday");
 const timeZone = computed(() => props.rules?.timeZone || "the site time zone");
@@ -272,7 +274,7 @@ const maxRangeDays = computed(() => props.rules?.maxRangeDays ?? 93);
 const shifts = computed(() => props.rules?.shifts || []);
 const ignoredStatuses = computed(() => (props.rules?.leaveStatusesIgnored || ["Declined", "Cancelled"]).join(", "));
 const movementTypes = computed(() => (props.rules?.movementTypes || ["Break", "Time Adjustment", "Work From Home"]).join(", "));
-const defaultLateAfter = computed(() => shifts.value.find((s) => s.name === defaultShift.value)?.lateAfter || "");
+const defaultLateAfter = computed(() => fmtTime12(shifts.value.find((s) => s.name === defaultShift.value)?.lateAfter || ""));
 
 function jump (id) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });

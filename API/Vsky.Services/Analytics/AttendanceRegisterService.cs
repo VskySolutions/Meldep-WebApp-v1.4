@@ -106,6 +106,14 @@ namespace Vsky.Services.Analytics
                     Accumulate(summary.PerDay[i], cell, state);
                 }
 
+                // The hours balance is struck per employee over the period (a long day offsets a short one),
+                // so the register's shortfall is the sum of the employees' shortfalls, not one net figure.
+                row.Totals.ShortMinutes = AttendanceRegisterRules.ShortMinutes(row.Totals.RequiredMinutes, row.Totals.WorkedMinutes);
+                row.Totals.ExtraMinutes = AttendanceRegisterRules.ExtraMinutes(row.Totals.RequiredMinutes, row.Totals.WorkedMinutes);
+                summary.ShortMinutes += row.Totals.ShortMinutes;
+                summary.ExtraMinutes += row.Totals.ExtraMinutes;
+                if (row.Totals.ShortMinutes > 0) summary.EmployeesShort++;
+
                 result.Rows.Add(row);
             }
 
@@ -378,7 +386,7 @@ namespace Vsky.Services.Analytics
                 if (!live && !missingTimeOut)
                     cell.LastOut = RegisterContext.IsoMinuteText(sessions[sessions.Count - 1].Out);
                 cell.Clocked = clocked;
-                cell.Worked = Math.Max(0, clocked - cell.BreakMinutes);
+                cell.Worked = AttendanceRegisterRules.ProductiveMinutes(clocked, cell.BreakMinutes, cell.AdjustMinutes);
             }
 
             // Employment bounds first: nobody is expected before joining or after release.
@@ -442,6 +450,8 @@ namespace Vsky.Services.Analytics
             if (cell.Wfh != null) totals.Wfh++;
 
             var expected = false;
+            // Required hours count once the day can be judged: not while the employee is still in or still awaited.
+            var closed = state != AttendanceCellState.InNow && state != AttendanceCellState.Awaited;
             switch (state)
             {
                 case AttendanceCellState.OnTime:
@@ -488,6 +498,7 @@ namespace Vsky.Services.Analytics
             {
                 totals.ExpectedDays++;
                 totals.ExpectedMinutes += cell.Expected;
+                if (closed) totals.RequiredMinutes += cell.Expected;
             }
 
             if (cell.Leave != null && cell.Leave.Kind != TimesheetRegisterRules.FullDayLeaveKind)

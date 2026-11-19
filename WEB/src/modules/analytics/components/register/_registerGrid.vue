@@ -479,6 +479,7 @@ function shiftText (row) {
 .tsr-td--dly { color: #a66f00; }
 .tsr-td--par { color: #c2410c; }
 .tsr-td--pnd { color: #b32424; font-weight: 600; }
+.tsr-td--strong { font-weight: 600; }
 /* A total that opens its details: the brand colour and a tint on hover, no underline. It fills the cell so the whole number is the target. */
 .tsr-tot-link {
   display: block;
