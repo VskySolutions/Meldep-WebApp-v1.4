@@ -41,6 +41,8 @@ namespace Vsky.Api.Services.RequirementExport
         public string ShortDescription { get; set; }
         public string Description { get; set; }
         public string Scope { get; set; }
+        public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public DateTime? UpdatedOnUtc { get; set; }
     }
@@ -55,12 +57,15 @@ namespace Vsky.Api.Services.RequirementExport
         public string Status { get; set; }
         public string Priority { get; set; }
         public string AssignedTo { get; set; }
+        public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public DateTime? DueDate { get; set; }
         public decimal EstimateTime { get; set; }
         public string Description { get; set; }
         public DateTime CreatedOnUtc { get; set; }
+        public DateTime? UpdatedOnUtc { get; set; }
     }
 
     public sealed class RequirementTestCaseRow
@@ -80,6 +85,9 @@ namespace Vsky.Api.Services.RequirementExport
         public string ExpectedResult { get; set; }
         public string ActualResult { get; set; }
         public DateTime CreatedOnUtc { get; set; }
+        public DateTime? UpdatedOnUtc { get; set; }
+        public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
     }
 
     public sealed class RequirementIssueRow
@@ -97,6 +105,9 @@ namespace Vsky.Api.Services.RequirementExport
         public DateTime? CloseDate { get; set; }
         public string Description { get; set; }
         public DateTime CreatedOnUtc { get; set; }
+        public DateTime? UpdatedOnUtc { get; set; }
+        public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
     }
 
     public sealed class RequirementTimesheetRow
@@ -122,6 +133,9 @@ namespace Vsky.Api.Services.RequirementExport
         public string CreatedBy { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public DateTime UpdatedOnUtc { get; set; }
+        public string UpdatedBy { get; set; }
+        public string ContributorEmployee { get; set; }
+        public string ContributorCustomer { get; set; }
     }
 
     public sealed class RequirementActionItemRow
@@ -134,6 +148,9 @@ namespace Vsky.Api.Services.RequirementExport
         public DateTime? DueDate { get; set; }
         public string Description { get; set; }
         public DateTime CreatedOnUtc { get; set; }
+        public DateTime? UpdatedOnUtc { get; set; }
+        public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
     }
 
     public sealed class RequirementMappingRow
@@ -145,6 +162,8 @@ namespace Vsky.Api.Services.RequirementExport
         public string IntegrationDirection { get; set; }
         public DateTime CreatedOnUtc { get; set; }
         public DateTime? UpdatedOnUtc { get; set; }
+        public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
     }
 
     public sealed class RequirementNoteRow

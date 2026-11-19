@@ -111,13 +111,16 @@ namespace Vsky.Api.Services.RequirementExport
             new("Type", Text, x => x.Type),
             new("Status", Text, x => x.Status),
             new("Priority", Text, x => x.Priority),
-            new("Assigned To", Text, x => x.AssignedTo),
+            new("Task Owner", Text, x => x.AssignedTo),
             new("Start Date", Date, x => x.StartDate),
-            new("End Date", Date, x => x.EndDate),
-            new("Due Date", Date, x => x.DueDate),
-            new("Estimate (Hours)", Number, x => x.EstimateTime),
+            new("Due Date", Date, x => x.EndDate),
+            new("Task Hrs", Number, x => x.EstimateTime),
             new("Description", Text, x => Rich(x.Description)),
-            new("Created On (UTC)", DateTime, x => x.CreatedOnUtc));
+            new("Created Date", DateTime, x => x.CreatedOnUtc),
+            new("Updated Date", DateTime, x => x.UpdatedOnUtc),
+            new("Created By", Text, x => x.CreatedBy),
+            new("Updated By", Text, x => x.UpdatedBy)
+        );
 
         public static readonly RequirementExportSheetDefinition<RequirementTestCaseRow> TestCases = new(
             "test-cases", "Test Cases", TestCaseLinks,
@@ -136,7 +139,11 @@ namespace Vsky.Api.Services.RequirementExport
             new("Steps", Text, x => Rich(x.Steps)),
             new("Expected Result", Text, x => Rich(x.ExpectedResult)),
             new("Actual Result", Text, x => Rich(x.ActualResult)),
-            new("Created On (UTC)", DateTime, x => x.CreatedOnUtc));
+            new("Created Date", DateTime, x => x.CreatedOnUtc),
+            new("Updated Date", DateTime, x => x.UpdatedOnUtc),
+            new("Created By", Text, x => x.CreatedBy),
+            new("Updated By", Text, x => x.UpdatedBy)
+        );
 
         public static readonly RequirementExportSheetDefinition<RequirementIssueRow> Issues = new(
             "issues", "Issues", IssueLinks,
@@ -151,9 +158,12 @@ namespace Vsky.Api.Services.RequirementExport
             new("Assigned To", Text, x => x.AssignedTo),
             new("Reported By", Text, x => x.ReportedBy),
             new("Due Date", Date, x => x.DueDate),
-            new("Close Date", Date, x => x.CloseDate),
             new("Description", Text, x => Rich(x.Description)),
-            new("Created On (UTC)", DateTime, x => x.CreatedOnUtc));
+            new("Created Date", DateTime, x => x.CreatedOnUtc),
+            new("Updated Date", DateTime, x => x.UpdatedOnUtc),
+            new("Created By", Text, x => x.CreatedBy),
+            new("Updated By", Text, x => x.UpdatedBy)
+        );
 
         public static readonly RequirementExportSheetDefinition<RequirementTimesheetRow> Timesheets = new(
             "timesheets", "Timesheets", TimesheetLinks,
@@ -166,7 +176,7 @@ namespace Vsky.Api.Services.RequirementExport
             new("Activity", Text, x => x.Activity),
             new("Hours", Number, x => x.Hours),
             new("Billable Hours", Number, x => x.BillableHours),
-            new("Approved", Boolean, x => x.IsApproved),
+            //new("Approved", Boolean, x => x.IsApproved),
             new("Description", Text, x => Rich(x.Description)));
 
         public static readonly RequirementExportSheetDefinition<RequirementQuestionRow> Questions = new(
@@ -174,10 +184,14 @@ namespace Vsky.Api.Services.RequirementExport
             (s, scope, ct) => s.GetQuestionsAsync(scope, ct),
             rows => rows.OrderBy(x => x.CreatedOnUtc).ThenBy(x => x.Id, StringComparer.Ordinal),
             new("Question", Text, x => x.Title),
+            new("ContributorEmployee", Text, x => x.ContributorEmployee),
+            new("ContributorCustomer", Text, x => x.ContributorCustomer),
             new("Description", Text, x => Rich(x.Description)),
             new("Created By", Text, x => x.CreatedBy),
-            new("Created On (UTC)", DateTime, x => x.CreatedOnUtc),
-            new("Updated On (UTC)", DateTime, x => x.UpdatedOnUtc == default ? null : x.UpdatedOnUtc));
+            new("Created Date", DateTime, x => x.CreatedOnUtc),
+            new ("Updated Date", DateTime, x => x.UpdatedOnUtc),
+            new ("Updated By", Text, x => x.UpdatedBy)
+        );
 
         public static readonly RequirementExportSheetDefinition<RequirementActionItemRow> ActionItems = new(
             "action-items", "Action Items", ProjectWorkLinks,
@@ -189,7 +203,11 @@ namespace Vsky.Api.Services.RequirementExport
             new("Customer", Text, x => x.Customer),
             new("Due Date", Date, x => x.DueDate),
             new("Description", Text, x => Rich(x.Description)),
-            new("Created On (UTC)", DateTime, x => x.CreatedOnUtc));
+            new("Created Date", DateTime, x => x.CreatedOnUtc),
+            new("Created By", Text, x => x.CreatedBy),
+            new("Updated Date", DateTime, x => x.UpdatedOnUtc),
+            new("Updated By", Text, x => x.UpdatedBy)
+        );
 
         public static readonly RequirementExportSheetDefinition<RequirementMappingRow> Mappings = new(
             "mappings", "Mappings", MappingLinks,
@@ -199,8 +217,11 @@ namespace Vsky.Api.Services.RequirementExport
             new("Source", Text, x => x.Source),
             new("Target", Text, x => x.Target),
             new("Integration Direction", Text, x => x.IntegrationDirection),
-            new("Created On (UTC)", DateTime, x => x.CreatedOnUtc),
-            new("Updated On (UTC)", DateTime, x => x.UpdatedOnUtc));
+            new("Created Date", DateTime, x => x.CreatedOnUtc),
+            new("Updated Date", DateTime, x => x.UpdatedOnUtc),
+            new("Created By", Text, x => x.CreatedBy),
+            new("Updated By", Text, x => x.UpdatedBy)
+        );
 
         public static readonly RequirementExportSheetDefinition<RequirementNoteRow> Notes = new(
             "notes", "Notes", RequirementLinks,
@@ -209,7 +230,8 @@ namespace Vsky.Api.Services.RequirementExport
             new("Note Type", Text, x => x.NoteType),
             new("Note", Text, x => Rich(x.Note)),
             new("Created By", Text, x => x.CreatedBy),
-            new("Created On (UTC)", DateTime, x => x.CreatedOnUtc));
+            new("Created Date", DateTime, x => x.CreatedOnUtc)
+        );
 
         /// <summary>Workbook order after Requirement Info.</summary>
         public static IReadOnlyList<IRequirementExportSheetDefinition> All { get; } = new IRequirementExportSheetDefinition[]
@@ -225,7 +247,7 @@ namespace Vsky.Api.Services.RequirementExport
                 new("Title", r.Title),
                 new("Project", r.Project),
                 new("Module", r.ProjectModule),
-                new("Requirement Group", r.RequirementGroup),
+                //new("Requirement Group", r.RequirementGroup),
                 new("Requirement Type", r.RequirementType),
                 new("Status", r.Status),
                 new("Priority", r.Priority),
@@ -245,14 +267,15 @@ namespace Vsky.Api.Services.RequirementExport
                 new("Planned End Date", r.PlannedEndDate, Date),
                 new("Actual Start Date", r.ActualStartDate, Date),
                 new("Actual End Date", r.ActualEndDate, Date),
-                new("Close Date", r.CloseDate, Date),
                 new("Source Label", r.SourceLabel),
                 new("Target Label", r.TargetLabel),
                 new("Short Description", Rich(r.ShortDescription)),
                 new("Description", Rich(r.Description)),
                 new("Scope", Rich(r.Scope)),
-                new("Created On (UTC)", r.CreatedOnUtc, DateTime),
-                new("Updated On (UTC)", r.UpdatedOnUtc, DateTime)
+                new("Created Date", r.CreatedOnUtc, DateTime),
+                new("Created By", r.CreatedBy, Text),
+                new("Updated By", r.UpdatedBy, Text),
+                new("Updated Date", r.UpdatedOnUtc, DateTime)
             };
         }
 

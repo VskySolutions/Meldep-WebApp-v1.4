@@ -119,7 +119,9 @@ namespace Vsky.Api.Services.RequirementExport
                     Description = x.Description,
                     Scope = x.Scope,
                     CreatedOnUtc = x.CreatedOnUtc,
-                    UpdatedOnUtc = x.UpdatedOnUtc
+                    UpdatedOnUtc = x.UpdatedOnUtc,
+                    CreatedBy = x.CreatedBy == null || x.CreatedBy.Person == null ? null : x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    UpdatedBy = x.UpdatedBy == null || x.UpdatedBy.Person == null ? null : x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                 }), ct);
 
             return rows.FirstOrDefault();
@@ -142,7 +144,10 @@ namespace Vsky.Api.Services.RequirementExport
                 DueDate = x.DueDate,
                 EstimateTime = x.EstimateTime,
                 Description = x.Description,
-                CreatedOnUtc = x.CreatedOnUtc
+                CreatedOnUtc = x.CreatedOnUtc,
+                UpdatedOnUtc = x.UpdatedOnUtc,
+                CreatedBy = x.CreatedBy == null || x.CreatedBy.Person == null ? null : x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                UpdatedBy = x.UpdatedBy == null || x.UpdatedBy.Person == null ? null : x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
             }), ct);
         }
 
@@ -166,7 +171,10 @@ namespace Vsky.Api.Services.RequirementExport
                     Steps = x.Steps,
                     ExpectedResult = x.ExpectedResult,
                     ActualResult = x.ActualResult,
-                    CreatedOnUtc = x.CreatedOnUtc
+                    CreatedOnUtc = x.CreatedOnUtc,
+                    UpdatedOnUtc = x.UpdatedOnUtc,
+                    CreatedBy = x.CreatedByUser == null || x.CreatedByUser.Person == null ? null : x.CreatedByUser.Person.FirstName + " " + x.CreatedByUser.Person.LastName,
+                    UpdatedBy = x.UpdatedBy == null || x.UpdatedBy.Person == null ? null : x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                 }), ct);
         }
 
@@ -186,9 +194,11 @@ namespace Vsky.Api.Services.RequirementExport
                     AssignedTo = x.Employee == null || x.Employee.Person == null ? null : x.Employee.Person.FirstName + " " + x.Employee.Person.LastName,
                     ReportedBy = x.ReportedBy == null || x.ReportedBy.Person == null ? null : x.ReportedBy.Person.FirstName + " " + x.ReportedBy.Person.LastName,
                     DueDate = x.DueDate,
-                    CloseDate = x.CloseDate,
                     Description = x.Description,
-                    CreatedOnUtc = x.CreatedOnUtc
+                    CreatedOnUtc = x.CreatedOnUtc,
+                    UpdatedOnUtc = x.UpdatedOnUtc,
+                    CreatedBy = x.CreatedBy == null || x.CreatedBy.Person == null ? null : x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    UpdatedBy = x.UpdatedBy == null || x.UpdatedBy.Person == null ? null : x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                 }), ct);
         }
 
@@ -233,9 +243,20 @@ namespace Vsky.Api.Services.RequirementExport
                     Id = x.Id,
                     Title = x.Title,
                     Description = x.Description,
-                    CreatedBy = x.CreatedBy == null || x.CreatedBy.Person == null ? null : x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
                     CreatedOnUtc = x.CreatedOnUtc,
-                    UpdatedOnUtc = x.UpdatedOnUtc
+                    UpdatedOnUtc = x.UpdatedOnUtc,
+                    UpdatedBy = x.UpdatedBy == null || x.UpdatedBy.Person == null ? null : x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName,
+                    CreatedBy = x.CreatedBy == null || x.CreatedBy.Person == null ? null : x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    ContributorEmployee = string.Join(", ", x.ProjectQuestionAnswerContributors
+                    .Where(c => !c.Deleted && c.ContributorEmployee != null)
+                    .Select(c =>
+                        c.ContributorEmployee.Person.FirstName + " " +
+                        c.ContributorEmployee.Person.LastName)),
+                    ContributorCustomer = string.Join(", ", x.ProjectQuestionAnswerContributors
+                    .Where(c => !c.Deleted && c.ContributorCustomer != null)
+                    .Select(c =>
+                        c.ContributorCustomer.FirstName + " " +
+                        c.ContributorCustomer.LastName))
                 }), ct);
         }
 
@@ -249,10 +270,14 @@ namespace Vsky.Api.Services.RequirementExport
                     Title = x.Title,
                     Priority = x.Priority == null ? null : x.Priority.DropDownValue,
                     Employee = x.Employee == null || x.Employee.Person == null ? null : x.Employee.Person.FirstName + " " + x.Employee.Person.LastName,
-                    Customer = x.Customer == null ? null : x.Customer.Name,
+                    //Customer = x.Customer == null ? null : x.Customer.Name,
+                    Customer = x.Customer.Company != null ? x.Customer.Company.Name : string.Join(" ", x.Customer.Person.FirstName, x.Customer.Person.LastName).Trim(),
                     DueDate = x.DueDate,
                     Description = x.Description,
-                    CreatedOnUtc = x.CreatedOnUtc
+                    CreatedOnUtc = x.CreatedOnUtc,
+                    UpdatedOnUtc = x.UpdatedOnUtc,
+                    CreatedBy = x.CreatedBy == null || x.CreatedBy.Person == null ? null : x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    UpdatedBy = x.UpdatedBy == null || x.UpdatedBy.Person == null ? null : x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                 }), ct);
         }
 
@@ -271,7 +296,9 @@ namespace Vsky.Api.Services.RequirementExport
                     Target = x.Target,
                     IntegrationDirection = x.IntegrationDirection == null ? null : x.IntegrationDirection.DropDownValue,
                     CreatedOnUtc = x.CreatedOnUtc,
-                    UpdatedOnUtc = x.UpdatedOnUtc
+                    UpdatedOnUtc = x.UpdatedOnUtc,
+                    CreatedBy = x.CreatedBy == null || x.CreatedBy.Person == null ? null : x.CreatedBy.Person.FirstName + " " + x.CreatedBy.Person.LastName,
+                    UpdatedBy = x.UpdatedBy == null || x.UpdatedBy.Person == null ? null : x.UpdatedBy.Person.FirstName + " " + x.UpdatedBy.Person.LastName
                 }), ct);
         }
 

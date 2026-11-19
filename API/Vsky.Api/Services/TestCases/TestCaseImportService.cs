@@ -212,6 +212,12 @@ namespace Vsky.Api.Services.TestCases
                 // Keep values as text so Excel does not reformat them; Tested Date is a real date column.
                 data.Column(i + 1).Style.Numberformat.Format = field.Key == TestCaseImportField.TestedDate ? "mm/dd/yyyy" : "@";
                 data.Column(i + 1).Width = TestCaseImportField.RichTextKeys.Contains(field.Key) ? 50 : 30;
+
+                // Lock header
+                cell.Style.Locked = true;
+
+                // Allow users to edit data rows
+                data.Cells[2, i + 1, TestCaseImportField.MaxDataRows + 1, i + 1].Style.Locked = false;
             }
             data.View.FreezePanes(2, 1);
 
@@ -303,6 +309,36 @@ namespace Vsky.Api.Services.TestCases
             AddDropdown(data, TestCaseImportField.TestedBy, employeeRange);
             AddFailOnlyAssignedTo(data, ctx, employeeRange, "_Keys!$Z$1");
             AddTestedDatePicker(data);
+
+            // Hide all sheets except Test Case and Instructions
+            foreach (var sheet in package.Workbook.Worksheets)
+            {
+                if (sheet.Name != TestCaseImportField.DataSheetName &&
+                    sheet.Name != "Instructions")
+                {
+                    sheet.Hidden = eWorkSheetHidden.Hidden;
+                }
+            }
+
+            // Protect worksheet
+            data.Protection.IsProtected = true;
+            data.Protection.AllowSelectLockedCells = false;
+            data.Protection.AllowSelectUnlockedCells = true;
+
+            data.Protection.AllowInsertRows = false;
+            data.Protection.AllowDeleteRows = false;
+            data.Protection.AllowInsertColumns = false;
+            data.Protection.AllowDeleteColumns = false;
+
+            data.Protection.AllowFormatCells = false;
+            data.Protection.AllowFormatColumns = false;
+            data.Protection.AllowFormatRows = false;
+
+            data.Protection.AllowSort = false;
+            data.Protection.AllowAutoFilter = false;
+
+            data.Protection.AllowEditObject = false;
+            data.Protection.AllowEditScenarios = false;
 
             return package.GetAsByteArray();
         }

@@ -167,6 +167,12 @@ namespace Vsky.Api.Services.TestPlans
             var areaList = AddLookupSheet(package, "Areas", "Area", "Area ID", lookups.Areas);
             var workspaceList = AddLookupSheet(package, "Workspaces", "Workspace", "Workspace ID", lookups.Workspaces);
 
+            // Hide lookup sheets
+            package.Workbook.Worksheets["Projects"].Hidden = eWorkSheetHidden.Hidden;
+            package.Workbook.Worksheets["Employees"].Hidden = eWorkSheetHidden.Hidden;
+            package.Workbook.Worksheets["Areas"].Hidden = eWorkSheetHidden.Hidden;
+            package.Workbook.Worksheets["Workspaces"].Hidden = eWorkSheetHidden.Hidden;
+
             AddDropdown(data, TestPlanImportField.ProjectId, projectList);
             AddDropdown(data, TestPlanImportField.AreaId, areaList);
             AddDropdown(data, TestPlanImportField.WorkspaceId, workspaceList);
