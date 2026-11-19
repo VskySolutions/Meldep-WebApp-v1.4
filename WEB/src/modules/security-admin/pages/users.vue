@@ -24,6 +24,14 @@
           <q-badge v-if="props.row.roles.length === 0" color="negative" label="No role" />
         </q-td>
       </template>
+      <!-- Same Active/Inactive display as User Management > User List -->
+      <template #body-cell-active="props">
+        <q-td :props="props">
+          <q-icon :name="props.row.active ? 'o_check_circle' : 'o_cancel'" :color="props.row.active ? 'positive' : 'negative'" class="cursor-pointer" size="sm">
+            <q-tooltip>{{ props.value }}</q-tooltip>
+          </q-icon>
+        </q-td>
+      </template>
       <template #body-cell-actions="props">
         <q-td :props="props" auto-width>
           <q-btn flat round dense icon="o_badge" aria-label="Assign Roles" @click="rolesUser = props.row"><q-tooltip>Assign Roles</q-tooltip></q-btn>
@@ -51,7 +59,7 @@ const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 });
 const columns = [
   { name: "name", label: "Name", field: "name", align: "left" },
   { name: "userName", label: "User name", field: "userName", align: "left" },
-  { name: "active", label: "Active", field: row => (row.active ? "Yes" : "No"), align: "left" },
+  { name: "active", label: "Active/Inactive", field: row => (row.active ? "Active" : "Inactive"), align: "center" },
   { name: "roles", label: "Roles", field: "roles", align: "left" },
   { name: "groupCount", label: "Groups", field: "groupCount", align: "center" },
   { name: "directGrantCount", label: "Individual permissions", field: "directGrantCount", align: "center" },

@@ -355,6 +355,7 @@ namespace Vsky.Api.Controllers
         // Title: Get EmployeeLeave List for Movement Register
         [HttpPost("leaveListForMovReg/list/{movRegDateStr}")]
         [ReadAccess]
+        [RequireMenu(MenuLinks.Dashboard + "|" + MenuLinks.LeaveAny)]
         public async Task<IActionResult> GetEmployeeLeaveListForMovReg(string movRegDateStr)
         {
             try

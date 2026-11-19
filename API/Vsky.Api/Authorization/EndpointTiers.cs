@@ -77,11 +77,22 @@ namespace Vsky.Api.Authorization
     {
     }
 
+    /// <summary>
+    /// Writes a "User activity" row for every successful call, although the action only reads.
+    /// For reads that hand data out of the application, such as exports. Other reads stay
+    /// governed by LogRecordAccess / LogModuleAccess.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class LogActivityAttribute : Attribute
+    {
+    }
+
     public sealed class EndpointPolicy
     {
         public EndpointTier? Tier { get; init; }
         public string[] Links { get; init; } = Array.Empty<string>();
         public AccessLevel? ExplicitLevel { get; init; }
+        public bool AlwaysLogActivity { get; init; }
 
         public AccessLevel ResolveLevel(string httpMethod)
         {
@@ -127,7 +138,8 @@ namespace Vsky.Api.Authorization
             {
                 Tier = isPublic ? EndpointTier.Public : tierAttribute?.Tier,
                 Links = (tierAttribute as RequireMenuAttribute)?.Links ?? Array.Empty<string>(),
-                ExplicitLevel = ResolveExplicitLevel(method) ?? ResolveExplicitLevel(controller)
+                ExplicitLevel = ResolveExplicitLevel(method) ?? ResolveExplicitLevel(controller),
+                AlwaysLogActivity = method.GetCustomAttributes(true).OfType<LogActivityAttribute>().Any()
             };
         }
 

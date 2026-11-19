@@ -16,7 +16,7 @@
         <user-select v-model="subjectId" label="User" @update:model-value="load" />
       </div>
       <div v-if="type === 'group'" class="col-12 col-sm-6 col-md-4">
-        <q-select v-model="subjectId" :options="groups" outlined dense emit-value map-options option-value="id" option-label="name" label="Group" aria-label="Group" @update:model-value="load" />
+        <q-select v-model="subjectId" :options="groups" outlined dense emit-value map-options use-input option-value="id" option-label="name" label="Group" aria-label="Group" @update:model-value="load" />
       </div>
       <div v-if="type === 'role'" class="col-12 col-sm-6 col-md-4">
         <q-select v-model="subjectId" :options="roles" outlined dense emit-value map-options option-value="siteRoleId" option-label="name" label="Role" aria-label="Role" />

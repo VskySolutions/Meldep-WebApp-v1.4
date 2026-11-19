@@ -118,7 +118,7 @@ namespace Vsky.Api.Authorization
                     return;
                 }
 
-                if (isRead)
+                if (isRead && !policy.AlwaysLogActivity)
                 {
                     RecordAccess(context, action, policy, state, started, status, userId);
                     return;

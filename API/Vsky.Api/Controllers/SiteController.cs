@@ -1137,7 +1137,9 @@ namespace Vsky.Api.Controllers
         #endregion
 
         #region CheckMobileVersion
-        [AllowAnonymous]
+        // Site member, not [AllowAnonymous]: public actions run with no site (AuthorizationEnforcementFilter
+        // clears it), so an anonymous version check could never see the site's VersionNo.
+        [SiteMember]
         [HttpGet("check-mobile-version")]
         public async Task<IActionResult> CheckMobileVersion(string currentVersion)
         {

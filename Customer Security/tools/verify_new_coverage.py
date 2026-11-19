@@ -106,6 +106,19 @@ r = call("GET", "/sites/check-mobile-version?currentVersion=1.0.0", None)
 check("check-mobile-version: no token -> 401", r[0] == 401, msg(r))
 r = call("GET", "/sites/check-mobile-version?currentVersion=1.0.0", tok["employee"], B)
 check("check-mobile-version: not a member of the site -> 403", r[0] == 403, msg(r))
+# Functional: the active site's VersionNo must reach the check (a public tier would clear the site and always answer false).
+import subprocess
+def _sql(t): subprocess.run(["sqlcmd", "-S", "DESKTOP-M3PJFV7", "-E", "-C", "-b", "-d", "Meldep_Security_Test", "-Q", "SET NOCOUNT ON; " + t], check=True, capture_output=True)
+_old = subprocess.run(["sqlcmd", "-S", "DESKTOP-M3PJFV7", "-E", "-C", "-b", "-h", "-1", "-W", "-d", "Meldep_Security_Test", "-Q",
+                       f"SET NOCOUNT ON; SELECT ISNULL(VersionNo,'NULL') FROM Sites WHERE Id='{A}'"], check=True, capture_output=True, text=True).stdout.strip()
+try:
+    _sql(f"UPDATE Sites SET VersionNo='9.9.9' WHERE Id='{A}'")
+    r = call("GET", "/sites/check-mobile-version?currentVersion=1.0.0", tok["employee"])
+    check("check-mobile-version: member sees the site's newer version", r[0] == 200 and r[1].get("isUpdateAvailable") is True and r[1].get("latestVersion") == "9.9.9", msg(r))
+    r = call("GET", "/sites/check-mobile-version?currentVersion=9.9.9", tok["employee"])
+    check("check-mobile-version: current version -> no update", r[0] == 200 and r[1].get("isUpdateAvailable") is False, msg(r))
+finally:
+    _sql(f"UPDATE Sites SET VersionNo={'NULL' if _old == 'NULL' else repr(_old)} WHERE Id='{A}'")
 r = call("GET", f"/requirement/getRequirementsByProjectModuleId/{OWN['mod']}", tok["admin"])
 check("getRequirementsByProjectModuleId own module -> 200", r[0] == 200, f"{r[0]} {msg(r)}")
 r = call("GET", f"/requirement/getRequirementsByProjectModuleId/{OTHER['mod']}", tok["admin"])

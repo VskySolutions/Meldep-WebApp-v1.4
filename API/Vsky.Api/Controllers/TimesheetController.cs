@@ -1129,6 +1129,7 @@ namespace Vsky.Api.Controllers
 
         [HttpPost("export")]
         [ReadAccess]
+        [LogActivity]
         public async Task<IActionResult> ExportTimesheet(TimesheetModel model)
         {
             try
@@ -1354,6 +1355,7 @@ namespace Vsky.Api.Controllers
 
         [HttpPost("exportBillingTimesheet")]
         [ReadAccess]
+        [LogActivity]
 
         public async Task<IActionResult> ExportBillingTimesheet(TimesheetLinesModel model)
         {

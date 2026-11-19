@@ -55,6 +55,7 @@ namespace Vsky.Api.Controllers
         [RequirementExportFeatureGate]
         [SiteOwned(typeof(Requirement))]
         [RecordScope(typeof(Requirement))]
+        [LogActivity]
         public async Task<IActionResult> ExportRequirement(string id, CancellationToken ct)
         {
             try

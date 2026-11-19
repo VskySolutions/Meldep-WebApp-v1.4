@@ -76,8 +76,14 @@ for role in ["employee", "admin", "site-super-admin", "system-super-admin"]:
 
     # Today's logged failure: the token pasted into the site field. Still denied (never guessed), with a clear message.
     pasted = call("POST", "/projects/list", {**bearer, "X-Site-Id": token}, LIST)
-    check(f"[{role}] token pasted as X-Site-Id -> 403 SITE_NOT_MEMBER, message explains it",
-          pasted[0] == 403 and pasted[1].get("code") == "SITE_NOT_MEMBER" and "doesn't contain a site ID" in pasted[1].get("message", ""), pasted)
+    if role == "system-super-admin":
+        # Since 54256d0 a system super admin skips AuthorizationEnforcementFilter (site gate included);
+        # an invalid site ID then simply matches no rows.
+        check(f"[{role}] token pasted as X-Site-Id -> no rows returned (system admin bypass, 54256d0)",
+              pasted[0] == 200 and not pasted[1].get("data"), pasted)
+    else:
+        check(f"[{role}] token pasted as X-Site-Id -> 403 SITE_NOT_MEMBER, message explains it",
+              pasted[0] == 403 and pasted[1].get("code") == "SITE_NOT_MEMBER" and "doesn't contain a site ID" in pasted[1].get("message", ""), pasted)
 
 # Authorized vs unauthorized users, same request shapes.
 for who, expect in [("sec.empty", 403), ("sec.hr", None)]:

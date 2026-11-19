@@ -10,18 +10,18 @@
           : "This page doesn't exist, or you don't have permission to open it." }}
       </div>
       <q-btn v-if="couldNotCheck" unelevated no-caps color="primary" label="Try again" @click="retry" />
-      <q-btn v-else unelevated no-caps color="primary" label="Go to home page" @click="goHome" />
+      <q-btn v-else unelevated no-caps color="primary" label="Go Back" @click="$router.back()" />
     </q-card>
   </div>
 </template>
 
 <script setup>
 import { computed } from "vue";
-import { LocalStorage } from "quasar";
+// import { LocalStorage } from "quasar";
 import { useRouter } from "vue-router";
 import { usePermissionStore } from "stores/permissions";
 
-const router = useRouter();
+// const router = useRouter();
 const permissions = usePermissionStore();
 
 const couldNotCheck = computed(() => permissions.loadFailed);
@@ -31,18 +31,18 @@ function retry () {
 }
 
 // The home page must be one this user can open: last_route may be the page that was just denied.
-function goHome () {
-  const user = LocalStorage.getItem("user");
-  if (!LocalStorage.getItem("token")) {
-    router.replace("/auth/login");
-    return;
-  }
+// function goHome () {
+//   const user = LocalStorage.getItem("user");
+//   if (!LocalStorage.getItem("token")) {
+//     router.replace("/auth/login");
+//     return;
+//   }
 
-  const landing = user?.siteLandingPageLink;
-  const target = landing && router.resolve(landing).path !== permissions.deniedPath ? landing : "/dashboard";
-  localStorage.setItem("last_route", target);
-  router.replace(target);
-}
+//   const landing = user?.siteLandingPageLink;
+//   const target = landing && router.resolve(landing).path !== permissions.deniedPath ? landing : "/dashboard";
+//   localStorage.setItem("last_route", target);
+//   router.replace(target);
+// }
 </script>
 
 <style scoped>
