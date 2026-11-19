@@ -160,6 +160,8 @@ namespace Vsky.Models.Analytics
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Department { get; set; }
+        /// <summary>The employment type ("Permanent", "On Contract", ...) of the employee's latest employment type record; null when there is none.</summary>
+        public string EmploymentType { get; set; }
         /// <summary>Manager on the latest org-structure row of the employee; null when there is none.</summary>
         public string TeamLeadId { get; set; }
         public string TeamLeadName { get; set; }

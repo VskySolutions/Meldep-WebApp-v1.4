@@ -101,8 +101,13 @@ namespace Vsky.Services.Analytics
                         cell.ShiftAssigned = null;
                     }
                     row.Cells.Add(cell);
-                    Accumulate(row.Totals, cell, state);
-                    Accumulate(summary, cell, state);
+                    // A day is open while the employee is still timed in, and today until there is a time-in
+                    // that has been timed out.
+                    var open = state == AttendanceCellState.InNow
+                        || state == AttendanceCellState.Awaited
+                        || (date == context.Today && cell.Sessions == 0);
+                    Accumulate(row.Totals, cell, state, open);
+                    Accumulate(summary, cell, state, open);
                     Accumulate(summary.PerDay[i], cell, state);
                 }
 
@@ -438,20 +443,28 @@ namespace Vsky.Services.Analytics
             return (cell, state);
         }
 
-        /// <summary>Adds one employee-day to a set of totals (an employee's period, or the whole register).</summary>
-        private static void Accumulate(AttendanceRowTotals totals, AttendanceCell cell, AttendanceCellState state)
+        /// <summary>
+        /// Adds one employee-day to a set of totals (an employee's period, or the whole register). An open
+        /// day (the employee has not timed out yet, or has not timed in today) stays out of every hours figure:
+        /// required, clocked, break, time adjustment, productive, and so short and extra. Its verdict (late,
+        /// absent, work from home) is counted like any other day's, and its cell shows the hours so far.
+        /// </summary>
+        private static void Accumulate(AttendanceRowTotals totals, AttendanceCell cell, AttendanceCellState state, bool open)
         {
-            totals.ClockedMinutes += cell.Clocked;
-            totals.WorkedMinutes += cell.Worked;
-            totals.Breaks += cell.Breaks;
-            totals.BreakMinutes += cell.BreakMinutes;
-            totals.Adjustments += cell.Adjustments;
-            totals.AdjustMinutes += cell.AdjustMinutes;
+            if (!open)
+            {
+                totals.ClockedMinutes += cell.Clocked;
+                totals.WorkedMinutes += cell.Worked;
+                totals.Breaks += cell.Breaks;
+                totals.BreakMinutes += cell.BreakMinutes;
+                totals.Adjustments += cell.Adjustments;
+                totals.AdjustMinutes += cell.AdjustMinutes;
+            }
             if (cell.Wfh != null) totals.Wfh++;
 
             var expected = false;
-            // Required hours count once the day can be judged: not while the employee is still in or still awaited.
-            var closed = state != AttendanceCellState.InNow && state != AttendanceCellState.Awaited;
+            // Required hours count once the day is closed.
+            var closed = !open;
             switch (state)
             {
                 case AttendanceCellState.OnTime:

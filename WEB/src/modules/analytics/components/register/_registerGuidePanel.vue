@@ -137,7 +137,7 @@
       <h3>6. Tiles, filters and search</h3>
       <ul>
         <li>The <b>tiles</b> count employee-days in the period for the employees currently listed. Click a tile to keep only the employees it counts (for example everyone with a pending day); click it again to release. <b>No shift</b> lists the employees whose record has no shift.</li>
-        <li><b>Filters</b> sit under the title bar: Department, Team Lead and Team Members from the org structure, Shift and Day state, plus a switch to hide the Sunday and holiday columns. Team Members appears once a team lead is picked and lists their people and the leads themselves; “No team lead (NA)” keeps employees with no lead. A Clear button appears when any filter is active.</li>
+        <li><b>Filters</b> sit under the title bar: Department, Team Lead and Team Members from the org structure, Shift, Exclude employment type and Day state, plus a switch to hide the Sunday and holiday columns. <b>Exclude employment type</b> leaves out employees by the type on their latest employment type record; “On Contract” is left out until you remove it there. Team Members appears once a team lead is picked and lists their people and the leads themselves; “No team lead (NA)” keeps employees with no lead. A Clear button appears when any filter is active.</li>
         <li><b>Search</b> matches the employee's name, code or department.</li>
         <li><b>Density</b>: Hours (the default) shows the logged hours in each cell; Compact shows only the icon, which suits a whole month. Auto picks by the length of the period.</li>
       </ul>

@@ -100,6 +100,7 @@ namespace Vsky.Services.Analytics
                 FullName = FullName(employee),
                 Email = employee.Email,
                 Department = PeriodValue(employee.Departments, ShiftAsOf),
+                EmploymentType = LatestValue(employee.EmploymentTypes),
                 TeamLeadId = lead?.ManagerId,
                 TeamLeadName = lead?.DisplayName,
                 Shift = shift.Name,
@@ -133,6 +134,22 @@ namespace Vsky.Services.Analytics
                 .First();
 
             return chosen.Value;
+        }
+
+        /// <summary>
+        /// The value of the latest record, whatever the period: an employee can have several employment type
+        /// records (Trainee, Probation, Permanent) and the latest one is what they are now. Latest = the latest
+        /// start date, then the most recently created; null when no record has a value.
+        /// </summary>
+        public static string LatestValue(List<PeriodSnapshot> rows)
+        {
+            var latest = rows?
+                .Where(r => !string.IsNullOrWhiteSpace(r.Value))
+                .OrderByDescending(r => r.StartDate ?? DateTime.MinValue)
+                .ThenByDescending(r => r.CreatedOnUtc ?? DateTime.MinValue)
+                .FirstOrDefault();
+
+            return latest?.Value.Trim();
         }
 
         public static string FullName(EmployeeSnapshot employee)
@@ -284,6 +301,16 @@ namespace Vsky.Services.Analytics
                             EndDate = d.EndDate,
                             CreatedOnUtc = d.CreatedOnUtc
                         })
+                        .ToList(),
+                    EmploymentTypes = e.EmployeeType
+                        .Where(t => !t.Deleted)
+                        .Select(t => new PeriodSnapshot
+                        {
+                            Value = t.EmployeeTypeDropdown != null ? t.EmployeeTypeDropdown.DropDownValue : null,
+                            StartDate = t.StartDate,
+                            EndDate = t.EndDate,
+                            CreatedOnUtc = t.CreatedOnUtc
+                        })
                         .ToList()
                 })
                 .ToListAsync();
@@ -422,6 +449,7 @@ namespace Vsky.Services.Analytics
         public DateTime? ReleaseDate { get; set; }
         public List<PeriodSnapshot> Designations { get; set; } = new List<PeriodSnapshot>();
         public List<PeriodSnapshot> Departments { get; set; } = new List<PeriodSnapshot>();
+        public List<PeriodSnapshot> EmploymentTypes { get; set; } = new List<PeriodSnapshot>();
     }
 
     internal sealed class PeriodSnapshot

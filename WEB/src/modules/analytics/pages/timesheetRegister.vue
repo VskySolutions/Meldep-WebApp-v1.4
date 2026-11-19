@@ -179,7 +179,16 @@ import RegisterEmployeePanel from "modules/analytics/components/register/_regist
 import RegisterGuidePanel from "modules/analytics/components/register/_registerGuidePanel.vue";
 import analyticsService from "modules/analytics/analytics.service";
 import { initEmployeeDialogs, onEmployeeView } from "src/modules/employee/utils/dialogs.js";
-import { STATES, FILTERABLE_STATES, fmtHours, exportCellText } from "modules/analytics/utils/registerStates";
+import {
+  STATES,
+  FILTERABLE_STATES,
+  fmtHours,
+  exportCellText,
+  DEFAULT_EXCLUDED_EMPLOYMENT_TYPES,
+  employmentTypeExcluded,
+  employmentTypeOptions,
+  employmentExclusionChanged
+} from "modules/analytics/utils/registerStates";
 import {
   MAX_RANGE_DAYS,
   todayIso,
@@ -271,7 +280,7 @@ watch(collapsed, (value) => prefs.set("topCollapsed", value));
 
 // ---- search, filters, quick tiles ---------------------------------------------------------------------
 // Filters persist per user and site like the other lists; a first visit starts clean on This Week.
-const BLANK_FILTERS = { departments: [], teamLeads: [], teamMembers: [], shifts: [], states: [], hideHolidays: false };
+const BLANK_FILTERS = { departments: [], teamLeads: [], teamMembers: [], shifts: [], excludeTypes: [...DEFAULT_EXCLUDED_EMPLOYMENT_TYPES], states: [], hideHolidays: false };
 const savedFilters = prefs.get("filters", null);
 const stringList = (value) => (Array.isArray(value) ? value.filter((x) => typeof x === "string") : []);
 
@@ -282,6 +291,8 @@ const filters = ref({
   // "teamMembers" replaced the earlier "employees" filter; an old saved value still applies.
   teamMembers: stringList(savedFilters?.teamLeads).length ? stringList(savedFilters?.teamMembers) : [],
   shifts: stringList(savedFilters?.shifts),
+  // Contract staff are left out until the reader removes the exclusion; a saved choice (even an empty one) wins.
+  excludeTypes: Array.isArray(savedFilters?.excludeTypes) ? stringList(savedFilters.excludeTypes) : [...DEFAULT_EXCLUDED_EMPLOYMENT_TYPES],
   states: stringList(savedFilters?.states),
   hideHolidays: !!(savedFilters ? savedFilters.hideHolidays : prefs.get("hideHolidays", false))
 });
@@ -316,6 +327,7 @@ const baseRows = computed(() => {
     if (!underLeads(row, f.teamLeads)) return false;
     if (f.teamMembers.length && !f.teamMembers.includes(row.employeeId)) return false;
     if (f.shifts.length && !f.shifts.includes(row.shiftAssigned ? row.shift : NONE)) return false;
+    if (employmentTypeExcluded(row, f.excludeTypes)) return false;
     if (f.states.length && !f.states.some((s) => rowHasState(row, s))) return false;
     return true;
   });
@@ -410,7 +422,8 @@ const filterOptions = computed(() => {
     { label: `Not assigned (judged as ${rules.value?.defaultShift || "default"})`, value: NONE }
   ];
   const states = FILTERABLE_STATES.map((k) => ({ label: STATES[k].label, value: k }));
-  return { departments, teamLeads, teamMembers, shifts, states };
+  const employmentTypes = employmentTypeOptions(rows.value, filters.value.excludeTypes);
+  return { departments, teamLeads, teamMembers, shifts, employmentTypes, states };
 });
 
 // Team Members only shows once a lead is chosen; a change of leads drops members no longer under them.
@@ -428,12 +441,12 @@ watch(() => filters.value.teamLeads, (leads) => {
 // Active filters, counted for the Clear button and the folded bar (the period is not a filter).
 const activeFilterCount = computed(() => {
   const f = filters.value;
-  return f.departments.length + f.teamLeads.length + f.teamMembers.length + f.shifts.length + f.states.length
+  return f.departments.length + f.teamLeads.length + f.teamMembers.length + f.shifts.length + f.states.length + (employmentExclusionChanged(f.excludeTypes) ? 1 : 0)
     + (f.hideHolidays ? 1 : 0) + (search.value.trim() ? 1 : 0) + (quick.value ? 1 : 0);
 });
 
 function clearFilters () {
-  filters.value = { ...BLANK_FILTERS };
+  filters.value = { ...BLANK_FILTERS, excludeTypes: [...DEFAULT_EXCLUDED_EMPLOYMENT_TYPES] };
   quick.value = null;
   search.value = "";
 }
@@ -487,6 +500,7 @@ function exportRegister () {
     { label: "Employee", value: (r) => r.fullName },
     { label: "Code", value: (r) => r.employeeCode || "" },
     { label: "Department", value: (r) => r.department || "" },
+    { label: "Employment type", value: (r) => r.employmentType || "" },
     { label: "Team lead", value: (r) => r.teamLeadName || "" },
     { label: "Shift", value: (r) => (r.shiftAssigned ? r.shift : `${r.shift} (not assigned)`) },
     ...indexes.map((i) => ({ label: formatDayLabel(days.value[i].date), value: (r) => exportCellText(r.cells[i]) })),

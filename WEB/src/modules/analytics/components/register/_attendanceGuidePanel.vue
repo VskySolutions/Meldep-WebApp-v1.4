@@ -156,7 +156,7 @@
       <h3>7. Tiles, filters and search</h3>
       <ul>
         <li>The <b>tiles</b> count employee-days in the period for the employees currently listed. Click a tile to keep only the employees it counts (for example everyone with an absent day); click it again to release. <b>Late</b> counts every late arrival, whatever else happened that day, so the tiles need not add up to the expected days.</li>
-        <li><b>Filters</b> sit under the title bar: Department, Team Lead and Team Members from the org structure, Shift, Day state and Movement, plus a switch to hide the Sunday and holiday columns. <b>Day state</b> offers “Late, no time adjustment” for the late days nobody declared. <b>Movement</b> keeps the employees with a break, a time adjustment or work from home in the period.</li>
+        <li><b>Filters</b> sit under the title bar: Department, Team Lead and Team Members from the org structure, Shift, Exclude employment type, Day state and Movement, plus a switch to hide the Sunday and holiday columns. <b>Exclude employment type</b> leaves out employees by the type on their latest employment type record; “On Contract” is left out until you remove it there. <b>Day state</b> offers “Late, no time adjustment” for the late days nobody declared. <b>Movement</b> keeps the employees with a break, a time adjustment or work from home in the period.</li>
         <li><b>Search</b> matches the employee's name, code or department.</li>
       </ul>
     </section>
@@ -168,7 +168,7 @@
         <li>Click an <b>employee's name</b> to open their employee record, the same view the employee list offers.</li>
         <li>The <b>icon</b> beside a name, or <b>View week</b> / <b>View period</b> in the day panel, opens that employee's <b>attendance</b>: the totals, one row per day, and every time-in and Movement Register entry in one list, for the selected period or any week you pick by its Sunday. Both tables export to CSV.</li>
         <li>The <b>WFH</b>, <b>Brk</b> and <b>TA</b> totals on the right of a row are links. Click one to see that employee's Work From Home days, breaks or time adjustments for the period <b>date by date</b>: how each day went, how much was declared, and every entry with its message, who gave permission and when it was entered. A switch at the top moves between the three, and the list exports to CSV.</li>
-        <li>The <b>hours columns</b> on the right of a row read left to right: <b>Req</b> (required: {{ fullDayText }} a working day, {{ halfDayText }} under a half-day leave; today counts once the employee has timed out), <b>Clk</b> (clocked, time in to time out), <b>Brk</b> and <b>TA</b> (break and time adjustment hours), <b>Prod</b> (productive = clocked minus breaks and time adjustments), <b>Short</b> (required minus productive when productive is lower, in red) and <b>Extra</b> (productive minus required when productive is higher, in green); an employee has one or the other. The balance is struck over the whole period, so a longer day offsets a shorter one. A day with no time-in (absent, work from home) or no time-out adds zero productive hours. The <b>Hours short</b> tile adds the shortfalls up and keeps the employees who are short.</li>
+        <li>The <b>hours columns</b> on the right of a row read left to right: <b>Req</b> (required: {{ fullDayText }} a working day, {{ halfDayText }} under a half-day leave), <b>Clk</b> (clocked, time in to time out), <b>Brk</b> and <b>TA</b> (break and time adjustment hours), <b>Prod</b> (productive = clocked minus breaks and time adjustments), <b>Short</b> (required minus productive when productive is lower, in red) and <b>Extra</b> (productive minus required when productive is higher, in green); an employee has one or the other. The balance is struck over the whole period, so a longer day offsets a shorter one. A day with no time-in (absent, work from home) or no time-out adds zero productive hours. <b>Today is left out of every hours column until the employee has timed out</b>: until then the totals run up to the previous day, and today's cell still shows the time-in, the hours so far and the day's entries. The <b>Hours short</b> tile adds the shortfalls up and keeps the employees who are short.</li>
         <li><b>Export CSV</b> downloads the grid as shown: one row per employee, one column per visible day with the state, the times, the hours and the movement, and the period totals.</li>
       </ul>
     </section>
@@ -200,7 +200,7 @@
           <tr><th>Full working day</th><td>{{ fullDayText }}</td></tr>
           <tr><th>Half-day leave</th><td>{{ halfDayText }}</td></tr>
           <tr><th>Productive hours</th><td>Time in to time out, minus Break and Time Adjustment minutes</td></tr>
-          <tr><th>Hours short</th><td>Required minus productive over the period; longer days offset shorter ones</td></tr>
+          <tr><th>Hours short</th><td>Required minus productive over the period (today only once timed out); longer days offset shorter ones</td></tr>
           <tr><th>Late grace after the shift start</th><td>{{ graceText }}</td></tr>
           <tr><th>Forgotten time-out</th><td>Open or closed {{ forgottenText }} or more after the time-in</td></tr>
           <tr><th>Day starts at</th><td>{{ dayStartsAt }} (earlier time-ins count for the day before)</td></tr>

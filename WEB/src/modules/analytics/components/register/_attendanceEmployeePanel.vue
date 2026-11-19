@@ -260,6 +260,7 @@ const facts = computed(() => {
   return [
     { label: "Team lead", value: r.teamLeadName || "None" },
     { label: "Department", value: r.department || "—" },
+    { label: "Employment type", value: r.employmentType || "—" },
     { label: "Shift", value: rule ? `${shift} · ${fmtTime12(rule.start)}–${fmtTime12(rule.end)}, late after ${fmtTime12(rule.lateAfter)}` : shift },
     { label: "Usual time-in", value: usual ? `${usual.text} (middle of ${usual.days} ${usual.days === 1 ? "day" : "days"})` : "—" },
     { label: "Joined", value: r.joiningDate ? formatAppDate(r.joiningDate) : "—" },

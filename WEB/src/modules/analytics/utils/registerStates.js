@@ -949,7 +949,7 @@ export const ATTENDANCE_TOTAL_COLUMNS = [
     key: "required",
     abbr: "Req",
     full: "Required hours",
-    desc: "The hours the employee had to work in the period: 8 a working day, 4 under a half-day leave, nothing on a holiday or a full-day leave. Today counts once the employee has timed out.",
+    desc: "The hours the employee had to work in the period: 8 a working day, 4 under a half-day leave, nothing on a holiday or a full-day leave. Today counts only once the employee has timed out.",
     cls: "",
     value: (t) => hoursOf(t.requiredMinutes)
   },
@@ -957,7 +957,7 @@ export const ATTENDANCE_TOTAL_COLUMNS = [
     key: "clocked",
     abbr: "Clk",
     full: "Clocked hours",
-    desc: "Time in to time out, added over the period. A day with a missing time-out, or with no time-in at all (absent, work from home), adds nothing.",
+    desc: "Time in to time out, added over the period. A day with a missing time-out, or with no time-in at all (absent, work from home), adds nothing. Today counts only once the employee has timed out.",
     cls: "",
     value: (t) => hoursOf(t.clockedMinutes)
   },
@@ -967,7 +967,7 @@ export const ATTENDANCE_TOTAL_COLUMNS = [
     key: "breaks",
     abbr: "Brk",
     full: "Break hours",
-    desc: "Total length of the Break entries in the Movement Register over the period, in hours and minutes. Click an employee's value to see the breaks date by date.",
+    desc: "Total length of the Break entries in the Movement Register over the period, in hours and minutes; today's are added once the employee has timed out. Click an employee's value to see the breaks date by date.",
     cls: "",
     action: "Break",
     actionHint: "Show the breaks, date by date",
@@ -978,7 +978,7 @@ export const ATTENDANCE_TOTAL_COLUMNS = [
     key: "adjust",
     abbr: "TA",
     full: "Time Adjustment hours",
-    desc: "Total length of the Time Adjustment entries in the Movement Register over the period, in hours and minutes. Click an employee's value to see them date by date.",
+    desc: "Total length of the Time Adjustment entries in the Movement Register over the period, in hours and minutes; today's are added once the employee has timed out. Click an employee's value to see them date by date.",
     cls: "",
     action: "Adjust",
     actionHint: "Show the time adjustments, date by date",
@@ -988,7 +988,7 @@ export const ATTENDANCE_TOTAL_COLUMNS = [
     key: "productive",
     abbr: "Prod",
     full: "Productive hours",
-    desc: "Clocked hours minus the Break and the Time Adjustment hours, day by day. Hours on a holiday or a leave day are included.",
+    desc: "Clocked hours minus the Break and the Time Adjustment hours, day by day. Hours on a holiday or a leave day are included; today's hours are not, until the employee has timed out.",
     cls: "tsr-td--strong",
     value: (t) => hoursOf(t.workedMinutes)
   },
@@ -996,7 +996,7 @@ export const ATTENDANCE_TOTAL_COLUMNS = [
     key: "shortfall",
     abbr: "Short",
     full: "Hours short of required",
-    desc: "Required hours minus productive hours over the period, when the productive hours are fewer. A longer day offsets a shorter one, so this is the balance of the whole period. Blank means the required hours were met.",
+    desc: "Required hours minus productive hours over the period, when the productive hours are fewer. A longer day offsets a shorter one, so this is the balance of the whole period (today joins it once the employee has timed out). Blank means the required hours were met.",
     cls: "tsr-td--pnd",
     value: (t) => hoursOf(t.shortMinutes)
   },
@@ -1315,3 +1315,36 @@ export const ATTENDANCE_VOCAB = {
 };
 
 // #endregion TimeInTimeOut-MovementRegister (Attendance Register)
+
+// #region Employment type (both registers)
+// Each row carries the type of the employee's latest employment type record. The registers skip the types
+// listed under "Exclude employment type"; contract staff are skipped until the reader brings them back.
+export const NO_EMPLOYMENT_TYPE = "__none__";
+export const DEFAULT_EXCLUDED_EMPLOYMENT_TYPES = ["On Contract"];
+
+const typeKey = (value) => String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+
+// True when the row's employment type is one of the excluded ones ("On contract" matches "On Contract").
+export function employmentTypeExcluded (row, excluded) {
+  if (!excluded?.length) return false;
+  const key = typeKey(row.employmentType || NO_EMPLOYMENT_TYPE);
+  return excluded.some((x) => typeKey(x) === key);
+}
+
+// The choices: the types of the loaded employees, plus any excluded type none of them has.
+export function employmentTypeOptions (rows, excluded = []) {
+  const labels = new Map();
+  for (const value of [...rows.map((r) => r.employmentType || NO_EMPLOYMENT_TYPE), ...excluded]) {
+    if (!labels.has(typeKey(value))) labels.set(typeKey(value), value);
+  }
+  return [...labels.values()]
+    .sort((a, b) => (a === NO_EMPLOYMENT_TYPE) - (b === NO_EMPLOYMENT_TYPE) || String(a).localeCompare(String(b)))
+    .map((v) => ({ label: v === NO_EMPLOYMENT_TYPE ? "No employment type" : v, value: v }));
+}
+
+// Whether the exclusion differs from the default (it then counts as an active filter).
+export function employmentExclusionChanged (excluded) {
+  const a = (excluded || []).map(typeKey).sort().join("|");
+  return a !== DEFAULT_EXCLUDED_EMPLOYMENT_TYPES.map(typeKey).sort().join("|");
+}
+// #endregion Employment type

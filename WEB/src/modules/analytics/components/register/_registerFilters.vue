@@ -96,6 +96,17 @@
       @update:model-value="set('shifts', $event)"
     />
     <app-select
+      :model-value="filters.excludeTypes || []"
+      label="Exclude employment type"
+      multiple
+      use-input
+      :placeholder="(filters.excludeTypes || []).length ? '' : 'None excluded'"
+      info="Employees of the chosen employment types are left out of the grid, the tiles and the export. The type is the one on the employee's latest employment type record. “On Contract” is left out unless you remove it here."
+      :options="options.employmentTypes || []"
+      class="tsr-filters__select"
+      @update:model-value="set('excludeTypes', $event)"
+    />
+    <app-select
       :model-value="filters.states"
       label="Day state"
       multiple
@@ -187,9 +198,9 @@ const props = defineProps({
   weekEnd: { type: String, default: "" },
   loading: { type: Boolean, default: false },
   rangeError: { type: String, default: "" },
-  // { departments: [], teamLeads: [], teamMembers: [], shifts: [], states: [], hideHolidays: false }
+  // { departments: [], teamLeads: [], teamMembers: [], shifts: [], excludeTypes: [], states: [], hideHolidays: false }
   filters: { type: Object, required: true },
-  // { departments: [{label,value}], teamLeads: [...], teamMembers: [...], shifts: [...], states: [...] }
+  // { departments: [{label,value}], teamLeads: [...], teamMembers: [...], shifts: [...], employmentTypes: [...], states: [...] }
   options: { type: Object, required: true },
   search: { type: String, default: "" },
   density: { type: String, default: "hours" },

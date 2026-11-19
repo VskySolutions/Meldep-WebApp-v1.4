@@ -154,10 +154,11 @@ namespace Vsky.Models.Analytics
         /// <summary>Working days on which the employee was expected (past days and today; holidays and full-day leaves out).</summary>
         public int ExpectedDays { get; set; }
         public int ExpectedMinutes { get; set; }
+        /// <summary>Clocked minutes over the closed days (an open day, still timed in or today without a time-in, is left out of every hours figure here).</summary>
         public int ClockedMinutes { get; set; }
-        /// <summary>Expected minutes of the days that can be judged: ExpectedMinutes without the days still open (in now, not in yet).</summary>
+        /// <summary>Expected minutes of the closed days: ExpectedMinutes without the open days.</summary>
         public int RequiredMinutes { get; set; }
-        /// <summary>Productive minutes (clocked minus breaks and time adjustments) over every day, hours on a holiday or leave day included.</summary>
+        /// <summary>Productive minutes (clocked minus breaks and time adjustments) over every closed day, hours on a holiday or leave day included.</summary>
         public int WorkedMinutes { get; set; }
         /// <summary>Required minus productive when productive is lower. Struck per employee over the period; on the summary, the sum of the employees' shortfalls.</summary>
         public int ShortMinutes { get; set; }

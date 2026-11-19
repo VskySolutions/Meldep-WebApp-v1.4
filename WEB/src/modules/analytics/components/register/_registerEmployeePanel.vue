@@ -178,6 +178,7 @@ const facts = computed(() => {
   return [
     { label: "Team lead", value: r.teamLeadName || "None" },
     { label: "Department", value: r.department || "—" },
+    { label: "Employment type", value: r.employmentType || "—" },
     { label: "Shift", value: r.shift ? (r.shiftAssigned ? r.shift : `${r.shift} (none assigned, default used)`) : "—" },
     { label: "Joined", value: r.joiningDate ? formatAppDate(r.joiningDate) : "—" },
     { label: "Logged", value: `${fmtHours(t.loggedHours)} of ${fmtHours(t.expectedHours)} h expected` }
