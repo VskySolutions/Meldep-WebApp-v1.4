@@ -60,7 +60,7 @@
                         </div>
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
                           <div class="input-group q-mx-sm w-100 h-auto">
-                            <q-input v-model="search.fromDate" fill-input dense clearable placeholder="MM/DD/YYYY" :error="!!fromDateError" :error-message="fromDateError" hide-bottom-space>
+                            <q-input v-model="search.fromDate" fill-input dense :error="!!fromDateError" :error-message="fromDateError" hide-bottom-space>
                               <template #append>
                                 <q-icon name="o_calendar_month" class="cursor-pointer">
                                   <q-popup-proxy ref="fromDateProxy" transition-show="scale" transition-hide="scale">
@@ -78,7 +78,7 @@
                         </div>
                         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
                           <div class="input-group q-mx-sm w-100 h-auto">
-                            <q-input v-model="search.toDate" fill-input dense clearable placeholder="MM/DD/YYYY" :error="!!toDateError" :error-message="toDateError" hide-bottom-space>
+                            <q-input v-model="search.toDate" fill-input dense :error="!!toDateError" :error-message="toDateError" hide-bottom-space>
                               <template #append>
                                 <q-icon name="o_calendar_month" class="cursor-pointer">
                                   <q-popup-proxy ref="toDateProxy" transition-show="scale" transition-hide="scale">
@@ -244,9 +244,8 @@
               <q-tr v-if="props.row.isGroup" :props="props" class="requirement-group-row">
                 <q-td :colspan="props.cols.length" class="requirement-group-cell">
                   <div class="row items-center no-wrap q-gutter-x-sm">
-                    <q-icon name="o_assignment" size="xs" color="primary" />
                     <span
-                      class="text-weight-bold cursor-pointer"
+                      class="cursor-pointer"
                       @click="setActiveRowIdInLocalStorage(props.row.key); $router.push({ path: '/requirement-center', state: { requirementId: props.row.requirementId } })"
                     >
                       <span v-if="props.row.requirementNumber">#{{ props.row.requirementNumber }} - </span>{{ props.row.requirementTitle }}
@@ -433,16 +432,16 @@ const records = ref([]);
 // Sorting orders requirement groups: Tracking Date = latest tracking date, Created/Updated Date = group's earliest/latest.
 const columns = ref([
   { name: "trackingDate", label: "Tracking Date", field: "trackingDate", align: "center", sortable: true, default: true },
-  { name: "currentPercent", label: "Current Completion (%)", field: "currentPercent", align: "right", sortable: false, default: true },
-  { name: "timeSpentAsOfToday", label: "Time Spent (Hrs)", field: "timeSpentAsOfToday", align: "right", sortable: false, default: true, tooltip: "Time Spent as of Today (Hours)" },
-  { name: "estimatedRemainingTime", label: "Est. Remaining (Hrs)", field: "estimatedRemainingTime", align: "right", sortable: false, default: true, tooltip: "Estimated Remaining Time Required (Hours)" },
-  { name: "scope", label: "Scope", field: "scope", align: "left", sortable: false, default: true, tooltip: "Additional Scope" },
-  { name: "roadblock", label: "Roadblock", field: "roadblock", align: "left", sortable: false, default: true },
-  { name: "estimatedTimeForCompletion", label: "Est. Completion Time (Hrs)", field: "estimatedTimeForCompletion", align: "right", sortable: false, default: true, tooltip: "Estimated Time for Completion of Additional Scope (Hours)" },
-  { name: "createdByName", label: "Created By", field: "createdByName", align: "left", sortable: false, default: true },
-  { name: "createdOnUtc", label: "Created Date", field: "createdOnUtc", align: "left", sortable: true, default: true },
-  { name: "updatedByName", label: "Updated By", field: "updatedByName", align: "left", sortable: false, default: true },
-  { name: "updatedOnUtc", label: "Updated Date", field: "updatedOnUtc", align: "left", sortable: true, default: true }
+  { name: "currentPercent", label: "Comp. (%)", field: "currentPercent", align: "right", sortable: true, default: true, tooltip: "Current Completion" },
+  { name: "timeSpentAsOfToday", label: "TS (Hrs)", field: "timeSpentAsOfToday", align: "right", sortable: true, default: true, tooltip: "Time Spent as of Today (Hours)" },
+  { name: "estimatedRemainingTime", label: "ERT (Hrs)", field: "estimatedRemainingTime", align: "right", sortable: true, default: true, tooltip: "Estimated Remaining Time Required (Hours)" },
+  { name: "scope", label: "Current Status", field: "scope", align: "left", sortable: true, default: true},
+  { name: "roadblock", label: "Roadblock", field: "roadblock", align: "left", sortable: true, default: true },
+  { name: "estimatedTimeForCompletion", label: "ETC (Hrs)", field: "estimatedTimeForCompletion", align: "right", sortable: true, default: true, tooltip: "Estimated Time for Completion of Current Status (Hours)" },
+  { name: "createdByName", label: "Created By", field: "createdByName", align: "left", sortable: true, default: false },
+  { name: "createdOnUtc", label: "Created On", field: "createdOnUtc", align: "left", sortable: true, default: false },
+  { name: "updatedByName", label: "Updated By", field: "updatedByName", align: "left", sortable: true, default: false },
+  { name: "updatedOnUtc", label: "Updated On", field: "updatedOnUtc", align: "left", sortable: true, default: false }
 ]);
 // Multi-sort dialog: requirement-group sort keys (incl. Requirement Title, Project, Module).
 const sortableColumns = SORT_OPTIONS;

@@ -202,7 +202,7 @@ namespace Vsky.Services.Timesheets
                         FullName = x.User.Person.FirstName + " " + x.User.Person.LastName,
                     }
                 },
-                TimesheetLines = x.TimesheetLines.Where(m => !m.Deleted && (string.IsNullOrWhiteSpace(projectId) || m.ProjectId == projectId) && (string.IsNullOrWhiteSpace(projectModuleId) || m.ProjectModuleId == projectModuleId) && (string.IsNullOrWhiteSpace(projectTaskId) || m.ProjectTaskId == projectTaskId) && (!searchHours.HasValue || m.Hours == searchHours.Value)).Select(mapping => new TimesheetLines
+                TimesheetLines = x.TimesheetLines.Where(m => !m.Deleted && (string.IsNullOrWhiteSpace(projectId) || m.ProjectId == projectId) && (string.IsNullOrWhiteSpace(projectModuleId) || m.ProjectModuleId == projectModuleId) && (string.IsNullOrWhiteSpace(projectTaskId) || m.ProjectTaskId == projectTaskId) && (string.IsNullOrWhiteSpace(requirementId) || m.Task.RequirementId == requirementId) && (!searchHours.HasValue || m.Hours == searchHours.Value)).Select(mapping => new TimesheetLines
                 {
                     Id = mapping.Id,
                     Hours = mapping.Hours,

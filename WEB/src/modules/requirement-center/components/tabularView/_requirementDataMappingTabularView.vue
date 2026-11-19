@@ -60,18 +60,25 @@
             <q-td style="width: 25%;">
               {{ props.row.createdOnUtc }}
             </q-td>
-            <q-td v-if="props.row.requirementDataMappingNotes.length > 0" class="text-center actions">
-              <q-icon
+            <q-td v-if="hasRequirementDataMappingNotes" class="text-center actions">
+              <a
                 v-if="props.row.requirementDataMappingNotes.length > 0"
-                name="o_visibility"
-                size="xs"
-                class="cursor-pointer q-mr-sm"
+                style="position: relative;"
+                class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
                 @click="onRequirementDataMappingNoteEdit(props.row.id, props.row.source, props.row.target, false,  null)"
               >
-                <q-tooltip>
-                  View Notes
+                <q-tooltip anchor="bottom middle" self="top middle">
+                 View Notes
                 </q-tooltip>
-              </q-icon>
+                <q-icon name="o_visibility" size="xs"/>
+                <q-badge
+                  v-if="props.row.dataMappingNotesCount > 0"
+                  style="position: absolute; right: -16px; top: -15px;"
+                  color="green"
+                  text-color="white"
+                  :label="props.row.dataMappingNotesCount"
+                />
+               </a>
             </q-td>
           </q-tr>
         </template>

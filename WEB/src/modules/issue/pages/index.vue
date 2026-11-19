@@ -419,11 +419,10 @@
                 <q-td v-if="selectedColumnNames.includes('requirement.requirementNumber')"
                   class="common-q-td hoverable-cell"
                   style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
-                  @click="onRequirementView(props.row.requirement?.id)"
                 >
-                  <span v-if="props.row.requirement?.requirementNumber">
+                  <span v-if="props.row.requirement?.requirementNumber" @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.requirement?.id } })">
                     #{{ props.row.requirement?.requirementNumber }}
-                    <q-tooltip>View Requirement</q-tooltip>
+                    <q-tooltip>Requirement Center</q-tooltip>
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('projectTaskRelatedMappings')">
@@ -782,7 +781,7 @@ const columns = ref([
   { name: "issueNumber", label: "Id", field: "issueNumber", align: "left", sortable: true, default: true},
   { name: "project.name", label: "Project Name", field: "project.name", align: "left", sortable: true, default: true },
   { name: "projectModule.name", label: "Project Module", field: "projectModule.name", align: "left", sortable: true, default: true },
-  { name: "requirement.requirementNumber", label: "Requirement", field: "requirement.requirementNumber", align: "left", sortable: true, default: false },
+  { name: "requirement.requirementNumber", label: "Req. No.", field: "requirement.requirementNumber", align: "left", sortable: true, default: false },
   { name: "projectTaskRelatedMappings", label: "Task", field: "projectTaskRelatedMappings", align: "left", sortable: false, default: true },
   { name: "name", label: "Issue Name", field: "name", align: "left", sortable: true, default: true },
   { name: "priority.dropDownValue", label: "Priority", field: "priority.dropDownValue", align: "left", sortable: true, default: true },
@@ -1538,7 +1537,7 @@ onMounted(async () => {
   issuePriorityForDropdown.load("Issue Priority");
   issueTypeForDropdown.load("Issue Type");
   issueStatusDropdownSingleSelect.load("Issue Status");
-  
+
   await issueStatusForDropdown.load("Issue Status");
   const issueStatus = issueStatusForDropdown.getValuesByLabels(["New", "New from Test Plan"]);
   if (issueStatus.length && !search.value.statusIds?.length) {

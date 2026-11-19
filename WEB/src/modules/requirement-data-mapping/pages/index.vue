@@ -207,8 +207,11 @@
                 :props="props"
                 :class="activeRowId == props.row.id ? 'highlight' : ''"
               >
-                <q-td  v-if="computedColumns.length > 0" :colspan="computedColumns.length" style="background: #dbf2ff;" class="text-center text-bold text-primary">
-                  {{ props.row.requirementTitle }}
+                <q-td  v-if="computedColumns.length > 0" :colspan="computedColumns.length" style="background: #dbf2ff;" class="text-center text-bold text-primary hoverable-cell" >
+                  <span @click="setActiveRowIdInLocalStorage(props.row.requirementId);$router.push({ path: '/requirement-center', state: { requirementId: props.row.requirementId } })">
+                    {{ props.row.requirementTitle }}
+                    <q-tooltip>Requirement Center</q-tooltip>
+                  </span>
                 </q-td>
                 <q-td auto-width class="text-center actions" style="background: #dbf2ff;">
                   <q-icon v-can
@@ -337,7 +340,7 @@
                   <a
                     v-if="mapping.requirementDataMappingNotes.length > 0"
                     style="position: relative;"
-                    class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"                            
+                    class="q-icon notranslate cursor-pointer q-ml-sm q-mr-md"
                     @click="onRequirementDataMappingNoteEdit(mapping.id, mapping.source, mapping.target, false,  refreshDataMappingList)"
                   >
                     <q-tooltip anchor="bottom middle" self="top middle">

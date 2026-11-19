@@ -112,6 +112,13 @@
           </div>
         </q-tab>
 
+
+        <q-tab name="requirementStatusTrackings">
+          <div class="row items-center no-wrap">
+            REQ Status Trackings
+          </div>
+        </q-tab>
+
         <q-tab name="actionItems">
           <div class="row items-center no-wrap">
             Action Items
@@ -289,6 +296,14 @@
             />
           </q-tab-panel>
 
+          <q-tab-panel name="requirementStatusTrackings" class="q-pa-none">
+            <RequirementStatusTrackingsTabularView
+              :requirement-id="requirementId"
+              :active-tab="leftTab"
+              @select="selectedReqStatusTrackings = $event"
+            />
+          </q-tab-panel>
+
           <q-tab-panel name="qAndA" class="q-pa-none">
             <ProjectQATabularView
               :requirement-id="requirementId"
@@ -386,6 +401,7 @@ import RequirementShortDescriptionDetails from './details/_requirementShortDescr
 import RequirementScopeDetails from './details/_requirementScopeDetails.vue';
 import RequirementNoteDetails from './details/_requirementNoteDetails.vue';
 import RequirementDataMappingsTabularView from './tabularView/_requirementDataMappingTabularView.vue';
+import RequirementStatusTrackingsTabularView from './tabularView/_requirementStatusTrackingTabularView.vue';
 import viewClientMeetingUpdatesView from "src/modules/requirement/components/_clientMeetingUpdatesView.vue";
 
 const props = defineProps({
@@ -427,6 +443,7 @@ const selectedReqDescription = ref(null);
 const selectedActionItems = ref(null);
 const selectedReqFiles = ref(null);
 const selectedReqDataMappings = ref(null);
+const selectedReqStatusTrackings = ref(null);
 const selectedClientMeetingUpdates = ref(null);
 const selectedWeeklyStatus = ref(null);
 const selectedWeeklyNextSteps = ref(null);

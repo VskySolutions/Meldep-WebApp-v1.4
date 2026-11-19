@@ -237,14 +237,14 @@
                         aria-label="Remove row"
                         @click="onRemoveRow(bodyProps.row)"
                       >
-                        <q-tooltip>Remove row (saved on the next save)</q-tooltip>
+                        <q-tooltip>Delete</q-tooltip>
                       </q-btn>
                     </q-td>
                   </q-tr>
                 </template>
                 <template #no-data>
                   <div class="full-width text-center text-grey-7 q-pa-md">
-                    {{ model.projectModuleId ? "No requirement rows. Use Add New Line to add one." : "Select a project and module to load its requirements." }}
+                    No data available
                   </div>
                 </template>
               </q-table>
@@ -257,7 +257,7 @@
                     outline
                     label="Save and Continue"
                     type="button"
-                    class="actionBtn"
+                    class="actionBtn hidden"
                     style="width: 160px !important;"
                     no-caps
                     :loading="processing && activeButton === 'continue'"
@@ -268,7 +268,7 @@
                     color="primary"
                     push
                     outline
-                    label="Save and Close"
+                    label="Save"
                     type="button"
                     class="actionBtn"
                     no-caps
@@ -289,7 +289,7 @@
 // Import libraries
 import { useDialogPluginComponent, useQuasar } from "quasar";
 import { ref, computed, onMounted, watch } from "vue";
-import { notifySuccess, notifyError } from "assets/utils";
+import { notifySuccess, zwConfirmDelete, notifyError } from "assets/utils";
 import { isDate } from "validators/zw_validators.js";
 import { format } from "date-fns";
 
@@ -356,12 +356,12 @@ const removedRowIds = ref([]);
 const pagination = ref({ sortBy: "", descending: false, rowsPerPage: 20, page: 1 });
 const columns = [
   { name: "trackingDate", label: "Tracking Date", field: "trackingDate", align: "left" },
-  { name: "currentPercent", label: "Current Completion(%)", field: "currentPercent", align: "left" },
-  { name: "timeSpentAsOfToday", label: "Time Spent (Hrs)", field: "timeSpentAsOfToday", align: "left", tooltip: "Time Spent as of Today(Hours)" },
-  { name: "estimatedRemainingTime", label: "Est. Remaining (Hrs)", field: "estimatedRemainingTime", align: "left", tooltip: "Estimated Remaining Time Required (Hours)" },
+  { name: "currentPercent", label: "Comp. (%)", field: "currentPercent", align: "left", tooltip: "Current Completion" },
+  { name: "timeSpentAsOfToday", label: "TS (Hrs)", field: "timeSpentAsOfToday", align: "left", tooltip: "Time Spent as of Today(Hours)" },
+  { name: "estimatedRemainingTime", label: "ERT (Hrs)", field: "estimatedRemainingTime", align: "left", tooltip: "Estimated Remaining Time Required (Hours)" },
   { name: "scope", label: "Current Status", field: "scope", align: "left" },
   { name: "roadblock", label: "Roadblock", field: "roadblock", align: "left" },
-  { name: "estimatedTimeForCompletion", label: "Est. Completion Time (Hrs)", field: "estimatedTimeForCompletion", align: "left", tooltip: "Estimated Time for Completion of Additional Scope (Hours)"},
+  { name: "estimatedTimeForCompletion", label: "ETC (Hrs)", field: "estimatedTimeForCompletion", align: "left", tooltip: "Estimated Time for Completion of Current Status (Hours)"},
   { name: "action", label: "Action", field: "action", align: "center" }
 ];
 
@@ -538,12 +538,27 @@ function getDateOptions(currentRow) {
   return date => !existingDates.includes(date);
 }
 
-// Removal is staged: persisted rows are only deleted by the next successful batch save.
 function onRemoveRow(row) {
-  if (row.id && !row.deleted) {
-    removedRowIds.value.push(row.id);
+  if (rows.value.length === 1) {
+    notifyError({ message:"At least one row is required. You cannot delete the last row."});
+    return;
   }
-  rows.value = rows.value.filter(r => r.key !== row.key);
+  if (!row.id) {
+    rows.value = rows.value.filter(r => r.key !== row.key);
+    return;
+  }
+
+  zwConfirmDelete({ data: `${row.trackingDate}` }, async () => {
+    try {
+      if (!row.deleted) {
+        removedRowIds.value.push(row.id);
+      }
+
+      rows.value = rows.value.filter(r => r.key !== row.key);
+    } catch (error) {
+      console.error(error);
+    }
+  });
 }
 
 // ----------------------------------------------------------------------------------------------------------------

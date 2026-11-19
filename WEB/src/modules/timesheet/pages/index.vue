@@ -862,7 +862,7 @@ function calculateLineTotal(timesheetLines) {
   timesheetLines.forEach(line => {
     if (line.hours) {
       const [hours = "0", minutes = "0"] = line.hours.split(":");
-
+      console.log(line.hours);
       totalMinutes += (parseInt(hours, 10) * 60) + parseInt(minutes, 10);
     }
   });

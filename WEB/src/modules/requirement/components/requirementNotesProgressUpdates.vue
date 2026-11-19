@@ -110,7 +110,7 @@ import viewClientMeetingUpdatesView from "./_clientMeetingUpdatesView.vue";
 import requirementModule from "src/modules/requirement/utils/dropdowns.js";
 
 // Props values i.e. come from query string
-const props = defineProps({ 
+const props = defineProps({
   id: { type: String, default: "" },
   projectId: { type: String, default: "" },
   type: { type: String, default: "" },
@@ -126,7 +126,7 @@ const projectId = props.projectId;
 // Common variables
 const selectedRequirementId = ref(props.id);
 const loading = ref(true);
-const tab = ref("1_tab");
+const tab = ref("3_tab");
 
 // noteType and NoteTypeId
 const clientMeetingNoteType="Client Meeting Updates";

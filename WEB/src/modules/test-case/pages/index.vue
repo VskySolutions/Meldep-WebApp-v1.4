@@ -360,11 +360,10 @@
                 <q-td v-if="selectedColumnNames.includes('requirement.requirementNumber')"
                   class="common-q-td hoverable-cell"
                   style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;"
-                  @click="onRequirementView(props.row.requirement?.id)"
                 >
-                  <span v-if="props.row.requirement?.requirementNumber">
+                  <span v-if="props.row.requirement?.requirementNumber" @click="setActiveRowIdInLocalStorage(props.row.id);$router.push({ path: '/requirement-center', state: { requirementId: props.row.requirement?.id } })">
                     #{{ props.row.requirement?.requirementNumber }}
-                    <q-tooltip>View Requirement</q-tooltip>
+                    <q-tooltip>Requirement Center</q-tooltip>
                   </span>
                 </q-td>
                 <q-td v-if="selectedColumnNames.includes('testPlan.name')" class="hoverable-cell" style="overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
