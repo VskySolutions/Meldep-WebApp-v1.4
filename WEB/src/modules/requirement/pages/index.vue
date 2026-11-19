@@ -1023,7 +1023,7 @@
                     :label="props.row.requirementNotesCount"
                   />
                 </a>
-                <q-btn
+                <!-- <q-btn
                   dense
                   flat
                   icon="o_file_download"
@@ -1035,7 +1035,17 @@
                   @click.stop="requirementExport.exportRow(props.row)"
                 >
                   <q-tooltip>Export Requirement</q-tooltip>
-                </q-btn>
+                </q-btn> -->
+                <q-icon
+                  name="o_file_download"
+                  size="xs"
+                  class="q-icon notranslate cursor-pointer q-ml-sm"
+                  :loading="requirementExport.isExporting(props.row.id)"
+                  :class="{ 'disabled': requirementExport.isExporting(props.row.id) }"
+                  @click.stop="!requirementExport.isExporting(props.row.id) && requirementExport.exportRow(props.row)"
+                >
+                  <q-tooltip>Export Requirement</q-tooltip>
+                </q-icon>
                 <q-btn dense flat icon="o_more_vert" color="primary">
                   <q-tooltip>More Options</q-tooltip>
                   <q-menu auto-close>
