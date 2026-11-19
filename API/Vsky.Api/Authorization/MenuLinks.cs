@@ -108,7 +108,7 @@ namespace Vsky.Api.Authorization
         public const string ProjectWork = Project + "|" + ProjectTasks + "|" + MyTasks + "|" + AllProjectPlanner
             + "|" + WeeklyPlan + "|" + MonthlyPlan + "|" + BillingProcessing + "|" + ProjectSecurity
             + "|" + ProjectQuestions + "|" + ProjectRelease + "|" + Timesheet + "|" + DailyPlanner;
-        public const string LeaveAny = ApplyLeave + "|" + ApproveLeaves + "|" + ForwardLeaves;
+        public const string LeaveAny = ApplyLeave + "|" + ApproveLeaves + "|" + ForwardLeaves + "|" + LeaveCredit;
         public const string ExpenseAny = Expenses + "|" + ApproveExpense;
         public const string AdvanceExpenseAny = AdvanceExpense + "|" + ApproveAdvanceExpense;
         public const string PurchaseExpenseAny = PurchaseExpense + "|" + ApprovePurchaseExpense;

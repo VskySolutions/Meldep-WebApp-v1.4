@@ -24,7 +24,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace Vsky.Api.Controllers
 {
     [Route("leaveCredits")]
-    [RequireMenu(MenuLinks.LeaveCredit)]
+    [RequireMenu(MenuLinks.LeaveCredit + "|" + MenuLinks.LeaveAny)]
     public class LeaveCreditController : BaseController
     {
 
