@@ -88,9 +88,9 @@ namespace Vsky.Services.Timesheets
         Task<Timesheet> GetTimesheetById(string id);
         #endregion
 
-        #region GetAllTimesheetListForDropdown
-        Task<List<Timesheet>> GetAllTimesheetListForDropdown(string SiteId);
-        #endregion
+        //#region GetAllTimesheetListForDropdown
+        //Task<List<Timesheet>> GetAllTimesheetListForDropdown(string SiteId);
+        //#endregion
 
         #region
         List<Timesheet> GetTimesheetDescriptionsByRequirementId(string siteId, string requirementId);

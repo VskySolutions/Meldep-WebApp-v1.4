@@ -34,6 +34,10 @@ namespace Vsky.Services.ReportSettingDetail
         Task<ReportSettingsDetails> GetById(string id);
         #endregion
 
+        #region GetReportDetailsById
+        Task<ReportSettingsDetails> GetReportDetailsById(string id);
+        #endregion
+
         #region GetReportByName
         Task<ReportSettingsDetails> GetReportByName(string siteId, string reportName, string id = null);
         #endregion

@@ -269,7 +269,7 @@
                 <p v-safe-html="props.row.reportDescription" />
               </q-td>
               <q-td style="width: 5%;" class="text-center actions">
-                <a
+                <!-- <a
                   :href="props.row.url"
                   target="_blank"
                   class="text-underline text-dark"
@@ -280,6 +280,27 @@
                     style="display: inline-block;"
                   >
                     <q-tooltip>View</q-tooltip>
+                  </q-icon>
+                </a> -->
+                <a
+                  :href="props.row.url"
+                  target="_blank"
+                  class="text-underline text-dark"
+                >
+                  <q-icon
+                    :name="getReportTypeName(props.row.reportTypeId) === 'Dashboard'
+                      ? 'o_bar_chart'
+                      : 'o_description'"
+                    :class="getReportTypeName(props.row.reportTypeId) === 'Dashboard'
+                      ? 'dashboard-view-icon'
+                      : 'paginated-view-icon'"
+                    class="cursor-pointer q-mr-sm"
+                  >
+                  <q-tooltip>
+                    {{ getReportTypeName(props.row.reportTypeId) === 'Dashboard'
+                      ? 'View Dashboard Report'
+                      : 'View Paginated Report' }}
+                  </q-tooltip>
                   </q-icon>
                 </a>
                 <!-- <q-icon v-can
@@ -412,6 +433,12 @@ const getReports = (props) => {
   });
 };
 
+const getReportTypeName = (reportTypeId) => {
+  return reportTypeList.value.find(
+    item => String(item.value) === String(reportTypeId)
+  )?.text || "";
+};
+
 // Search records as per parameters
 const onSearch = () => {
   const propps = { pagination: pagination.value };
@@ -477,6 +504,15 @@ function getAllReportListForFilter (val, update, abort) {
     } else {
       reportNameList.value = reportNameListFilter.value.filter(v => v.text.toLowerCase().includes(needle));
     }
+  });
+}
+
+// Get all report Type list for dropdown
+const reportTypeList = ref([]);
+function getAllReportTypeForDropDown (typeName) {
+  commonService.getDropDown(typeName).then((resp) => {
+    const responseData = resp.map((item) => ({ text: item.dropdownValue, value: item.id }));
+    reportTypeList.value = responseData;
   });
 }
 
@@ -576,7 +612,27 @@ watch(() => searchText.value, () => {
 onMounted(() => {
   tableRef.value.requestServerInteraction();
   getAllReportGroupListForDropDown("Report Group");
-  getAllReportListForDropdown();
+  getAllReportListForDropdown();  
+  getAllReportTypeForDropDown("Report Type");
 });
 
 </script>
+<style scoped>
+.paginated-view-icon {
+  color: #1976d2;
+  /* background-color: #e3f2fd; */
+  background-color: #c2d4f7;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 22px;
+}
+
+.dashboard-view-icon {
+  color: #009688;
+  /* background-color: #e0f2f1; */
+  background-color: #c1ecea;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 22px;
+}
+</style>

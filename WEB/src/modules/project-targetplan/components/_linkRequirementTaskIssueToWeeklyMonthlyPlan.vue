@@ -219,7 +219,9 @@ const hasImage = (html) => {
 };
 
 const rules = computed(() => ({
-  description: { descriptionRequired }
+  description: model.value.names?.length === 1
+    ? { descriptionRequired }
+    : {}
 }));
 
 const v$ = useVuelidate(rules, model);
@@ -319,7 +321,6 @@ watch(showWeeklyMonthlyCalendar, () => {
   dateErrorMessage.value = "";
 });
 
-
 watch(
   () => model.value,
   (newModelValue) => {
@@ -343,7 +344,12 @@ watch(
       !newModelValue?.type ||
       !newModelValue?.ids ||
       newModelValue?.ids.length === 0 ||
-      !stripHtml(newModelValue?.description) && !hasImage(newModelValue?.description) ||
+      // !stripHtml(newModelValue?.description) && !hasImage(newModelValue?.description) ||
+      (
+        newModelValue?.names?.length === 1 &&
+        !stripHtml(newModelValue?.description) &&
+        !hasImage(newModelValue?.description)
+      ) ||
       dateError.value;
 
     disableActionButton.value = hasMissingData;

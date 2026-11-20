@@ -811,14 +811,14 @@ namespace Vsky.Services.Timesheets
         }
         #endregion
 
-        #region GetAllTimesheetListForDropdown
-        public async Task<List<Timesheet>> GetAllTimesheetListForDropdown(string SiteId)
-        {
-            var query = _timesheetRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == SiteId);
-            var list = await query.ToListAsync();
-            return list;
-        }
-        #endregion
+        //#region GetAllTimesheetListForDropdown
+        //public async Task<List<Timesheet>> GetAllTimesheetListForDropdown(string SiteId)
+        //{
+        //    var query = _timesheetRepository.TableNoTracking.Where(m => !m.Deleted && m.SiteId == SiteId);
+        //    var list = await query.ToListAsync();
+        //    return list;
+        //}
+        //#endregion
 
         #region
         public List<Timesheet> GetTimesheetDescriptionsByRequirementId(string siteId, string requirementId)

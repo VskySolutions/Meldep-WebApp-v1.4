@@ -13,6 +13,7 @@ namespace Vsky.Models
         public string ReportId { get; set; }
         public string SiteId { get; set; }
         public string ReportGroupId { get; set; }
+        public string ReportTypeId { get; set; }
         public string ReportName { get; set; }
         public string ReportDescription { get; set; }
         public string Url { get; set; }
@@ -24,6 +25,7 @@ namespace Vsky.Models
 
         public virtual ReportSettings ReportSetting { get; set; }
         public virtual DropDown ReportGroup { get; set; }
+        public virtual DropDown ReportType { get; set; }
         public virtual Site Sites { get; set; }
         public virtual ApplicationUser CreatedBy { get; set; }
         public virtual ApplicationUser UpdatedBy { get; set; }

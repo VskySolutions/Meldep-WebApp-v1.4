@@ -595,20 +595,20 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
-        #region GetAllTimesheetListForDropdown
-        // Title: GetAllTimesheetListForDropdown
-        // Description: This endpoint retrieves the details of a specific timesheet based on its unique identifier (ID). 
-        [HttpGet("dropdown/list")]
-        [SiteMember]
-        public async Task<IActionResult> GetAllTimesheetListForDropdown()
-        {
-            var LoggedUserId = User.GetLoggedInUserId<string>();
-            var SiteId = _globalVariable.SiteId;
-            var list = await _timesheetService.GetAllTimesheetListForDropdown(SiteId);
-            var model = _mapper.Map<List<TimesheetModel>>(list);
-            return Ok(model);
-        }
-        #endregion
+        //#region GetAllTimesheetListForDropdown
+        //// Title: GetAllTimesheetListForDropdown
+        //// Description: This endpoint retrieves the details of a specific timesheet based on its unique identifier (ID). 
+        //[HttpGet("dropdown/list")]
+        //[SiteMember]
+        //public async Task<IActionResult> GetAllTimesheetListForDropdown()
+        //{
+        //    var LoggedUserId = User.GetLoggedInUserId<string>();
+        //    var SiteId = _globalVariable.SiteId;
+        //    var list = await _timesheetService.GetAllTimesheetListForDropdown(SiteId);
+        //    var model = _mapper.Map<List<TimesheetModel>>(list);
+        //    return Ok(model);
+        //}
+        //#endregion
 
         #region GetTimesheetById
         // Title: GetTimesheetById

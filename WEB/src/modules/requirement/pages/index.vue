@@ -1039,7 +1039,7 @@
                 <q-icon
                   name="o_file_download"
                   size="xs"
-                  class="q-icon notranslate cursor-pointer q-ml-sm"
+                  class="q-icon notranslate cursor-pointer q-ml-sm hidden"
                   :loading="requirementExport.isExporting(props.row.id)"
                   :class="{ 'disabled': requirementExport.isExporting(props.row.id) }"
                   @click.stop="!requirementExport.isExporting(props.row.id) && requirementExport.exportRow(props.row)"

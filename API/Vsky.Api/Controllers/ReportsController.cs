@@ -225,7 +225,6 @@ namespace Vsky.Api.Controllers
         }
         #endregion
 
-
         #region GetAllReportListForDropdown
         // Title: GetAllReportListForDropdown
         [HttpGet("dropdown/list")]
@@ -272,7 +271,7 @@ namespace Vsky.Api.Controllers
             try
             {
                 // Fetch the project entity by its ID from the service
-                var entity = await _reportSettingDetailService.GetById(id);
+                var entity = await _reportSettingDetailService.GetReportDetailsById(id);
                 // If the project entity is not found, return a BadRequest response with an error message
                 if (entity == null)
                     return BadRequest(new BadRequestError("No report found with the specified id."));
@@ -310,6 +309,7 @@ namespace Vsky.Api.Controllers
 
                     entity.Id = Guid.NewGuid().ToString();
                     entity.SiteId = SiteId;
+                    //entity.ReportTypeId = model.ReportTypeId;
 
                     if (!string.IsNullOrEmpty(model.ReportDescription))
                     {
@@ -370,6 +370,7 @@ namespace Vsky.Api.Controllers
                     entity.ReportName = model.ReportName;
                     entity.ReportGroupId = model.ReportGroupId;
                     entity.Url = model.Url;
+                    entity.ReportTypeId = model.ReportTypeId;
 
                     entity.ReportDescription = await _azureBlobImageServices
                             .ProcessHtmlAndManageImagesAsync(

@@ -18,7 +18,7 @@ namespace Vsky.Api.Authorization
         public const string LeadGroupUsers = "/lead-group-user-assignment/list";
 
         // Expenses
-        public const string AdvanceExpense = "/advance-expense-request";
+        public const string AdvanceExpense = "/finance-expense-advance";
         public const string ApproveAdvanceExpense = "/approve-advance-expense";
         public const string ApproveExpense = "/approve-expense";
         public const string ApprovePurchaseExpense = "/approve-purchase-expense";

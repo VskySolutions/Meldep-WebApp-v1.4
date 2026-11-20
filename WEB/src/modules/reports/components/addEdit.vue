@@ -12,7 +12,7 @@
             <fieldset>
               <legend>Report Info</legend>
               <div class="row q-col-gutter-x-md">
-                <div class="col-md-6 col-sm-12">
+                <div class="col-12 col-md-12 col-sm-12">
                   <div class="form-group">
                     <div class="text-black q-mb-sm">
                       <div class="q-mb-xs text-black">Name<span class="required">*</span></div>
@@ -30,6 +30,8 @@
                     </div>
                   </div>
                 </div>
+              </div>
+              <div class="row q-col-gutter-x-md">                
                 <div class="col-md-6 col-sm-12">
                   <div class="form-group">
                     <div class="q-mb-xs text-black">Group By<span class="required">*</span></div>
@@ -61,6 +63,29 @@
                       </template>
                     </q-select>
                   </div>
+                </div>
+                <div class="col-md-6 col-sm-12">
+                  <div class="q-mb-sm text-black">Report Type<span class="required">*</span></div>
+                  <q-radio
+                    v-for="item in reportTypeList"
+                    :key="item.value"                    
+                    v-model="model.reportTypeId"
+                    :val="item.value"
+                    dense
+                    class="q-ml-sm"
+                  >
+                    <div class="row items-center no-wrap q-ml-xs">
+                      <q-icon
+                        :name="item.text === 'Dashboard' ? 'o_bar_chart' : 'o_description'"
+                        :class="item.text === 'Dashboard'
+                          ? 'dashboard-view-icon'
+                          : 'paginated-view-icon'"
+                        size="xs"
+                        class="q-mr-sm"
+                      />
+                      <span>{{ item.text }}</span>
+                    </div>
+                  </q-radio>
                 </div>
               </div>
               <div class="row q-col-gutter-x-md q-mt-md">
@@ -152,7 +177,8 @@ const model = ref({
   reportName: "",
   reportGroupId: "",
   reportDescription: "",
-  url: ""
+  url: "",
+  reportTypeId: false
 });
 
 // Report Details Info - Validation Rules
@@ -173,6 +199,7 @@ const getReportById = () => {
   reportService.getReportById(props.id).then((resp) => {
     model.value = _.cloneDeep(resp);
     model.value.reportDescription = resp.reportDescription ? resp.reportDescription : "";
+    model.value.reportTypeId = resp.reportTypeId ? resp.reportTypeId : "";
   }).finally(() => {
     loading.value = false;
   });
@@ -202,6 +229,27 @@ function getAllReportGroupForFilter (val, update, abort) {
     } else {
       reportGroupList.value = reportGroupFilter.value.filter(v => v.text.toLowerCase().includes(needle));
     }
+  });
+}
+
+// Get all report Type list for dropdown
+const reportTypeList = ref([]);
+function getAllReportTypeForDropDown (typeName) {
+  commonService.getDropDown(typeName).then((resp) => {
+    const responseData = resp.map((item) => ({ text: item.dropdownValue, value: item.id }));
+    reportTypeList.value = responseData;
+
+    // Set default Report Type to Paginated
+    if (!model.value.reportTypeId) {
+      const defaultType = reportTypeList.value.find(
+        item => item.text.toLowerCase() === "paginated"
+      );
+      
+      if (defaultType) {
+        model.value.reportTypeId = defaultType.value;
+      }
+    }
+
   });
 }
 
@@ -272,6 +320,7 @@ watch(() => props.id, (newValue, oldValue) => {
 
 onMounted(() => {
   getAllReportGroupForDropDown("Report Group");
+  getAllReportTypeForDropDown("Report Type");
 });
 
 </script>
@@ -281,5 +330,23 @@ onMounted(() => {
 }
 .q-dialog__inner--minimized{
   padding: 0;
+}
+
+.paginated-view-icon {
+  color: #1976d2;
+  /* background-color: #e3f2fd; */
+  background-color: #c2d4f7;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 22px;
+}
+
+.dashboard-view-icon {
+  color: #009688;
+  /* background-color: #e0f2f1; */
+  background-color: #c1ecea;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 22px;
 }
 </style>
